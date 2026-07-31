@@ -8,12 +8,12 @@ using Mooh.Core.Interactions;
 namespace Mooh.Core.Movement
 {
     /// <summary>
-    /// Plans movement requests and commits successful transactions to a world.
+    /// Plans movement requests without mutating the authoritative world.
     /// </summary>
     /// <remarks>
     /// Initializes a movement system for a world and interaction policy.
     /// </remarks>
-    /// <param name="world">The authoritative world to mutate.</param>
+    /// <param name="world">The authoritative world to inspect.</param>
     /// <param name="interactions">The policy used to classify destination occupants.</param>
     public sealed class MovementSystem(WorldGrid world, IInteractionPolicy interactions)
     {
@@ -21,34 +21,35 @@ namespace Mooh.Core.Movement
         private readonly WorldGrid _world = world ?? throw new ArgumentNullException(nameof(world));
 
         /// <summary>
-        /// Attempts to execute a movement request atomically.
+        /// Plans a movement request without mutating the world.
         /// </summary>
-        /// <param name="request">The entity and direction to move.</param>
-        /// <returns>The movement outcome.</returns>
-        public MoveResult Move(MoveRequest request)
+        /// <param name="request">The entity and direction to plan.</param>
+        /// <returns>The movement outcome and ordered entity transitions.</returns>
+        public MovementPlan Plan(MoveRequest request)
         {
             Entity mover = _world.GetEntity(request.EntityId);
-            List<PlannedMove> plannedMoves = [];
+            List<MovementStep> plannedMoves = [];
             HashSet<EntityId> plannedEntities = [];
             HashSet<EntityId> visiting = [];
 
             if (!TryPlanMove(mover, request.Direction, plannedMoves, plannedEntities, visiting))
             {
-                return MoveResult.Blocked;
+                return new MovementPlan(MoveResult.Blocked, []);
             }
 
-            _world.CommitMoves(plannedMoves);
-            return plannedMoves.Count > 1 ? MoveResult.Pushed : MoveResult.Moved;
+            MoveResult result = plannedMoves.Count > 1 ? MoveResult.Pushed : MoveResult.Moved;
+            return new MovementPlan(result, plannedMoves);
         }
 
         private bool TryPlanMove(
             Entity entity,
             Direction direction,
-            List<PlannedMove> plannedMoves,
+            List<MovementStep> plannedMoves,
             HashSet<EntityId> plannedEntities,
             HashSet<EntityId> visiting)
         {
-            if (entity.Interactions.HasFlag(InteractionMask.MovementLocked)
+            if (entity.Motion is not null
+                || entity.Interactions.HasFlag(InteractionMask.MovementLocked)
                 || !visiting.Add(entity.Id))
             {
                 return false;
@@ -90,7 +91,7 @@ namespace Mooh.Core.Movement
 
             _ = visiting.Remove(entity.Id);
             _ = plannedEntities.Add(entity.Id);
-            plannedMoves.Add(new PlannedMove(entity.Id, entity.Position, destination));
+            plannedMoves.Add(new MovementStep(entity.Id, entity.Position, destination));
             return true;
         }
     }
