@@ -34,7 +34,7 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(new GridPosition(2, 1), entity.Position);
             Assert.NotNull(entity.Motion);
             Assert.Equal(MotionCause.Falling, entity.Motion.Cause);
-            Assert.Equal(Direction.Down, entity.Motion.Direction);
+            Assert.Equal(Direction.Down, entity.Motion.SegmentDirection);
             Assert.Equal(0.5, entity.Motion.Progress, precision: 10);
             Assert.Equal([new FallStarted(entity.Id, Direction.Down)], events);
         }

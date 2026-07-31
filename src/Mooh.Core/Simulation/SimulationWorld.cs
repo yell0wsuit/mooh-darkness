@@ -155,7 +155,7 @@ namespace Mooh.Core.Simulation
                 }
 
                 resolvedAny = true;
-                GridPosition destination = entity.Position.Offset(motion.Direction);
+                GridPosition destination = entity.Position.Offset(motion.SegmentDirection);
                 if (!_gravity.CanEnter(_world, entity, destination))
                 {
                     KinematicsSystem.Stop(entity);

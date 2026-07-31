@@ -15,9 +15,15 @@ namespace Mooh.Core.Motion
         /// <param name="cause">The behavior responsible for the motion.</param>
         /// <param name="direction">The direction of travel.</param>
         /// <param name="speed">The positive speed in cells per second.</param>
+        /// <param name="resolutionOrder">The order in which simultaneous boundaries are resolved.</param>
         /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
         /// <exception cref="InvalidOperationException">The entity is already moving.</exception>
-        public static void Start(Entity entity, MotionCause cause, Direction direction, double speed)
+        public static void Start(
+            Entity entity,
+            MotionCause cause,
+            Direction direction,
+            double speed,
+            int resolutionOrder = 0)
         {
             ArgumentNullException.ThrowIfNull(entity);
             if (entity.Motion is not null)
@@ -25,7 +31,7 @@ namespace Mooh.Core.Motion
                 throw new InvalidOperationException("An entity already in motion cannot start another motion.");
             }
 
-            entity.Motion = new MotionState(cause, direction, speed);
+            entity.Motion = new MotionState(cause, direction, speed, resolutionOrder);
         }
 
         /// <summary>Advances an entity's active motion by elapsed time.</summary>
@@ -38,7 +44,26 @@ namespace Mooh.Core.Motion
             ArgumentNullException.ThrowIfNull(entity);
             MotionState motion = entity.Motion
                 ?? throw new InvalidOperationException("An entity without active motion cannot be advanced.");
-            motion.Progress += motion.Speed * elapsed.TotalSeconds;
+            motion.Progress += motion.TravelSign * motion.Speed * elapsed.TotalSeconds;
+        }
+
+        /// <summary>Reverses player walking along its current cell segment.</summary>
+        /// <param name="entity">The walking player entity.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// The entity is not moving, or its active motion is not player walking.
+        /// </exception>
+        public static void Reverse(Entity entity)
+        {
+            ArgumentNullException.ThrowIfNull(entity);
+            MotionState motion = entity.Motion
+                ?? throw new InvalidOperationException("An entity without active motion cannot reverse.");
+            if (motion.Cause != MotionCause.PlayerWalking)
+            {
+                throw new InvalidOperationException("Only player walking motion can reverse.");
+            }
+
+            motion.TravelSign = -motion.TravelSign;
         }
 
         /// <summary>Stops an entity's active motion.</summary>
