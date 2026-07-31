@@ -4,8 +4,15 @@ using Xunit;
 
 namespace Mooh.Core.Tests.Grid
 {
+    /// <summary>
+    /// Verifies coordinate operations on <see cref="GridPosition"/>.
+    /// </summary>
     public sealed class GridPositionTests
     {
+        /// <summary>Verifies that each cardinal direction offsets the expected coordinate.</summary>
+        /// <param name="direction">The direction to apply.</param>
+        /// <param name="expectedX">The expected horizontal coordinate.</param>
+        /// <param name="expectedY">The expected vertical coordinate.</param>
         [Theory]
         [InlineData(Direction.Left, 3, 4)]
         [InlineData(Direction.Up, 4, 3)]

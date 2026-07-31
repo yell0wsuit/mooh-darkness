@@ -8,8 +8,12 @@ using Xunit;
 
 namespace Mooh.Core.Tests.Grid
 {
+    /// <summary>
+    /// Verifies authoritative entity registration and ordered cell occupancy.
+    /// </summary>
     public sealed class WorldOccupancyTests
     {
+        /// <summary>Verifies that adding an entity registers it in its initial cell.</summary>
         [Fact]
         public void AddRegistersEntityInItsCell()
         {
@@ -22,6 +26,7 @@ namespace Mooh.Core.Tests.Grid
             Assert.Equal([entity], world.GetOccupants(entity.Position));
         }
 
+        /// <summary>Verifies that a cell preserves multiple occupants in insertion order.</summary>
         [Fact]
         public void CellSupportsMultipleEntitiesInInsertionOrder()
         {
@@ -36,6 +41,7 @@ namespace Mooh.Core.Tests.Grid
             Assert.Equal([first, second], world.GetOccupants(position));
         }
 
+        /// <summary>Verifies that duplicate identities are rejected without changing occupancy.</summary>
         [Fact]
         public void AddRejectsDuplicateIdentityWithoutChangingOccupancy()
         {
@@ -50,6 +56,7 @@ namespace Mooh.Core.Tests.Grid
             Assert.Empty(world.GetOccupants(duplicate.Position));
         }
 
+        /// <summary>Verifies that entities cannot be registered outside the world.</summary>
         [Fact]
         public void AddRejectsPositionOutsideWorld()
         {
