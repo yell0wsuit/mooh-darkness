@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
@@ -27,27 +28,70 @@ namespace Mooh.Core.Movement
         public MoveResult Move(MoveRequest request)
         {
             Entity mover = _world.GetEntity(request.EntityId);
-            if (mover.Interactions.HasFlag(InteractionMask.MovementLocked))
+            List<PlannedMove> plannedMoves = [];
+            HashSet<EntityId> plannedEntities = [];
+            HashSet<EntityId> visiting = [];
+
+            if (!TryPlanMove(mover, request.Direction, plannedMoves, plannedEntities, visiting))
             {
                 return MoveResult.Blocked;
             }
 
-            GridPosition destination = mover.Position.Offset(request.Direction);
+            _world.CommitMoves(plannedMoves);
+            return plannedMoves.Count > 1 ? MoveResult.Pushed : MoveResult.Moved;
+        }
+
+        private bool TryPlanMove(
+            Entity entity,
+            Direction direction,
+            List<PlannedMove> plannedMoves,
+            HashSet<EntityId> plannedEntities,
+            HashSet<EntityId> visiting)
+        {
+            if (entity.Interactions.HasFlag(InteractionMask.MovementLocked)
+                || !visiting.Add(entity.Id))
+            {
+                return false;
+            }
+
+            GridPosition destination = entity.Position.Offset(direction);
             if (!_world.Contains(destination))
             {
-                return MoveResult.Blocked;
+                _ = visiting.Remove(entity.Id);
+                return false;
             }
 
             foreach (Entity occupant in _world.GetOccupants(destination))
             {
-                if (_interactions.Classify(mover, occupant) != OccupantInteraction.Allow)
+                if (plannedEntities.Contains(occupant.Id))
                 {
-                    return MoveResult.Blocked;
+                    continue;
+                }
+
+                switch (_interactions.Classify(entity, occupant))
+                {
+                    case OccupantInteraction.Allow:
+                        break;
+                    case OccupantInteraction.Block:
+                        _ = visiting.Remove(entity.Id);
+                        return false;
+                    case OccupantInteraction.Push:
+                        if (!TryPlanMove(occupant, direction, plannedMoves, plannedEntities, visiting))
+                        {
+                            _ = visiting.Remove(entity.Id);
+                            return false;
+                        }
+
+                        break;
+                    default:
+                        throw new InvalidOperationException("Unknown occupant interaction.");
                 }
             }
 
-            _world.CommitMoves([new PlannedMove(mover.Id, mover.Position, destination)]);
-            return MoveResult.Moved;
+            _ = visiting.Remove(entity.Id);
+            _ = plannedEntities.Add(entity.Id);
+            plannedMoves.Add(new PlannedMove(entity.Id, entity.Position, destination));
+            return true;
         }
     }
 }
