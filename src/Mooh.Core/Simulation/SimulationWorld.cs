@@ -20,7 +20,7 @@ namespace Mooh.Core.Simulation
         private readonly GravitySystem _gravity;
         private readonly double _maximumTravelPerSubstep;
         private readonly WorldGrid _world;
-        private readonly Direction _gravityDirection;
+        private Direction _gravityDirection;
 
         /// <summary>Initializes a simulation coordinator.</summary>
         /// <param name="world">The authoritative world.</param>
@@ -71,6 +71,27 @@ namespace Mooh.Core.Simulation
             _gravityDirection = gravityDirection;
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
             _gravity = new GravitySystem(collisionPolicy, random);
+        }
+
+        /// <summary>Changes gravity direction while all gravity bodies are stationary.</summary>
+        /// <param name="direction">The new cardinal gravity direction.</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="direction"/> is not a defined <see cref="Direction"/> value.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">A gravity body is currently moving.</exception>
+        public void SetGravity(Direction direction)
+        {
+            if (!Enum.IsDefined(direction))
+            {
+                throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+            }
+
+            if (_world.Entities.Any(entity => entity.GravityBody is not null && entity.Motion is not null))
+            {
+                throw new InvalidOperationException("Gravity cannot change while a gravity body is moving.");
+            }
+
+            _gravityDirection = direction;
         }
 
         /// <summary>Advances gravity-driven motion by the specified elapsed time.</summary>
