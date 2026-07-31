@@ -2,6 +2,7 @@ using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
+using Mooh.Core.Player;
 
 namespace Mooh.Core.Entities
 {
@@ -12,11 +13,13 @@ namespace Mooh.Core.Entities
     /// <param name="position">The entity's initial grid position.</param>
     /// <param name="interactions">The interaction capabilities assigned to the entity.</param>
     /// <param name="gravityBody">The entity's optional gravity behavior.</param>
+    /// <param name="playerBody">The entity's optional player behavior.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
         InteractionMask interactions,
-        GravityBody? gravityBody = null)
+        GravityBody? gravityBody = null,
+        PlayerBody? playerBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -29,6 +32,9 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's optional gravity behavior.</summary>
         public GravityBody? GravityBody { get; } = gravityBody;
+
+        /// <summary>Gets the entity's optional player behavior.</summary>
+        public PlayerBody? PlayerBody { get; } = playerBody;
 
         /// <summary>Gets the entity's current gravity-driven motion, if any.</summary>
         public MotionState? Motion { get; internal set; }
