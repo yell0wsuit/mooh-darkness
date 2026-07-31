@@ -35,6 +35,30 @@ namespace Mooh.Core.Simulation
             Direction gravityDirection,
             IGravityCollisionPolicy collisionPolicy,
             double maximumTravelPerSubstep = 0.5)
+            : this(
+                world,
+                gravityDirection,
+                collisionPolicy,
+                Random.Shared,
+                maximumTravelPerSubstep)
+        {
+        }
+
+        /// <summary>Initializes a simulation coordinator with a supplied random source.</summary>
+        /// <param name="world">The authoritative world.</param>
+        /// <param name="gravityDirection">The direction in which unsupported bodies fall.</param>
+        /// <param name="collisionPolicy">The gravity collision policy.</param>
+        /// <param name="random">The random generator used to select equivalent slide routes.</param>
+        /// <param name="maximumTravelPerSubstep">The maximum cell fraction traveled in one substep.</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maximumTravelPerSubstep"/> is not finite or lies outside (0, 1].
+        /// </exception>
+        public SimulationWorld(
+            WorldGrid world,
+            Direction gravityDirection,
+            IGravityCollisionPolicy collisionPolicy,
+            Random random,
+            double maximumTravelPerSubstep = 0.5)
         {
             if (!double.IsFinite(maximumTravelPerSubstep)
                 || maximumTravelPerSubstep <= 0
@@ -46,7 +70,7 @@ namespace Mooh.Core.Simulation
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _gravityDirection = gravityDirection;
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
-            _gravity = new GravitySystem(collisionPolicy);
+            _gravity = new GravitySystem(collisionPolicy, random);
         }
 
         /// <summary>Advances gravity-driven motion by the specified elapsed time.</summary>
@@ -114,13 +138,23 @@ namespace Mooh.Core.Simulation
                 if (!_gravity.CanEnter(_world, entity, destination))
                 {
                     KinematicsSystem.Stop(entity);
-                    events.Add(new Landed(entity.Id, _gravityDirection));
+                    if (motion.Cause == MotionCause.Falling)
+                    {
+                        events.Add(new Landed(entity.Id, _gravityDirection));
+                    }
+
                     continue;
                 }
 
                 _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, destination)]);
                 motion.Progress = 0;
                 events.Add(new CellEntered(entity.Id, destination));
+
+                if (motion.Cause == MotionCause.Sliding)
+                {
+                    KinematicsSystem.Stop(entity);
+                    continue;
+                }
 
                 GridPosition following = destination.Offset(_gravityDirection);
                 if (!_gravity.CanEnter(_world, entity, following))
