@@ -9,12 +9,17 @@ using Mooh.Core.Simulation;
 
 namespace Mooh.Core.Player
 {
-    internal sealed class PlayerController(Entity player, MovementSystem movement)
+    internal sealed class PlayerController(
+        Entity player,
+        WorldGrid world,
+        MovementSystem movement)
     {
         private readonly MovementSystem _movement = movement
             ?? throw new ArgumentNullException(nameof(movement));
         private readonly Entity _player = player
             ?? throw new ArgumentNullException(nameof(player));
+        private readonly WorldGrid _world = world
+            ?? throw new ArgumentNullException(nameof(world));
         private PlayerInputState _input;
         private Direction? _lastAppliedTravelDirection;
 
@@ -57,7 +62,7 @@ namespace Mooh.Core.Player
 
             if (plan.Result == MoveResult.Pushed)
             {
-                throw new NotSupportedException("Continuous pushing is not implemented.");
+                StartPushedMembers(plan, heldDirection, body, events);
             }
 
             KinematicsSystem.Start(
@@ -67,6 +72,32 @@ namespace Mooh.Core.Player
                 body.MoveSpeed);
             _lastAppliedTravelDirection = heldDirection;
             events.Add(new PlayerMoveStarted(_player.Id, heldDirection));
+        }
+
+        private void StartPushedMembers(
+            MovementPlan plan,
+            Direction direction,
+            PlayerBody playerBody,
+            ICollection<SimulationEvent> events)
+        {
+            int resolutionOrder = 0;
+            foreach (MovementStep step in plan.Steps)
+            {
+                if (step.EntityId == _player.Id)
+                {
+                    continue;
+                }
+
+                Entity pushed = _world.GetEntity(step.EntityId);
+                KinematicsSystem.Start(
+                    pushed,
+                    MotionCause.PlayerPushed,
+                    direction,
+                    playerBody.MoveSpeed * playerBody.PushSpeedMultiplier,
+                    resolutionOrder);
+                resolutionOrder++;
+                events.Add(new PushStarted(pushed.Id, direction));
+            }
         }
 
         public void HandleInTransit(ICollection<SimulationEvent> events)

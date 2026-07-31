@@ -41,10 +41,15 @@ namespace Mooh.Core.Motion
         /// <exception cref="InvalidOperationException">The entity is not moving.</exception>
         public static void Advance(Entity entity, TimeSpan elapsed)
         {
+            Advance(entity, elapsed.TotalSeconds);
+        }
+
+        internal static void Advance(Entity entity, double elapsedSeconds)
+        {
             ArgumentNullException.ThrowIfNull(entity);
             MotionState motion = entity.Motion
                 ?? throw new InvalidOperationException("An entity without active motion cannot be advanced.");
-            motion.Progress += motion.TravelSign * motion.Speed * elapsed.TotalSeconds;
+            motion.Progress += motion.TravelSign * motion.Speed * elapsedSeconds;
         }
 
         /// <summary>Reverses player walking along its current cell segment.</summary>

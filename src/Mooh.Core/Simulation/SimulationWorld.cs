@@ -17,9 +17,11 @@ namespace Mooh.Core.Simulation
     /// </summary>
     public sealed class SimulationWorld
     {
-        private const double BoundaryTolerance = 1e-12;
+        private const double BoundaryTolerance = 1e-6;
+        private const double TimeTolerance = 1e-12;
 
         private readonly GravitySystem _gravity;
+        private readonly DefaultInteractionPolicy _interactions;
         private readonly double _maximumTravelPerSubstep;
         private readonly MovementSystem _movement;
         private readonly PlayerController? _playerController;
@@ -75,9 +77,10 @@ namespace Mooh.Core.Simulation
             _gravityDirection = gravityDirection;
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
             _gravity = new GravitySystem(collisionPolicy, random);
-            _movement = new MovementSystem(world, new DefaultInteractionPolicy());
+            _interactions = new DefaultInteractionPolicy();
+            _movement = new MovementSystem(world, _interactions);
             _playerController = world.Player is Entity player
-                ? new PlayerController(player, _movement)
+                ? new PlayerController(player, world, _movement)
                 : null;
         }
 
@@ -147,14 +150,13 @@ namespace Mooh.Core.Simulation
                     remainingSeconds,
                     Math.Min(_maximumTravelPerSubstep / maximumSpeed, boundarySeconds));
 
-                TimeSpan substep = TimeSpan.FromSeconds(substepSeconds);
                 foreach (Entity entity in moving)
                 {
-                    KinematicsSystem.Advance(entity, substep);
+                    KinematicsSystem.Advance(entity, substepSeconds);
                 }
 
                 remainingSeconds -= substepSeconds;
-                if (remainingSeconds < BoundaryTolerance)
+                if (remainingSeconds < TimeTolerance)
                 {
                     remainingSeconds = 0;
                 }
@@ -167,20 +169,39 @@ namespace Mooh.Core.Simulation
 
         private void ResolveBoundaries(List<SimulationEvent> events)
         {
-            bool resolvedAny = false;
-            foreach (Entity entity in _world.Entities)
+            Entity[] ready =
+            [
+                .. _world.Entities
+                    .Where(IsAtBoundary)
+                    .OrderBy(entity => BoundaryPriority(entity.Motion!.Cause))
+                    .ThenBy(entity => entity.Motion!.ResolutionOrder),
+            ];
+            if (ready.Length == 0)
             {
-                MotionState? motion = entity.Motion;
-                if (motion is null)
-                {
-                    continue;
-                }
+                return;
+            }
 
+            HashSet<EntityId> readyPushedIds =
+            [
+                .. ready
+                    .Where(entity => entity.Motion!.Cause == MotionCause.PlayerPushed)
+                    .Select(entity => entity.Id),
+            ];
+            Dictionary<EntityId, bool> pushedCanCross = [];
+            foreach (Entity pushed in ready.Where(
+                entity => entity.Motion!.Cause == MotionCause.PlayerPushed))
+            {
+                pushedCanCross.Add(
+                    pushed.Id,
+                    CanPushedCross(pushed, pushed.Motion!, readyPushedIds, pushedCanCross));
+            }
+
+            foreach (Entity entity in ready)
+            {
+                MotionState motion = entity.Motion!;
                 if (motion.Cause == MotionCause.PlayerWalking
-                    && motion.TravelSign < 0
-                    && motion.Progress <= BoundaryTolerance)
+                    && motion.TravelSign < 0)
                 {
-                    resolvedAny = true;
                     KinematicsSystem.Stop(entity);
                     _playerController!.EndSegment();
                     events.Add(new PlayerReturned(entity.Id, entity.Position));
@@ -188,12 +209,12 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
-                if (motion.Progress < 1 - BoundaryTolerance)
+                if (motion.Cause == MotionCause.PlayerPushed)
                 {
+                    ResolvePushedBoundary(entity, motion, pushedCanCross[entity.Id], events);
                     continue;
                 }
 
-                resolvedAny = true;
                 if (motion.Cause == MotionCause.PlayerWalking)
                 {
                     ResolvePlayerBoundary(entity, motion, events);
@@ -230,10 +251,117 @@ namespace Mooh.Core.Simulation
                 }
             }
 
-            if (resolvedAny)
+            _gravity.EvaluateStationary(_world, _gravityDirection, events);
+        }
+
+        private static bool IsAtBoundary(Entity entity)
+        {
+            MotionState? motion = entity.Motion;
+            return motion is not null
+                && ((motion.Cause == MotionCause.PlayerWalking
+                        && motion.TravelSign < 0
+                        && motion.Progress <= BoundaryTolerance)
+                    || motion.Progress >= 1 - BoundaryTolerance);
+        }
+
+        private static int BoundaryPriority(MotionCause cause)
+        {
+            return cause switch
             {
-                _gravity.EvaluateStationary(_world, _gravityDirection, events);
+                MotionCause.PlayerPushed => 0,
+                MotionCause.Falling or MotionCause.Sliding => 1,
+                MotionCause.PlayerWalking => 2,
+                _ => throw new InvalidOperationException("Unknown motion cause."),
+            };
+        }
+
+        private bool CanPushedCross(
+            Entity entity,
+            MotionState motion,
+            HashSet<EntityId> readyPushedIds,
+            Dictionary<EntityId, bool> earlierResults)
+        {
+            GridPosition destination = entity.Position.Offset(motion.SegmentDirection);
+            if (!_world.Contains(destination))
+            {
+                return false;
             }
+
+            foreach (Entity occupant in _world.GetOccupants(destination))
+            {
+                if (readyPushedIds.Contains(occupant.Id))
+                {
+                    if (earlierResults.TryGetValue(occupant.Id, out bool willCross) && willCross)
+                    {
+                        continue;
+                    }
+
+                    return false;
+                }
+
+                if (_interactions.Classify(entity, occupant) != OccupantInteraction.Allow)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void ResolvePushedBoundary(
+            Entity entity,
+            MotionState motion,
+            bool canCross,
+            List<SimulationEvent> events)
+        {
+            if (!canCross)
+            {
+                KinematicsSystem.Stop(entity);
+                return;
+            }
+
+            Direction direction = motion.SegmentDirection;
+            double speed = motion.Speed;
+            int resolutionOrder = motion.ResolutionOrder;
+            GridPosition destination = entity.Position.Offset(direction);
+            _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, destination)]);
+            events.Add(new CellEntered(entity.Id, destination));
+            KinematicsSystem.Stop(entity);
+
+            if (CanContinuePush(entity, direction, resolutionOrder))
+            {
+                KinematicsSystem.Start(
+                    entity,
+                    MotionCause.PlayerPushed,
+                    direction,
+                    speed,
+                    resolutionOrder);
+            }
+        }
+
+        private bool CanContinuePush(Entity entity, Direction direction, int resolutionOrder)
+        {
+            GridPosition destination = entity.Position.Offset(direction);
+            if (!_world.Contains(destination))
+            {
+                return false;
+            }
+
+            foreach (Entity occupant in _world.GetOccupants(destination))
+            {
+                MotionState? occupantMotion = occupant.Motion;
+                bool followsEarlierPush = occupantMotion is not null
+                    && occupantMotion.Cause == MotionCause.PlayerPushed
+                    && occupantMotion.SegmentDirection == direction
+                    && occupantMotion.ResolutionOrder < resolutionOrder;
+                if (!followsEarlierPush
+                    && _interactions.Classify(entity, occupant) != OccupantInteraction.Allow)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void ResolvePlayerBoundary(
