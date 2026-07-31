@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Mooh.Core.Entities;
+using Mooh.Core.Movement;
 
 namespace Mooh.Core.Grid
 {
@@ -103,6 +104,49 @@ namespace Mooh.Core.Grid
             return !Contains(position)
                 ? throw new ArgumentOutOfRangeException(nameof(position), position, "Position is outside the world.")
                 : !_occupancy.TryGetValue(position, out List<EntityId>? occupants) ? [] : [.. occupants.Select(GetEntity)];
+        }
+
+        internal void CommitMoves(IReadOnlyList<PlannedMove> moves)
+        {
+            ArgumentNullException.ThrowIfNull(moves);
+            if (moves.Select(move => move.EntityId).Distinct().Count() != moves.Count)
+            {
+                throw new InvalidOperationException("A transaction cannot move one entity more than once.");
+            }
+
+            foreach (PlannedMove move in moves)
+            {
+                Entity entity = GetEntity(move.EntityId);
+                if (entity.Position != move.From || !Contains(move.To)
+                    || !_occupancy.TryGetValue(move.From, out List<EntityId>? source)
+                    || !source.Contains(move.EntityId))
+                {
+                    throw new InvalidOperationException("Movement transaction does not match world state.");
+                }
+            }
+
+            foreach (PlannedMove move in moves)
+            {
+                List<EntityId> source = _occupancy[move.From];
+                _ = source.Remove(move.EntityId);
+                if (source.Count == 0)
+                {
+                    _ = _occupancy.Remove(move.From);
+                }
+            }
+
+            foreach (PlannedMove move in moves)
+            {
+                Entity entity = _entities[move.EntityId];
+                entity.Position = move.To;
+                if (!_occupancy.TryGetValue(move.To, out List<EntityId>? destination))
+                {
+                    destination = [];
+                    _occupancy.Add(move.To, destination);
+                }
+
+                destination.Add(move.EntityId);
+            }
         }
     }
 }
