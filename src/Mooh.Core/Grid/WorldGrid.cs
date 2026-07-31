@@ -13,6 +13,7 @@ namespace Mooh.Core.Grid
     public sealed class WorldGrid
     {
         private readonly Dictionary<EntityId, Entity> _entities = [];
+        private readonly List<EntityId> _entityOrder = [];
         private readonly Dictionary<GridPosition, List<EntityId>> _occupancy = [];
 
         /// <summary>
@@ -38,7 +39,7 @@ namespace Mooh.Core.Grid
         public int Height { get; }
 
         /// <summary>Gets all entities registered in the world.</summary>
-        public IReadOnlyCollection<Entity> Entities => _entities.Values;
+        public IReadOnlyList<Entity> Entities => [.. _entityOrder.Select(GetEntity)];
 
         /// <summary>
         /// Determines whether a position lies within the world bounds.
@@ -70,6 +71,8 @@ namespace Mooh.Core.Grid
             {
                 throw new InvalidOperationException($"Entity '{entity.Id}' is already registered.");
             }
+
+            _entityOrder.Add(entity.Id);
 
             if (!_occupancy.TryGetValue(entity.Position, out List<EntityId>? occupants))
             {
