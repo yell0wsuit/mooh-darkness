@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Mooh.Core/Mooh.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Mooh.Core.Tests/Mooh.Core.Tests.csproj" />
+  </Folder>
+</Solution>
