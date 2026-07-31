@@ -21,6 +21,7 @@ namespace Mooh.Core.Simulation
 
         private readonly GravitySystem _gravity;
         private readonly double _maximumTravelPerSubstep;
+        private readonly MovementSystem _movement;
         private readonly PlayerController? _playerController;
         private readonly WorldGrid _world;
         private Direction _gravityDirection;
@@ -74,10 +75,9 @@ namespace Mooh.Core.Simulation
             _gravityDirection = gravityDirection;
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
             _gravity = new GravitySystem(collisionPolicy, random);
+            _movement = new MovementSystem(world, new DefaultInteractionPolicy());
             _playerController = world.Player is Entity player
-                ? new PlayerController(
-                    player,
-                    new MovementSystem(world, new DefaultInteractionPolicy()))
+                ? new PlayerController(player, _movement)
                 : null;
         }
 
@@ -131,6 +131,7 @@ namespace Mooh.Core.Simulation
             double remainingSeconds = elapsed.TotalSeconds;
             while (remainingSeconds > 0)
             {
+                _playerController?.HandleInTransit(events);
                 Entity[] moving = [.. _world.Entities.Where(entity => entity.Motion is not null)];
                 if (moving.Length == 0)
                 {
@@ -170,12 +171,35 @@ namespace Mooh.Core.Simulation
             foreach (Entity entity in _world.Entities)
             {
                 MotionState? motion = entity.Motion;
-                if (motion is null || motion.Progress < 1 - BoundaryTolerance)
+                if (motion is null)
+                {
+                    continue;
+                }
+
+                if (motion.Cause == MotionCause.PlayerWalking
+                    && motion.TravelSign < 0
+                    && motion.Progress <= BoundaryTolerance)
+                {
+                    resolvedAny = true;
+                    KinematicsSystem.Stop(entity);
+                    _playerController!.EndSegment();
+                    events.Add(new PlayerReturned(entity.Id, entity.Position));
+                    _playerController.TryStart(events);
+                    continue;
+                }
+
+                if (motion.Progress < 1 - BoundaryTolerance)
                 {
                     continue;
                 }
 
                 resolvedAny = true;
+                if (motion.Cause == MotionCause.PlayerWalking)
+                {
+                    ResolvePlayerBoundary(entity, motion, events);
+                    continue;
+                }
+
                 GridPosition destination = entity.Position.Offset(motion.SegmentDirection);
                 if (!_gravity.CanEnter(_world, entity, destination))
                 {
@@ -210,6 +234,33 @@ namespace Mooh.Core.Simulation
             {
                 _gravity.EvaluateStationary(_world, _gravityDirection, events);
             }
+        }
+
+        private void ResolvePlayerBoundary(
+            Entity player,
+            MotionState motion,
+            List<SimulationEvent> events)
+        {
+            Direction direction = motion.SegmentDirection;
+            KinematicsSystem.Stop(player);
+            _playerController!.EndSegment();
+
+            MovementPlan plan = _movement.Plan(new MoveRequest(player.Id, direction));
+            if (plan.Result == MoveResult.Blocked)
+            {
+                events.Add(new PlayerBlocked(player.Id, direction));
+                return;
+            }
+
+            if (plan.Result == MoveResult.Pushed)
+            {
+                throw new NotSupportedException("Continuous pushing is not implemented.");
+            }
+
+            MovementStep step = plan.Steps.Single();
+            _world.CommitMoves([new PlannedMove(step.EntityId, step.From, step.To)]);
+            events.Add(new CellEntered(player.Id, step.To));
+            _playerController.TryStart(events, emitStoppedWhenNoInput: true);
         }
     }
 }
