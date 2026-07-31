@@ -16,7 +16,8 @@ namespace Mooh.Core.Player
         /// <param name="pushSpeedMultiplier">The multiplier applied to pushed-object speed.</param>
         /// <param name="facingDirection">The player's initial facing direction.</param>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="moveSpeed"/> or <paramref name="pushSpeedMultiplier"/> is not finite and positive.
+        /// <paramref name="moveSpeed"/> or <paramref name="pushSpeedMultiplier"/> is not finite and positive,
+        /// or <paramref name="facingDirection"/> is undefined.
         /// </exception>
         public PlayerBody(double moveSpeed, double pushSpeedMultiplier, Direction facingDirection)
         {
@@ -28,6 +29,11 @@ namespace Mooh.Core.Player
             if (!double.IsFinite(pushSpeedMultiplier) || pushSpeedMultiplier <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(pushSpeedMultiplier));
+            }
+
+            if (!Enum.IsDefined(facingDirection))
+            {
+                throw new ArgumentOutOfRangeException(nameof(facingDirection), facingDirection, null);
             }
 
             MoveSpeed = moveSpeed;

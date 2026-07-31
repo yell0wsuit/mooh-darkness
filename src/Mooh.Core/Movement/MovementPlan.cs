@@ -1,4 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+
+using Mooh.Core.Entities;
 
 namespace Mooh.Core.Movement
 {
@@ -13,6 +17,21 @@ namespace Mooh.Core.Movement
         public MoveResult Result { get; } = result;
 
         /// <summary>Gets the ordered entity transitions.</summary>
-        public IReadOnlyList<MovementStep> Steps { get; } = steps;
+        public IReadOnlyList<MovementStep> Steps { get; } = ValidateSteps(steps);
+
+        private static ReadOnlyCollection<MovementStep> ValidateSteps(IReadOnlyList<MovementStep> steps)
+        {
+            ArgumentNullException.ThrowIfNull(steps);
+            HashSet<EntityId> entityIds = [];
+            foreach (MovementStep step in steps)
+            {
+                if (!entityIds.Add(step.EntityId))
+                {
+                    throw new InvalidOperationException("A movement plan cannot contain one entity more than once.");
+                }
+            }
+
+            return Array.AsReadOnly([.. steps]);
+        }
     }
 }

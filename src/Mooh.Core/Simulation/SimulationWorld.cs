@@ -94,12 +94,12 @@ namespace Mooh.Core.Simulation
             controller.SetInput(input);
         }
 
-        /// <summary>Changes gravity direction while all gravity bodies are stationary.</summary>
+        /// <summary>Changes gravity direction while all entities are stationary.</summary>
         /// <param name="direction">The new cardinal gravity direction.</param>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="direction"/> is not a defined <see cref="Direction"/> value.
         /// </exception>
-        /// <exception cref="InvalidOperationException">A gravity body is currently moving.</exception>
+        /// <exception cref="InvalidOperationException">An entity is currently moving.</exception>
         public void SetGravity(Direction direction)
         {
             if (!Enum.IsDefined(direction))
@@ -107,9 +107,9 @@ namespace Mooh.Core.Simulation
                 throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
             }
 
-            if (_world.Entities.Any(entity => entity.GravityBody is not null && entity.Motion is not null))
+            if (_world.Entities.Any(entity => entity.Motion is not null))
             {
-                throw new InvalidOperationException("Gravity cannot change while a gravity body is moving.");
+                throw new InvalidOperationException("Gravity cannot change while an entity is moving.");
             }
 
             _gravityDirection = direction;
@@ -127,6 +127,7 @@ namespace Mooh.Core.Simulation
                 return [];
             }
 
+            ValidateMotionState();
             List<SimulationEvent> events = [];
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
             _playerController?.TryStart(events);
@@ -165,6 +166,27 @@ namespace Mooh.Core.Simulation
             }
 
             return events;
+        }
+
+        private void ValidateMotionState()
+        {
+            Entity? player = _world.Player;
+            foreach (Entity entity in _world.Entities)
+            {
+                MotionState? motion = entity.Motion;
+                if (motion?.Cause == MotionCause.PlayerWalking
+                    && (player is null || entity.Id != player.Id || entity.PlayerBody is null))
+                {
+                    throw new InvalidOperationException("Player walking motion must belong to the world's player.");
+                }
+
+                if (motion?.Cause == MotionCause.PlayerPushed
+                    && player is not null
+                    && entity.Id == player.Id)
+                {
+                    throw new InvalidOperationException("The player cannot have pushed-object motion.");
+                }
+            }
         }
 
         private void ResolveBoundaries(List<SimulationEvent> events)
@@ -327,6 +349,11 @@ namespace Mooh.Core.Simulation
             _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, destination)]);
             events.Add(new CellEntered(entity.Id, destination));
             KinematicsSystem.Stop(entity);
+
+            if (_gravity.EvaluateStationary(_world, entity, _gravityDirection, events))
+            {
+                return;
+            }
 
             if (CanContinuePush(entity, direction, resolutionOrder))
             {
