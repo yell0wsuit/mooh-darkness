@@ -5,8 +5,10 @@ using System.Linq;
 using Mooh.Core.Entities;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
+using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
 using Mooh.Core.Movement;
+using Mooh.Core.Player;
 
 namespace Mooh.Core.Simulation
 {
@@ -19,6 +21,7 @@ namespace Mooh.Core.Simulation
 
         private readonly GravitySystem _gravity;
         private readonly double _maximumTravelPerSubstep;
+        private readonly PlayerController? _playerController;
         private readonly WorldGrid _world;
         private Direction _gravityDirection;
 
@@ -71,6 +74,21 @@ namespace Mooh.Core.Simulation
             _gravityDirection = gravityDirection;
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
             _gravity = new GravitySystem(collisionPolicy, random);
+            _playerController = world.Player is Entity player
+                ? new PlayerController(
+                    player,
+                    new MovementSystem(world, new DefaultInteractionPolicy()))
+                : null;
+        }
+
+        /// <summary>Replaces the currently held input for the world's player.</summary>
+        /// <param name="input">The latest held cardinal inputs.</param>
+        /// <exception cref="InvalidOperationException">The world has no player.</exception>
+        public void SetPlayerInput(PlayerInputState input)
+        {
+            PlayerController controller = _playerController
+                ?? throw new InvalidOperationException("Player input requires a world with a player.");
+            controller.SetInput(input);
         }
 
         /// <summary>Changes gravity direction while all gravity bodies are stationary.</summary>
@@ -108,6 +126,7 @@ namespace Mooh.Core.Simulation
 
             List<SimulationEvent> events = [];
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
+            _playerController?.TryStart(events);
 
             double remainingSeconds = elapsed.TotalSeconds;
             while (remainingSeconds > 0)
@@ -120,7 +139,9 @@ namespace Mooh.Core.Simulation
 
                 double maximumSpeed = moving.Max(entity => entity.Motion!.Speed);
                 double boundarySeconds = moving.Min(
-                    entity => (1 - entity.Motion!.Progress) / entity.Motion.Speed);
+                    entity => entity.Motion!.TravelSign > 0
+                        ? (1 - entity.Motion.Progress) / entity.Motion.Speed
+                        : entity.Motion.Progress / entity.Motion.Speed);
                 double substepSeconds = Math.Min(
                     remainingSeconds,
                     Math.Min(_maximumTravelPerSubstep / maximumSpeed, boundarySeconds));
