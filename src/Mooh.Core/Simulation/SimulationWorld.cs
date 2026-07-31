@@ -6,6 +6,7 @@ using Mooh.Core.Entities;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Motion;
+using Mooh.Core.Movement;
 
 namespace Mooh.Core.Simulation
 {
@@ -14,6 +15,8 @@ namespace Mooh.Core.Simulation
     /// </summary>
     public sealed class SimulationWorld
     {
+        private const double BoundaryTolerance = 1e-12;
+
         private readonly GravitySystem _gravity;
         private readonly double _maximumTravelPerSubstep;
         private readonly WorldGrid _world;
@@ -77,11 +80,6 @@ namespace Mooh.Core.Simulation
                     remainingSeconds,
                     Math.Min(_maximumTravelPerSubstep / maximumSpeed, boundarySeconds));
 
-                if (substepSeconds >= boundarySeconds)
-                {
-                    throw new NotSupportedException("Cell-boundary crossings are not supported yet.");
-                }
-
                 TimeSpan substep = TimeSpan.FromSeconds(substepSeconds);
                 foreach (Entity entity in moving)
                 {
@@ -89,9 +87,53 @@ namespace Mooh.Core.Simulation
                 }
 
                 remainingSeconds -= substepSeconds;
+                if (remainingSeconds < BoundaryTolerance)
+                {
+                    remainingSeconds = 0;
+                }
+
+                ResolveBoundaries(events);
             }
 
             return events;
+        }
+
+        private void ResolveBoundaries(List<SimulationEvent> events)
+        {
+            bool resolvedAny = false;
+            foreach (Entity entity in _world.Entities)
+            {
+                MotionState? motion = entity.Motion;
+                if (motion is null || motion.Progress < 1 - BoundaryTolerance)
+                {
+                    continue;
+                }
+
+                resolvedAny = true;
+                GridPosition destination = entity.Position.Offset(motion.Direction);
+                if (!_gravity.CanEnter(_world, entity, destination))
+                {
+                    KinematicsSystem.Stop(entity);
+                    events.Add(new Landed(entity.Id, _gravityDirection));
+                    continue;
+                }
+
+                _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, destination)]);
+                motion.Progress = 0;
+                events.Add(new CellEntered(entity.Id, destination));
+
+                GridPosition following = destination.Offset(_gravityDirection);
+                if (!_gravity.CanEnter(_world, entity, following))
+                {
+                    KinematicsSystem.Stop(entity);
+                    events.Add(new Landed(entity.Id, _gravityDirection));
+                }
+            }
+
+            if (resolvedAny)
+            {
+                _gravity.EvaluateStationary(_world, _gravityDirection, events);
+            }
         }
     }
 }

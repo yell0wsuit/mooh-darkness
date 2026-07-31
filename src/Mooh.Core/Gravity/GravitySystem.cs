@@ -46,5 +46,10 @@ namespace Mooh.Core.Gravity
                 events.Add(new FallStarted(entity.Id, gravityDirection));
             }
         }
+
+        internal bool CanEnter(WorldGrid world, Entity entity, GridPosition destination)
+        {
+            return _collisionPolicy.CanEnter(world, entity, destination);
+        }
     }
 }
