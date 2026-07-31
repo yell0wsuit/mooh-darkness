@@ -401,15 +401,10 @@ namespace Mooh.Core.Simulation
             _playerController!.EndSegment();
 
             MovementPlan plan = _movement.Plan(new MoveRequest(player.Id, direction));
-            if (plan.Result == MoveResult.Blocked)
+            if (plan.Result != MoveResult.Moved)
             {
                 events.Add(new PlayerBlocked(player.Id, direction));
                 return;
-            }
-
-            if (plan.Result == MoveResult.Pushed)
-            {
-                throw new NotSupportedException("Continuous pushing is not implemented.");
             }
 
             MovementStep step = plan.Steps.Single();

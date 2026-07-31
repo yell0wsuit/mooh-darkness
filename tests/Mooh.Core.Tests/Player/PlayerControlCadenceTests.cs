@@ -236,6 +236,27 @@ namespace Mooh.Core.Tests.Player
                 events);
         }
 
+        /// <summary>Verifies that a new push requirement at the active destination blocks safely.</summary>
+        [Fact]
+        public void PushableAddedToActiveDestinationBlocksBoundaryRevalidation()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateWorldScenario();
+            StartRightToHalfCell(simulation);
+            Entity pushable = new(
+                EntityId.New(),
+                new GridPosition(3, 2),
+                InteractionMask.BlocksMovement | InteractionMask.PlayerPushable);
+            world.Add(pushable);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
+
+            Assert.Equal(new GridPosition(2, 2), player.Position);
+            Assert.Null(player.Motion);
+            Assert.Equal(new GridPosition(3, 2), pushable.Position);
+            Assert.Null(pushable.Motion);
+            Assert.Equal([new PlayerBlocked(player.Id, Direction.Right)], events);
+        }
+
         private static void StartRightToHalfCell(SimulationWorld simulation)
         {
             simulation.SetPlayerInput(Held(Direction.Right));
