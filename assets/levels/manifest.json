@@ -1,0 +1,759 @@
+{
+    "formatVersion": 1,
+    "source": {
+        "archive": "00_Levels.lp",
+        "legacyPackName": "normal pack"
+    },
+    "levels": [
+        {
+            "order": 1,
+            "name": "tutor_0001_motions",
+            "file": "tutor_0001_motions.json"
+        },
+        {
+            "order": 2,
+            "name": "tutor_0001_2_motions",
+            "file": "tutor_0001_2_motions.json"
+        },
+        {
+            "order": 3,
+            "name": "tutor_0002_grenades",
+            "file": "tutor_0002_grenades.json"
+        },
+        {
+            "order": 4,
+            "name": "tutor_0002_2_grenades",
+            "file": "tutor_0002_2_grenades.json"
+        },
+        {
+            "order": 5,
+            "name": "tutor_0003_slide_fall",
+            "file": "tutor_0003_slide_fall.json"
+        },
+        {
+            "order": 6,
+            "name": "tutor_0004_bottles",
+            "file": "tutor_0004_bottles.json"
+        },
+        {
+            "order": 7,
+            "name": "tutor_0005_bottles_2",
+            "file": "tutor_0005_bottles_2.json"
+        },
+        {
+            "order": 8,
+            "name": "tutor_0006_mon_blue",
+            "file": "tutor_0006_mon_blue.json"
+        },
+        {
+            "order": 9,
+            "name": "tutor_0007_mon_blue_attack",
+            "file": "tutor_0007_mon_blue_attack.json"
+        },
+        {
+            "order": 10,
+            "name": "ma_tut_02",
+            "file": "ma_tut_02.json"
+        },
+        {
+            "order": 11,
+            "name": "tutor_0008_mon_green",
+            "file": "tutor_0008_mon_green.json"
+        },
+        {
+            "order": 12,
+            "name": "tutor_0009_mon_green_attack",
+            "file": "tutor_0009_mon_green_attack.json"
+        },
+        {
+            "order": 13,
+            "name": "ma_tut_01",
+            "file": "ma_tut_01.json"
+        },
+        {
+            "order": 14,
+            "name": "tutor_0010_mon_all_2",
+            "file": "tutor_0010_mon_all_2.json"
+        },
+        {
+            "order": 15,
+            "name": "ma_easy_68",
+            "file": "ma_easy_68.json"
+        },
+        {
+            "order": 16,
+            "name": "nrm_0011_keys",
+            "file": "nrm_0011_keys.json"
+        },
+        {
+            "order": 17,
+            "name": "lvl_0007",
+            "file": "lvl_0007.json"
+        },
+        {
+            "order": 18,
+            "name": "lvl_0043",
+            "file": "lvl_0043.json"
+        },
+        {
+            "order": 19,
+            "name": "ma_easy_12",
+            "file": "ma_easy_12.json"
+        },
+        {
+            "order": 20,
+            "name": "lvl_0027",
+            "file": "lvl_0027.json"
+        },
+        {
+            "order": 21,
+            "name": "lvl_0011",
+            "file": "lvl_0011.json"
+        },
+        {
+            "order": 22,
+            "name": "tutor_0015_pow_strike",
+            "file": "tutor_0015_pow_strike.json"
+        },
+        {
+            "order": 23,
+            "name": "simple_01",
+            "file": "simple_01.json"
+        },
+        {
+            "order": 24,
+            "name": "lvl_0008",
+            "file": "lvl_0008.json"
+        },
+        {
+            "order": 25,
+            "name": "lvl_0037",
+            "file": "lvl_0037.json"
+        },
+        {
+            "order": 26,
+            "name": "lvl_0003",
+            "file": "lvl_0003.json"
+        },
+        {
+            "order": 27,
+            "name": "lvl_0005",
+            "file": "lvl_0005.json"
+        },
+        {
+            "order": 28,
+            "name": "simple_02",
+            "file": "simple_02.json"
+        },
+        {
+            "order": 29,
+            "name": "lvl_0009",
+            "file": "lvl_0009.json"
+        },
+        {
+            "order": 30,
+            "name": "s_04",
+            "file": "s_04.json"
+        },
+        {
+            "order": 31,
+            "name": "ma_easy_51",
+            "file": "ma_easy_51.json"
+        },
+        {
+            "order": 32,
+            "name": "ma_easy_04",
+            "file": "ma_easy_04.json"
+        },
+        {
+            "order": 33,
+            "name": "ma_easy_11",
+            "file": "ma_easy_11.json"
+        },
+        {
+            "order": 34,
+            "name": "lvl_0002",
+            "file": "lvl_0002.json"
+        },
+        {
+            "order": 35,
+            "name": "ma_easy_15",
+            "file": "ma_easy_15.json"
+        },
+        {
+            "order": 36,
+            "name": "ma_easy_65",
+            "file": "ma_easy_65.json"
+        },
+        {
+            "order": 37,
+            "name": "s_06",
+            "file": "s_06.json"
+        },
+        {
+            "order": 38,
+            "name": "ma_easy_13",
+            "file": "ma_easy_13.json"
+        },
+        {
+            "order": 39,
+            "name": "s_02",
+            "file": "s_02.json"
+        },
+        {
+            "order": 40,
+            "name": "lvl_0036",
+            "file": "lvl_0036.json"
+        },
+        {
+            "order": 41,
+            "name": "nrm_0014_weap_rocets",
+            "file": "nrm_0014_weap_rocets.json"
+        },
+        {
+            "order": 42,
+            "name": "ma_easy_60",
+            "file": "ma_easy_60.json"
+        },
+        {
+            "order": 43,
+            "name": "ma_easy_53",
+            "file": "ma_easy_53.json"
+        },
+        {
+            "order": 44,
+            "name": "s_03",
+            "file": "s_03.json"
+        },
+        {
+            "order": 45,
+            "name": "simple_07",
+            "file": "simple_07.json"
+        },
+        {
+            "order": 46,
+            "name": "lvl_0001",
+            "file": "lvl_0001.json"
+        },
+        {
+            "order": 47,
+            "name": "lvl_0014",
+            "file": "lvl_0014.json"
+        },
+        {
+            "order": 48,
+            "name": "lvl_0021",
+            "file": "lvl_0021.json"
+        },
+        {
+            "order": 49,
+            "name": "s_01",
+            "file": "s_01.json"
+        },
+        {
+            "order": 50,
+            "name": "ma_easy_61",
+            "file": "ma_easy_61.json"
+        },
+        {
+            "order": 51,
+            "name": "simple_04",
+            "file": "simple_04.json"
+        },
+        {
+            "order": 52,
+            "name": "s_05",
+            "file": "s_05.json"
+        },
+        {
+            "order": 53,
+            "name": "ma_easy_14",
+            "file": "ma_easy_14.json"
+        },
+        {
+            "order": 54,
+            "name": "ma_easy_01",
+            "file": "ma_easy_01.json"
+        },
+        {
+            "order": 55,
+            "name": "simple_08",
+            "file": "simple_08.json"
+        },
+        {
+            "order": 56,
+            "name": "ma_easy_64",
+            "file": "ma_easy_64.json"
+        },
+        {
+            "order": 57,
+            "name": "lvl_0048",
+            "file": "lvl_0048.json"
+        },
+        {
+            "order": 58,
+            "name": "lvl_0024",
+            "file": "lvl_0024.json"
+        },
+        {
+            "order": 59,
+            "name": "lvl_0042",
+            "file": "lvl_0042.json"
+        },
+        {
+            "order": 60,
+            "name": "s_13",
+            "file": "s_13.json"
+        },
+        {
+            "order": 61,
+            "name": "simple_05",
+            "file": "simple_05.json"
+        },
+        {
+            "order": 62,
+            "name": "lvl_0040",
+            "file": "lvl_0040.json"
+        },
+        {
+            "order": 63,
+            "name": "simple_06",
+            "file": "simple_06.json"
+        },
+        {
+            "order": 64,
+            "name": "lvl_0020",
+            "file": "lvl_0020.json"
+        },
+        {
+            "order": 65,
+            "name": "ma_easy_66",
+            "file": "ma_easy_66.json"
+        },
+        {
+            "order": 66,
+            "name": "s_10",
+            "file": "s_10.json"
+        },
+        {
+            "order": 67,
+            "name": "s_11",
+            "file": "s_11.json"
+        },
+        {
+            "order": 68,
+            "name": "lvl_0061",
+            "file": "lvl_0061.json"
+        },
+        {
+            "order": 69,
+            "name": "simple_09",
+            "file": "simple_09.json"
+        },
+        {
+            "order": 70,
+            "name": "lvl_0025",
+            "file": "lvl_0025.json"
+        },
+        {
+            "order": 71,
+            "name": "lvl_0045",
+            "file": "lvl_0045.json"
+        },
+        {
+            "order": 72,
+            "name": "lvl_0058",
+            "file": "lvl_0058.json"
+        },
+        {
+            "order": 73,
+            "name": "lvl_0050",
+            "file": "lvl_0050.json"
+        },
+        {
+            "order": 74,
+            "name": "ma_03",
+            "file": "ma_03.json"
+        },
+        {
+            "order": 75,
+            "name": "simple_03",
+            "file": "simple_03.json"
+        },
+        {
+            "order": 76,
+            "name": "lvl_0051",
+            "file": "lvl_0051.json"
+        },
+        {
+            "order": 77,
+            "name": "ma_16",
+            "file": "ma_16.json"
+        },
+        {
+            "order": 78,
+            "name": "lvl_0056",
+            "file": "lvl_0056.json"
+        },
+        {
+            "order": 79,
+            "name": "lvl_0004",
+            "file": "lvl_0004.json"
+        },
+        {
+            "order": 80,
+            "name": "lvl_0006",
+            "file": "lvl_0006.json"
+        },
+        {
+            "order": 81,
+            "name": "s_12",
+            "file": "s_12.json"
+        },
+        {
+            "order": 82,
+            "name": "ma_easy_62",
+            "file": "ma_easy_62.json"
+        },
+        {
+            "order": 83,
+            "name": "lvl_0029",
+            "file": "lvl_0029.json"
+        },
+        {
+            "order": 84,
+            "name": "ma_13",
+            "file": "ma_13.json"
+        },
+        {
+            "order": 85,
+            "name": "ma_easy_05",
+            "file": "ma_easy_05.json"
+        },
+        {
+            "order": 86,
+            "name": "ma_07",
+            "file": "ma_07.json"
+        },
+        {
+            "order": 87,
+            "name": "lvl_0017",
+            "file": "lvl_0017.json"
+        },
+        {
+            "order": 88,
+            "name": "lvl_0016",
+            "file": "lvl_0016.json"
+        },
+        {
+            "order": 89,
+            "name": "ma_18",
+            "file": "ma_18.json"
+        },
+        {
+            "order": 90,
+            "name": "ma_10",
+            "file": "ma_10.json"
+        },
+        {
+            "order": 91,
+            "name": "lvl_0054",
+            "file": "lvl_0054.json"
+        },
+        {
+            "order": 92,
+            "name": "ma_easy_55",
+            "file": "ma_easy_55.json"
+        },
+        {
+            "order": 93,
+            "name": "lvl_0039",
+            "file": "lvl_0039.json"
+        },
+        {
+            "order": 94,
+            "name": "lvl_0052",
+            "file": "lvl_0052.json"
+        },
+        {
+            "order": 95,
+            "name": "lvl_0022",
+            "file": "lvl_0022.json"
+        },
+        {
+            "order": 96,
+            "name": "s_08_bio",
+            "file": "s_08_bio.json"
+        },
+        {
+            "order": 97,
+            "name": "lvl_0046",
+            "file": "lvl_0046.json"
+        },
+        {
+            "order": 98,
+            "name": "ma_21",
+            "file": "ma_21.json"
+        },
+        {
+            "order": 99,
+            "name": "lvl_0044",
+            "file": "lvl_0044.json"
+        },
+        {
+            "order": 100,
+            "name": "s_09_tut",
+            "file": "s_09_tut.json"
+        },
+        {
+            "order": 101,
+            "name": "lvl_0026",
+            "file": "lvl_0026.json"
+        },
+        {
+            "order": 102,
+            "name": "lvl_0049",
+            "file": "lvl_0049.json"
+        },
+        {
+            "order": 103,
+            "name": "lvl_0035",
+            "file": "lvl_0035.json"
+        },
+        {
+            "order": 104,
+            "name": "lvl_0055",
+            "file": "lvl_0055.json"
+        },
+        {
+            "order": 105,
+            "name": "lvl_0034",
+            "file": "lvl_0034.json"
+        },
+        {
+            "order": 106,
+            "name": "ma_05",
+            "file": "ma_05.json"
+        },
+        {
+            "order": 107,
+            "name": "lvl_0030",
+            "file": "lvl_0030.json"
+        },
+        {
+            "order": 108,
+            "name": "lvl_0028",
+            "file": "lvl_0028.json"
+        },
+        {
+            "order": 109,
+            "name": "lvl_0065",
+            "file": "lvl_0065.json"
+        },
+        {
+            "order": 110,
+            "name": "s_07_cola_tut",
+            "file": "s_07_cola_tut.json"
+        },
+        {
+            "order": 111,
+            "name": "lvl_0032",
+            "file": "lvl_0032.json"
+        },
+        {
+            "order": 112,
+            "name": "lvl_0031",
+            "file": "lvl_0031.json"
+        },
+        {
+            "order": 113,
+            "name": "lvl_0057",
+            "file": "lvl_0057.json"
+        },
+        {
+            "order": 114,
+            "name": "lvl_0053",
+            "file": "lvl_0053.json"
+        },
+        {
+            "order": 115,
+            "name": "lvl_0066",
+            "file": "lvl_0066.json"
+        },
+        {
+            "order": 116,
+            "name": "lvl_0067",
+            "file": "lvl_0067.json"
+        },
+        {
+            "order": 117,
+            "name": "lvl_0068",
+            "file": "lvl_0068.json"
+        },
+        {
+            "order": 118,
+            "name": "lvl_0015",
+            "file": "lvl_0015.json"
+        },
+        {
+            "order": 119,
+            "name": "ma_35",
+            "file": "ma_35.json"
+        },
+        {
+            "order": 120,
+            "name": "ma_11",
+            "file": "ma_11.json"
+        },
+        {
+            "order": 121,
+            "name": "lvl_0018",
+            "file": "lvl_0018.json"
+        },
+        {
+            "order": 122,
+            "name": "ma_28",
+            "file": "ma_28.json"
+        },
+        {
+            "order": 123,
+            "name": "ma_29",
+            "file": "ma_29.json"
+        },
+        {
+            "order": 124,
+            "name": "ma_easy_09",
+            "file": "ma_easy_09.json"
+        },
+        {
+            "order": 125,
+            "name": "lvl_0070",
+            "file": "lvl_0070.json"
+        },
+        {
+            "order": 126,
+            "name": "ma_40",
+            "file": "ma_40.json"
+        },
+        {
+            "order": 127,
+            "name": "ma_12",
+            "file": "ma_12.json"
+        },
+        {
+            "order": 128,
+            "name": "ma_37",
+            "file": "ma_37.json"
+        },
+        {
+            "order": 129,
+            "name": "ma_easy_63",
+            "file": "ma_easy_63.json"
+        },
+        {
+            "order": 130,
+            "name": "ma_48",
+            "file": "ma_48.json"
+        },
+        {
+            "order": 131,
+            "name": "ma_41",
+            "file": "ma_41.json"
+        },
+        {
+            "order": 132,
+            "name": "ma_39",
+            "file": "ma_39.json"
+        },
+        {
+            "order": 133,
+            "name": "ma_42",
+            "file": "ma_42.json"
+        },
+        {
+            "order": 134,
+            "name": "lvl_0069",
+            "file": "lvl_0069.json"
+        },
+        {
+            "order": 135,
+            "name": "ma_04",
+            "file": "ma_04.json"
+        },
+        {
+            "order": 136,
+            "name": "ma_easy_56",
+            "file": "ma_easy_56.json"
+        },
+        {
+            "order": 137,
+            "name": "lvl_0019",
+            "file": "lvl_0019.json"
+        },
+        {
+            "order": 138,
+            "name": "ma_08",
+            "file": "ma_08.json"
+        },
+        {
+            "order": 139,
+            "name": "ma_easy_08",
+            "file": "ma_easy_08.json"
+        },
+        {
+            "order": 140,
+            "name": "ma_easy_58",
+            "file": "ma_easy_58.json"
+        },
+        {
+            "order": 141,
+            "name": "lvl_0041",
+            "file": "lvl_0041.json"
+        },
+        {
+            "order": 142,
+            "name": "ma_09",
+            "file": "ma_09.json"
+        },
+        {
+            "order": 143,
+            "name": "ma_easy_03",
+            "file": "ma_easy_03.json"
+        },
+        {
+            "order": 144,
+            "name": "lvl_0012",
+            "file": "lvl_0012.json"
+        },
+        {
+            "order": 145,
+            "name": "ma_25",
+            "file": "ma_25.json"
+        },
+        {
+            "order": 146,
+            "name": "ma_34",
+            "file": "ma_34.json"
+        },
+        {
+            "order": 147,
+            "name": "ma_19",
+            "file": "ma_19.json"
+        },
+        {
+            "order": 148,
+            "name": "ma_50",
+            "file": "ma_50.json"
+        },
+        {
+            "order": 149,
+            "name": "ma_33",
+            "file": "ma_33.json"
+        },
+        {
+            "order": 150,
+            "name": "lvl_0062",
+            "file": "lvl_0062.json"
+        }
+    ]
+}

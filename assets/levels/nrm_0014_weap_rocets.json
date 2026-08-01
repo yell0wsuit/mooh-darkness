@@ -1,0 +1,4511 @@
+{
+    "formatVersion": 1,
+    "source": {
+        "file": "nrm_0014_weap_rocets.lvl",
+        "legacyFormat": "lvl002"
+    },
+    "size": {
+        "width": 21,
+        "height": 21
+    },
+    "editorPreview": {
+        "x": 307,
+        "y": -1280,
+        "width": 750,
+        "height": 656
+    },
+    "objects": [
+        {
+            "id": 1,
+            "type": "DCellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 13,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 2,
+            "type": "DCellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 13,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 3,
+            "type": "DCellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 13,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 4,
+            "type": "DCellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 6,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 5,
+            "type": "DCellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 8,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 6,
+            "type": "DCellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 7,
+            "type": "DCellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 5,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 8,
+            "type": "DCellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 14,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 9,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 17,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 10,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 17,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 11,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 19,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 12,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 19,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 13,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 14,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 19,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 15,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 19,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 16,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 20,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 17,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 20,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 18,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 19,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 19,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 20,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 19,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 21,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 17,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 22,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 18,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 23,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 24,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 14,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 25,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 26,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 17,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 27,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 28,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 29,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 16,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 30,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 15,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 31,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 14,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 32,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 10,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 33,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 11,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 34,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 35,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 8,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 36,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 7,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 37,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 38,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 3,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 39,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 40,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 1,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 41,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 1,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 42,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 1,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 43,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 44,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 6,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 45,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 46,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 4,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 47,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 3,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 48,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 49,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 3,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 50,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 3,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 51,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 52,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 0,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 53,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 0,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 54,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 2,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 55,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 56,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 57,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 3,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 58,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 3,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 59,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 4,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 60,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 5,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 61,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 13,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 62,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 15,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 63,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 64,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 13,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 65,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 5,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 66,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 67,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 4,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 68,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 4,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 69,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 16,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 70,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 16,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 71,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 72,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 73,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 13,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 74,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 75,
+            "type": "WROne",
+            "editorIndex": 6,
+            "position": {
+                "x": 7,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 76,
+            "type": "WROne",
+            "editorIndex": 11,
+            "position": {
+                "x": 8,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 77,
+            "type": "WROne",
+            "editorIndex": 7,
+            "position": {
+                "x": 9,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 78,
+            "type": "WROne",
+            "editorIndex": 7,
+            "position": {
+                "x": 10,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 79,
+            "type": "WROne",
+            "editorIndex": 11,
+            "position": {
+                "x": 11,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 80,
+            "type": "WROne",
+            "editorIndex": 11,
+            "position": {
+                "x": 13,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 81,
+            "type": "OPlayer",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 82,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 83,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 7,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 84,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 85,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 9,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 86,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 87,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 11,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 88,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 12,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 89,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 90,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 7,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 91,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 8,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 92,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 93,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 94,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 95,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 96,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 97,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 98,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 99,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 9,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 100,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 101,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 7,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 102,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 103,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 104,
+            "type": "OTable",
+            "editorIndex": 4,
+            "position": {
+                "x": 6,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {
+                "_TableTxt": "HlpTutAllWeapRocket"
+            }
+        },
+        {
+            "id": 105,
+            "type": "OTable",
+            "editorIndex": 2,
+            "position": {
+                "x": 15,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {
+                "_TableTxt": "HlpTutAllWeapSwitch"
+            }
+        },
+        {
+            "id": 106,
+            "type": "WROne",
+            "editorIndex": 11,
+            "position": {
+                "x": 12,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 107,
+            "type": "OCoin02",
+            "editorIndex": 29,
+            "position": {
+                "x": 5,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 108,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 5,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 109,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 110,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 111,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 112,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 113,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 11,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 114,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 10,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 115,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 116,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 117,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 118,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 119,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 120,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 121,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 16,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 122,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 16,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 123,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 16,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 124,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 16,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 125,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 126,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 127,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 128,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 129,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 5,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 130,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 131,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 7,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 132,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 8,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 133,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 9,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 134,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 135,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 136,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 12,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 137,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 13,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 138,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 139,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 140,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 141,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 9,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 142,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 143,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 144,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 15,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 145,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 4,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 146,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 147,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 4,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 148,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 16,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 149,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 16,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 150,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 151,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 15,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 152,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 12,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 153,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 11,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 154,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 155,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 9,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 156,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 7,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 157,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 5,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 158,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 5,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 159,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 7,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 160,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 161,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 9,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 162,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 163,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 164,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 165,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 166,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 167,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 168,
+            "type": "ODiam02",
+            "editorIndex": 1,
+            "position": {
+                "x": 15,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 169,
+            "type": "ODiam01",
+            "editorIndex": 14,
+            "position": {
+                "x": 11,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 170,
+            "type": "ODiam01",
+            "editorIndex": 22,
+            "position": {
+                "x": 11,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 171,
+            "type": "MGrR",
+            "editorIndex": 4,
+            "position": {
+                "x": 15,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 172,
+            "type": "MGrR",
+            "editorIndex": 4,
+            "position": {
+                "x": 9,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 173,
+            "type": "MGrL",
+            "editorIndex": 4,
+            "position": {
+                "x": 13,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 174,
+            "type": "MGrR",
+            "editorIndex": 14,
+            "position": {
+                "x": 15,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 175,
+            "type": "MGrR",
+            "editorIndex": 8,
+            "position": {
+                "x": 11,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 176,
+            "type": "MGrB",
+            "editorIndex": 8,
+            "position": {
+                "x": 5,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 177,
+            "type": "MGrL",
+            "editorIndex": 4,
+            "position": {
+                "x": 9,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 178,
+            "type": "MGrL",
+            "editorIndex": 17,
+            "position": {
+                "x": 5,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 179,
+            "type": "WRBox",
+            "editorIndex": 30,
+            "position": {
+                "x": 7,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 180,
+            "type": "WRBox",
+            "editorIndex": 9,
+            "position": {
+                "x": 9,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 181,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 8,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 182,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 183,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 184,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 10,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 185,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 186,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 187,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 7,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 188,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 189,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 5,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 190,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 14,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 191,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 14,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 192,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 14,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 193,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 14,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 194,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 14,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 195,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 14,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 196,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 14,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 197,
+            "type": "OEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 15,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 198,
+            "type": "WROne",
+            "editorIndex": 11,
+            "position": {
+                "x": 14,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 199,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 200,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 201,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 202,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 6,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 203,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 12,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 204,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 205,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 206,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 14,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 207,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 208,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 209,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 16,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 210,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 10,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 211,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 212,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 11,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 213,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 214,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 215,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 7,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 216,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 8,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 217,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 13,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 218,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 219,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 8,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 220,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 14,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 221,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 13,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 222,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 223,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 224,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 9,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 225,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 14,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 226,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 13,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 227,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 228,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 10,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 229,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 230,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 231,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 232,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 11,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 233,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 16,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 234,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 3,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 235,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 236,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 237,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 238,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 239,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 18,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 240,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 241,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 242,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 243,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 244,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 245,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 1,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 246,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 247,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 248,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 249,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 250,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 251,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 252,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 18,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 253,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 19,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 254,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 255,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 0,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 256,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 257,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 258,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 17,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 259,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 260,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 261,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 262,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 0,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 263,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 264,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 265,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 3,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 266,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 17,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 267,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 268,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 269,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 270,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 0,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 271,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 272,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 273,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 3,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 274,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 275,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 276,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 277,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 278,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 0,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 279,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 280,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 18,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 281,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 282,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 0,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 283,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 284,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 285,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 286,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 287,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 288,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 289,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 290,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 291,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 292,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 293,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 294,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 295,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 17,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 296,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 18,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 297,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 298,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 299,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 1,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 300,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 301,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 17,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 302,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 18,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 303,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 304,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 305,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 306,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 307,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 3,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 308,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 309,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 310,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 311,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 312,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 1,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 313,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 3,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 314,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 315,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 316,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 317,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 318,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 319,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 320,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 321,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 322,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 323,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 324,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 325,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 326,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 0,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 327,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 328,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 18,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 329,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 330,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 331,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 332,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 333,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 334,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 335,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 336,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 337,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 17,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 338,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 339,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 0,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 340,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 341,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 342,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 343,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 344,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 345,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 346,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 16,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 347,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 348,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 349,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 14,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 350,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 5,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 351,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 13,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 352,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 353,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 354,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 13,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 355,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 13,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 356,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 357,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 358,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 359,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 360,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 361,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 362,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 11,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 363,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 11,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 364,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 9,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 365,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 366,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 367,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 368,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 9,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 369,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 370,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 17,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 371,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 16,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 372,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 17,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 373,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 15,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 374,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 375,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 19,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 376,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 19,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 377,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 19,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 378,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 18,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 379,
+            "type": "DCellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 380,
+            "type": "DCellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 14
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 381,
+            "type": "DCellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 15,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 382,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 20,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 383,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 20,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 384,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 15,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 385,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 14,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 386,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 387,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 11,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 388,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 389,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 390,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 391,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 5,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 392,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 4,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 393,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 3,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 394,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 17
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 395,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 3,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 396,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 3,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 397,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 398,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 5,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 399,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 2,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 400,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 1,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 401,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 3,
+                "y": 20
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 402,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 1,
+                "y": 19
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 403,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 18
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 404,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 0,
+                "y": 15
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 405,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 0,
+                "y": 16
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 406,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 1,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 407,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 1,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 408,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        }
+    ]
+}

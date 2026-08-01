@@ -1,0 +1,4311 @@
+{
+    "formatVersion": 1,
+    "source": {
+        "file": "tutor_0008_mon_green.lvl",
+        "legacyFormat": "lvl002"
+    },
+    "size": {
+        "width": 32,
+        "height": 14
+    },
+    "editorPreview": {
+        "x": 328,
+        "y": -760,
+        "width": 625,
+        "height": 547
+    },
+    "objects": [
+        {
+            "id": 1,
+            "type": "MGrT",
+            "editorIndex": 5,
+            "position": {
+                "x": 26,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 2,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 30,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 3,
+            "type": "OPlayer",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 4,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 9,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 5,
+            "type": "WBomb",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 6,
+            "type": "WBomb",
+            "editorIndex": 5,
+            "position": {
+                "x": 5,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 7,
+            "type": "WBomb",
+            "editorIndex": 6,
+            "position": {
+                "x": 7,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 8,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 9,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 9,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 10,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 8,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 11,
+            "type": "CellsEat01",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 12,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 13,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 7,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 14,
+            "type": "MBlueL",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 15,
+            "type": "MBlueB",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 16,
+            "type": "MBlueT",
+            "editorIndex": 10,
+            "position": {
+                "x": 11,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 17,
+            "type": "WGrBox",
+            "editorIndex": 27,
+            "position": {
+                "x": 5,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 18,
+            "type": "WGrBox",
+            "editorIndex": 15,
+            "position": {
+                "x": 11,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 19,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 20,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 11,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 21,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 11,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 22,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 5,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 23,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 9,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 24,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 25,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 9,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 26,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 27,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 6,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 28,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 5,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 29,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 8,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 30,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 31,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 5,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 32,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 8,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 33,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 34,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 35,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 8,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 36,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 8,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 37,
+            "type": "CellsMetalRight",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 38,
+            "type": "CellsMetalRight",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 39,
+            "type": "CellsMetalRight",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 40,
+            "type": "CellsMetalRight",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 41,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 12,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 42,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 43,
+            "type": "CellsMetalRight",
+            "editorIndex": 0,
+            "position": {
+                "x": 25,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 44,
+            "type": "CellsMetalRight",
+            "editorIndex": 0,
+            "position": {
+                "x": 19,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 45,
+            "type": "CellsMetalRight",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 46,
+            "type": "OTable",
+            "editorIndex": 2,
+            "position": {
+                "x": 12,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {
+                "_TableTxt": "HlpTut06GreenMove"
+            }
+        },
+        {
+            "id": 47,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 16,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 48,
+            "type": "ORock01",
+            "editorIndex": 0,
+            "position": {
+                "x": 14,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 49,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 13,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 50,
+            "type": "MGrT",
+            "editorIndex": 15,
+            "position": {
+                "x": 17,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 51,
+            "type": "MGrT",
+            "editorIndex": 4,
+            "position": {
+                "x": 16,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 52,
+            "type": "MGrT",
+            "editorIndex": 18,
+            "position": {
+                "x": 14,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 53,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 18,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 54,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 55,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 56,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 57,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 9,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 58,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 59,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 60,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 61,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 62,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 63,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 4,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 64,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 65,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 4,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 66,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 5,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 67,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 7,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 68,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 8,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 69,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 10,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 70,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 71,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 19,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 72,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 19,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 73,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 74,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 75,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 76,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 21,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 77,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 21,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 78,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 21,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 79,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 21,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 80,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 22,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 81,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 24,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 82,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 26,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 83,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 26,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 84,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 25,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 85,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 25,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 86,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 23,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 87,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 23,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 88,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 23,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 89,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 23,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 90,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 25,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 91,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 27,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 92,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 27,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 93,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 27,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 94,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 27,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 95,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 27,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 96,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 27,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 97,
+            "type": "OCoin03",
+            "editorIndex": 4,
+            "position": {
+                "x": 20,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 98,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 99,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 22,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 100,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 24,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 101,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 21,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 102,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 22,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 103,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 23,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 104,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 24,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 105,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 25,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 106,
+            "type": "OCoin03",
+            "editorIndex": 39,
+            "position": {
+                "x": 26,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 107,
+            "type": "OCoin01",
+            "editorIndex": 0,
+            "position": {
+                "x": 25,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 108,
+            "type": "ODiam01",
+            "editorIndex": 16,
+            "position": {
+                "x": 24,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 109,
+            "type": "OCoin03",
+            "editorIndex": 2,
+            "position": {
+                "x": 23,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 110,
+            "type": "ODiam03",
+            "editorIndex": 24,
+            "position": {
+                "x": 22,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 111,
+            "type": "ODiam03",
+            "editorIndex": 7,
+            "position": {
+                "x": 21,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 112,
+            "type": "ORock01",
+            "editorIndex": 1,
+            "position": {
+                "x": 26,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 113,
+            "type": "MGrT",
+            "editorIndex": 16,
+            "position": {
+                "x": 20,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 114,
+            "type": "MGrT",
+            "editorIndex": 3,
+            "position": {
+                "x": 22,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 115,
+            "type": "MGrT",
+            "editorIndex": 5,
+            "position": {
+                "x": 24,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 116,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 19,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 117,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 118,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 119,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 12,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 120,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 13,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 121,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 14,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 122,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 15,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 123,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 16,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 124,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 17,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 125,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 18,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 126,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 13,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 127,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 14,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 128,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 15,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 129,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 130,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 131,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 13,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 132,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 14,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 133,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 16,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 134,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 15,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 135,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 136,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 6,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 137,
+            "type": "CellsEat01",
+            "editorIndex": 4,
+            "position": {
+                "x": 7,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 138,
+            "type": "CellsEat01",
+            "editorIndex": 3,
+            "position": {
+                "x": 11,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 139,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 140,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 141,
+            "type": "CellsEat01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 142,
+            "type": "CellsEat01",
+            "editorIndex": 1,
+            "position": {
+                "x": 9,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 143,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 144,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 4,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 145,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 146,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 147,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 148,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 19,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 149,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 150,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 22,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 151,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 21,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 152,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 22,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 153,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 19,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 154,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 21,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 155,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 23,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 156,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 23,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 157,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 23,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 158,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 159,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 24,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 160,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 23,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 161,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 16,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 162,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 25,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 163,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 25,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 164,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 25,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 165,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 166,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 27,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 167,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 13,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 168,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 27,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 169,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 170,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 29,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 171,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 28,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 172,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 11,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 173,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 31,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 174,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 31,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 175,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 30,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 176,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 28,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 177,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 31,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 178,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 30,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 179,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 30,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 180,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 29,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 181,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 30,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 182,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 7,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 183,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 8,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 184,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 29,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 185,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 28,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 186,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 6,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 187,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 7,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 188,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 30,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 189,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 29,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 190,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 191,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 27,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 192,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 29,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 193,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 3,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 194,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 30,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 195,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 29,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 196,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 197,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 31,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 198,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 1,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 199,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 3,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 200,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 31,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 201,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 24,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 202,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 26,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 203,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 0,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 204,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 205,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 23,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 206,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 25,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 207,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 0,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 208,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 23,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 209,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 24,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 210,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 211,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 212,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 213,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 1,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 214,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 21,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 215,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 2,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 216,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 21,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 217,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 218,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 2,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 219,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 18,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 220,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 221,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 222,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 223,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 1,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 224,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 225,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 18,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 226,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 0,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 227,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 228,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 3,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 229,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 230,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 17,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 231,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 18,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 232,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 0,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 233,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 5,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 234,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 15,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 235,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 13,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 236,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 6,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 237,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 13,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 238,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 239,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 240,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 241,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 7,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 242,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 243,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 12,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 244,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 245,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 246,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 247,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 27,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 248,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 29,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 249,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 250,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 12,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 251,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 252,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 1,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 253,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 254,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 28,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 255,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 256,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 15,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 257,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 22,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 258,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 31,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 259,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 3,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 260,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 4,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 261,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 26,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 262,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 29,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 263,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 31,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 264,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 27,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 265,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 30,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 266,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 267,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 14,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 268,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 10,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 269,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 270,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 271,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 272,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 0,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 273,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 274,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 275,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 15,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 276,
+            "type": "OBaloon",
+            "editorIndex": 0,
+            "position": {
+                "x": 20,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 277,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 278,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 9,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 279,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 8,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 280,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 7,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 281,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 9,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 282,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 283,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 4,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 284,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 285,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 1,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 286,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 287,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 288,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 0,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 289,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 1,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 290,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 1,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 291,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 2,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 292,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 0,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 293,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 2,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 294,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 0,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 295,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 1,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 296,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 1,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 297,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 1,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 298,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 2,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 299,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 1,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 300,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 1,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 301,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 1,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 302,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 303,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 3,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 304,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 305,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 5,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 306,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 307,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 7,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 308,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 8,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 309,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 11,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 310,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 311,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 9,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 312,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 13,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 313,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 14,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 314,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 17,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 315,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 316,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 21,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 317,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 20,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 318,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 319,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 31,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 320,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 30,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 321,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 31,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 322,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 30,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 323,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 29,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 324,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 24,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 325,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 25,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 326,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 29,
+                "y": 10
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 327,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 27,
+                "y": 13
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 328,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 26,
+                "y": 12
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 329,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 31,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 330,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 31,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 331,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 31,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 332,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 30,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 333,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 29,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 334,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 29,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 335,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 31,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 336,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 30,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 337,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 29,
+                "y": 3
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 338,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 30,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 339,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 29,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 340,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 28,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 341,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 28,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 342,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 27,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 343,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 26,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 344,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 25,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 345,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 24,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 346,
+            "type": "CellsSolid01",
+            "editorIndex": 0,
+            "position": {
+                "x": 22,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 347,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 348,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 21,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 349,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 19,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 350,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 16,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 351,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 18,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 352,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 17,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 353,
+            "type": "CellsSolid01",
+            "editorIndex": 1,
+            "position": {
+                "x": 17,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 354,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 13,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 355,
+            "type": "CellsSolid01",
+            "editorIndex": 3,
+            "position": {
+                "x": 14,
+                "y": 0
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 356,
+            "type": "CellsSolid01",
+            "editorIndex": 2,
+            "position": {
+                "x": 14,
+                "y": 1
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 357,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 6,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 358,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 3,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 359,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 3,
+                "y": 5
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 360,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 3,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 361,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 362,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 3,
+                "y": 9
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 363,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 4,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 364,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 7,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 365,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 11,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 366,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 14,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 367,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 16,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 368,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 17,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 369,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 370,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 22,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 371,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 25,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 372,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 26,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 373,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 27,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 374,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 28,
+                "y": 11
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 375,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 28,
+                "y": 8
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 376,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 28,
+                "y": 7
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 377,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 28,
+                "y": 6
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 378,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 28,
+                "y": 4
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 379,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 28,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 380,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 26,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 381,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 21,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 382,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 20,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 383,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 16,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 384,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 17,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 385,
+            "type": "CellsMetal01",
+            "editorIndex": 1,
+            "position": {
+                "x": 14,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 386,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 13,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 387,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 11,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 388,
+            "type": "CellsMetal01",
+            "editorIndex": 2,
+            "position": {
+                "x": 10,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 389,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 9,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        },
+        {
+            "id": 390,
+            "type": "CellsMetal01",
+            "editorIndex": 0,
+            "position": {
+                "x": 5,
+                "y": 2
+            },
+            "savedState": [],
+            "properties": {}
+        }
+    ]
+}
