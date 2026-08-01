@@ -272,7 +272,7 @@ namespace Mooh.Core.Simulation
 
                 if (playerControlReady)
                 {
-                    _playerController?.TryStart(events, emitStoppedWhenNoInput);
+                    _playerController?.ResumeOrTryStart(events, emitStoppedWhenNoInput);
                 }
             }
 

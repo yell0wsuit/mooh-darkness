@@ -210,6 +210,44 @@ namespace Mooh.Core.Tests.Enemies
                 events);
         }
 
+        /// <summary>Verifies suspended reversal resumes only after a simultaneous strike rechecks its cell.</summary>
+        [Fact]
+        public void SimultaneousReverseCompletionResumesAfterStrike()
+        {
+            WorldGrid world = new(4, 2);
+            Entity monster = new(
+                EntityId.New(),
+                new GridPosition(0, 1),
+                InteractionMask.BlocksMovement,
+                greenMonsterBody: new GreenMonsterBody(
+                    1.5625,
+                    Direction.Right,
+                    TimeSpan.FromMilliseconds(250),
+                    attackWindupDuration: TimeSpan.FromMilliseconds(212)));
+            Entity player = NewPlayer(1, 1, Direction.Right);
+            world.Add(monster);
+            world.Add(player);
+            SimulationWorld simulation = CreateSimulation(world);
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(1));
+            simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(1));
+            simulation.SetPlayerInput(new PlayerInputState(true, false, false, false));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(210));
+
+            Assert.Equal(100, player.HealthBody!.Current);
+            Assert.Equal(new GridPosition(1, 1), player.Position);
+            Assert.Equal(Direction.Left, player.Motion!.TravelDirection);
+            Assert.Equal(
+                [
+                    new PlayerRotationStarted(player.Id, Direction.Right, Direction.Left),
+                    new PlayerRotationCompleted(player.Id, Direction.Left),
+                    new EnemyStrike(monster.Id, new GridPosition(1, 1)),
+                    new PlayerMoveStarted(player.Id, Direction.Left),
+                ],
+                events);
+        }
+
         /// <summary>Verifies simultaneous attackers resolve in registration order through immunity.</summary>
         [Fact]
         public void SimultaneousStrikesFollowRegistrationOrder()

@@ -32,6 +32,7 @@ namespace Mooh.Core.Player
         private Direction _gravityDirection = gravityDirection;
         private PlayerInputState _input;
         private Direction? _lastAppliedTravelDirection;
+        private PlayerRotation? _pendingResume;
 
         public void SetInput(PlayerInputState input)
         {
@@ -75,6 +76,38 @@ namespace Mooh.Core.Player
             }
 
             StartMove(heldDirection, body, events);
+        }
+
+        public void ResumeOrTryStart(
+            ICollection<SimulationEvent> events,
+            bool emitStoppedWhenNoInput)
+        {
+            if (_pendingResume is not PlayerRotation pendingResume)
+            {
+                TryStart(events, emitStoppedWhenNoInput);
+                return;
+            }
+
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            if (_player.Motion is not null
+                || body.Rotation is not null
+                || body.Reaction.Kind != PlayerReactionKind.Normal)
+            {
+                return;
+            }
+
+            _pendingResume = null;
+            GridPosition destination = _player.Position.Offset(pendingResume.To);
+            _world.CommitMoves([new PlannedMove(_player.Id, _player.Position, destination)]);
+            KinematicsSystem.Start(
+                _player,
+                MotionCause.PlayerWalking,
+                pendingResume.To,
+                body.MoveSpeed);
+            _player.Motion!.Progress = 1 - pendingResume.SuspendedProgress!.Value;
+            _lastAppliedTravelDirection = pendingResume.To;
+            events.Add(new PlayerMoveStarted(_player.Id, pendingResume.To));
         }
 
         private void StartMove(
@@ -198,19 +231,9 @@ namespace Mooh.Core.Player
 
             body.Rotation = null;
             events.Add(new PlayerRotationCompleted(_player.Id, rotation.To));
-            if (rotation.SuspendedProgress is double suspendedProgress)
+            if (rotation.SuspendedProgress is not null)
             {
-                GridPosition destination = _player.Position.Offset(rotation.To);
-                _world.CommitMoves([new PlannedMove(_player.Id, _player.Position, destination)]);
-                KinematicsSystem.Start(
-                    _player,
-                    MotionCause.PlayerWalking,
-                    rotation.To,
-                    body.MoveSpeed);
-                _player.Motion!.Progress = 1 - suspendedProgress;
-                _lastAppliedTravelDirection = rotation.To;
-                events.Add(new PlayerMoveStarted(_player.Id, rotation.To));
-                return false;
+                _pendingResume = rotation;
             }
 
             return true;
@@ -234,6 +257,7 @@ namespace Mooh.Core.Player
         public void EndSegment()
         {
             _lastAppliedTravelDirection = null;
+            _pendingResume = null;
         }
 
         private bool HasCounterMotion(GridPosition position, Direction direction)
