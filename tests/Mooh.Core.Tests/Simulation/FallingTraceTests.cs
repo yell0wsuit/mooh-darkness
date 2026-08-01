@@ -48,7 +48,7 @@ namespace Mooh.Core.Tests.Simulation
 
             IReadOnlyList<SimulationEvent> events = CreateSimulation(world).Advance(TimeSpan.FromSeconds(1.5));
 
-            Assert.Equal(new GridPosition(1, 3), body.Position);
+            Assert.Equal(new GridPosition(1, 4), body.Position);
             Assert.NotNull(body.Motion);
             Assert.Equal(MotionCause.Falling, body.Motion.Cause);
             Assert.Equal(0, body.Motion.Progress, precision: 10);
@@ -82,28 +82,37 @@ namespace Mooh.Core.Tests.Simulation
                 events);
         }
 
-        /// <summary>Verifies stable crossing order when an earlier mover occupies a shared destination.</summary>
+        /// <summary>Verifies that a later body waits 150 milliseconds before claiming a vacated cell.</summary>
         [Fact]
-        public void EarlierEntityCanBlockLaterEntityInSameBoundaryBatch()
+        public void EarlierEntityLocksVacatedDestinationBeforeLaterGravityEvaluation()
         {
             WorldGrid world = new(3, 4);
             Entity first = AddBody(world, new GridPosition(1, 0), 1, InteractionMask.BlocksMovement);
             Entity second = AddBody(world, new GridPosition(1, 0), 1);
+            SimulationWorld simulation = CreateSimulation(world);
 
-            IReadOnlyList<SimulationEvent> events = CreateSimulation(world).Advance(TimeSpan.FromSeconds(1));
+            IReadOnlyList<SimulationEvent> boundaryEvents = simulation.Advance(TimeSpan.FromSeconds(1));
 
-            Assert.Equal(new GridPosition(1, 1), first.Position);
+            Assert.Equal(new GridPosition(1, 2), first.Position);
             Assert.NotNull(first.Motion);
             Assert.Equal(new GridPosition(1, 0), second.Position);
             Assert.Null(second.Motion);
             Assert.Equal(
                 [
                     new FallStarted(first.Id, Direction.Down),
-                    new FallStarted(second.Id, Direction.Down),
                     new CellEntered(first.Id, new GridPosition(1, 1)),
-                    new Landed(second.Id, Direction.Down),
                 ],
-                events);
+                boundaryEvents);
+
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(149));
+
+            Assert.Null(second.Motion);
+
+            IReadOnlyList<SimulationEvent> expiryEvents = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(new GridPosition(1, 1), second.Position);
+            Assert.NotNull(second.Motion);
+            Assert.Equal([new FallStarted(second.Id, Direction.Down)], expiryEvents);
         }
 
         private static SimulationWorld CreateSimulation(WorldGrid world)

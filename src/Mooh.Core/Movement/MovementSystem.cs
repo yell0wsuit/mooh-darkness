@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
@@ -27,72 +28,89 @@ namespace Mooh.Core.Movement
         /// <returns>The movement outcome and ordered entity transitions.</returns>
         public MovementPlan Plan(MoveRequest request)
         {
-            Entity mover = _world.GetEntity(request.EntityId);
-            List<MovementStep> plannedMoves = [];
-            HashSet<EntityId> plannedEntities = [];
-            HashSet<EntityId> visiting = [];
+            return Plan(request, gravityDirection: null);
+        }
 
-            if (!TryPlanMove(mover, request.Direction, plannedMoves, plannedEntities, visiting))
+        internal MovementPlan Plan(MoveRequest request, Direction gravityDirection)
+        {
+            return Plan(request, (Direction?)gravityDirection);
+        }
+
+        private MovementPlan Plan(MoveRequest request, Direction? gravityDirection)
+        {
+            Entity mover = _world.GetEntity(request.EntityId);
+            if (mover.Motion is not null
+                || mover.Interactions.HasFlag(InteractionMask.MovementLocked))
             {
                 return new MovementPlan(MoveResult.Blocked, []);
             }
 
-            MoveResult result = plannedMoves.Count > 1 ? MoveResult.Pushed : MoveResult.Moved;
-            return new MovementPlan(result, plannedMoves);
-        }
-
-        private bool TryPlanMove(
-            Entity entity,
-            Direction direction,
-            List<MovementStep> plannedMoves,
-            HashSet<EntityId> plannedEntities,
-            HashSet<EntityId> visiting)
-        {
-            if (entity.Motion is not null
-                || entity.Interactions.HasFlag(InteractionMask.MovementLocked)
-                || !visiting.Add(entity.Id))
-            {
-                return false;
-            }
-
-            GridPosition destination = entity.Position.Offset(direction);
+            GridPosition destination = mover.Position.Offset(request.Direction);
             if (!_world.Contains(destination))
             {
-                _ = visiting.Remove(entity.Id);
-                return false;
+                return new MovementPlan(MoveResult.Blocked, []);
             }
 
+            List<Entity> pushed = [];
             foreach (Entity occupant in _world.GetOccupants(destination))
             {
-                if (plannedEntities.Contains(occupant.Id))
-                {
-                    continue;
-                }
-
-                switch (_interactions.Classify(entity, occupant))
+                switch (_interactions.Classify(mover, occupant))
                 {
                     case OccupantInteraction.Allow:
                         break;
                     case OccupantInteraction.Block:
-                        _ = visiting.Remove(entity.Id);
-                        return false;
+                        return new MovementPlan(MoveResult.Blocked, []);
                     case OccupantInteraction.Push:
-                        if (!TryPlanMove(occupant, direction, plannedMoves, plannedEntities, visiting))
-                        {
-                            _ = visiting.Remove(entity.Id);
-                            return false;
-                        }
-
+                        pushed.Add(occupant);
                         break;
                     default:
                         throw new InvalidOperationException("Unknown occupant interaction.");
                 }
             }
 
-            _ = visiting.Remove(entity.Id);
-            _ = plannedEntities.Add(entity.Id);
-            plannedMoves.Add(new MovementStep(entity.Id, entity.Position, destination));
-            return true;
+            if (pushed.Count == 0)
+            {
+                return new MovementPlan(
+                    MoveResult.Moved,
+                    [new MovementStep(mover.Id, mover.Position, destination)]);
+            }
+
+            if (gravityDirection is Direction gravity
+                && IsOnSameAxis(request.Direction, gravity)
+                && pushed.Any(
+                    entity => !entity.Interactions.HasFlag(InteractionMask.GravityAxisPushable)))
+            {
+                return new MovementPlan(MoveResult.Blocked, []);
+            }
+
+            GridPosition pushedDestination = destination.Offset(request.Direction);
+            IReadOnlyList<Entity> pushedDestinationOccupants = _world.Contains(pushedDestination)
+                ? _world.GetOccupants(pushedDestination)
+                : [];
+            if (!_world.Contains(pushedDestination)
+                || (pushedDestinationOccupants.Count != 0
+                    && !pushed.Exists(
+                        entity => entity.Interactions.HasFlag(InteractionMask.PushesThroughOccupants)))
+                || pushedDestinationOccupants.Any(
+                    entity => !entity.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
+                || pushed.Exists(
+                    entity => entity.Motion is not null
+                        || entity.Interactions.HasFlag(InteractionMask.MovementLocked)))
+            {
+                return new MovementPlan(MoveResult.Blocked, []);
+            }
+
+            List<MovementStep> steps = [];
+            steps.AddRange(
+                pushed.Select(
+                    entity => new MovementStep(entity.Id, entity.Position, pushedDestination)));
+            steps.Add(new MovementStep(mover.Id, mover.Position, destination));
+            return new MovementPlan(MoveResult.Pushed, steps);
+        }
+
+        private static bool IsOnSameAxis(Direction first, Direction second)
+        {
+            return ((int)first & 1) == ((int)second & 1);
         }
     }
 }

@@ -17,9 +17,9 @@ namespace Mooh.Core.Tests.Player
     /// </summary>
     public sealed class PlayerControlCadenceTests
     {
-        /// <summary>Verifies that opposite same-axis input reverses fractional walking immediately.</summary>
+        /// <summary>Verifies that opposite input starts a timed rotation and freezes fractional transit.</summary>
         [Fact]
-        public void OppositeInputReversesImmediately()
+        public void OppositeInputStartsRotationAndFreezesTransit()
         {
             (Entity player, SimulationWorld simulation) = CreateScenario();
             StartRightToHalfCell(simulation);
@@ -27,15 +27,19 @@ namespace Mooh.Core.Tests.Player
             simulation.SetPlayerInput(Held(Direction.Left));
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
 
-            Assert.Equal(0.3, player.Motion!.Progress, precision: 12);
-            Assert.Equal(Direction.Left, player.Motion.TravelDirection);
+            Assert.Null(player.Motion);
             Assert.Equal(Direction.Left, player.PlayerBody!.FacingDirection);
-            Assert.Equal([new PlayerReversed(player.Id, Direction.Left)], events);
+            Assert.NotNull(player.PlayerBody.Rotation);
+            Assert.Equal(0.11, player.PlayerBody.Rotation.RemainingSeconds, precision: 12);
+            Assert.Equal(0.5, player.PlayerBody.Rotation.SuspendedProgress!.Value, precision: 12);
+            Assert.Equal(
+                [new PlayerRotationStarted(player.Id, Direction.Right, Direction.Left)],
+                events);
         }
 
-        /// <summary>Verifies that holding the opposite key does not toggle direction every update.</summary>
+        /// <summary>Verifies input is ignored while a rotation remains active.</summary>
         [Fact]
-        public void RepeatedOppositeInputDoesNotToggleRepeatedly()
+        public void ActiveRotationIgnoresRepeatedInput()
         {
             (Entity player, SimulationWorld simulation) = CreateScenario();
             StartRightToHalfCell(simulation);
@@ -44,14 +48,15 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
 
-            Assert.Equal(0.1, player.Motion!.Progress, precision: 12);
-            Assert.Equal(Direction.Left, player.Motion.TravelDirection);
+            Assert.Null(player.Motion);
+            Assert.NotNull(player.PlayerBody!.Rotation);
+            Assert.Equal(0.01, player.PlayerBody.Rotation.RemainingSeconds, precision: 12);
             Assert.Empty(events);
         }
 
-        /// <summary>Verifies that forward input resumes forward travel after reversal.</summary>
+        /// <summary>Verifies changed input cannot cancel an active rotation.</summary>
         [Fact]
-        public void ForwardInputAfterReversalResumesForwardTravel()
+        public void ChangedInputDoesNotCancelActiveRotation()
         {
             (Entity player, SimulationWorld simulation) = CreateScenario();
             StartRightToHalfCell(simulation);
@@ -61,33 +66,83 @@ namespace Mooh.Core.Tests.Player
             simulation.SetPlayerInput(Held(Direction.Right));
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
 
-            Assert.Equal(0.5, player.Motion!.Progress, precision: 12);
-            Assert.Equal(Direction.Right, player.Motion.TravelDirection);
-            Assert.Equal(Direction.Right, player.PlayerBody!.FacingDirection);
-            Assert.Equal([new PlayerReversed(player.Id, Direction.Right)], events);
+            Assert.Null(player.Motion);
+            Assert.NotNull(player.PlayerBody!.Rotation);
+            Assert.Equal(Direction.Left, player.PlayerBody.Rotation.To);
+            Assert.Equal(Direction.Left, player.PlayerBody.FacingDirection);
+            Assert.Empty(events);
         }
 
-        /// <summary>Verifies return to the origin and immediate reevaluation of held input.</summary>
+        /// <summary>Verifies a completed reversal resumes from the preserved physical offset.</summary>
         [Fact]
-        public void ReachingOriginReturnsAndStartsFromCurrentInput()
+        public void CompletedReversalResumesFromPreservedOffset()
         {
             (Entity player, SimulationWorld simulation) = CreateScenario();
             StartRightToHalfCell(simulation);
             simulation.SetPlayerInput(Held(Direction.Left));
 
-            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.21));
 
             Assert.Equal(new GridPosition(2, 2), player.Position);
             Assert.NotNull(player.Motion);
             Assert.Equal(Direction.Left, player.Motion.SegmentDirection);
-            Assert.Equal(0, player.Motion.Progress, precision: 12);
+            Assert.Equal(0.5, player.Motion.Progress, precision: 12);
+            Assert.Null(player.PlayerBody!.Rotation);
             Assert.Equal(
                 [
-                    new PlayerReversed(player.Id, Direction.Left),
-                    new PlayerReturned(player.Id, new GridPosition(2, 2)),
+                    new PlayerRotationStarted(player.Id, Direction.Right, Direction.Left),
+                    new PlayerRotationCompleted(player.Id, Direction.Left),
                     new PlayerMoveStarted(player.Id, Direction.Left),
                 ],
                 events);
+        }
+
+        /// <summary>Verifies a quarter-turn completes at 105 milliseconds and then starts a fresh cell lock.</summary>
+        [Fact]
+        public void QuarterTurnCompletionStartsFullVacatedCellLock()
+        {
+            WorldGrid world = new(6, 6);
+            Entity fallingBody = new(
+                EntityId.New(),
+                new GridPosition(2, 1),
+                InteractionMask.None,
+                new GravityBody(fallSpeed: 1, canSlide: false));
+            Entity player = new(
+                EntityId.New(),
+                new GridPosition(2, 2),
+                InteractionMask.BlocksMovement,
+                playerBody: new PlayerBody(moveSpeed: 10, pushSpeedMultiplier: 1.5, Direction.Up));
+            world.Add(fallingBody);
+            world.Add(player);
+            SimulationWorld simulation = new(
+                world,
+                Direction.Down,
+                new DefaultGravityCollisionPolicy());
+            simulation.SetPlayerInput(Held(Direction.Right));
+
+            IReadOnlyList<SimulationEvent> rotationEvents =
+                simulation.Advance(TimeSpan.FromMilliseconds(105));
+
+            Assert.Null(player.PlayerBody!.Rotation);
+            Assert.NotNull(player.Motion);
+            Assert.Equal(
+                [
+                    new PlayerRotationStarted(player.Id, Direction.Up, Direction.Right),
+                    new PlayerRotationCompleted(player.Id, Direction.Right),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
+                ],
+                rotationEvents);
+
+            simulation.SetPlayerInput(default);
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(149));
+
+            Assert.Null(fallingBody.Motion);
+
+            IReadOnlyList<SimulationEvent> expiryEvents =
+                simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.NotNull(fallingBody.Motion);
+            Assert.Equal([new FallStarted(fallingBody.Id, Direction.Down)], expiryEvents);
         }
 
         /// <summary>Verifies that perpendicular input does not alter an active segment.</summary>
@@ -135,7 +190,7 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.5));
 
-            Assert.Equal(new GridPosition(3, 2), player.Position);
+            Assert.Equal(new GridPosition(4, 2), player.Position);
             Assert.NotNull(player.Motion);
             Assert.Equal(Direction.Right, player.Motion.SegmentDirection);
             Assert.Equal(0.5, player.Motion.Progress, precision: 12);
@@ -158,13 +213,13 @@ namespace Mooh.Core.Tests.Player
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
             Assert.Equal(new GridPosition(3, 2), player.Position);
-            Assert.NotNull(player.Motion);
-            Assert.Equal(Direction.Up, player.Motion.SegmentDirection);
+            Assert.Null(player.Motion);
             Assert.Equal(Direction.Up, player.PlayerBody!.FacingDirection);
+            Assert.NotNull(player.PlayerBody.Rotation);
             Assert.Equal(
                 [
                     new CellEntered(player.Id, new GridPosition(3, 2)),
-                    new PlayerMoveStarted(player.Id, Direction.Up),
+                    new PlayerRotationStarted(player.Id, Direction.Right, Direction.Up),
                 ],
                 events);
         }
@@ -202,12 +257,12 @@ namespace Mooh.Core.Tests.Player
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
             Assert.Equal(new GridPosition(3, 2), player.Position);
-            Assert.NotNull(player.Motion);
-            Assert.Equal(Direction.Up, player.Motion.SegmentDirection);
+            Assert.Null(player.Motion);
+            Assert.NotNull(player.PlayerBody!.Rotation);
             Assert.Equal(
                 [
                     new CellEntered(player.Id, new GridPosition(3, 2)),
-                    new PlayerMoveStarted(player.Id, Direction.Up),
+                    new PlayerRotationStarted(player.Id, Direction.Right, Direction.Up),
                 ],
                 events);
         }
@@ -236,9 +291,9 @@ namespace Mooh.Core.Tests.Player
                 events);
         }
 
-        /// <summary>Verifies that a new push requirement at the active destination blocks safely.</summary>
+        /// <summary>Verifies that a new same-cell occupant cannot undo an already-authoritative segment.</summary>
         [Fact]
-        public void PushableAddedToActiveDestinationBlocksBoundaryRevalidation()
+        public void OccupantAddedToAuthoritativeDestinationDoesNotCancelSegment()
         {
             (WorldGrid world, Entity player, SimulationWorld simulation) = CreateWorldScenario();
             StartRightToHalfCell(simulation);
@@ -250,11 +305,16 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
-            Assert.Equal(new GridPosition(2, 2), player.Position);
-            Assert.Null(player.Motion);
+            Assert.Equal(new GridPosition(4, 2), player.Position);
+            Assert.NotNull(player.Motion);
             Assert.Equal(new GridPosition(3, 2), pushable.Position);
             Assert.Null(pushable.Motion);
-            Assert.Equal([new PlayerBlocked(player.Id, Direction.Right)], events);
+            Assert.Equal(
+                [
+                    new CellEntered(player.Id, new GridPosition(3, 2)),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
+                ],
+                events);
         }
 
         private static void StartRightToHalfCell(SimulationWorld simulation)
@@ -288,7 +348,7 @@ namespace Mooh.Core.Tests.Player
                 EntityId.New(),
                 new GridPosition(2, 2),
                 InteractionMask.None,
-                playerBody: new PlayerBody(moveSpeed: 2, pushSpeedMultiplier: 1.5, Direction.Down));
+                playerBody: new PlayerBody(moveSpeed: 2, pushSpeedMultiplier: 1.5, Direction.Right));
             world.Add(player);
             SimulationWorld simulation = new(
                 world,

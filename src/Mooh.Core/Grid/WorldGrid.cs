@@ -12,6 +12,9 @@ namespace Mooh.Core.Grid
     /// </summary>
     public sealed class WorldGrid
     {
+        private const double VacatedCellLockSeconds = 0.150;
+
+        private readonly Dictionary<GridPosition, CellState> _cellStates = [];
         private readonly Dictionary<EntityId, Entity> _entities = [];
         private readonly List<EntityId> _entityOrder = [];
         private readonly Dictionary<GridPosition, List<EntityId>> _occupancy = [];
@@ -45,6 +48,8 @@ namespace Mooh.Core.Grid
         /// <summary>Gets the world's player entity, if one is registered.</summary>
         public Entity? Player => _playerId is EntityId id ? GetEntity(id) : null;
 
+        internal double CurrentTimeSeconds { get; private set; }
+
         /// <summary>
         /// Determines whether a position lies within the world bounds.
         /// </summary>
@@ -57,7 +62,7 @@ namespace Mooh.Core.Grid
         }
 
         /// <summary>
-        /// Registers an entity and appends it to the occupancy order of its cell.
+        /// Registers an entity at the head of its cell's occupancy order.
         /// </summary>
         /// <param name="entity">The entity to register.</param>
         /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
@@ -96,7 +101,7 @@ namespace Mooh.Core.Grid
                 _occupancy.Add(entity.Position, occupants);
             }
 
-            occupants.Add(entity.Id);
+            occupants.Insert(0, entity.Id);
         }
 
         /// <summary>
@@ -112,8 +117,35 @@ namespace Mooh.Core.Grid
                 : throw new KeyNotFoundException($"Entity '{id}' is not registered.");
         }
 
+        /// <summary>Removes a registered entity from the world.</summary>
+        /// <param name="id">The identifier of the entity to remove.</param>
+        /// <returns><see langword="true"/> when the entity was removed; otherwise, <see langword="false"/>.</returns>
+        public bool Remove(EntityId id)
+        {
+            if (!_entities.Remove(id, out Entity? entity))
+            {
+                return false;
+            }
+
+            _ = _entityOrder.Remove(id);
+            List<EntityId> occupants = _occupancy[entity.Position];
+            _ = occupants.Remove(id);
+            if (occupants.Count == 0)
+            {
+                _ = _occupancy.Remove(entity.Position);
+            }
+
+            if (_playerId == id)
+            {
+                _playerId = null;
+            }
+
+            entity.Motion = null;
+            return true;
+        }
+
         /// <summary>
-        /// Gets the occupants of a cell in insertion order.
+        /// Gets the occupants of a cell in newest-arrival-first order.
         /// </summary>
         /// <param name="position">The cell position.</param>
         /// <returns>A snapshot of the cell's occupants.</returns>
@@ -123,6 +155,53 @@ namespace Mooh.Core.Grid
             return !Contains(position)
                 ? throw new ArgumentOutOfRangeException(nameof(position), position, "Position is outside the world.")
                 : !_occupancy.TryGetValue(position, out List<EntityId>? occupants) ? [] : [.. occupants.Select(GetEntity)];
+        }
+
+        /// <summary>
+        /// Prevents gravity from using a cell for at least the specified simulation duration.
+        /// </summary>
+        /// <param name="position">The cell to lock.</param>
+        /// <param name="duration">The positive lock duration.</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="position"/> is outside the world or <paramref name="duration"/> is not positive.
+        /// </exception>
+        public void LockCell(GridPosition position, TimeSpan duration)
+        {
+            if (!Contains(position))
+            {
+                throw new ArgumentOutOfRangeException(nameof(position), position, "Position is outside the world.");
+            }
+
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(duration, TimeSpan.Zero);
+            double lockedUntil = CurrentTimeSeconds + duration.TotalSeconds;
+            CellState state = GetOrCreateCellState(position);
+            state.LockedUntilSeconds = Math.Max(state.LockedUntilSeconds, lockedUntil);
+        }
+
+        internal void AdvanceTime(double elapsedSeconds)
+        {
+            CurrentTimeSeconds += elapsedSeconds;
+        }
+
+        internal bool IsCellUnlocked(GridPosition position)
+        {
+            return !_cellStates.TryGetValue(position, out CellState? state)
+                || state.LockedUntilSeconds <= CurrentTimeSeconds;
+        }
+
+        internal double? SecondsUntilNextCellUnlock()
+        {
+            double? result = null;
+            foreach (CellState state in _cellStates.Values)
+            {
+                double remaining = state.LockedUntilSeconds - CurrentTimeSeconds;
+                if (remaining > 0 && (result is null || remaining < result))
+                {
+                    result = remaining;
+                }
+            }
+
+            return result;
         }
 
         internal void CommitMoves(IReadOnlyList<PlannedMove> moves)
@@ -148,6 +227,7 @@ namespace Mooh.Core.Grid
             {
                 List<EntityId> source = _occupancy[move.From];
                 _ = source.Remove(move.EntityId);
+                LockCellForVacatingMove(move.From);
                 if (source.Count == 0)
                 {
                     _ = _occupancy.Remove(move.From);
@@ -164,8 +244,27 @@ namespace Mooh.Core.Grid
                     _occupancy.Add(move.To, destination);
                 }
 
-                destination.Add(move.EntityId);
+                destination.Insert(0, move.EntityId);
             }
+        }
+
+        private CellState GetOrCreateCellState(GridPosition position)
+        {
+            if (!_cellStates.TryGetValue(position, out CellState? state))
+            {
+                state = new CellState();
+                _cellStates.Add(position, state);
+            }
+
+            return state;
+        }
+
+        private void LockCellForVacatingMove(GridPosition position)
+        {
+            CellState state = GetOrCreateCellState(position);
+            state.LockedUntilSeconds = Math.Max(
+                state.LockedUntilSeconds,
+                CurrentTimeSeconds + VacatedCellLockSeconds);
         }
     }
 }

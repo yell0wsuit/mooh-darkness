@@ -25,5 +25,14 @@ namespace Mooh.Core.Interactions
 
         /// <summary>The entity cannot move or be pushed.</summary>
         MovementLocked = 1 << 4,
+
+        /// <summary>The entity gives its cell a rounded cap that can support sliding objects.</summary>
+        RoundSupport = 1 << 5,
+
+        /// <summary>The entity permits player pushing along the current gravity axis.</summary>
+        GravityAxisPushable = 1 << 6,
+
+        /// <summary>The pushed entity can consume eligible occupants in its destination cell.</summary>
+        PushesThroughOccupants = 1 << 7,
     }
 }

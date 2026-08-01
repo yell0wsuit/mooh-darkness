@@ -94,9 +94,9 @@ namespace Mooh.Core.Tests.Player
                 () => simulation.SetGravity(Direction.Left));
         }
 
-        /// <summary>Verifies that gravity cannot change while only pushed motion remains active.</summary>
+        /// <summary>Verifies that gravity can change after both the player and one-cell push stop.</summary>
         [Fact]
-        public void GravityChangeDuringPushedMotionIsRejected()
+        public void GravityChangeAfterOneCellPushCompletesIsAllowed()
         {
             WorldGrid world = new(8, 5);
             Entity player = NewPlayer(new GridPosition(1, 1));
@@ -110,10 +110,9 @@ namespace Mooh.Core.Tests.Player
             _ = simulation.Advance(TimeSpan.FromSeconds(0.9));
 
             Assert.Null(player.Motion);
-            Assert.NotNull(block.Motion);
-            Assert.Equal(MotionCause.PlayerPushed, block.Motion.Cause);
-            _ = Assert.Throws<InvalidOperationException>(
-                () => simulation.SetGravity(Direction.Left));
+            Assert.Null(block.Motion);
+
+            simulation.SetGravity(Direction.Left);
         }
 
         private static PlayerInputState HeldRight => new(

@@ -37,7 +37,7 @@ namespace Mooh.Core.Tests.Player
             IReadOnlyList<SimulationEvent> events = simulation.Advance(
                 TimeSpan.FromSeconds(2.0 / 3.0));
 
-            Assert.Equal(new GridPosition(3, 1), block.Position);
+            Assert.Equal(new GridPosition(3, 2), block.Position);
             Assert.NotNull(block.Motion);
             Assert.Equal(MotionCause.Falling, block.Motion.Cause);
             Assert.Equal(Direction.Down, block.Motion.SegmentDirection);
@@ -77,7 +77,7 @@ namespace Mooh.Core.Tests.Player
                     new PlayerMoveStarted(player.Id, Direction.Right),
                 ],
                 started);
-            Assert.Equal(new GridPosition(4, 1), block.Position);
+            Assert.Equal(new GridPosition(4, 2), block.Position);
             Assert.NotNull(block.Motion);
             Assert.Equal(MotionCause.Falling, block.Motion.Cause);
             Assert.Equal(
@@ -128,7 +128,10 @@ namespace Mooh.Core.Tests.Player
 
         private static Entity AddSolid(WorldGrid world, GridPosition position)
         {
-            return Add(world, position, InteractionMask.BlocksMovement);
+            return Add(
+                world,
+                position,
+                InteractionMask.BlocksMovement | InteractionMask.RoundSupport);
         }
     }
 }

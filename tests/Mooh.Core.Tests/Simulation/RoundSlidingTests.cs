@@ -103,6 +103,38 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Empty(events);
         }
 
+        /// <summary>Verifies that slide capability alone is insufficient without round support below.</summary>
+        [Fact]
+        public void BodyOnNonRoundSupportRemainsStationary()
+        {
+            SlidingScenario scenario = CreateScenario(roundSupport: false);
+
+            IReadOnlyList<SimulationEvent> events = AdvanceFractionally(scenario, seed: 0);
+
+            Assert.Null(scenario.Body.Motion);
+            Assert.Empty(events);
+        }
+
+        /// <summary>Verifies that an explicit 500-millisecond cell lock gates a slide route.</summary>
+        [Fact]
+        public void ExplosionStyleCellLockBlocksSlideRouteFor500Milliseconds()
+        {
+            SlidingScenario scenario = CreateScenario();
+            _ = AddSolid(scenario.World, new GridPosition(1, 1));
+            scenario.World.LockCell(new GridPosition(3, 1), TimeSpan.FromMilliseconds(500));
+            SimulationWorld simulation = CreateSimulation(scenario.World, seed: 0);
+
+            IReadOnlyList<SimulationEvent> earlyEvents = simulation.Advance(TimeSpan.FromMilliseconds(499));
+
+            Assert.Null(scenario.Body.Motion);
+            Assert.Empty(earlyEvents);
+
+            IReadOnlyList<SimulationEvent> expiryEvents = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            AssertSlide(scenario.Body, Direction.Right, expectedProgress: 0);
+            Assert.Equal([new SlideStarted(scenario.Body.Id, Direction.Right)], expiryEvents);
+        }
+
         /// <summary>Verifies the ordered transition from a completed slide into falling.</summary>
         [Fact]
         public void CompletedRightSlideTransitionsToFalling()
@@ -113,7 +145,7 @@ namespace Mooh.Core.Tests.Simulation
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(1));
 
-            Assert.Equal(new GridPosition(3, 1), scenario.Body.Position);
+            Assert.Equal(new GridPosition(3, 2), scenario.Body.Position);
             Assert.NotNull(scenario.Body.Motion);
             Assert.Equal(MotionCause.Falling, scenario.Body.Motion.Cause);
             Assert.Equal(Direction.Down, scenario.Body.Motion.SegmentDirection);
@@ -126,9 +158,9 @@ namespace Mooh.Core.Tests.Simulation
                 events);
         }
 
-        /// <summary>Verifies that a slide is cancelled when an earlier mover occupies its destination.</summary>
+        /// <summary>Verifies that an authoritative destination prevents a conflicting slide from starting.</summary>
         [Fact]
-        public void OccupiedSlideDestinationIsRevalidatedAtBoundary()
+        public void AuthoritativeDestinationPreventsConflictingSlideStart()
         {
             WorldGrid world = new(5, 5);
             Entity earlier = new(
@@ -148,13 +180,12 @@ namespace Mooh.Core.Tests.Simulation
 
             IReadOnlyList<SimulationEvent> events = CreateSimulation(world, seed: 0).Advance(TimeSpan.FromSeconds(1));
 
-            Assert.Equal(new GridPosition(3, 1), earlier.Position);
+            Assert.Equal(new GridPosition(3, 2), earlier.Position);
             Assert.Equal(new GridPosition(2, 1), body.Position);
             Assert.Null(body.Motion);
             Assert.Equal(
                 [
                     new FallStarted(earlier.Id, Direction.Down),
-                    new SlideStarted(body.Id, Direction.Right),
                     new CellEntered(earlier.Id, new GridPosition(3, 1)),
                 ],
                 events);
@@ -176,7 +207,7 @@ namespace Mooh.Core.Tests.Simulation
                 random: new Random(seed));
         }
 
-        private static SlidingScenario CreateScenario(bool canSlide = true)
+        private static SlidingScenario CreateScenario(bool canSlide = true, bool roundSupport = true)
         {
             WorldGrid world = new(5, 5);
             Entity body = new(
@@ -185,23 +216,35 @@ namespace Mooh.Core.Tests.Simulation
                 InteractionMask.None,
                 new GravityBody(1, canSlide));
             world.Add(body);
-            _ = AddSolid(world, new GridPosition(2, 2));
+            _ = AddSolid(
+                world,
+                new GridPosition(2, 2),
+                roundSupport ? InteractionMask.RoundSupport : InteractionMask.None);
             return new SlidingScenario(world, body);
         }
 
-        private static Entity AddSolid(WorldGrid world, GridPosition position)
+        private static Entity AddSolid(
+            WorldGrid world,
+            GridPosition position,
+            InteractionMask additionalMask = InteractionMask.None)
         {
-            Entity entity = new(EntityId.New(), position, InteractionMask.BlocksMovement);
+            Entity entity = new(
+                EntityId.New(),
+                position,
+                InteractionMask.BlocksMovement | additionalMask);
             world.Add(entity);
             return entity;
         }
 
-        private static void AssertSlide(Entity body, Direction direction)
+        private static void AssertSlide(
+            Entity body,
+            Direction direction,
+            double expectedProgress = 0.25)
         {
             Assert.NotNull(body.Motion);
             Assert.Equal(MotionCause.Sliding, body.Motion.Cause);
             Assert.Equal(direction, body.Motion.SegmentDirection);
-            Assert.Equal(0.25, body.Motion.Progress, precision: 10);
+            Assert.Equal(expectedProgress, body.Motion.Progress, precision: 10);
         }
 
         private sealed record SlidingScenario(WorldGrid World, Entity Body);

@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
+using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
+using Mooh.Core.Movement;
 using Mooh.Core.Simulation;
 
 namespace Mooh.Core.Gravity
@@ -46,14 +49,17 @@ namespace Mooh.Core.Gravity
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(entity);
             ArgumentNullException.ThrowIfNull(events);
-            if (entity.GravityBody is not GravityBody body || entity.Motion is not null)
+            if (entity.GravityBody is not GravityBody body
+                || entity.Motion is not null
+                || entity.PlayerBody?.Rotation is not null)
             {
                 return false;
             }
 
             GridPosition destination = entity.Position.Offset(gravityDirection);
-            if (_collisionPolicy.CanEnter(world, entity, destination))
+            if (CanEnter(world, entity, destination))
             {
+                world.CommitMoves([new PlannedMove(entity.Id, entity.Position, destination)]);
                 KinematicsSystem.Start(entity, MotionCause.Falling, gravityDirection, body.FallSpeed);
                 events.Add(new FallStarted(entity.Id, gravityDirection));
                 return true;
@@ -64,13 +70,28 @@ namespace Mooh.Core.Gravity
                 return false;
             }
 
+            if (!world.Contains(destination))
+            {
+                return false;
+            }
+
+            if (!world.GetOccupants(destination).Any(
+                occupant => occupant.Interactions.HasFlag(InteractionMask.RoundSupport)))
+            {
+                return false;
+            }
+
             Direction[] candidates = [gravityDirection.TurnLeft(), gravityDirection.TurnRight()];
             List<Direction> viable = [];
             foreach (Direction candidate in candidates)
             {
                 GridPosition side = entity.Position.Offset(candidate);
                 GridPosition diagonal = side.Offset(gravityDirection);
-                if (_collisionPolicy.CanEnter(world, entity, side)
+                if (world.Contains(side)
+                    && world.Contains(diagonal)
+                    && world.IsCellUnlocked(side)
+                    && world.IsCellUnlocked(diagonal)
+                    && _collisionPolicy.CanEnter(world, entity, side)
                     && _collisionPolicy.CanEnter(world, entity, diagonal))
                 {
                     viable.Add(candidate);
@@ -83,6 +104,8 @@ namespace Mooh.Core.Gravity
             }
 
             Direction slideDirection = viable.Count == 1 ? viable[0] : viable[_random.Next(2)];
+            GridPosition slideDestination = entity.Position.Offset(slideDirection);
+            world.CommitMoves([new PlannedMove(entity.Id, entity.Position, slideDestination)]);
             KinematicsSystem.Start(entity, MotionCause.Sliding, slideDirection, body.FallSpeed);
             events.Add(new SlideStarted(entity.Id, slideDirection));
             return true;
@@ -90,7 +113,9 @@ namespace Mooh.Core.Gravity
 
         internal bool CanEnter(WorldGrid world, Entity entity, GridPosition destination)
         {
-            return _collisionPolicy.CanEnter(world, entity, destination);
+            return world.Contains(destination)
+                && world.IsCellUnlocked(destination)
+                && _collisionPolicy.CanEnter(world, entity, destination);
         }
     }
 }

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
+using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
 using Mooh.Core.Movement;
 using Mooh.Core.Simulation;
@@ -12,14 +14,22 @@ namespace Mooh.Core.Player
     internal sealed class PlayerController(
         Entity player,
         WorldGrid world,
-        MovementSystem movement)
+        MovementSystem movement,
+        Direction gravityDirection)
     {
+        private const double HalfTurnSeconds = 0.210;
+        private const double QuarterTurnSeconds = 0.105;
+        private const double CounterMotionMultiplier = 0.75;
+        private const double TimeTolerance = 1e-12;
+        private static readonly TimeSpan CellInteractionLock = TimeSpan.FromMilliseconds(150);
+
         private readonly MovementSystem _movement = movement
             ?? throw new ArgumentNullException(nameof(movement));
         private readonly Entity _player = player
             ?? throw new ArgumentNullException(nameof(player));
         private readonly WorldGrid _world = world
             ?? throw new ArgumentNullException(nameof(world));
+        private Direction _gravityDirection = gravityDirection;
         private PlayerInputState _input;
         private Direction? _lastAppliedTravelDirection;
 
@@ -28,12 +38,19 @@ namespace Mooh.Core.Player
             _input = input;
         }
 
+        public void SetGravity(Direction direction)
+        {
+            _gravityDirection = direction;
+        }
+
         public void TryStart(
             ICollection<SimulationEvent> events,
             bool emitStoppedWhenNoInput = false)
         {
             ArgumentNullException.ThrowIfNull(events);
-            if (_player.Motion is not null)
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            if (_player.Motion is not null || body.Rotation is not null)
             {
                 return;
             }
@@ -49,35 +66,65 @@ namespace Mooh.Core.Player
                 return;
             }
 
-            PlayerBody body = _player.PlayerBody
-                ?? throw new InvalidOperationException("The player entity has no player body.");
-            body.FacingDirection = heldDirection;
-
-            MovementPlan plan = _movement.Plan(new MoveRequest(_player.Id, heldDirection));
-            if (plan.Result == MoveResult.Blocked)
+            if (heldDirection != body.FacingDirection)
             {
-                events.Add(new PlayerBlocked(_player.Id, heldDirection));
+                StartRotation(body, heldDirection, suspendedProgress: null, events);
                 return;
             }
 
+            StartMove(heldDirection, body, events);
+        }
+
+        private void StartMove(
+            Direction direction,
+            PlayerBody body,
+            ICollection<SimulationEvent> events)
+        {
+
+            GridPosition destination = _player.Position.Offset(direction);
+            EatDestination(destination, events);
+            MovementPlan plan = _movement.Plan(
+                new MoveRequest(_player.Id, direction),
+                _gravityDirection);
+            if (plan.Result == MoveResult.Blocked)
+            {
+                events.Add(new PlayerBlocked(_player.Id, direction));
+                return;
+            }
+
+            bool hasCounterMotion = plan.Result == MoveResult.Pushed
+                ? HasCounterMotion(destination, direction)
+                    || HasCounterMotion(destination.Offset(direction), direction)
+                : HasCounterMotion(destination, direction);
+            double speedMultiplier = hasCounterMotion ? CounterMotionMultiplier : 1;
+
             if (plan.Result == MoveResult.Pushed)
             {
-                StartPushedMembers(plan, heldDirection, body, events);
+                RemovePushThroughOccupants(destination.Offset(direction));
+            }
+
+            _world.CommitMoves(
+                [.. plan.Steps.Select(step => new PlannedMove(step.EntityId, step.From, step.To))]);
+
+            if (plan.Result == MoveResult.Pushed)
+            {
+                StartPushedMembers(plan, direction, body, speedMultiplier, events);
             }
 
             KinematicsSystem.Start(
                 _player,
                 MotionCause.PlayerWalking,
-                heldDirection,
-                body.MoveSpeed);
-            _lastAppliedTravelDirection = heldDirection;
-            events.Add(new PlayerMoveStarted(_player.Id, heldDirection));
+                direction,
+                body.MoveSpeed * speedMultiplier);
+            _lastAppliedTravelDirection = direction;
+            events.Add(new PlayerMoveStarted(_player.Id, direction));
         }
 
         private void StartPushedMembers(
             MovementPlan plan,
             Direction direction,
             PlayerBody playerBody,
+            double speedMultiplier,
             ICollection<SimulationEvent> events)
         {
             int resolutionOrder = 0;
@@ -93,7 +140,7 @@ namespace Mooh.Core.Player
                     pushed,
                     MotionCause.PlayerPushed,
                     direction,
-                    playerBody.MoveSpeed * playerBody.PushSpeedMultiplier,
+                    playerBody.MoveSpeed * playerBody.PushSpeedMultiplier * speedMultiplier,
                     resolutionOrder);
                 resolutionOrder++;
                 events.Add(new PushStarted(pushed.Id, direction));
@@ -116,22 +163,120 @@ namespace Mooh.Core.Player
                 return;
             }
 
-            _lastAppliedTravelDirection = direction;
             if (direction == motion.TravelDirection)
+            {
+                _lastAppliedTravelDirection = direction;
+                return;
+            }
+
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            KinematicsSystem.Stop(_player);
+            _lastAppliedTravelDirection = null;
+            StartRotation(body, direction, motion.Progress, events);
+        }
+
+        public double? RotationSecondsRemaining => _player.PlayerBody?.Rotation?.RemainingSeconds;
+
+        public void AdvanceRotation(double elapsedSeconds, ICollection<SimulationEvent> events)
+        {
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            PlayerRotation? rotation = body.Rotation;
+            if (rotation is null)
             {
                 return;
             }
 
-            KinematicsSystem.Reverse(_player);
-            PlayerBody body = _player.PlayerBody
-                ?? throw new InvalidOperationException("The player entity has no player body.");
+            rotation.RemainingSeconds -= elapsedSeconds;
+            if (rotation.RemainingSeconds > TimeTolerance)
+            {
+                return;
+            }
+
+            body.Rotation = null;
+            events.Add(new PlayerRotationCompleted(_player.Id, rotation.To));
+            if (rotation.SuspendedProgress is double suspendedProgress)
+            {
+                GridPosition destination = _player.Position.Offset(rotation.To);
+                _world.CommitMoves([new PlannedMove(_player.Id, _player.Position, destination)]);
+                KinematicsSystem.Start(
+                    _player,
+                    MotionCause.PlayerWalking,
+                    rotation.To,
+                    body.MoveSpeed);
+                _player.Motion!.Progress = 1 - suspendedProgress;
+                _lastAppliedTravelDirection = rotation.To;
+                events.Add(new PlayerMoveStarted(_player.Id, rotation.To));
+                return;
+            }
+
+            TryStart(events);
+        }
+
+        private void StartRotation(
+            PlayerBody body,
+            Direction direction,
+            double? suspendedProgress,
+            ICollection<SimulationEvent> events)
+        {
+            Direction from = body.FacingDirection;
+            double duration = direction == from.Opposite()
+                ? HalfTurnSeconds
+                : QuarterTurnSeconds;
             body.FacingDirection = direction;
-            events.Add(new PlayerReversed(_player.Id, direction));
+            body.Rotation = new PlayerRotation(from, direction, duration, suspendedProgress);
+            events.Add(new PlayerRotationStarted(_player.Id, from, direction));
         }
 
         public void EndSegment()
         {
             _lastAppliedTravelDirection = null;
+        }
+
+        private bool HasCounterMotion(GridPosition position, Direction direction)
+        {
+            return _world.Contains(position)
+                && _world.GetOccupants(position).Any(
+                    entity => entity.Motion is not null
+                        && entity.Motion.TravelDirection != direction);
+        }
+
+        private void EatDestination(
+            GridPosition destination,
+            ICollection<SimulationEvent> events)
+        {
+            if (!_world.Contains(destination))
+            {
+                return;
+            }
+
+            _world.LockCell(destination, CellInteractionLock);
+            foreach (Entity entity in _world.GetOccupants(destination))
+            {
+                if (!entity.Interactions.HasFlag(InteractionMask.PlayerEdible))
+                {
+                    continue;
+                }
+
+                _ = _world.Remove(entity.Id);
+                events.Add(new PlayerAte(_player.Id, entity.Id));
+            }
+        }
+
+        private void RemovePushThroughOccupants(GridPosition destination)
+        {
+            IReadOnlyList<Entity> occupants = _world.GetOccupants(destination);
+            if (occupants.Count == 0)
+            {
+                return;
+            }
+
+            _world.LockCell(destination, CellInteractionLock);
+            foreach (Entity entity in occupants)
+            {
+                _ = _world.Remove(entity.Id);
+            }
         }
 
         private Direction? FirstHeldAlong(Direction segmentDirection)

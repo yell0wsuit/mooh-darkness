@@ -18,7 +18,7 @@ namespace Mooh.Core.Tests.Player
     /// </summary>
     public sealed class PlayerMovementStartTests
     {
-        /// <summary>Verifies that held input starts fractional walking without committing occupancy.</summary>
+        /// <summary>Verifies that held input commits destination authority before fractional walking completes.</summary>
         [Fact]
         public void HeldDirectionStartsFractionalWalking()
         {
@@ -28,17 +28,46 @@ namespace Mooh.Core.Tests.Player
             context.Simulation.SetPlayerInput(input);
 
             Assert.Null(context.Player.Motion);
-            Assert.Equal(Direction.Down, context.Player.PlayerBody!.FacingDirection);
+            Assert.Equal(Direction.Right, context.Player.PlayerBody!.FacingDirection);
 
             IReadOnlyList<SimulationEvent> events = context.Simulation.Advance(TimeSpan.FromSeconds(0.25));
 
-            Assert.Equal(new GridPosition(2, 2), context.Player.Position);
+            Assert.Equal(new GridPosition(3, 2), context.Player.Position);
+            Assert.Empty(context.World.GetOccupants(new GridPosition(2, 2)));
+            Assert.Equal([context.Player], context.World.GetOccupants(new GridPosition(3, 2)));
             Assert.NotNull(context.Player.Motion);
             Assert.Equal(MotionCause.PlayerWalking, context.Player.Motion.Cause);
             Assert.Equal(Direction.Right, context.Player.Motion.SegmentDirection);
             Assert.Equal(0.5, context.Player.Motion.Progress, precision: 12);
             Assert.Equal(Direction.Right, context.Player.PlayerBody.FacingDirection);
             Assert.Equal([new PlayerMoveStarted(context.Player.Id, Direction.Right)], events);
+        }
+
+        /// <summary>Verifies counter-motion slowdown inspects the cell the player enters.</summary>
+        /// <param name="counterX">The authoritative cell of the counter-moving object.</param>
+        /// <param name="expectedSpeed">The expected player speed.</param>
+        [Theory]
+        [InlineData(3, 1.5)]
+        [InlineData(4, 2.0)]
+        public void WalkingCounterMotionUsesEnteredCell(int counterX, double expectedSpeed)
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreatePlayerWorld();
+            Entity counterMover = new(
+                EntityId.New(),
+                new GridPosition(counterX, 2),
+                InteractionMask.None);
+            world.Add(counterMover);
+            KinematicsSystem.Start(
+                counterMover,
+                MotionCause.Falling,
+                Direction.Left,
+                speed: 1);
+            simulation.SetPlayerInput(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+
+            _ = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.NotNull(player.Motion);
+            Assert.Equal(expectedSpeed, player.Motion.Speed, precision: 12);
         }
 
         /// <summary>Verifies that no held direction leaves a stationary player unchanged.</summary>
@@ -51,7 +80,7 @@ namespace Mooh.Core.Tests.Player
 
             Assert.Null(player.Motion);
             Assert.Equal(new GridPosition(2, 2), player.Position);
-            Assert.Equal(Direction.Down, player.PlayerBody!.FacingDirection);
+            Assert.Equal(Direction.Right, player.PlayerBody!.FacingDirection);
             Assert.Empty(events);
         }
 
@@ -91,11 +120,36 @@ namespace Mooh.Core.Tests.Player
             Assert.Equal([new PlayerBlocked(player.Id, Direction.Right)], events);
         }
 
+        /// <summary>Verifies edible occupants are removed and reported before movement starts.</summary>
+        [Fact]
+        public void DestinationIsEatenBeforeMovementStarts()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreatePlayerWorld();
+            Entity edible = new(
+                EntityId.New(),
+                new GridPosition(3, 2),
+                InteractionMask.PlayerEdible);
+            world.Add(edible);
+            simulation.SetPlayerInput(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
+
+            Assert.Equal([player], world.GetOccupants(new GridPosition(3, 2)));
+            _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(edible.Id));
+            Assert.Equal(
+                [
+                    new PlayerAte(player.Id, edible.Id),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
+                ],
+                events);
+        }
+
         /// <summary>Verifies fixed left, up, right, down priority when starting movement.</summary>
         [Fact]
         public void MultipleHeldDirectionsUseFixedPriority()
         {
-            (WorldGrid _, Entity player, SimulationWorld simulation) = CreatePlayerWorld();
+            (WorldGrid _, Entity player, SimulationWorld simulation) = CreatePlayerWorld(
+                facingDirection: Direction.Left);
             simulation.SetPlayerInput(new PlayerInputState(Left: true, Up: true, Right: true, Down: true));
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
@@ -119,7 +173,7 @@ namespace Mooh.Core.Tests.Player
             Assert.NotNull(player.Motion);
             Assert.Equal(MotionCause.Falling, player.Motion.Cause);
             Assert.Equal(Direction.Down, player.Motion.SegmentDirection);
-            Assert.Equal(Direction.Down, player.PlayerBody!.FacingDirection);
+            Assert.Equal(Direction.Right, player.PlayerBody!.FacingDirection);
             Assert.Equal([new FallStarted(player.Id, Direction.Down)], events);
         }
 
@@ -139,7 +193,8 @@ namespace Mooh.Core.Tests.Player
 
         private static (WorldGrid World, Entity Player, SimulationWorld Simulation) CreatePlayerWorld(
             GridPosition? playerPosition = null,
-            GravityBody? gravityBody = null)
+            GravityBody? gravityBody = null,
+            Direction facingDirection = Direction.Right)
         {
             WorldGrid world = new(5, 5);
             Entity player = new(
@@ -147,7 +202,7 @@ namespace Mooh.Core.Tests.Player
                 playerPosition ?? new GridPosition(2, 2),
                 InteractionMask.None,
                 gravityBody,
-                new PlayerBody(moveSpeed: 2, pushSpeedMultiplier: 1.5, Direction.Down));
+                new PlayerBody(moveSpeed: 2, pushSpeedMultiplier: 1.5, facingDirection));
             world.Add(player);
             SimulationWorld simulation = new(
                 world,
