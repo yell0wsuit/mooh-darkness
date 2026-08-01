@@ -28,6 +28,16 @@ namespace Mooh.Core.Movement
         /// <returns>The movement outcome and ordered entity transitions.</returns>
         public MovementPlan Plan(MoveRequest request)
         {
+            return Plan(request, gravityDirection: null);
+        }
+
+        internal MovementPlan Plan(MoveRequest request, Direction gravityDirection)
+        {
+            return Plan(request, (Direction?)gravityDirection);
+        }
+
+        private MovementPlan Plan(MoveRequest request, Direction? gravityDirection)
+        {
             Entity mover = _world.GetEntity(request.EntityId);
             if (mover.Motion is not null
                 || mover.Interactions.HasFlag(InteractionMask.MovementLocked))
@@ -65,6 +75,14 @@ namespace Mooh.Core.Movement
                     [new MovementStep(mover.Id, mover.Position, destination)]);
             }
 
+            if (gravityDirection is Direction gravity
+                && IsOnSameAxis(request.Direction, gravity)
+                && pushed.Any(
+                    entity => !entity.Interactions.HasFlag(InteractionMask.GravityAxisPushable)))
+            {
+                return new MovementPlan(MoveResult.Blocked, []);
+            }
+
             GridPosition pushedDestination = destination.Offset(request.Direction);
             if (!_world.Contains(pushedDestination)
                 || _world.GetOccupants(pushedDestination).Any(
@@ -82,6 +100,11 @@ namespace Mooh.Core.Movement
                     entity => new MovementStep(entity.Id, entity.Position, pushedDestination)));
             steps.Add(new MovementStep(mover.Id, mover.Position, destination));
             return new MovementPlan(MoveResult.Pushed, steps);
+        }
+
+        private static bool IsOnSameAxis(Direction first, Direction second)
+        {
+            return ((int)first & 1) == ((int)second & 1);
         }
     }
 }

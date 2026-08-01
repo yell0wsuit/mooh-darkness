@@ -28,5 +28,8 @@ namespace Mooh.Core.Interactions
 
         /// <summary>The entity gives its cell a rounded cap that can support sliding objects.</summary>
         RoundSupport = 1 << 5,
+
+        /// <summary>The entity permits player pushing along the current gravity axis.</summary>
+        GravityAxisPushable = 1 << 6,
     }
 }

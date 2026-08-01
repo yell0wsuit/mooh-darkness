@@ -93,6 +93,30 @@ namespace Mooh.Core.Tests.Player
             Assert.Equal([new PlayerBlocked(player.Id, Direction.Right)], events);
         }
 
+        /// <summary>Verifies edible occupants are removed and reported before movement starts.</summary>
+        [Fact]
+        public void DestinationIsEatenBeforeMovementStarts()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreatePlayerWorld();
+            Entity edible = new(
+                EntityId.New(),
+                new GridPosition(3, 2),
+                InteractionMask.PlayerEdible);
+            world.Add(edible);
+            simulation.SetPlayerInput(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
+
+            Assert.Equal([player], world.GetOccupants(new GridPosition(3, 2)));
+            _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(edible.Id));
+            Assert.Equal(
+                [
+                    new PlayerAte(player.Id, edible.Id),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
+                ],
+                events);
+        }
+
         /// <summary>Verifies fixed left, up, right, down priority when starting movement.</summary>
         [Fact]
         public void MultipleHeldDirectionsUseFixedPriority()

@@ -114,7 +114,10 @@ namespace Mooh.Core.Tests.Player
                 pushSpeedMultiplier: 1.5,
                 facingDirection: direction);
             GridPosition blockStart = player.Position.Offset(direction);
-            Entity block = Add(world, blockStart, Pushable);
+            InteractionMask interactions = IsOnSameAxis(direction, Direction.Down)
+                ? Pushable | InteractionMask.GravityAxisPushable
+                : Pushable;
+            Entity block = Add(world, blockStart, interactions);
             simulation.SetPlayerInput(Held(direction));
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(
@@ -129,6 +132,55 @@ namespace Mooh.Core.Tests.Player
                     new PushStarted(block.Id, direction),
                     new PlayerMoveStarted(player.Id, direction),
                     new CellEntered(block.Id, blockDestination),
+                ],
+                events);
+        }
+
+        /// <summary>Verifies that every pushed occupant needs permission for gravity-axis pushes.</summary>
+        [Fact]
+        public void GravityAxisPushRequiresCapabilityOnEveryPushedOccupant()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
+                moveSpeed: 1,
+                pushSpeedMultiplier: 1.5,
+                gravityDirection: Direction.Down,
+                facingDirection: Direction.Down);
+            GridPosition blockStart = player.Position.Offset(Direction.Down);
+            Entity capable = Add(
+                world,
+                blockStart,
+                Pushable | InteractionMask.GravityAxisPushable);
+            Entity ordinary = Add(world, blockStart, Pushable);
+            simulation.SetPlayerInput(Held(Direction.Down));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.Null(player.Motion);
+            Assert.Null(capable.Motion);
+            Assert.Null(ordinary.Motion);
+            Assert.Equal([new PlayerBlocked(player.Id, Direction.Down)], events);
+        }
+
+        /// <summary>Verifies that ordinary pushes remain available perpendicular to gravity.</summary>
+        [Fact]
+        public void OrdinaryPushPerpendicularToGravityStarts()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
+                moveSpeed: 1,
+                pushSpeedMultiplier: 1.5,
+                gravityDirection: Direction.Down,
+                facingDirection: Direction.Right);
+            Entity block = Add(world, player.Position.Offset(Direction.Right), Pushable);
+            simulation.SetPlayerInput(Held(Direction.Right));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.NotNull(player.Motion);
+            Assert.NotNull(block.Motion);
+            Assert.Equal(
+                [
+                    new PushStarted(block.Id, Direction.Right),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
                 ],
                 events);
         }
@@ -182,6 +234,11 @@ namespace Mooh.Core.Tests.Player
                 Direction.Down => new PlayerInputState(Left: false, Up: false, Right: false, Down: true),
                 _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null),
             };
+        }
+
+        private static bool IsOnSameAxis(Direction first, Direction second)
+        {
+            return ((int)first & 1) == ((int)second & 1);
         }
 
         private static (WorldGrid World, Entity Player, SimulationWorld Simulation) CreateScenario(

@@ -78,7 +78,7 @@ namespace Mooh.Core.Simulation
             _gravity = new GravitySystem(collisionPolicy, random);
             _movement = new MovementSystem(world, new DefaultInteractionPolicy());
             _playerController = world.Player is Entity player
-                ? new PlayerController(player, world, _movement)
+                ? new PlayerController(player, world, _movement, gravityDirection)
                 : null;
         }
 
@@ -111,6 +111,7 @@ namespace Mooh.Core.Simulation
             }
 
             _gravityDirection = direction;
+            _playerController?.SetGravity(direction);
         }
 
         /// <summary>Advances gravity-driven motion by the specified elapsed time.</summary>

@@ -4,6 +4,7 @@ using System.Linq;
 
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
+using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
 using Mooh.Core.Movement;
 using Mooh.Core.Simulation;
@@ -13,7 +14,8 @@ namespace Mooh.Core.Player
     internal sealed class PlayerController(
         Entity player,
         WorldGrid world,
-        MovementSystem movement)
+        MovementSystem movement,
+        Direction gravityDirection)
     {
         private const double HalfTurnSeconds = 0.210;
         private const double QuarterTurnSeconds = 0.105;
@@ -26,12 +28,18 @@ namespace Mooh.Core.Player
             ?? throw new ArgumentNullException(nameof(player));
         private readonly WorldGrid _world = world
             ?? throw new ArgumentNullException(nameof(world));
+        private Direction _gravityDirection = gravityDirection;
         private PlayerInputState _input;
         private Direction? _lastAppliedTravelDirection;
 
         public void SetInput(PlayerInputState input)
         {
             _input = input;
+        }
+
+        public void SetGravity(Direction direction)
+        {
+            _gravityDirection = direction;
         }
 
         public void TryStart(
@@ -72,14 +80,17 @@ namespace Mooh.Core.Player
             ICollection<SimulationEvent> events)
         {
 
-            MovementPlan plan = _movement.Plan(new MoveRequest(_player.Id, direction));
+            GridPosition destination = _player.Position.Offset(direction);
+            EatDestination(destination, events);
+            MovementPlan plan = _movement.Plan(
+                new MoveRequest(_player.Id, direction),
+                _gravityDirection);
             if (plan.Result == MoveResult.Blocked)
             {
                 events.Add(new PlayerBlocked(_player.Id, direction));
                 return;
             }
 
-            GridPosition destination = _player.Position.Offset(direction);
             bool hasCounterMotion = plan.Result == MoveResult.Pushed
                 ? HasCounterMotion(destination, direction)
                     || HasCounterMotion(destination.Offset(direction), direction)
@@ -223,6 +234,27 @@ namespace Mooh.Core.Player
                 && _world.GetOccupants(position).Any(
                     entity => entity.Motion is not null
                         && entity.Motion.TravelDirection != direction);
+        }
+
+        private void EatDestination(
+            GridPosition destination,
+            ICollection<SimulationEvent> events)
+        {
+            if (!_world.Contains(destination))
+            {
+                return;
+            }
+
+            foreach (Entity entity in _world.GetOccupants(destination))
+            {
+                if (!entity.Interactions.HasFlag(InteractionMask.PlayerEdible))
+                {
+                    continue;
+                }
+
+                _ = _world.Remove(entity.Id);
+                events.Add(new PlayerAte(_player.Id, entity.Id));
+            }
         }
 
         private Direction? FirstHeldAlong(Direction segmentDirection)

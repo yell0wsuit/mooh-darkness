@@ -117,6 +117,32 @@ namespace Mooh.Core.Grid
                 : throw new KeyNotFoundException($"Entity '{id}' is not registered.");
         }
 
+        /// <summary>Removes a registered entity from the world.</summary>
+        /// <param name="id">The identifier of the entity to remove.</param>
+        /// <returns><see langword="true"/> when the entity was removed; otherwise, <see langword="false"/>.</returns>
+        public bool Remove(EntityId id)
+        {
+            if (!_entities.Remove(id, out Entity? entity))
+            {
+                return false;
+            }
+
+            _ = _entityOrder.Remove(id);
+            List<EntityId> occupants = _occupancy[entity.Position];
+            _ = occupants.Remove(id);
+            if (occupants.Count == 0)
+            {
+                _ = _occupancy.Remove(entity.Position);
+            }
+
+            if (_playerId == id)
+            {
+                _playerId = null;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Gets the occupants of a cell in newest-arrival-first order.
         /// </summary>
