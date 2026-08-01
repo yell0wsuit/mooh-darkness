@@ -67,7 +67,8 @@ namespace Mooh.Core.Movement
 
             GridPosition pushedDestination = destination.Offset(request.Direction);
             if (!_world.Contains(pushedDestination)
-                || _world.GetOccupants(pushedDestination).Count != 0
+                || _world.GetOccupants(pushedDestination).Any(
+                    entity => !entity.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
                 || pushed.Exists(
                     entity => entity.Motion is not null
                         || entity.Interactions.HasFlag(InteractionMask.MovementLocked)))

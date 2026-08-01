@@ -17,6 +17,7 @@ namespace Mooh.Core.Player
     {
         private const double HalfTurnSeconds = 0.210;
         private const double QuarterTurnSeconds = 0.105;
+        private const double CounterMotionMultiplier = 0.75;
         private const double TimeTolerance = 1e-12;
 
         private readonly MovementSystem _movement = movement
@@ -78,19 +79,26 @@ namespace Mooh.Core.Player
                 return;
             }
 
+            GridPosition destination = _player.Position.Offset(direction);
+            bool hasCounterMotion = plan.Result == MoveResult.Pushed
+                ? HasCounterMotion(destination, direction)
+                    || HasCounterMotion(destination.Offset(direction), direction)
+                : HasCounterMotion(destination.Offset(direction), direction);
+            double speedMultiplier = hasCounterMotion ? CounterMotionMultiplier : 1;
+
             _world.CommitMoves(
                 [.. plan.Steps.Select(step => new PlannedMove(step.EntityId, step.From, step.To))]);
 
             if (plan.Result == MoveResult.Pushed)
             {
-                StartPushedMembers(plan, direction, body, events);
+                StartPushedMembers(plan, direction, body, speedMultiplier, events);
             }
 
             KinematicsSystem.Start(
                 _player,
                 MotionCause.PlayerWalking,
                 direction,
-                body.MoveSpeed);
+                body.MoveSpeed * speedMultiplier);
             _lastAppliedTravelDirection = direction;
             events.Add(new PlayerMoveStarted(_player.Id, direction));
         }
@@ -99,6 +107,7 @@ namespace Mooh.Core.Player
             MovementPlan plan,
             Direction direction,
             PlayerBody playerBody,
+            double speedMultiplier,
             ICollection<SimulationEvent> events)
         {
             int resolutionOrder = 0;
@@ -114,7 +123,7 @@ namespace Mooh.Core.Player
                     pushed,
                     MotionCause.PlayerPushed,
                     direction,
-                    playerBody.MoveSpeed * playerBody.PushSpeedMultiplier,
+                    playerBody.MoveSpeed * playerBody.PushSpeedMultiplier * speedMultiplier,
                     resolutionOrder);
                 resolutionOrder++;
                 events.Add(new PushStarted(pushed.Id, direction));
@@ -206,6 +215,14 @@ namespace Mooh.Core.Player
         public void EndSegment()
         {
             _lastAppliedTravelDirection = null;
+        }
+
+        private bool HasCounterMotion(GridPosition position, Direction direction)
+        {
+            return _world.Contains(position)
+                && _world.GetOccupants(position).Any(
+                    entity => entity.Motion is not null
+                        && entity.Motion.TravelDirection != direction);
         }
 
         private Direction? FirstHeldAlong(Direction segmentDirection)

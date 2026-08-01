@@ -5,6 +5,7 @@ using Mooh.Core.Entities;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
+using Mooh.Core.Motion;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
@@ -122,6 +123,30 @@ namespace Mooh.Core.Tests.Player
                     new PlayerStopped(player.Id),
                 ],
                 events);
+        }
+
+        /// <summary>Verifies counter-motion slows both participants in a player push.</summary>
+        [Fact]
+        public void CounterMotionSlowsPlayerAndPushedObject()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
+                moveSpeed: 1,
+                pushSpeedMultiplier: 1.5);
+            Entity block = Add(world, x: 2, Pushable);
+            Entity counterMover = Add(world, x: 3, InteractionMask.CanBePushedThrough);
+            KinematicsSystem.Start(
+                counterMover,
+                MotionCause.Falling,
+                Direction.Left,
+                speed: 1);
+            simulation.SetPlayerInput(HeldRight);
+
+            _ = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.NotNull(player.Motion);
+            Assert.NotNull(block.Motion);
+            Assert.Equal(0.75, player.Motion.Speed, precision: 12);
+            Assert.Equal(1.125, block.Motion.Speed, precision: 12);
         }
 
         /// <summary>Verifies that an occupant added to the authoritative destination does not cancel transit.</summary>
