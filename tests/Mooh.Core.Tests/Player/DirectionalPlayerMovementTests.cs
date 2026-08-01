@@ -38,7 +38,8 @@ namespace Mooh.Core.Tests.Player
         {
             (WorldGrid _, Entity player, SimulationWorld simulation) = CreateScenario(
                 moveSpeed: 2,
-                pushSpeedMultiplier: 1.5);
+                pushSpeedMultiplier: 1.5,
+                facingDirection: direction);
             simulation.SetPlayerInput(Held(direction));
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
@@ -58,7 +59,8 @@ namespace Mooh.Core.Tests.Player
         {
             (WorldGrid _, Entity player, SimulationWorld simulation) = CreateScenario(
                 moveSpeed: 2,
-                pushSpeedMultiplier: 1.5);
+                pushSpeedMultiplier: 1.5,
+                facingDirection: direction);
             simulation.SetPlayerInput(Held(direction));
             _ = simulation.Advance(TimeSpan.FromSeconds(0.25));
             Direction reverse = direction.Opposite();
@@ -66,9 +68,10 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
 
-            Assert.Equal(0.3, player.Motion!.Progress, precision: 12);
-            Assert.Equal(reverse, player.Motion.TravelDirection);
-            Assert.Equal([new PlayerReversed(player.Id, reverse)], events);
+            Assert.Null(player.Motion);
+            Assert.NotNull(player.PlayerBody!.Rotation);
+            Assert.Equal(0.11, player.PlayerBody.Rotation.RemainingSeconds, precision: 12);
+            Assert.Equal([new PlayerRotationStarted(player.Id, direction, reverse)], events);
         }
 
         /// <summary>Verifies perpendicular boundary turns in every direction.</summary>
@@ -79,7 +82,8 @@ namespace Mooh.Core.Tests.Player
         {
             (WorldGrid _, Entity player, SimulationWorld simulation) = CreateScenario(
                 moveSpeed: 2,
-                pushSpeedMultiplier: 1.5);
+                pushSpeedMultiplier: 1.5,
+                facingDirection: direction);
             simulation.SetPlayerInput(Held(direction));
             _ = simulation.Advance(TimeSpan.FromSeconds(0.25));
             Direction turn = direction.TurnLeft();
@@ -88,13 +92,13 @@ namespace Mooh.Core.Tests.Player
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
             GridPosition entered = new GridPosition(4, 4).Offset(direction);
-            Assert.Equal(entered.Offset(turn), player.Position);
-            Assert.NotNull(player.Motion);
-            Assert.Equal(turn, player.Motion.SegmentDirection);
+            Assert.Equal(entered, player.Position);
+            Assert.Null(player.Motion);
+            Assert.NotNull(player.PlayerBody!.Rotation);
             Assert.Equal(
                 [
                     new CellEntered(player.Id, entered),
-                    new PlayerMoveStarted(player.Id, turn),
+                    new PlayerRotationStarted(player.Id, direction, turn),
                 ],
                 events);
         }
@@ -107,7 +111,8 @@ namespace Mooh.Core.Tests.Player
         {
             (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
                 moveSpeed: 1,
-                pushSpeedMultiplier: 1.5);
+                pushSpeedMultiplier: 1.5,
+                facingDirection: direction);
             GridPosition blockStart = player.Position.Offset(direction);
             Entity block = Add(world, blockStart, Pushable);
             simulation.SetPlayerInput(Held(direction));
@@ -138,7 +143,8 @@ namespace Mooh.Core.Tests.Player
             (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
                 moveSpeed: 1,
                 pushSpeedMultiplier: 1.5,
-                gravityDirection);
+                gravityDirection,
+                facingDirection: direction);
             GridPosition blockStart = player.Position.Offset(direction);
             Entity block = Add(
                 world,
@@ -181,14 +187,15 @@ namespace Mooh.Core.Tests.Player
         private static (WorldGrid World, Entity Player, SimulationWorld Simulation) CreateScenario(
             double moveSpeed,
             double pushSpeedMultiplier,
-            Direction gravityDirection = Direction.Down)
+            Direction gravityDirection = Direction.Down,
+            Direction facingDirection = Direction.Down)
         {
             WorldGrid world = new(9, 9);
             Entity player = new(
                 EntityId.New(),
                 new GridPosition(4, 4),
                 InteractionMask.None,
-                playerBody: new PlayerBody(moveSpeed, pushSpeedMultiplier, Direction.Down));
+                playerBody: new PlayerBody(moveSpeed, pushSpeedMultiplier, facingDirection));
             world.Add(player);
             SimulationWorld simulation = new(
                 world,

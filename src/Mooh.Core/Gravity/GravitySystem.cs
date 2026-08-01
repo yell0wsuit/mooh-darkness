@@ -49,7 +49,9 @@ namespace Mooh.Core.Gravity
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(entity);
             ArgumentNullException.ThrowIfNull(events);
-            if (entity.GravityBody is not GravityBody body || entity.Motion is not null)
+            if (entity.GravityBody is not GravityBody body
+                || entity.Motion is not null
+                || entity.PlayerBody?.Rotation is not null)
             {
                 return false;
             }

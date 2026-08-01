@@ -28,7 +28,7 @@ namespace Mooh.Core.Tests.Player
             context.Simulation.SetPlayerInput(input);
 
             Assert.Null(context.Player.Motion);
-            Assert.Equal(Direction.Down, context.Player.PlayerBody!.FacingDirection);
+            Assert.Equal(Direction.Right, context.Player.PlayerBody!.FacingDirection);
 
             IReadOnlyList<SimulationEvent> events = context.Simulation.Advance(TimeSpan.FromSeconds(0.25));
 
@@ -53,7 +53,7 @@ namespace Mooh.Core.Tests.Player
 
             Assert.Null(player.Motion);
             Assert.Equal(new GridPosition(2, 2), player.Position);
-            Assert.Equal(Direction.Down, player.PlayerBody!.FacingDirection);
+            Assert.Equal(Direction.Right, player.PlayerBody!.FacingDirection);
             Assert.Empty(events);
         }
 
@@ -97,7 +97,8 @@ namespace Mooh.Core.Tests.Player
         [Fact]
         public void MultipleHeldDirectionsUseFixedPriority()
         {
-            (WorldGrid _, Entity player, SimulationWorld simulation) = CreatePlayerWorld();
+            (WorldGrid _, Entity player, SimulationWorld simulation) = CreatePlayerWorld(
+                facingDirection: Direction.Left);
             simulation.SetPlayerInput(new PlayerInputState(Left: true, Up: true, Right: true, Down: true));
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
@@ -121,7 +122,7 @@ namespace Mooh.Core.Tests.Player
             Assert.NotNull(player.Motion);
             Assert.Equal(MotionCause.Falling, player.Motion.Cause);
             Assert.Equal(Direction.Down, player.Motion.SegmentDirection);
-            Assert.Equal(Direction.Down, player.PlayerBody!.FacingDirection);
+            Assert.Equal(Direction.Right, player.PlayerBody!.FacingDirection);
             Assert.Equal([new FallStarted(player.Id, Direction.Down)], events);
         }
 
@@ -141,7 +142,8 @@ namespace Mooh.Core.Tests.Player
 
         private static (WorldGrid World, Entity Player, SimulationWorld Simulation) CreatePlayerWorld(
             GridPosition? playerPosition = null,
-            GravityBody? gravityBody = null)
+            GravityBody? gravityBody = null,
+            Direction facingDirection = Direction.Right)
         {
             WorldGrid world = new(5, 5);
             Entity player = new(
@@ -149,7 +151,7 @@ namespace Mooh.Core.Tests.Player
                 playerPosition ?? new GridPosition(2, 2),
                 InteractionMask.None,
                 gravityBody,
-                new PlayerBody(moveSpeed: 2, pushSpeedMultiplier: 1.5, Direction.Down));
+                new PlayerBody(moveSpeed: 2, pushSpeedMultiplier: 1.5, facingDirection));
             world.Add(player);
             SimulationWorld simulation = new(
                 world,

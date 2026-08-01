@@ -135,24 +135,36 @@ namespace Mooh.Core.Simulation
             {
                 _playerController?.HandleInTransit(events);
                 Entity[] moving = [.. _world.Entities.Where(entity => entity.Motion is not null)];
-                if (moving.Length == 0)
+                double? rotationSeconds = _playerController?.RotationSecondsRemaining;
+                if (moving.Length == 0 && rotationSeconds is null)
                 {
                     break;
                 }
 
-                double maximumSpeed = moving.Max(entity => entity.Motion!.Speed);
-                double boundarySeconds = moving.Min(
-                    entity => entity.Motion!.TravelSign > 0
-                        ? (1 - entity.Motion.Progress) / entity.Motion.Speed
-                        : entity.Motion.Progress / entity.Motion.Speed);
-                double substepSeconds = Math.Min(
-                    remainingSeconds,
-                    Math.Min(_maximumTravelPerSubstep / maximumSpeed, boundarySeconds));
+                double substepSeconds = remainingSeconds;
+                if (moving.Length != 0)
+                {
+                    double maximumSpeed = moving.Max(entity => entity.Motion!.Speed);
+                    double boundarySeconds = moving.Min(
+                        entity => entity.Motion!.TravelSign > 0
+                            ? (1 - entity.Motion.Progress) / entity.Motion.Speed
+                            : entity.Motion.Progress / entity.Motion.Speed);
+                    substepSeconds = Math.Min(
+                        substepSeconds,
+                        Math.Min(_maximumTravelPerSubstep / maximumSpeed, boundarySeconds));
+                }
+
+                if (rotationSeconds is double remainingRotation)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingRotation);
+                }
 
                 foreach (Entity entity in moving)
                 {
                     KinematicsSystem.Advance(entity, substepSeconds);
                 }
+
+                _playerController?.AdvanceRotation(substepSeconds, events);
 
                 remainingSeconds -= substepSeconds;
                 if (remainingSeconds < TimeTolerance)

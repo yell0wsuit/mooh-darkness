@@ -15,6 +15,10 @@ namespace Mooh.Core.Player
         WorldGrid world,
         MovementSystem movement)
     {
+        private const double HalfTurnSeconds = 0.210;
+        private const double QuarterTurnSeconds = 0.105;
+        private const double TimeTolerance = 1e-12;
+
         private readonly MovementSystem _movement = movement
             ?? throw new ArgumentNullException(nameof(movement));
         private readonly Entity _player = player
@@ -34,7 +38,9 @@ namespace Mooh.Core.Player
             bool emitStoppedWhenNoInput = false)
         {
             ArgumentNullException.ThrowIfNull(events);
-            if (_player.Motion is not null)
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            if (_player.Motion is not null || body.Rotation is not null)
             {
                 return;
             }
@@ -50,14 +56,25 @@ namespace Mooh.Core.Player
                 return;
             }
 
-            PlayerBody body = _player.PlayerBody
-                ?? throw new InvalidOperationException("The player entity has no player body.");
-            body.FacingDirection = heldDirection;
+            if (heldDirection != body.FacingDirection)
+            {
+                StartRotation(body, heldDirection, suspendedProgress: null, events);
+                return;
+            }
 
-            MovementPlan plan = _movement.Plan(new MoveRequest(_player.Id, heldDirection));
+            StartMove(heldDirection, body, events);
+        }
+
+        private void StartMove(
+            Direction direction,
+            PlayerBody body,
+            ICollection<SimulationEvent> events)
+        {
+
+            MovementPlan plan = _movement.Plan(new MoveRequest(_player.Id, direction));
             if (plan.Result == MoveResult.Blocked)
             {
-                events.Add(new PlayerBlocked(_player.Id, heldDirection));
+                events.Add(new PlayerBlocked(_player.Id, direction));
                 return;
             }
 
@@ -66,16 +83,16 @@ namespace Mooh.Core.Player
 
             if (plan.Result == MoveResult.Pushed)
             {
-                StartPushedMembers(plan, heldDirection, body, events);
+                StartPushedMembers(plan, direction, body, events);
             }
 
             KinematicsSystem.Start(
                 _player,
                 MotionCause.PlayerWalking,
-                heldDirection,
+                direction,
                 body.MoveSpeed);
-            _lastAppliedTravelDirection = heldDirection;
-            events.Add(new PlayerMoveStarted(_player.Id, heldDirection));
+            _lastAppliedTravelDirection = direction;
+            events.Add(new PlayerMoveStarted(_player.Id, direction));
         }
 
         private void StartPushedMembers(
@@ -120,19 +137,70 @@ namespace Mooh.Core.Player
                 return;
             }
 
-            _lastAppliedTravelDirection = direction;
             if (direction == motion.TravelDirection)
+            {
+                _lastAppliedTravelDirection = direction;
+                return;
+            }
+
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            KinematicsSystem.Stop(_player);
+            _lastAppliedTravelDirection = null;
+            StartRotation(body, direction, motion.Progress, events);
+        }
+
+        public double? RotationSecondsRemaining => _player.PlayerBody?.Rotation?.RemainingSeconds;
+
+        public void AdvanceRotation(double elapsedSeconds, ICollection<SimulationEvent> events)
+        {
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            PlayerRotation? rotation = body.Rotation;
+            if (rotation is null)
             {
                 return;
             }
 
-            GridPosition destination = _player.Position.Offset(direction);
-            _world.CommitMoves([new PlannedMove(_player.Id, _player.Position, destination)]);
-            KinematicsSystem.Reverse(_player);
-            PlayerBody body = _player.PlayerBody
-                ?? throw new InvalidOperationException("The player entity has no player body.");
+            rotation.RemainingSeconds -= elapsedSeconds;
+            if (rotation.RemainingSeconds > TimeTolerance)
+            {
+                return;
+            }
+
+            body.Rotation = null;
+            events.Add(new PlayerRotationCompleted(_player.Id, rotation.To));
+            if (rotation.SuspendedProgress is double suspendedProgress)
+            {
+                GridPosition destination = _player.Position.Offset(rotation.To);
+                _world.CommitMoves([new PlannedMove(_player.Id, _player.Position, destination)]);
+                KinematicsSystem.Start(
+                    _player,
+                    MotionCause.PlayerWalking,
+                    rotation.To,
+                    body.MoveSpeed);
+                _player.Motion!.Progress = 1 - suspendedProgress;
+                _lastAppliedTravelDirection = rotation.To;
+                events.Add(new PlayerMoveStarted(_player.Id, rotation.To));
+                return;
+            }
+
+            TryStart(events);
+        }
+
+        private void StartRotation(
+            PlayerBody body,
+            Direction direction,
+            double? suspendedProgress,
+            ICollection<SimulationEvent> events)
+        {
+            Direction from = body.FacingDirection;
+            double duration = direction == from.Opposite()
+                ? HalfTurnSeconds
+                : QuarterTurnSeconds;
             body.FacingDirection = direction;
-            events.Add(new PlayerReversed(_player.Id, direction));
+            body.Rotation = new PlayerRotation(from, direction, duration, suspendedProgress);
+            events.Add(new PlayerRotationStarted(_player.Id, from, direction));
         }
 
         public void EndSegment()

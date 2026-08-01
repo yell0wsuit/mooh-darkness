@@ -49,5 +49,8 @@ namespace Mooh.Core.Player
 
         /// <summary>Gets the direction the player currently faces.</summary>
         public Direction FacingDirection { get; internal set; }
+
+        /// <summary>Gets the active uncontrollable rotation, if any.</summary>
+        public PlayerRotation? Rotation { get; internal set; }
     }
 }
