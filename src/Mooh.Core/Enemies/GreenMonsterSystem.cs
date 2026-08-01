@@ -14,6 +14,8 @@ namespace Mooh.Core.Enemies
 {
     internal sealed class GreenMonsterSystem
     {
+        private const double CounterMotionMultiplier = 0.75;
+
         private static readonly TimeSpan TimerTolerance = TimeSpan.FromTicks(1);
 
         private readonly IInteractionPolicy _interactions;
@@ -112,7 +114,9 @@ namespace Mooh.Core.Enemies
                     monster,
                     MotionCause.MonsterWalking,
                     body.FacingDirection,
-                    body.MoveSpeed,
+                    HasCounterMotion(destination, body.FacingDirection)
+                        ? body.MoveSpeed * CounterMotionMultiplier
+                        : body.MoveSpeed,
                     resolutionOrder);
                 body.State = GreenMonsterState.Walking;
                 events.Add(new EnemyMoveStarted(monster.Id, source, destination));
@@ -128,6 +132,13 @@ namespace Mooh.Core.Enemies
                 && _world.Contains(destination)
                 && _world.GetOccupants(destination)
                     .All(occupant => _interactions.Classify(monster, occupant) == OccupantInteraction.Allow);
+        }
+
+        private bool HasCounterMotion(GridPosition position, Direction direction)
+        {
+            return _world.GetOccupants(position).Any(
+                entity => entity.Motion is not null
+                    && entity.Motion.TravelDirection != direction);
         }
 
         private void CompleteTimedState(

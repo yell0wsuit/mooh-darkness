@@ -66,6 +66,31 @@ namespace Mooh.Core.Tests.Enemies
                 Assert.Single(events));
         }
 
+        /// <summary>Verifies counter-motion in the entered cell slows monster walking.</summary>
+        [Fact]
+        public void CounterMotionSlowsWalking()
+        {
+            WorldGrid world = new(3, 1);
+            Entity monster = NewMonster(0, 0, Direction.Right);
+            Entity counterMover = new(
+                EntityId.New(),
+                new GridPosition(1, 0),
+                InteractionMask.None);
+            world.Add(monster);
+            world.Add(counterMover);
+            KinematicsSystem.Start(
+                counterMover,
+                MotionCause.Falling,
+                Direction.Left,
+                speed: 1);
+            SimulationWorld simulation = CreateSimulation(world);
+
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.NotNull(monster.Motion);
+            Assert.Equal(1.171875, monster.Motion.Speed, precision: 12);
+        }
+
         /// <summary>Verifies a monster turns clockwise when its forward cell is blocked.</summary>
         [Fact]
         public void BlockedCellStartsClockwiseTurn()
