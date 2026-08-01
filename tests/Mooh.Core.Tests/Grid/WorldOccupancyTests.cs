@@ -26,9 +26,9 @@ namespace Mooh.Core.Tests.Grid
             Assert.Equal([entity], world.GetOccupants(entity.Position));
         }
 
-        /// <summary>Verifies that a cell preserves multiple occupants in insertion order.</summary>
+        /// <summary>Verifies that the newest cell occupant is visited first.</summary>
         [Fact]
-        public void CellSupportsMultipleEntitiesInInsertionOrder()
+        public void CellSupportsMultipleEntitiesInLifoOrder()
         {
             WorldGrid world = new(10, 10);
             GridPosition position = new(2, 3);
@@ -38,7 +38,7 @@ namespace Mooh.Core.Tests.Grid
             world.Add(first);
             world.Add(second);
 
-            Assert.Equal([first, second], world.GetOccupants(position));
+            Assert.Equal([second, first], world.GetOccupants(position));
         }
 
         /// <summary>Verifies that duplicate identities are rejected without changing occupancy.</summary>

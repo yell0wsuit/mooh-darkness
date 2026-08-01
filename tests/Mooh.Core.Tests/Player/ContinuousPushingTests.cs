@@ -88,8 +88,8 @@ namespace Mooh.Core.Tests.Player
             Assert.Equal(new GridPosition(2, 1), player.Position);
             Assert.Equal(
                 [
-                    new CellEntered(first.Id, new GridPosition(3, 1)),
                     new CellEntered(second.Id, new GridPosition(3, 1)),
+                    new CellEntered(first.Id, new GridPosition(3, 1)),
                     new CellEntered(player.Id, new GridPosition(2, 1)),
                     new PlayerStopped(player.Id),
                 ],
@@ -142,7 +142,7 @@ namespace Mooh.Core.Tests.Player
             Assert.Equal(new GridPosition(3, 1), block.Position);
             Assert.NotNull(block.Motion);
             Assert.Equal([player], world.GetOccupants(new GridPosition(2, 1)));
-            Assert.Equal([block, blocker], world.GetOccupants(new GridPosition(3, 1)));
+            Assert.Equal([blocker, block], world.GetOccupants(new GridPosition(3, 1)));
             Assert.Equal(new GridPosition(2, 1), player.Position);
             Assert.DoesNotContain(events, item => item is CellEntered entered && entered.EntityId == block.Id);
         }

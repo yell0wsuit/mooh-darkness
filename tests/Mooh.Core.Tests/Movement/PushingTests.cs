@@ -68,8 +68,8 @@ namespace Mooh.Core.Tests.Movement
             Assert.Equal(MoveResult.Pushed, plan.Result);
             Assert.Equal(
                 [
-                    new MovementStep(first.Id, new GridPosition(3, 1), new GridPosition(4, 1)),
                     new MovementStep(second.Id, new GridPosition(3, 1), new GridPosition(4, 1)),
+                    new MovementStep(first.Id, new GridPosition(3, 1), new GridPosition(4, 1)),
                     new MovementStep(mover.Id, new GridPosition(2, 1), new GridPosition(3, 1)),
                 ],
                 plan.Steps);

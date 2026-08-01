@@ -57,7 +57,7 @@ namespace Mooh.Core.Grid
         }
 
         /// <summary>
-        /// Registers an entity and appends it to the occupancy order of its cell.
+        /// Registers an entity at the head of its cell's occupancy order.
         /// </summary>
         /// <param name="entity">The entity to register.</param>
         /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
@@ -96,7 +96,7 @@ namespace Mooh.Core.Grid
                 _occupancy.Add(entity.Position, occupants);
             }
 
-            occupants.Add(entity.Id);
+            occupants.Insert(0, entity.Id);
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Mooh.Core.Grid
         }
 
         /// <summary>
-        /// Gets the occupants of a cell in insertion order.
+        /// Gets the occupants of a cell in newest-arrival-first order.
         /// </summary>
         /// <param name="position">The cell position.</param>
         /// <returns>A snapshot of the cell's occupants.</returns>
@@ -164,7 +164,7 @@ namespace Mooh.Core.Grid
                     _occupancy.Add(move.To, destination);
                 }
 
-                destination.Add(move.EntityId);
+                destination.Insert(0, move.EntityId);
             }
         }
     }
