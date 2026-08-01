@@ -94,7 +94,7 @@ namespace Mooh.Core.Player
             bool hasCounterMotion = plan.Result == MoveResult.Pushed
                 ? HasCounterMotion(destination, direction)
                     || HasCounterMotion(destination.Offset(direction), direction)
-                : HasCounterMotion(destination.Offset(direction), direction);
+                : HasCounterMotion(destination, direction);
             double speedMultiplier = hasCounterMotion ? CounterMotionMultiplier : 1;
 
             _world.CommitMoves(

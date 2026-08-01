@@ -43,6 +43,33 @@ namespace Mooh.Core.Tests.Player
             Assert.Equal([new PlayerMoveStarted(context.Player.Id, Direction.Right)], events);
         }
 
+        /// <summary>Verifies counter-motion slowdown inspects the cell the player enters.</summary>
+        /// <param name="counterX">The authoritative cell of the counter-moving object.</param>
+        /// <param name="expectedSpeed">The expected player speed.</param>
+        [Theory]
+        [InlineData(3, 1.5)]
+        [InlineData(4, 2.0)]
+        public void WalkingCounterMotionUsesEnteredCell(int counterX, double expectedSpeed)
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreatePlayerWorld();
+            Entity counterMover = new(
+                EntityId.New(),
+                new GridPosition(counterX, 2),
+                InteractionMask.None);
+            world.Add(counterMover);
+            KinematicsSystem.Start(
+                counterMover,
+                MotionCause.Falling,
+                Direction.Left,
+                speed: 1);
+            simulation.SetPlayerInput(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+
+            _ = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.NotNull(player.Motion);
+            Assert.Equal(expectedSpeed, player.Motion.Speed, precision: 12);
+        }
+
         /// <summary>Verifies that no held direction leaves a stationary player unchanged.</summary>
         [Fact]
         public void NoInputLeavesPlayerStationary()
