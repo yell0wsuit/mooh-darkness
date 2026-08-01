@@ -67,6 +67,12 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets optional player behavior.</summary>
         public ScenarioPlayerBody? PlayerBody { get; init; }
+
+        /// <summary>Gets optional health behavior.</summary>
+        public ScenarioHealthBody? HealthBody { get; init; }
+
+        /// <summary>Gets optional green-monster behavior.</summary>
+        public ScenarioGreenMonsterBody? GreenMonsterBody { get; init; }
     }
 
     /// <summary>Describes gravity behavior for a scenario entity.</summary>
@@ -90,6 +96,41 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets the initial facing direction name.</summary>
         public required string FacingDirection { get; init; }
+    }
+
+    /// <summary>Describes health behavior for a scenario entity.</summary>
+    public sealed class ScenarioHealthBody
+    {
+        /// <summary>Gets the maximum health.</summary>
+        public required double Maximum { get; init; }
+
+        /// <summary>Gets the initial current health.</summary>
+        public required double Current { get; init; }
+
+        /// <summary>Gets the post-damage immunity duration in milliseconds.</summary>
+        public required long ImmunityMilliseconds { get; init; }
+    }
+
+    /// <summary>Describes autonomous green-monster behavior for a scenario entity.</summary>
+    public sealed class ScenarioGreenMonsterBody
+    {
+        /// <summary>Gets the walking speed in cells per second.</summary>
+        public required double MoveSpeed { get; init; }
+
+        /// <summary>Gets the initial facing direction name.</summary>
+        public required string FacingDirection { get; init; }
+
+        /// <summary>Gets the clockwise turn duration in milliseconds.</summary>
+        public required long TurnMilliseconds { get; init; }
+
+        /// <summary>Gets the attack wind-up duration in milliseconds.</summary>
+        public required long AttackWindupMilliseconds { get; init; }
+
+        /// <summary>Gets the attack recovery duration in milliseconds.</summary>
+        public required long AttackRecoveryMilliseconds { get; init; }
+
+        /// <summary>Gets the damage dealt by one strike.</summary>
+        public required double StrikeDamage { get; init; }
     }
 
     /// <summary>Describes one timed input and advancement boundary.</summary>
@@ -128,6 +169,30 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets an optional event position.</summary>
         public ScenarioPosition? Position { get; init; }
+
+        /// <summary>Gets an optional movement source position.</summary>
+        public ScenarioPosition? FromPosition { get; init; }
+
+        /// <summary>Gets an optional movement destination position.</summary>
+        public ScenarioPosition? ToPosition { get; init; }
+
+        /// <summary>Gets an optional source-entity alias.</summary>
+        public string? SourceEntity { get; init; }
+
+        /// <summary>Gets an optional semantic damage kind.</summary>
+        public string? DamageKind { get; init; }
+
+        /// <summary>Gets an optional damage-resolution result.</summary>
+        public string? DamageResult { get; init; }
+
+        /// <summary>Gets an optional damage amount.</summary>
+        public double? Amount { get; init; }
+
+        /// <summary>Gets optional remaining health after damage.</summary>
+        public double? RemainingHealth { get; init; }
+
+        /// <summary>Gets an optional event duration in milliseconds.</summary>
+        public long? DurationMilliseconds { get; init; }
     }
 
     /// <summary>Describes the expected state after all simulation steps.</summary>
@@ -154,6 +219,27 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets the expected active player rotation, if any.</summary>
         public ExpectedRotationState? Rotation { get; init; }
+
+        /// <summary>Gets expected current health, if applicable.</summary>
+        public double? CurrentHealth { get; init; }
+
+        /// <summary>Gets expected remaining damage immunity in milliseconds, if applicable.</summary>
+        public long? ImmunityMilliseconds { get; init; }
+
+        /// <summary>Gets the expected player reaction name, if applicable.</summary>
+        public string? PlayerReaction { get; init; }
+
+        /// <summary>Gets expected remaining player-reaction time in milliseconds, if applicable.</summary>
+        public long? ReactionMilliseconds { get; init; }
+
+        /// <summary>Gets the expected green-monster state name, if applicable.</summary>
+        public string? GreenMonsterState { get; init; }
+
+        /// <summary>Gets the expected green-monster facing direction, if applicable.</summary>
+        public string? GreenMonsterFacingDirection { get; init; }
+
+        /// <summary>Gets expected remaining green-monster state time in milliseconds, if applicable.</summary>
+        public long? GreenMonsterRemainingMilliseconds { get; init; }
     }
 
     /// <summary>Describes expected observable continuous motion.</summary>

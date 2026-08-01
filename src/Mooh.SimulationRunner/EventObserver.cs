@@ -34,6 +34,43 @@ namespace Mooh.SimulationRunner
                         nameof(CellEntered),
                         entity,
                         position: value.Position),
+                    DamageApplied value => new ObservedEvent(
+                        nameof(DamageApplied),
+                        entity,
+                        sourceEntity: ResolveAlias(value.SourceEntityId, aliasesById),
+                        damageKind: value.Kind,
+                        amount: value.Amount,
+                        remainingHealth: value.RemainingHealth),
+                    DamageIgnored value => new ObservedEvent(
+                        nameof(DamageIgnored),
+                        entity,
+                        sourceEntity: ResolveAlias(value.SourceEntityId, aliasesById),
+                        damageKind: value.Kind,
+                        damageResult: value.Reason),
+                    EnemyAttackStarted value => new ObservedEvent(
+                        nameof(EnemyAttackStarted),
+                        entity,
+                        position: value.TargetCell,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds),
+                    EnemyMoveStarted value => new ObservedEvent(
+                        nameof(EnemyMoveStarted),
+                        entity,
+                        fromPosition: value.From,
+                        toPosition: value.To),
+                    EnemyStrike value => new ObservedEvent(
+                        nameof(EnemyStrike),
+                        entity,
+                        position: value.TargetCell),
+                    EnemyTurnCompleted value => new ObservedEvent(
+                        nameof(EnemyTurnCompleted),
+                        entity,
+                        direction: value.FacingDirection),
+                    EnemyTurnStarted value => new ObservedEvent(
+                        nameof(EnemyTurnStarted),
+                        entity,
+                        from: value.FromDirection,
+                        to: value.ToDirection,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds),
                     FallStarted value => new ObservedEvent(
                         nameof(FallStarted),
                         entity,
@@ -54,6 +91,7 @@ namespace Mooh.SimulationRunner
                         nameof(PlayerMoveStarted),
                         entity,
                         direction: value.Direction),
+                    PlayerDied => new ObservedEvent(nameof(PlayerDied), entity),
                     PlayerReturned value => new ObservedEvent(
                         nameof(PlayerReturned),
                         entity,
@@ -71,6 +109,11 @@ namespace Mooh.SimulationRunner
                         entity,
                         from: value.From,
                         to: value.To),
+                    PlayerShockEnded => new ObservedEvent(nameof(PlayerShockEnded), entity),
+                    PlayerShockStarted value => new ObservedEvent(
+                        nameof(PlayerShockStarted),
+                        entity,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds),
                     PlayerStopped => new ObservedEvent(nameof(PlayerStopped), entity),
                     PushStarted value => new ObservedEvent(
                         nameof(PushStarted),

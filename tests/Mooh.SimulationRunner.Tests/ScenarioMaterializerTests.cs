@@ -1,5 +1,7 @@
 using System;
 
+using Mooh.Core.Combat;
+using Mooh.Core.Enemies;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
@@ -67,6 +69,49 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Equal(
                 new Guid("00000001-0000-0000-0000-000000000000"),
                 result.IdsByAlias["player"].Value);
+        }
+
+        /// <summary>Verifies health and green-monster declarations create their runtime components.</summary>
+        [Fact]
+        public void MaterializesHealthAndGreenMonsterBodies()
+        {
+            ScenarioDocument scenario = ScenarioTestData.CreateValid();
+            ScenarioEntity monster = new()
+            {
+                Alias = "monster",
+                Position = new ScenarioPosition { X = 2, Y = 1 },
+                Interactions = ["BlocksMovement"],
+                HealthBody = new ScenarioHealthBody
+                {
+                    Maximum = 60,
+                    Current = 45,
+                    ImmunityMilliseconds = 500,
+                },
+                GreenMonsterBody = new ScenarioGreenMonsterBody
+                {
+                    MoveSpeed = 1.5625,
+                    FacingDirection = "Left",
+                    TurnMilliseconds = 250,
+                    AttackWindupMilliseconds = 625,
+                    AttackRecoveryMilliseconds = 500,
+                    StrikeDamage = 20,
+                },
+            };
+            scenario = ScenarioTestData.WithWorld(
+                scenario,
+                entities: [scenario.World.Entities[0], monster]);
+            ScenarioValidator.Validate(scenario, "monster.json");
+
+            MaterializedScenario materialized = ScenarioMaterializer.Materialize(scenario);
+
+            HealthBody health = Assert.IsType<HealthBody>(materialized.World.Entities[1].HealthBody);
+            GreenMonsterBody body = Assert.IsType<GreenMonsterBody>(
+                materialized.World.Entities[1].GreenMonsterBody);
+            Assert.Equal(45, health.Current);
+            Assert.Equal(TimeSpan.FromMilliseconds(500), health.ImmunityDuration);
+            Assert.Equal(Direction.Left, body.FacingDirection);
+            Assert.Equal(TimeSpan.FromMilliseconds(625), body.AttackWindupDuration);
+            Assert.Equal(20, body.StrikeDamage);
         }
     }
 }

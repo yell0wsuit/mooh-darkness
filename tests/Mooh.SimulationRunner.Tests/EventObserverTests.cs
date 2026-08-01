@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using Mooh.Core.Combat;
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Simulation;
@@ -18,10 +19,12 @@ namespace Mooh.SimulationRunner.Tests
         {
             EntityId player = new(new Guid("00000000-0000-0000-0000-000000000001"));
             EntityId rock = new(new Guid("00000000-0000-0000-0000-000000000002"));
+            EntityId monster = new(new Guid("00000000-0000-0000-0000-000000000003"));
             Dictionary<EntityId, string> aliases = new()
             {
                 [player] = "player",
                 [rock] = "rock",
+                [monster] = "monster",
             };
             SimulationEvent[] events =
             [
@@ -38,11 +41,35 @@ namespace Mooh.SimulationRunner.Tests
                 new PlayerAte(player, rock),
                 new PlayerRotationStarted(player, Direction.Right, Direction.Down),
                 new PlayerRotationCompleted(player, Direction.Down),
+                new EnemyMoveStarted(
+                    monster,
+                    new GridPosition(0, 1),
+                    new GridPosition(1, 1)),
+                new EnemyTurnStarted(
+                    monster,
+                    Direction.Right,
+                    Direction.Down,
+                    TimeSpan.FromMilliseconds(250)),
+                new EnemyTurnCompleted(monster, Direction.Down),
+                new EnemyAttackStarted(
+                    monster,
+                    new GridPosition(1, 1),
+                    TimeSpan.FromMilliseconds(625)),
+                new EnemyStrike(monster, new GridPosition(1, 1)),
+                new DamageApplied(player, monster, DamageKind.Strike, 20, 80),
+                new DamageIgnored(
+                    player,
+                    monster,
+                    DamageKind.Strike,
+                    DamageResult.IgnoredImmune),
+                new PlayerShockStarted(player, TimeSpan.FromMilliseconds(700)),
+                new PlayerShockEnded(player),
+                new PlayerDied(player),
             ];
 
             IReadOnlyList<ObservedEvent> observed = EventObserver.Observe(events, aliases);
 
-            Assert.Equal(13, observed.Count);
+            Assert.Equal(23, observed.Count);
             Assert.Equal(new ObservedEvent("FallStarted", "rock", direction: Direction.Down), observed[0]);
             Assert.Equal(new ObservedEvent("SlideStarted", "rock", direction: Direction.Left), observed[1]);
             Assert.Equal(
@@ -59,6 +86,28 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Equal(
                 new ObservedEvent("PlayerRotationCompleted", "player", direction: Direction.Down),
                 observed[12]);
+            Assert.Equal(
+                new ObservedEvent(
+                    "EnemyMoveStarted",
+                    "monster",
+                    fromPosition: new GridPosition(0, 1),
+                    toPosition: new GridPosition(1, 1)),
+                observed[13]);
+            Assert.Equal(
+                new ObservedEvent(
+                    "DamageApplied",
+                    "player",
+                    sourceEntity: "monster",
+                    damageKind: DamageKind.Strike,
+                    amount: 20,
+                    remainingHealth: 80),
+                observed[18]);
+            Assert.Equal(
+                new ObservedEvent(
+                    "PlayerShockStarted",
+                    "player",
+                    durationMilliseconds: 700),
+                observed[20]);
         }
     }
 }

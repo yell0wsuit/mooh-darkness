@@ -49,6 +49,8 @@ namespace Mooh.SimulationRunner.Tests
                             Alias = "player",
                             Position = new ScenarioPosition { X = 1, Y = 1 },
                             FacingDirection = "Right",
+                            PlayerReaction = "Normal",
+                            ReactionMilliseconds = 0,
                         },
                     ],
                 },

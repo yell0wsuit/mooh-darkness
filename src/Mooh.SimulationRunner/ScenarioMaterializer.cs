@@ -2,6 +2,8 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 
+using Mooh.Core.Combat;
+using Mooh.Core.Enemies;
 using Mooh.Core.Entities;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
@@ -39,7 +41,9 @@ namespace Mooh.SimulationRunner
                     new GridPosition(definition.Position.X, definition.Position.Y),
                     CreateInteractionMask(definition.Interactions),
                     CreateGravityBody(definition.GravityBody),
-                    CreatePlayerBody(definition.PlayerBody, scenario.Name));
+                    CreatePlayerBody(definition.PlayerBody, scenario.Name),
+                    CreateHealthBody(definition.HealthBody),
+                    CreateGreenMonsterBody(definition.GreenMonsterBody, scenario.Name));
                 world.Add(entity);
                 idsByAlias.Add(definition.Alias, id);
                 aliasesById.Add(id, definition.Alias);
@@ -95,6 +99,34 @@ namespace Mooh.SimulationRunner
                         definition.FacingDirection,
                         source,
                         "playerBody.facingDirection"));
+        }
+
+        private static HealthBody? CreateHealthBody(ScenarioHealthBody? definition)
+        {
+            return definition is null
+                ? null
+                : new HealthBody(
+                    definition.Maximum,
+                    definition.Current,
+                    TimeSpan.FromMilliseconds(definition.ImmunityMilliseconds));
+        }
+
+        private static GreenMonsterBody? CreateGreenMonsterBody(
+            ScenarioGreenMonsterBody? definition,
+            string source)
+        {
+            return definition is null
+                ? null
+                : new GreenMonsterBody(
+                    definition.MoveSpeed,
+                    ScenarioValidator.ParseEnum<Direction>(
+                        definition.FacingDirection,
+                        source,
+                        "greenMonsterBody.facingDirection"),
+                    TimeSpan.FromMilliseconds(definition.TurnMilliseconds),
+                    TimeSpan.FromMilliseconds(definition.AttackWindupMilliseconds),
+                    TimeSpan.FromMilliseconds(definition.AttackRecoveryMilliseconds),
+                    definition.StrikeDamage);
         }
     }
 }

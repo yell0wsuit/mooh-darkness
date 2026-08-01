@@ -2,7 +2,7 @@
 
 Mooh Darkness is a rewrite of the 2007 grid-based puzzle game, Crazy Chicken: Jewel of Darkness. The project targets .NET 10.
 
-The current milestone is deliberately headless. `Mooh.Core` loads and validates the committed 150-level authoritative JSON pack into strongly typed archival models without creating runtime simulation entities. It also enforces a zero-or-one-player simulation world, interprets held cardinal input, and advances the player continuously between authoritative grid cells. Walking supports immediate same-axis reversal, turns only at cell boundaries, and preserves occupancy until a validated crossing. Push chains move continuously at their configured multiplier, continue independently until blocked, and hand off to falling or round-object sliding when gravity takes over. Each update returns an ordered trace of player, push, gravity, and cell-entry events.
+The current milestone is deliberately headless. `Mooh.Core` loads and validates the committed 150-level authoritative JSON pack into strongly typed archival models without creating runtime simulation entities. It also simulates a zero-or-one-player world with health, damage immunity, shock and death reactions, plus autonomous green monsters that walk, turn, wind up strikes, recheck targets, and recover. Walking, pushing, gravity, and round-object sliding share deterministic occupancy and continuous-motion rules. Each update returns an ordered typed event trace suitable for tests and a future renderer.
 
 Runtime materialization of archival level objects, MonoGame integration, rendering, keyboard and gamepad input adapters, and complete collision physics are outside the current milestone.
 
@@ -17,7 +17,9 @@ dotnet test Mooh.slnx
 
 `Mooh.SimulationRunner` executes self-verifying headless simulation scenarios. Each JSON
 file declares a runtime grid, ordered entities, a random seed, timed held inputs, the exact
-event trace for every update, and the expected final entity state.
+event trace for every update, and the expected final entity state. Supported runtime
+components include gravity, player control, health, and green-monster behavior; scenarios
+can assert final health, immunity, player reaction, and monster phase/timers.
 
 Run one scenario or every top-level JSON scenario in a directory:
 

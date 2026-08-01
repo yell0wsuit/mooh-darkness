@@ -1,3 +1,4 @@
+using Mooh.Core.Combat;
 using Mooh.Core.Grid;
 
 namespace Mooh.SimulationRunner
@@ -13,6 +14,14 @@ namespace Mooh.SimulationRunner
         /// <param name="from">An optional pre-rotation direction.</param>
         /// <param name="to">An optional post-rotation direction.</param>
         /// <param name="position">An optional grid position.</param>
+        /// <param name="fromPosition">An optional movement source position.</param>
+        /// <param name="toPosition">An optional movement destination position.</param>
+        /// <param name="sourceEntity">An optional source-entity alias.</param>
+        /// <param name="damageKind">An optional semantic damage kind.</param>
+        /// <param name="damageResult">An optional damage-resolution result.</param>
+        /// <param name="amount">An optional damage amount.</param>
+        /// <param name="remainingHealth">Optional remaining health after damage.</param>
+        /// <param name="durationMilliseconds">An optional event duration in milliseconds.</param>
         public ObservedEvent(
             string type,
             string entity,
@@ -20,7 +29,15 @@ namespace Mooh.SimulationRunner
             Direction? direction = null,
             Direction? from = null,
             Direction? to = null,
-            GridPosition? position = null)
+            GridPosition? position = null,
+            GridPosition? fromPosition = null,
+            GridPosition? toPosition = null,
+            string? sourceEntity = null,
+            DamageKind? damageKind = null,
+            DamageResult? damageResult = null,
+            double? amount = null,
+            double? remainingHealth = null,
+            long? durationMilliseconds = null)
         {
             Type = type;
             Entity = entity;
@@ -29,6 +46,14 @@ namespace Mooh.SimulationRunner
             From = from;
             To = to;
             Position = position;
+            FromPosition = fromPosition;
+            ToPosition = toPosition;
+            SourceEntity = sourceEntity;
+            DamageKind = damageKind;
+            DamageResult = damageResult;
+            Amount = amount;
+            RemainingHealth = remainingHealth;
+            DurationMilliseconds = durationMilliseconds;
         }
 
         /// <summary>Gets the concrete event type name.</summary>
@@ -51,5 +76,29 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets an optional grid position.</summary>
         public GridPosition? Position { get; }
+
+        /// <summary>Gets an optional movement source position.</summary>
+        public GridPosition? FromPosition { get; }
+
+        /// <summary>Gets an optional movement destination position.</summary>
+        public GridPosition? ToPosition { get; }
+
+        /// <summary>Gets an optional source-entity alias.</summary>
+        public string? SourceEntity { get; }
+
+        /// <summary>Gets an optional semantic damage kind.</summary>
+        public DamageKind? DamageKind { get; }
+
+        /// <summary>Gets an optional damage-resolution result.</summary>
+        public DamageResult? DamageResult { get; }
+
+        /// <summary>Gets an optional damage amount.</summary>
+        public double? Amount { get; }
+
+        /// <summary>Gets optional remaining health after damage.</summary>
+        public double? RemainingHealth { get; }
+
+        /// <summary>Gets an optional event duration in milliseconds.</summary>
+        public long? DurationMilliseconds { get; }
     }
 }

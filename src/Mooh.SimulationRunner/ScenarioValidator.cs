@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Mooh.Core.Combat;
+using Mooh.Core.Enemies;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
+using Mooh.Core.Player;
 
 namespace Mooh.SimulationRunner
 {
@@ -23,6 +26,14 @@ namespace Mooh.SimulationRunner
             From = 1 << 2,
             To = 1 << 3,
             Position = 1 << 4,
+            FromPosition = 1 << 5,
+            ToPosition = 1 << 6,
+            SourceEntity = 1 << 7,
+            DamageKind = 1 << 8,
+            DamageResult = 1 << 9,
+            Amount = 1 << 10,
+            RemainingHealth = 1 << 11,
+            DurationMilliseconds = 1 << 12,
         }
 
         /// <summary>Validates a scenario document.</summary>
@@ -122,6 +133,58 @@ namespace Mooh.SimulationRunner
                         source,
                         $"{path}.playerBody.facingDirection");
                 }
+
+                if (entity.HealthBody is ScenarioHealthBody healthBody)
+                {
+                    if (!double.IsFinite(healthBody.Maximum) || healthBody.Maximum <= 0)
+                    {
+                        throw Invalid(source, $"{path}.healthBody.maximum", "must be finite and positive.");
+                    }
+
+                    if (!double.IsFinite(healthBody.Current)
+                        || healthBody.Current < 0
+                        || healthBody.Current > healthBody.Maximum)
+                    {
+                        throw Invalid(
+                            source,
+                            $"{path}.healthBody.current",
+                            "must be finite and within [0, maximum].");
+                    }
+
+                    ValidatePositiveMilliseconds(
+                        healthBody.ImmunityMilliseconds,
+                        source,
+                        $"{path}.healthBody.immunityMilliseconds");
+                }
+
+                if (entity.GreenMonsterBody is ScenarioGreenMonsterBody monsterBody)
+                {
+                    if (!double.IsFinite(monsterBody.MoveSpeed) || monsterBody.MoveSpeed <= 0)
+                    {
+                        throw Invalid(source, $"{path}.greenMonsterBody.moveSpeed", "must be finite and positive.");
+                    }
+
+                    _ = ParseEnum<Direction>(
+                        monsterBody.FacingDirection,
+                        source,
+                        $"{path}.greenMonsterBody.facingDirection");
+                    ValidatePositiveMilliseconds(
+                        monsterBody.TurnMilliseconds,
+                        source,
+                        $"{path}.greenMonsterBody.turnMilliseconds");
+                    ValidatePositiveMilliseconds(
+                        monsterBody.AttackWindupMilliseconds,
+                        source,
+                        $"{path}.greenMonsterBody.attackWindupMilliseconds");
+                    ValidatePositiveMilliseconds(
+                        monsterBody.AttackRecoveryMilliseconds,
+                        source,
+                        $"{path}.greenMonsterBody.attackRecoveryMilliseconds");
+                    if (!double.IsFinite(monsterBody.StrikeDamage) || monsterBody.StrikeDamage <= 0)
+                    {
+                        throw Invalid(source, $"{path}.greenMonsterBody.strikeDamage", "must be finite and positive.");
+                    }
+                }
             }
 
             if (playerCount > 1)
@@ -215,6 +278,11 @@ namespace Mooh.SimulationRunner
                 ValidateAliasReference(eatenEntity, aliases, source, $"{path}.eatenEntity");
             }
 
+            if (expected.SourceEntity is string sourceEntity)
+            {
+                ValidateAliasReference(sourceEntity, aliases, source, $"{path}.sourceEntity");
+            }
+
             if (expected.Direction is string direction)
             {
                 _ = ParseEnum<Direction>(direction, source, $"{path}.direction");
@@ -234,6 +302,42 @@ namespace Mooh.SimulationRunner
             {
                 ValidatePosition(expected.Position, world, source, $"{path}.position");
             }
+
+            if (expected.FromPosition is not null)
+            {
+                ValidatePosition(expected.FromPosition, world, source, $"{path}.fromPosition");
+            }
+
+            if (expected.ToPosition is not null)
+            {
+                ValidatePosition(expected.ToPosition, world, source, $"{path}.toPosition");
+            }
+
+            if (expected.DamageKind is string damageKind)
+            {
+                _ = ParseEnum<DamageKind>(damageKind, source, $"{path}.damageKind");
+            }
+
+            if (expected.DamageResult is string damageResult)
+            {
+                _ = ParseEnum<DamageResult>(damageResult, source, $"{path}.damageResult");
+            }
+
+            if (expected.Amount is double amount && (!double.IsFinite(amount) || amount <= 0))
+            {
+                throw Invalid(source, $"{path}.amount", "must be finite and positive.");
+            }
+
+            if (expected.RemainingHealth is double remainingHealth
+                && (!double.IsFinite(remainingHealth) || remainingHealth < 0))
+            {
+                throw Invalid(source, $"{path}.remainingHealth", "must be finite and non-negative.");
+            }
+
+            if (expected.DurationMilliseconds is long durationMilliseconds)
+            {
+                ValidatePositiveMilliseconds(durationMilliseconds, source, $"{path}.durationMilliseconds");
+            }
         }
 
         private static void ValidateEventFields(ExpectedEvent expected, string source, string path)
@@ -246,7 +350,17 @@ namespace Mooh.SimulationRunner
                     or "SlideStarted" => EventFields.Direction,
                 "PlayerAte" => EventFields.EatenEntity,
                 "PlayerRotationStarted" => EventFields.From | EventFields.To,
-                "PlayerStopped" => EventFields.None,
+                "DamageApplied" => EventFields.SourceEntity | EventFields.DamageKind
+                    | EventFields.Amount | EventFields.RemainingHealth,
+                "DamageIgnored" => EventFields.SourceEntity | EventFields.DamageKind
+                    | EventFields.DamageResult,
+                "EnemyAttackStarted" => EventFields.Position | EventFields.DurationMilliseconds,
+                "EnemyMoveStarted" => EventFields.FromPosition | EventFields.ToPosition,
+                "EnemyStrike" => EventFields.Position,
+                "EnemyTurnCompleted" => EventFields.Direction,
+                "EnemyTurnStarted" => EventFields.From | EventFields.To | EventFields.DurationMilliseconds,
+                "PlayerShockStarted" => EventFields.DurationMilliseconds,
+                "PlayerDied" or "PlayerShockEnded" or "PlayerStopped" => EventFields.None,
                 _ => EventFields.None,
             };
             EventFields actual = EventFields.None;
@@ -255,6 +369,16 @@ namespace Mooh.SimulationRunner
             actual |= expected.From is null ? EventFields.None : EventFields.From;
             actual |= expected.To is null ? EventFields.None : EventFields.To;
             actual |= expected.Position is null ? EventFields.None : EventFields.Position;
+            actual |= expected.FromPosition is null ? EventFields.None : EventFields.FromPosition;
+            actual |= expected.ToPosition is null ? EventFields.None : EventFields.ToPosition;
+            actual |= expected.SourceEntity is null ? EventFields.None : EventFields.SourceEntity;
+            actual |= expected.DamageKind is null ? EventFields.None : EventFields.DamageKind;
+            actual |= expected.DamageResult is null ? EventFields.None : EventFields.DamageResult;
+            actual |= expected.Amount is null ? EventFields.None : EventFields.Amount;
+            actual |= expected.RemainingHealth is null ? EventFields.None : EventFields.RemainingHealth;
+            actual |= expected.DurationMilliseconds is null
+                ? EventFields.None
+                : EventFields.DurationMilliseconds;
             if (actual != required)
             {
                 throw Invalid(
@@ -267,15 +391,25 @@ namespace Mooh.SimulationRunner
         private static readonly string[] SupportedEventTypes =
         [
             "CellEntered",
+            "DamageApplied",
+            "DamageIgnored",
+            "EnemyAttackStarted",
+            "EnemyMoveStarted",
+            "EnemyStrike",
+            "EnemyTurnCompleted",
+            "EnemyTurnStarted",
             "FallStarted",
             "Landed",
             "PlayerAte",
             "PlayerBlocked",
             "PlayerMoveStarted",
+            "PlayerDied",
             "PlayerReturned",
             "PlayerReversed",
             "PlayerRotationCompleted",
             "PlayerRotationStarted",
+            "PlayerShockEnded",
+            "PlayerShockStarted",
             "PlayerStopped",
             "PushStarted",
             "SlideStarted",
@@ -344,6 +478,82 @@ namespace Mooh.SimulationRunner
                             "must be finite and non-negative.");
                     }
                 }
+
+                ScenarioEntity declaration = scenario.World.Entities.Single(
+                    candidate => string.Equals(candidate.Alias, entity.Alias, StringComparison.Ordinal));
+                ValidateFinalGameplayState(entity, declaration, source, path);
+            }
+        }
+
+        private static void ValidateFinalGameplayState(
+            ExpectedEntityState expected,
+            ScenarioEntity declaration,
+            string source,
+            string path)
+        {
+            if (declaration.HealthBody is not null)
+            {
+                if (expected.CurrentHealth is not double currentHealth
+                    || !double.IsFinite(currentHealth)
+                    || currentHealth < 0
+                    || currentHealth > declaration.HealthBody.Maximum)
+                {
+                    throw Invalid(source, $"{path}.currentHealth", "must be finite and within [0, maximum].");
+                }
+
+                ValidateNonNegativeMilliseconds(
+                    expected.ImmunityMilliseconds,
+                    source,
+                    $"{path}.immunityMilliseconds");
+            }
+            else if (expected.CurrentHealth is not null || expected.ImmunityMilliseconds is not null)
+            {
+                throw Invalid(source, path, "cannot declare health state without a health body.");
+            }
+
+            if (declaration.PlayerBody is not null)
+            {
+                _ = ParseEnum<Direction>(
+                    expected.FacingDirection ?? string.Empty,
+                    source,
+                    $"{path}.facingDirection");
+                _ = ParseEnum<PlayerReactionKind>(
+                    expected.PlayerReaction ?? string.Empty,
+                    source,
+                    $"{path}.playerReaction");
+                ValidateNonNegativeMilliseconds(
+                    expected.ReactionMilliseconds,
+                    source,
+                    $"{path}.reactionMilliseconds");
+            }
+            else if (expected.FacingDirection is not null
+                || expected.Rotation is not null
+                || expected.PlayerReaction is not null
+                || expected.ReactionMilliseconds is not null)
+            {
+                throw Invalid(source, path, "cannot declare player state without a player body.");
+            }
+
+            if (declaration.GreenMonsterBody is not null)
+            {
+                _ = ParseEnum<GreenMonsterState>(
+                    expected.GreenMonsterState ?? string.Empty,
+                    source,
+                    $"{path}.greenMonsterState");
+                _ = ParseEnum<Direction>(
+                    expected.GreenMonsterFacingDirection ?? string.Empty,
+                    source,
+                    $"{path}.greenMonsterFacingDirection");
+                ValidateNonNegativeMilliseconds(
+                    expected.GreenMonsterRemainingMilliseconds,
+                    source,
+                    $"{path}.greenMonsterRemainingMilliseconds");
+            }
+            else if (expected.GreenMonsterState is not null
+                || expected.GreenMonsterFacingDirection is not null
+                || expected.GreenMonsterRemainingMilliseconds is not null)
+            {
+                throw Invalid(source, path, "cannot declare green-monster state without a green-monster body.");
             }
         }
 
@@ -391,6 +601,24 @@ namespace Mooh.SimulationRunner
                 || position.Y < 0 || position.Y >= world.Height)
             {
                 throw Invalid(source, path, "is outside the world.");
+            }
+        }
+
+        private static void ValidatePositiveMilliseconds(long value, string source, string path)
+        {
+            if (value <= 0 || value > MaximumAdvanceMilliseconds)
+            {
+                throw Invalid(source, path, $"must be within [1, {MaximumAdvanceMilliseconds}].");
+            }
+        }
+
+        private static void ValidateNonNegativeMilliseconds(long? value, string source, string path)
+        {
+            if (value is not long milliseconds
+                || milliseconds < 0
+                || milliseconds > MaximumAdvanceMilliseconds)
+            {
+                throw Invalid(source, path, $"must be within [0, {MaximumAdvanceMilliseconds}].");
             }
         }
 

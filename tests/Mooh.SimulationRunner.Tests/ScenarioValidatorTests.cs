@@ -80,6 +80,42 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Contains("world.gravity", exception.Message, StringComparison.Ordinal);
         }
 
+        /// <summary>Verifies invalid health and green-monster configuration is rejected.</summary>
+        [Fact]
+        public void RejectsInvalidGameplayComponents()
+        {
+            ScenarioDocument valid = ScenarioTestData.CreateValid();
+            ScenarioEntity invalidMonster = new()
+            {
+                Alias = "monster",
+                Position = new ScenarioPosition { X = 2, Y = 2 },
+                Interactions = [],
+                HealthBody = new ScenarioHealthBody
+                {
+                    Maximum = 0,
+                    Current = 0,
+                    ImmunityMilliseconds = 500,
+                },
+                GreenMonsterBody = new ScenarioGreenMonsterBody
+                {
+                    MoveSpeed = 1.5625,
+                    FacingDirection = "Right",
+                    TurnMilliseconds = 0,
+                    AttackWindupMilliseconds = 625,
+                    AttackRecoveryMilliseconds = 500,
+                    StrikeDamage = 20,
+                },
+            };
+            ScenarioDocument scenario = ScenarioTestData.WithWorld(
+                valid,
+                entities: [valid.World.Entities[0], invalidMonster]);
+
+            ScenarioValidationException exception = Assert.Throws<ScenarioValidationException>(
+                () => ScenarioValidator.Validate(scenario, "components.json"));
+
+            Assert.Contains("healthBody.maximum", exception.Message, StringComparison.Ordinal);
+        }
+
         private static List<ScenarioDocument> CreateInvalidScenarios()
         {
             ScenarioDocument valid = ScenarioTestData.CreateValid();

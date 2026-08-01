@@ -1,0 +1,91 @@
+{
+    "formatVersion": 1,
+    "name": "green monster strikes player",
+    "world": {
+        "width": 2,
+        "height": 1,
+        "gravity": "Down",
+        "randomSeed": 0,
+        "entities": [
+            {
+                "alias": "monster",
+                "position": { "x": 0, "y": 0 },
+                "interactions": ["BlocksMovement"],
+                "greenMonsterBody": {
+                    "moveSpeed": 1.5625,
+                    "facingDirection": "Right",
+                    "turnMilliseconds": 250,
+                    "attackWindupMilliseconds": 625,
+                    "attackRecoveryMilliseconds": 500,
+                    "strikeDamage": 20
+                }
+            },
+            {
+                "alias": "player",
+                "position": { "x": 1, "y": 0 },
+                "interactions": ["BlocksMovement"],
+                "playerBody": {
+                    "moveSpeed": 2.5,
+                    "pushSpeedMultiplier": 1.5,
+                    "facingDirection": "Left"
+                },
+                "healthBody": {
+                    "maximum": 100,
+                    "current": 100,
+                    "immunityMilliseconds": 500
+                }
+            }
+        ]
+    },
+    "steps": [
+        {
+            "advanceMilliseconds": 625,
+            "expectEvents": [
+                {
+                    "type": "EnemyAttackStarted",
+                    "entity": "monster",
+                    "position": { "x": 1, "y": 0 },
+                    "durationMilliseconds": 625
+                },
+                {
+                    "type": "EnemyStrike",
+                    "entity": "monster",
+                    "position": { "x": 1, "y": 0 }
+                },
+                {
+                    "type": "DamageApplied",
+                    "entity": "player",
+                    "sourceEntity": "monster",
+                    "damageKind": "Strike",
+                    "amount": 20,
+                    "remainingHealth": 80
+                },
+                {
+                    "type": "PlayerShockStarted",
+                    "entity": "player",
+                    "durationMilliseconds": 700
+                }
+            ]
+        }
+    ],
+    "expectFinal": {
+        "entities": [
+            {
+                "alias": "monster",
+                "position": { "x": 0, "y": 0 },
+                "greenMonsterState": "AttackRecovery",
+                "greenMonsterFacingDirection": "Right",
+                "greenMonsterRemainingMilliseconds": 500
+            },
+            {
+                "alias": "player",
+                "position": { "x": 1, "y": 0 },
+                "facingDirection": "Left",
+                "currentHealth": 80,
+                "immunityMilliseconds": 500,
+                "playerReaction": "Shocked",
+                "reactionMilliseconds": 700
+            }
+        ]
+    }
+}
