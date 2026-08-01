@@ -5,7 +5,6 @@ using Mooh.Core.Entities;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
-using Mooh.Core.Motion;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
@@ -34,9 +33,8 @@ namespace Mooh.Core.Tests.Player
             IReadOnlyList<SimulationEvent> events = simulation.Advance(
                 TimeSpan.FromSeconds(2.0 / 3.0));
 
-            Assert.Equal(new GridPosition(4, 1), block.Position);
-            Assert.NotNull(block.Motion);
-            Assert.Equal(MotionCause.PlayerPushed, block.Motion.Cause);
+            Assert.Equal(new GridPosition(3, 1), block.Position);
+            Assert.Null(block.Motion);
             Assert.Equal(new GridPosition(2, 1), player.Position);
             Assert.NotNull(player.Motion);
             Assert.Equal(2.0 / 3.0, player.Motion.Progress, precision: 6);
@@ -49,9 +47,9 @@ namespace Mooh.Core.Tests.Player
                 events);
         }
 
-        /// <summary>Verifies farthest-first start and equal-time boundary resolution for a chain.</summary>
+        /// <summary>Verifies that adjacent pushables cannot recursively push a second cell.</summary>
         [Fact]
-        public void PushChainResolvesFarthestFirstAtEqualBoundaryTime()
+        public void CrossCellPushChainDoesNotStart()
         {
             (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
                 moveSpeed: 1,
@@ -60,32 +58,15 @@ namespace Mooh.Core.Tests.Player
             Entity second = Add(world, x: 3, Pushable);
             simulation.SetPlayerInput(HeldRight);
 
-            IReadOnlyList<SimulationEvent> started = simulation.Advance(TimeSpan.FromSeconds(0.1));
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
 
-            Assert.Equal(0, second.Motion!.ResolutionOrder);
-            Assert.Equal(1, first.Motion!.ResolutionOrder);
-            Assert.Equal(
-                [
-                    new PushStarted(second.Id, Direction.Right),
-                    new PushStarted(first.Id, Direction.Right),
-                    new PlayerMoveStarted(player.Id, Direction.Right),
-                ],
-                started);
-
-            simulation.SetPlayerInput(default);
-            IReadOnlyList<SimulationEvent> crossed = simulation.Advance(TimeSpan.FromSeconds(0.9));
-
-            Assert.Equal(new GridPosition(5, 1), second.Position);
-            Assert.Equal(new GridPosition(4, 1), first.Position);
-            Assert.Equal(new GridPosition(2, 1), player.Position);
-            Assert.Equal(
-                [
-                    new CellEntered(second.Id, new GridPosition(4, 1)),
-                    new CellEntered(first.Id, new GridPosition(3, 1)),
-                    new CellEntered(player.Id, new GridPosition(2, 1)),
-                    new PlayerStopped(player.Id),
-                ],
-                crossed);
+            Assert.Null(second.Motion);
+            Assert.Null(first.Motion);
+            Assert.Null(player.Motion);
+            Assert.Equal(new GridPosition(3, 1), second.Position);
+            Assert.Equal(new GridPosition(2, 1), first.Position);
+            Assert.Equal(new GridPosition(1, 1), player.Position);
+            Assert.Equal([new PlayerBlocked(player.Id, Direction.Right)], events);
         }
 
         /// <summary>Verifies that same-cell pushables cross together in deterministic plan order.</summary>
@@ -103,7 +84,7 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.9));
 
-            Assert.Equal([first, second], world.GetOccupants(new GridPosition(4, 1)));
+            Assert.Equal([first, second], world.GetOccupants(new GridPosition(3, 1)));
             Assert.Equal(new GridPosition(2, 1), player.Position);
             Assert.Equal(
                 [
@@ -115,9 +96,9 @@ namespace Mooh.Core.Tests.Player
                 events);
         }
 
-        /// <summary>Verifies that a pushed block continues cell-by-cell until its next cell is blocked.</summary>
+        /// <summary>Verifies that a pushed block stops after exactly one cell.</summary>
         [Fact]
-        public void PushedBlockContinuesUntilBlocked()
+        public void PushedBlockStopsAfterOneCell()
         {
             (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
                 moveSpeed: 1,
@@ -130,7 +111,7 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(1.9));
 
-            Assert.Equal(new GridPosition(4, 1), block.Position);
+            Assert.Equal(new GridPosition(3, 1), block.Position);
             Assert.Null(block.Motion);
             Assert.Equal(new GridPosition(2, 1), player.Position);
             Assert.Null(player.Motion);
@@ -139,7 +120,6 @@ namespace Mooh.Core.Tests.Player
                     new CellEntered(block.Id, new GridPosition(3, 1)),
                     new CellEntered(player.Id, new GridPosition(2, 1)),
                     new PlayerStopped(player.Id),
-                    new CellEntered(block.Id, new GridPosition(4, 1)),
                 ],
                 events);
         }

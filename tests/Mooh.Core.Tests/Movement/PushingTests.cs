@@ -8,7 +8,7 @@ using Xunit;
 namespace Mooh.Core.Tests.Movement
 {
     /// <summary>
-    /// Verifies atomic single-block and chained pushing behavior.
+    /// Verifies atomic adjacent-cell pushing behavior.
     /// </summary>
     public sealed class PushingTests
     {
@@ -36,9 +36,9 @@ namespace Mooh.Core.Tests.Movement
             Assert.Equal(new GridPosition(3, 1), block.Position);
         }
 
-        /// <summary>Verifies that a push chain moves its farthest block first.</summary>
+        /// <summary>Verifies that an object in the cell beyond the adjacent push target blocks the push.</summary>
         [Fact]
-        public void PushChainMovesFarthestBlockFirst()
+        public void CrossCellPushChainIsBlocked()
         {
             (WorldGrid World, MovementSystem Movement) context = CreateContext();
             Entity mover = Add(context.World, 2, InteractionMask.None);
@@ -47,14 +47,8 @@ namespace Mooh.Core.Tests.Movement
 
             MovementPlan plan = context.Movement.Plan(new MoveRequest(mover.Id, Direction.Right));
 
-            Assert.Equal(MoveResult.Pushed, plan.Result);
-            Assert.Equal(
-                [
-                    new MovementStep(second.Id, new GridPosition(4, 1), new GridPosition(5, 1)),
-                    new MovementStep(first.Id, new GridPosition(3, 1), new GridPosition(4, 1)),
-                    new MovementStep(mover.Id, new GridPosition(2, 1), new GridPosition(3, 1)),
-                ],
-                plan.Steps);
+            Assert.Equal(MoveResult.Blocked, plan.Result);
+            Assert.Empty(plan.Steps);
             Assert.Equal(new GridPosition(2, 1), mover.Position);
             Assert.Equal(new GridPosition(3, 1), first.Position);
             Assert.Equal(new GridPosition(4, 1), second.Position);

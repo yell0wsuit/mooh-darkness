@@ -116,7 +116,8 @@ namespace Mooh.Core.Tests.Player
                 TimeSpan.FromSeconds(2.0 / 3.0));
 
             GridPosition blockDestination = blockStart.Offset(direction);
-            Assert.Equal(blockDestination.Offset(direction), block.Position);
+            Assert.Equal(blockDestination, block.Position);
+            Assert.Null(block.Motion);
             Assert.Equal(blockStart, player.Position);
             Assert.Equal(
                 [

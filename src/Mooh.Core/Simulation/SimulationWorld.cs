@@ -21,7 +21,6 @@ namespace Mooh.Core.Simulation
         private const double TimeTolerance = 1e-12;
 
         private readonly GravitySystem _gravity;
-        private readonly DefaultInteractionPolicy _interactions;
         private readonly double _maximumTravelPerSubstep;
         private readonly MovementSystem _movement;
         private readonly PlayerController? _playerController;
@@ -77,8 +76,7 @@ namespace Mooh.Core.Simulation
             _gravityDirection = gravityDirection;
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
             _gravity = new GravitySystem(collisionPolicy, random);
-            _interactions = new DefaultInteractionPolicy();
-            _movement = new MovementSystem(world, _interactions);
+            _movement = new MovementSystem(world, new DefaultInteractionPolicy());
             _playerController = world.Player is Entity player
                 ? new PlayerController(player, world, _movement)
                 : null;
@@ -218,7 +216,7 @@ namespace Mooh.Core.Simulation
 
                 if (motion.Cause == MotionCause.PlayerPushed)
                 {
-                    ResolvePushedBoundary(entity, motion, events);
+                    ResolvePushedBoundary(entity, events);
                     continue;
                 }
 
@@ -276,12 +274,8 @@ namespace Mooh.Core.Simulation
 
         private void ResolvePushedBoundary(
             Entity entity,
-            MotionState motion,
             List<SimulationEvent> events)
         {
-            Direction direction = motion.SegmentDirection;
-            double speed = motion.Speed;
-            int resolutionOrder = motion.ResolutionOrder;
             GridPosition destination = entity.Position;
             events.Add(new CellEntered(entity.Id, destination));
             KinematicsSystem.Stop(entity);
@@ -290,43 +284,6 @@ namespace Mooh.Core.Simulation
             {
                 return;
             }
-
-            if (CanContinuePush(entity, direction, resolutionOrder))
-            {
-                GridPosition following = entity.Position.Offset(direction);
-                _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, following)]);
-                KinematicsSystem.Start(
-                    entity,
-                    MotionCause.PlayerPushed,
-                    direction,
-                    speed,
-                    resolutionOrder);
-            }
-        }
-
-        private bool CanContinuePush(Entity entity, Direction direction, int resolutionOrder)
-        {
-            GridPosition destination = entity.Position.Offset(direction);
-            if (!_world.Contains(destination))
-            {
-                return false;
-            }
-
-            foreach (Entity occupant in _world.GetOccupants(destination))
-            {
-                MotionState? occupantMotion = occupant.Motion;
-                bool followsEarlierPush = occupantMotion is not null
-                    && occupantMotion.Cause == MotionCause.PlayerPushed
-                    && occupantMotion.SegmentDirection == direction
-                    && occupantMotion.ResolutionOrder < resolutionOrder;
-                if (!followsEarlierPush
-                    && _interactions.Classify(entity, occupant) != OccupantInteraction.Allow)
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         private void ResolvePlayerBoundary(
