@@ -48,5 +48,17 @@ namespace Mooh.Core.Combat
             Current = Math.Max(0, Current - amount);
             ImmunityRemaining = ImmunityDuration;
         }
+
+        internal void AdvanceImmunity(TimeSpan elapsed)
+        {
+            if (ImmunityRemaining <= TimeSpan.Zero)
+            {
+                return;
+            }
+
+            ImmunityRemaining = elapsed >= ImmunityRemaining
+                ? TimeSpan.Zero
+                : ImmunityRemaining - elapsed;
+        }
     }
 }

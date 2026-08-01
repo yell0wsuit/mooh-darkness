@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using Mooh.Core.Entities;
+using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
 namespace Mooh.Core.Combat
@@ -42,7 +43,8 @@ namespace Mooh.Core.Combat
                 return DamageResult.IgnoredDead;
             }
 
-            if (health.ImmunityRemaining > TimeSpan.Zero)
+            if (health.ImmunityRemaining > TimeSpan.Zero
+                || target.PlayerBody?.Reaction.Kind == PlayerReactionKind.Shocked)
             {
                 events.Add(new DamageIgnored(
                     target.Id,

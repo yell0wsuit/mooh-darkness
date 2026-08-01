@@ -9,17 +9,26 @@ namespace Mooh.Core.Player
     /// </summary>
     public sealed class PlayerBody
     {
+        private static readonly TimeSpan DefaultShockDuration = TimeSpan.FromMilliseconds(700);
+
         /// <summary>
         /// Initializes player movement configuration.
         /// </summary>
         /// <param name="moveSpeed">The player's walking speed in cells per second.</param>
         /// <param name="pushSpeedMultiplier">The multiplier applied to pushed-object speed.</param>
         /// <param name="facingDirection">The player's initial facing direction.</param>
+        /// <param name="shockDuration">
+        /// The optional duration of the player's nonlethal-damage reaction.
+        /// </param>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="moveSpeed"/> or <paramref name="pushSpeedMultiplier"/> is not finite and positive,
-        /// or <paramref name="facingDirection"/> is undefined.
+        /// <paramref name="facingDirection"/> is undefined, or <paramref name="shockDuration"/> is not positive.
         /// </exception>
-        public PlayerBody(double moveSpeed, double pushSpeedMultiplier, Direction facingDirection)
+        public PlayerBody(
+            double moveSpeed,
+            double pushSpeedMultiplier,
+            Direction facingDirection,
+            TimeSpan? shockDuration = null)
         {
             if (!double.IsFinite(moveSpeed) || moveSpeed <= 0)
             {
@@ -36,9 +45,16 @@ namespace Mooh.Core.Player
                 throw new ArgumentOutOfRangeException(nameof(facingDirection), facingDirection, null);
             }
 
+            TimeSpan resolvedShockDuration = shockDuration ?? DefaultShockDuration;
+            if (resolvedShockDuration <= TimeSpan.Zero)
+            {
+                throw new ArgumentOutOfRangeException(nameof(shockDuration));
+            }
+
             MoveSpeed = moveSpeed;
             PushSpeedMultiplier = pushSpeedMultiplier;
             FacingDirection = facingDirection;
+            ShockDuration = resolvedShockDuration;
         }
 
         /// <summary>Gets the player's walking speed in cells per second.</summary>
@@ -49,6 +65,12 @@ namespace Mooh.Core.Player
 
         /// <summary>Gets the direction the player currently faces.</summary>
         public Direction FacingDirection { get; internal set; }
+
+        /// <summary>Gets the duration of the uncontrollable nonlethal-damage reaction.</summary>
+        public TimeSpan ShockDuration { get; }
+
+        /// <summary>Gets the player's current damage reaction.</summary>
+        public PlayerReaction Reaction { get; } = new();
 
         /// <summary>Gets the active uncontrollable rotation, if any.</summary>
         public PlayerRotation? Rotation { get; internal set; }

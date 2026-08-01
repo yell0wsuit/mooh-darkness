@@ -50,7 +50,9 @@ namespace Mooh.Core.Player
             ArgumentNullException.ThrowIfNull(events);
             PlayerBody body = _player.PlayerBody
                 ?? throw new InvalidOperationException("The player entity has no player body.");
-            if (_player.Motion is not null || body.Rotation is not null)
+            if (_player.Motion is not null
+                || body.Rotation is not null
+                || body.Reaction.Kind != PlayerReactionKind.Normal)
             {
                 return;
             }

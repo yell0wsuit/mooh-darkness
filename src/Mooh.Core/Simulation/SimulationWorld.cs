@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Mooh.Core.Combat;
 using Mooh.Core.Entities;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
@@ -19,6 +20,7 @@ namespace Mooh.Core.Simulation
     {
         private const double BoundaryTolerance = 1e-6;
         private const double TimeTolerance = 1e-12;
+        private static readonly TimeSpan TimerTolerance = TimeSpan.FromTicks(1);
 
         private readonly GravitySystem _gravity;
         private readonly double _maximumTravelPerSubstep;
@@ -92,6 +94,41 @@ namespace Mooh.Core.Simulation
             controller.SetInput(input);
         }
 
+        /// <summary>Applies health damage and starts any corresponding player reaction.</summary>
+        /// <param name="request">The requested damage.</param>
+        /// <returns>The complete ordered event sequence produced by the request.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="request"/> is <see langword="null"/>.</exception>
+        /// <exception cref="KeyNotFoundException">The target entity is not registered.</exception>
+        public IReadOnlyList<SimulationEvent> ApplyDamage(DamageRequest request)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            Entity target = _world.GetEntity(request.TargetEntityId);
+            List<SimulationEvent> events = [];
+            DamageResult result = DamageSystem.Apply(target, request, events);
+            if (result != DamageResult.Applied || target.PlayerBody is not PlayerBody body)
+            {
+                return events;
+            }
+
+            KinematicsSystem.Stop(target);
+            body.Rotation = null;
+            _playerController?.EndSegment();
+            if (target.HealthBody!.IsDead)
+            {
+                body.Reaction.Kind = PlayerReactionKind.Dead;
+                body.Reaction.Remaining = TimeSpan.Zero;
+                events.Add(new PlayerDied(target.Id));
+            }
+            else
+            {
+                body.Reaction.Kind = PlayerReactionKind.Shocked;
+                body.Reaction.Remaining = body.ShockDuration;
+                events.Add(new PlayerShockStarted(target.Id, body.ShockDuration));
+            }
+
+            return events;
+        }
+
         /// <summary>Changes gravity direction while all entities are stationary.</summary>
         /// <param name="direction">The new cardinal gravity direction.</param>
         /// <exception cref="ArgumentOutOfRangeException">
@@ -138,6 +175,8 @@ namespace Mooh.Core.Simulation
                 Entity[] moving = [.. _world.Entities.Where(entity => entity.Motion is not null)];
                 double? rotationSeconds = _playerController?.RotationSecondsRemaining;
                 double? unlockSeconds = _world.SecondsUntilNextCellUnlock();
+                double? healthSeconds = SecondsUntilNextImmunityExpiry();
+                double? reactionSeconds = SecondsUntilPlayerReactionEnds();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -162,9 +201,21 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingUntilUnlock);
                 }
 
+                if (healthSeconds is double remainingImmunity)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingImmunity);
+                }
+
+                if (reactionSeconds is double remainingReaction)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingReaction);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
-                    && unlockSeconds is null)
+                    && unlockSeconds is null
+                    && healthSeconds is null
+                    && reactionSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -176,7 +227,9 @@ namespace Mooh.Core.Simulation
                 }
 
                 _world.AdvanceTime(substepSeconds);
+                AdvanceHealthImmunity(substepSeconds);
                 _playerController?.AdvanceRotation(substepSeconds, events);
+                AdvancePlayerReaction(substepSeconds, events);
 
                 remainingSeconds -= substepSeconds;
                 if (remainingSeconds < TimeTolerance)
@@ -194,6 +247,58 @@ namespace Mooh.Core.Simulation
             }
 
             return events;
+        }
+
+        private double? SecondsUntilNextImmunityExpiry()
+        {
+            TimeSpan? remaining = _world.Entities
+                .Select(entity => entity.HealthBody?.ImmunityRemaining)
+                .Where(value => value > TimeSpan.Zero)
+                .Min();
+            return remaining?.TotalSeconds;
+        }
+
+        private double? SecondsUntilPlayerReactionEnds()
+        {
+            PlayerReaction? reaction = _world.Player?.PlayerBody?.Reaction;
+            return reaction?.Kind == PlayerReactionKind.Shocked
+                ? reaction.Remaining.TotalSeconds
+                : null;
+        }
+
+        private void AdvanceHealthImmunity(double elapsedSeconds)
+        {
+            TimeSpan elapsed = TimeSpan.FromSeconds(elapsedSeconds);
+            foreach (Entity entity in _world.Entities)
+            {
+                entity.HealthBody?.AdvanceImmunity(elapsed);
+            }
+        }
+
+        private void AdvancePlayerReaction(
+            double elapsedSeconds,
+            List<SimulationEvent> events)
+        {
+            Entity? player = _world.Player;
+            PlayerReaction? reaction = player?.PlayerBody?.Reaction;
+            if (player is null
+                || reaction is null
+                || reaction.Kind != PlayerReactionKind.Shocked)
+            {
+                return;
+            }
+
+            TimeSpan elapsed = TimeSpan.FromSeconds(elapsedSeconds);
+            if (reaction.Remaining - elapsed > TimerTolerance)
+            {
+                reaction.Remaining -= elapsed;
+                return;
+            }
+
+            reaction.Kind = PlayerReactionKind.Normal;
+            reaction.Remaining = TimeSpan.Zero;
+            events.Add(new PlayerShockEnded(player.Id));
+            _playerController?.TryStart(events);
         }
 
         private void ValidateMotionState()
