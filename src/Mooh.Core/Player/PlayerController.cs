@@ -180,20 +180,20 @@ namespace Mooh.Core.Player
 
         public double? RotationSecondsRemaining => _player.PlayerBody?.Rotation?.RemainingSeconds;
 
-        public void AdvanceRotation(double elapsedSeconds, ICollection<SimulationEvent> events)
+        public bool AdvanceRotation(double elapsedSeconds, ICollection<SimulationEvent> events)
         {
             PlayerBody body = _player.PlayerBody
                 ?? throw new InvalidOperationException("The player entity has no player body.");
             PlayerRotation? rotation = body.Rotation;
             if (rotation is null)
             {
-                return;
+                return false;
             }
 
             rotation.RemainingSeconds -= elapsedSeconds;
             if (rotation.RemainingSeconds > TimeTolerance)
             {
-                return;
+                return false;
             }
 
             body.Rotation = null;
@@ -210,10 +210,10 @@ namespace Mooh.Core.Player
                 _player.Motion!.Progress = 1 - suspendedProgress;
                 _lastAppliedTravelDirection = rotation.To;
                 events.Add(new PlayerMoveStarted(_player.Id, rotation.To));
-                return;
+                return false;
             }
 
-            TryStart(events);
+            return true;
         }
 
         private void StartRotation(

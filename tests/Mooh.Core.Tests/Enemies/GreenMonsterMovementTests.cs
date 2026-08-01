@@ -7,6 +7,7 @@ using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
+using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
 using Xunit;
@@ -173,6 +174,44 @@ namespace Mooh.Core.Tests.Enemies
                         monster.Id,
                         new GridPosition(1, 0),
                         new GridPosition(2, 0)),
+                ],
+                events);
+        }
+
+        /// <summary>Verifies simultaneous boundaries resolve monster decisions before player control.</summary>
+        [Fact]
+        public void SimultaneousBoundariesResolveMonsterBeforePlayerContinuation()
+        {
+            WorldGrid world = new(6, 1);
+            Entity monster = NewMonster(0, 0, Direction.Right, moveSpeed: 2);
+            Entity player = new(
+                EntityId.New(),
+                new GridPosition(3, 0),
+                InteractionMask.BlocksMovement,
+                playerBody: new PlayerBody(2, 1.5, Direction.Right));
+            world.Add(monster);
+            world.Add(player);
+            SimulationWorld simulation = CreateSimulation(world);
+            simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(500));
+
+            Assert.Equal(new GridPosition(2, 0), monster.Position);
+            Assert.Equal(new GridPosition(5, 0), player.Position);
+            Assert.Equal(
+                [
+                    new EnemyMoveStarted(
+                        monster.Id,
+                        new GridPosition(0, 0),
+                        new GridPosition(1, 0)),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
+                    new CellEntered(monster.Id, new GridPosition(1, 0)),
+                    new CellEntered(player.Id, new GridPosition(4, 0)),
+                    new EnemyMoveStarted(
+                        monster.Id,
+                        new GridPosition(1, 0),
+                        new GridPosition(2, 0)),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
                 ],
                 events);
         }

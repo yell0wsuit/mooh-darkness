@@ -142,16 +142,16 @@ namespace Mooh.SimulationRunner
                     }
 
                     if (!double.IsFinite(healthBody.Current)
-                        || healthBody.Current < 0
+                        || healthBody.Current <= 0
                         || healthBody.Current > healthBody.Maximum)
                     {
                         throw Invalid(
                             source,
                             $"{path}.healthBody.current",
-                            "must be finite and within [0, maximum].");
+                            "must be finite and within (0, maximum].");
                     }
 
-                    ValidatePositiveMilliseconds(
+                    ValidateNonNegativeMilliseconds(
                         healthBody.ImmunityMilliseconds,
                         source,
                         $"{path}.healthBody.immunityMilliseconds");
@@ -617,6 +617,14 @@ namespace Mooh.SimulationRunner
             if (value is not long milliseconds
                 || milliseconds < 0
                 || milliseconds > MaximumAdvanceMilliseconds)
+            {
+                throw Invalid(source, path, $"must be within [0, {MaximumAdvanceMilliseconds}].");
+            }
+        }
+
+        private static void ValidateNonNegativeMilliseconds(long value, string source, string path)
+        {
+            if (value < 0 || value > MaximumAdvanceMilliseconds)
             {
                 throw Invalid(source, path, $"must be within [0, {MaximumAdvanceMilliseconds}].");
             }

@@ -173,8 +173,8 @@ namespace Mooh.Core.Simulation
             ValidateMotionState();
             List<SimulationEvent> events = [];
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
-            _playerController?.TryStart(events);
             _greenMonsters.DecideAll(events);
+            _playerController?.TryStart(events);
 
             double remainingSeconds = elapsed.TotalSeconds;
             while (remainingSeconds > 0)
@@ -243,8 +243,10 @@ namespace Mooh.Core.Simulation
 
                 _world.AdvanceTime(substepSeconds);
                 AdvanceHealthImmunity(substepSeconds);
-                _playerController?.AdvanceRotation(substepSeconds, events);
-                AdvancePlayerReaction(substepSeconds, events);
+                bool playerControlReady = _playerController?.AdvanceRotation(
+                    substepSeconds,
+                    events) == true;
+                playerControlReady |= AdvancePlayerReaction(substepSeconds, events);
                 _greenMonsters.AdvanceTimers(
                     substepSeconds,
                     events,
@@ -256,12 +258,21 @@ namespace Mooh.Core.Simulation
                     remainingSeconds = 0;
                 }
 
-                bool resolvedBoundary = ResolveBoundaries(events);
+                bool resolvedBoundary = ResolveBoundaries(
+                    events,
+                    out bool boundaryControlReady,
+                    out bool emitStoppedWhenNoInput);
+                playerControlReady |= boundaryControlReady;
                 if (!resolvedBoundary
                     && unlockSeconds is double expiringLock
                     && substepSeconds >= expiringLock - TimeTolerance)
                 {
                     _gravity.EvaluateStationary(_world, _gravityDirection, events);
+                }
+
+                if (playerControlReady)
+                {
+                    _playerController?.TryStart(events, emitStoppedWhenNoInput);
                 }
             }
 
@@ -294,7 +305,7 @@ namespace Mooh.Core.Simulation
             }
         }
 
-        private void AdvancePlayerReaction(
+        private bool AdvancePlayerReaction(
             double elapsedSeconds,
             List<SimulationEvent> events)
         {
@@ -304,20 +315,20 @@ namespace Mooh.Core.Simulation
                 || reaction is null
                 || reaction.Kind != PlayerReactionKind.Shocked)
             {
-                return;
+                return false;
             }
 
             TimeSpan elapsed = TimeSpan.FromSeconds(elapsedSeconds);
             if (reaction.Remaining - elapsed > TimerTolerance)
             {
                 reaction.Remaining -= elapsed;
-                return;
+                return false;
             }
 
             reaction.Kind = PlayerReactionKind.Normal;
             reaction.Remaining = TimeSpan.Zero;
             events.Add(new PlayerShockEnded(player.Id));
-            _playerController?.TryStart(events);
+            return true;
         }
 
         private void ValidateMotionState()
@@ -347,8 +358,13 @@ namespace Mooh.Core.Simulation
             }
         }
 
-        private bool ResolveBoundaries(List<SimulationEvent> events)
+        private bool ResolveBoundaries(
+            List<SimulationEvent> events,
+            out bool playerControlReady,
+            out bool emitStoppedWhenNoInput)
         {
+            playerControlReady = false;
+            emitStoppedWhenNoInput = false;
             Entity[] ready =
             [
                 .. _world.Entities
@@ -370,7 +386,7 @@ namespace Mooh.Core.Simulation
                     KinematicsSystem.Stop(entity);
                     _playerController!.EndSegment();
                     events.Add(new PlayerReturned(entity.Id, entity.Position));
-                    _playerController.TryStart(events);
+                    playerControlReady = true;
                     continue;
                 }
 
@@ -383,6 +399,8 @@ namespace Mooh.Core.Simulation
                 if (motion.Cause == MotionCause.PlayerWalking)
                 {
                     ResolvePlayerBoundary(entity, events);
+                    playerControlReady = true;
+                    emitStoppedWhenNoInput = true;
                     continue;
                 }
 
@@ -466,7 +484,6 @@ namespace Mooh.Core.Simulation
             _playerController!.EndSegment();
 
             events.Add(new CellEntered(player.Id, player.Position));
-            _playerController.TryStart(events, emitStoppedWhenNoInput: true);
         }
     }
 }

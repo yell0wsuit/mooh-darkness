@@ -116,6 +116,30 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Contains("healthBody.maximum", exception.Message, StringComparison.Ordinal);
         }
 
+        /// <summary>Verifies zero initial health is rejected before materialization.</summary>
+        [Fact]
+        public void RejectsZeroInitialHealth()
+        {
+            ScenarioDocument scenario = WithPlayerHealth(current: 0, immunityMilliseconds: 500);
+
+            ScenarioValidationException exception = Assert.Throws<ScenarioValidationException>(
+                () => ScenarioValidator.Validate(scenario, "zero-health.json"));
+
+            Assert.Contains("healthBody.current", exception.Message, StringComparison.Ordinal);
+        }
+
+        /// <summary>Verifies zero post-damage immunity matches the core health invariant.</summary>
+        [Fact]
+        public void AcceptsZeroImmunityDuration()
+        {
+            ScenarioDocument scenario = WithPlayerHealth(current: 100, immunityMilliseconds: 0);
+
+            ScenarioValidator.Validate(scenario, "zero-immunity.json");
+            MaterializedScenario materialized = ScenarioMaterializer.Materialize(scenario);
+
+            Assert.Equal(TimeSpan.Zero, materialized.World.Player!.HealthBody!.ImmunityDuration);
+        }
+
         private static List<ScenarioDocument> CreateInvalidScenarios()
         {
             ScenarioDocument valid = ScenarioTestData.CreateValid();
@@ -176,6 +200,40 @@ namespace Mooh.SimulationRunner.Tests
                     {
                         AdvanceMilliseconds = 1,
                         ExpectEvents = [expected],
+                    },
+                ]);
+        }
+
+        private static ScenarioDocument WithPlayerHealth(double current, long immunityMilliseconds)
+        {
+            ScenarioDocument scenario = ScenarioTestData.CreateValid();
+            ScenarioEntity original = scenario.World.Entities[0];
+            ScenarioEntity player = new()
+            {
+                Alias = original.Alias,
+                Position = original.Position,
+                Interactions = original.Interactions,
+                PlayerBody = original.PlayerBody,
+                HealthBody = new ScenarioHealthBody
+                {
+                    Maximum = 100,
+                    Current = current,
+                    ImmunityMilliseconds = immunityMilliseconds,
+                },
+            };
+            scenario = ScenarioTestData.WithWorld(scenario, entities: [player]);
+            return ScenarioTestData.WithFinal(
+                scenario,
+                [
+                    new ExpectedEntityState
+                    {
+                        Alias = "player",
+                        Position = original.Position,
+                        FacingDirection = "Right",
+                        CurrentHealth = current,
+                        ImmunityMilliseconds = 0,
+                        PlayerReaction = "Normal",
+                        ReactionMilliseconds = 0,
                     },
                 ]);
         }

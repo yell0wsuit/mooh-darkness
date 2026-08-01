@@ -73,6 +73,31 @@ namespace Mooh.Core.Tests.Enemies
                 Assert.Single(events));
         }
 
+        /// <summary>Verifies monsters decide before held input reserves an escape cell.</summary>
+        [Fact]
+        public void InitialMonsterDecisionPrecedesPlayerInput()
+        {
+            (SimulationWorld simulation, Entity monster, Entity player) = CreateFacingPair(
+                width: 2,
+                height: 2,
+                playerFacing: Direction.Up);
+            simulation.SetPlayerInput(new PlayerInputState(false, true, false, false));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(GreenMonsterState.AttackWindup, monster.GreenMonsterBody!.State);
+            Assert.Equal(new GridPosition(1, 0), player.Position);
+            Assert.Equal(
+                [
+                    new EnemyAttackStarted(
+                        monster.Id,
+                        new GridPosition(1, 1),
+                        TimeSpan.FromMilliseconds(625)),
+                    new PlayerMoveStarted(player.Id, Direction.Up),
+                ],
+                events);
+        }
+
         /// <summary>Verifies the strike fires after 625 milliseconds and routes 20 shake damage.</summary>
         [Fact]
         public void WindupCompletionStrikesPlayer()
@@ -141,6 +166,48 @@ namespace Mooh.Core.Tests.Enemies
                     Direction.Down,
                     TimeSpan.FromMilliseconds(250)),
                 Assert.Single(atRecovery));
+        }
+
+        /// <summary>Verifies recovered held input cannot escape a strike expiring at the same instant.</summary>
+        [Fact]
+        public void SimultaneousShockRecoveryDefersPlayerControlUntilAfterStrike()
+        {
+            WorldGrid world = new(2, 2);
+            Entity monster = new(
+                EntityId.New(),
+                new GridPosition(0, 1),
+                InteractionMask.BlocksMovement,
+                greenMonsterBody: new GreenMonsterBody(
+                    1.5625,
+                    Direction.Right,
+                    TimeSpan.FromMilliseconds(250),
+                    attackWindupDuration: TimeSpan.FromMilliseconds(700)));
+            Entity player = NewPlayer(1, 1, Direction.Up);
+            world.Add(monster);
+            world.Add(player);
+            SimulationWorld simulation = CreateSimulation(world);
+            EntityId source = EntityId.New();
+            _ = simulation.ApplyDamage(
+                new DamageRequest(source, player.Id, DamageKind.Shake, 20));
+            simulation.SetPlayerInput(new PlayerInputState(false, true, false, false));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(700));
+
+            Assert.Equal(new GridPosition(1, 1), player.Position);
+            Assert.Equal(60, player.HealthBody!.Current);
+            Assert.Equal(PlayerReactionKind.Shocked, player.PlayerBody!.Reaction.Kind);
+            Assert.Equal(
+                [
+                    new EnemyAttackStarted(
+                        monster.Id,
+                        player.Position,
+                        TimeSpan.FromMilliseconds(700)),
+                    new PlayerShockEnded(player.Id),
+                    new EnemyStrike(monster.Id, player.Position),
+                    new DamageApplied(player.Id, monster.Id, DamageKind.Strike, 20, 60),
+                    new PlayerShockStarted(player.Id, TimeSpan.FromMilliseconds(700)),
+                ],
+                events);
         }
 
         /// <summary>Verifies simultaneous attackers resolve in registration order through immunity.</summary>
