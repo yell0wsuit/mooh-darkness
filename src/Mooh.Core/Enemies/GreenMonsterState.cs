@@ -11,5 +11,11 @@ namespace Mooh.Core.Enemies
 
         /// <summary>The monster is turning clockwise.</summary>
         Turning,
+
+        /// <summary>The monster is winding up a strike.</summary>
+        AttackWindup,
+
+        /// <summary>The monster is recovering after a strike.</summary>
+        AttackRecovery,
     }
 }

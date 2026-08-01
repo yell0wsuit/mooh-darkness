@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Mooh.Core.Combat;
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
@@ -27,7 +28,10 @@ namespace Mooh.Core.Enemies
         internal double? SecondsUntilNextTimer()
         {
             TimeSpan? remaining = _world.Entities
-                .Where(entity => entity.GreenMonsterBody?.State == GreenMonsterState.Turning)
+                .Where(
+                    entity => entity.GreenMonsterBody?.State is GreenMonsterState.Turning
+                        or GreenMonsterState.AttackWindup
+                        or GreenMonsterState.AttackRecovery)
                 .Min(entity => entity.GreenMonsterBody?.Remaining);
             return remaining?.TotalSeconds;
         }
@@ -46,14 +50,20 @@ namespace Mooh.Core.Enemies
             }
         }
 
-        internal void AdvanceTimers(double elapsedSeconds, List<SimulationEvent> events)
+        internal void AdvanceTimers(
+            double elapsedSeconds,
+            List<SimulationEvent> events,
+            Action<DamageRequest> applyDamage)
         {
             ArgumentNullException.ThrowIfNull(events);
+            ArgumentNullException.ThrowIfNull(applyDamage);
             TimeSpan elapsed = TimeSpan.FromSeconds(elapsedSeconds);
             foreach (Entity monster in _world.Entities)
             {
                 GreenMonsterBody? body = monster.GreenMonsterBody;
-                if (body?.State != GreenMonsterState.Turning)
+                if (body?.State is not (GreenMonsterState.Turning
+                    or GreenMonsterState.AttackWindup
+                    or GreenMonsterState.AttackRecovery))
                 {
                     continue;
                 }
@@ -64,10 +74,7 @@ namespace Mooh.Core.Enemies
                     continue;
                 }
 
-                body.FacingDirection = body.FacingDirection.TurnRight();
-                body.State = GreenMonsterState.Deciding;
-                body.Remaining = TimeSpan.Zero;
-                events.Add(new EnemyTurnCompleted(monster.Id, body.FacingDirection));
+                CompleteTimedState(monster, body, events, applyDamage);
             }
 
             DecideAll(events);
@@ -85,6 +92,18 @@ namespace Mooh.Core.Enemies
         {
             GreenMonsterBody body = monster.GreenMonsterBody!;
             GridPosition destination = monster.Position.Offset(body.FacingDirection);
+            if (FindAttackablePlayer(destination) is not null)
+            {
+                body.State = GreenMonsterState.AttackWindup;
+                body.Remaining = body.AttackWindupDuration;
+                events.Add(
+                    new EnemyAttackStarted(
+                        monster.Id,
+                        destination,
+                        body.AttackWindupDuration));
+                return;
+            }
+
             if (CanEnter(monster, destination))
             {
                 GridPosition source = monster.Position;
@@ -100,6 +119,83 @@ namespace Mooh.Core.Enemies
                 return;
             }
 
+            StartTurn(monster, body, events);
+        }
+
+        private bool CanEnter(Entity monster, GridPosition destination)
+        {
+            return !monster.Interactions.HasFlag(InteractionMask.MovementLocked)
+                && _world.Contains(destination)
+                && _world.GetOccupants(destination)
+                    .All(occupant => _interactions.Classify(monster, occupant) == OccupantInteraction.Allow);
+        }
+
+        private void CompleteTimedState(
+            Entity monster,
+            GreenMonsterBody body,
+            List<SimulationEvent> events,
+            Action<DamageRequest> applyDamage)
+        {
+            switch (body.State)
+            {
+                case GreenMonsterState.Turning:
+                    body.FacingDirection = body.FacingDirection.TurnRight();
+                    body.State = GreenMonsterState.Deciding;
+                    body.Remaining = TimeSpan.Zero;
+                    events.Add(new EnemyTurnCompleted(monster.Id, body.FacingDirection));
+                    break;
+                case GreenMonsterState.AttackWindup:
+                    ResolveStrike(monster, body, events, applyDamage);
+                    break;
+                case GreenMonsterState.AttackRecovery:
+                    StartTurn(monster, body, events);
+                    break;
+                case GreenMonsterState.Deciding:
+                case GreenMonsterState.Walking:
+                    throw new InvalidOperationException("A non-timed green-monster state cannot expire.");
+                default:
+                    throw new InvalidOperationException("Undefined green-monster state.");
+            }
+        }
+
+        private void ResolveStrike(
+            Entity monster,
+            GreenMonsterBody body,
+            List<SimulationEvent> events,
+            Action<DamageRequest> applyDamage)
+        {
+            GridPosition targetCell = monster.Position.Offset(body.FacingDirection);
+            body.State = GreenMonsterState.AttackRecovery;
+            body.Remaining = body.AttackRecoveryDuration;
+            events.Add(new EnemyStrike(monster.Id, targetCell));
+
+            Entity? target = FindAttackablePlayer(targetCell);
+            if (target is not null)
+            {
+                applyDamage(
+                    new DamageRequest(
+                        monster.Id,
+                        target.Id,
+                        DamageKind.Strike,
+                        body.StrikeDamage));
+            }
+        }
+
+        private Entity? FindAttackablePlayer(GridPosition position)
+        {
+            return _world.Contains(position)
+                ? _world.GetOccupants(position)
+                    .FirstOrDefault(
+                        entity => entity.PlayerBody is not null
+                            && entity.HealthBody is { IsDead: false })
+                : null;
+        }
+
+        private static void StartTurn(
+            Entity monster,
+            GreenMonsterBody body,
+            List<SimulationEvent> events)
+        {
             Direction nextDirection = body.FacingDirection.TurnRight();
             body.State = GreenMonsterState.Turning;
             body.Remaining = body.TurnDuration;
@@ -109,14 +205,6 @@ namespace Mooh.Core.Enemies
                     body.FacingDirection,
                     nextDirection,
                     body.TurnDuration));
-        }
-
-        private bool CanEnter(Entity monster, GridPosition destination)
-        {
-            return !monster.Interactions.HasFlag(InteractionMask.MovementLocked)
-                && _world.Contains(destination)
-                && _world.GetOccupants(destination)
-                    .All(occupant => _interactions.Classify(monster, occupant) == OccupantInteraction.Allow);
         }
     }
 }

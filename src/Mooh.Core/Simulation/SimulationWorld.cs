@@ -105,12 +105,18 @@ namespace Mooh.Core.Simulation
         public IReadOnlyList<SimulationEvent> ApplyDamage(DamageRequest request)
         {
             ArgumentNullException.ThrowIfNull(request);
-            Entity target = _world.GetEntity(request.TargetEntityId);
             List<SimulationEvent> events = [];
+            ApplyDamage(request, events);
+            return events;
+        }
+
+        private void ApplyDamage(DamageRequest request, List<SimulationEvent> events)
+        {
+            Entity target = _world.GetEntity(request.TargetEntityId);
             DamageResult result = DamageSystem.Apply(target, request, events);
             if (result != DamageResult.Applied || target.PlayerBody is not PlayerBody body)
             {
-                return events;
+                return;
             }
 
             KinematicsSystem.Stop(target);
@@ -128,8 +134,6 @@ namespace Mooh.Core.Simulation
                 body.Reaction.Remaining = body.ShockDuration;
                 events.Add(new PlayerShockStarted(target.Id, body.ShockDuration));
             }
-
-            return events;
         }
 
         /// <summary>Changes gravity direction while all entities are stationary.</summary>
@@ -240,8 +244,11 @@ namespace Mooh.Core.Simulation
                 _world.AdvanceTime(substepSeconds);
                 AdvanceHealthImmunity(substepSeconds);
                 _playerController?.AdvanceRotation(substepSeconds, events);
-                _greenMonsters.AdvanceTimers(substepSeconds, events);
                 AdvancePlayerReaction(substepSeconds, events);
+                _greenMonsters.AdvanceTimers(
+                    substepSeconds,
+                    events,
+                    request => ApplyDamage(request, events));
 
                 remainingSeconds -= substepSeconds;
                 if (remainingSeconds < TimeTolerance)
