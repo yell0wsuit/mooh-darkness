@@ -10,4 +10,9 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Mooh.Core/Mooh.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../assets/levels/**/*.json"
+             Link="assets/levels/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
