@@ -70,6 +70,11 @@ namespace Mooh.Core.Gravity
                 return false;
             }
 
+            if (!world.Contains(destination))
+            {
+                return false;
+            }
+
             if (!world.GetOccupants(destination).Any(
                 occupant => occupant.Interactions.HasFlag(InteractionMask.RoundSupport)))
             {

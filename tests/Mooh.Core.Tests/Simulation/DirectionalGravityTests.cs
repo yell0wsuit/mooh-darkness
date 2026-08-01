@@ -37,6 +37,16 @@ namespace Mooh.Core.Tests.Simulation
                 { Direction.Down, 2, 1, 2, 2, Direction.Right, 3, 1 },
             };
 
+        /// <summary>Gets slide-capable bodies placed at each gravity-facing world edge.</summary>
+        public static TheoryData<Direction, GridPosition> BoundaryScenarios =>
+            new()
+            {
+                { Direction.Left, new GridPosition(0, 2) },
+                { Direction.Up, new GridPosition(2, 0) },
+                { Direction.Right, new GridPosition(4, 2) },
+                { Direction.Down, new GridPosition(2, 4) },
+            };
+
         /// <summary>Verifies rotated cell entry and landing traces.</summary>
         /// <param name="gravityDirection">The direction of gravity.</param>
         /// <param name="startX">The starting horizontal coordinate.</param>
@@ -119,6 +129,26 @@ namespace Mooh.Core.Tests.Simulation
                     new FallStarted(body.Id, gravityDirection),
                 ],
                 events);
+        }
+
+        /// <summary>Verifies a slide-capable body remains stationary at the gravity-facing edge.</summary>
+        /// <param name="gravityDirection">The direction pointing outside the world.</param>
+        /// <param name="position">The body's boundary position.</param>
+        [Theory]
+        [MemberData(nameof(BoundaryScenarios))]
+        public void SlideCapableBodyAtGravityFacingBoundaryDoesNotThrow(
+            Direction gravityDirection,
+            GridPosition position)
+        {
+            WorldGrid world = new(5, 5);
+            Entity body = AddBody(world, position, canSlide: true);
+
+            IReadOnlyList<SimulationEvent> events =
+                CreateSimulation(world, gravityDirection).Advance(TimeSpan.FromSeconds(0.25));
+
+            Assert.Equal(position, body.Position);
+            Assert.Null(body.Motion);
+            Assert.Empty(events);
         }
 
         /// <summary>Verifies changing gravity while all entities are stationary.</summary>
