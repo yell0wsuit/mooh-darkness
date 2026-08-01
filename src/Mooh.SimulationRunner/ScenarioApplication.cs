@@ -39,15 +39,24 @@ namespace Mooh.SimulationRunner
             }
             else if (Directory.Exists(selectedPath))
             {
-                files =
-                [
-                    .. Directory.EnumerateFiles(selectedPath, "*", SearchOption.TopDirectoryOnly)
-                        .Where(path => string.Equals(
-                            Path.GetExtension(path),
-                            ".json",
-                            StringComparison.OrdinalIgnoreCase))
-                        .OrderBy(path => Path.GetFileName(path), StringComparer.Ordinal),
-                ];
+                try
+                {
+                    files =
+                    [
+                        .. Directory.EnumerateFiles(selectedPath, "*", SearchOption.TopDirectoryOnly)
+                            .Where(path => string.Equals(
+                                Path.GetExtension(path),
+                                ".json",
+                                StringComparison.OrdinalIgnoreCase))
+                            .OrderBy(path => Path.GetFileName(path), StringComparer.Ordinal),
+                    ];
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                {
+                    error.WriteLine($"Unable to enumerate scenario directory '{selectedPath}': {exception.Message}");
+                    return 2;
+                }
+
                 if (files.Length == 0)
                 {
                     error.WriteLine($"No top-level JSON scenario files found in '{selectedPath}'.");

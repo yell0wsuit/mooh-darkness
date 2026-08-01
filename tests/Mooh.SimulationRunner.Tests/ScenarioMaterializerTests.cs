@@ -1,3 +1,5 @@
+using System;
+
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
@@ -54,6 +56,17 @@ namespace Mooh.SimulationRunner.Tests
             MaterializedScenario secondResult = ScenarioMaterializer.Materialize(second);
 
             Assert.Equal(firstResult.IdsByAlias["player"], secondResult.IdsByAlias["player"]);
+        }
+
+        /// <summary>Verifies every byte outside the declaration index is deterministically zero.</summary>
+        [Fact]
+        public void GeneratesExactIndexBasedEntityIdentifier()
+        {
+            MaterializedScenario result = ScenarioMaterializer.Materialize(ScenarioTestData.CreateValid());
+
+            Assert.Equal(
+                new Guid("00000001-0000-0000-0000-000000000000"),
+                result.IdsByAlias["player"].Value);
         }
     }
 }

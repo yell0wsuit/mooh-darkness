@@ -61,6 +61,7 @@ namespace Mooh.SimulationRunner
         private static EntityId CreateDeterministicId(int index)
         {
             Span<byte> bytes = stackalloc byte[16];
+            bytes.Clear();
             BinaryPrimitives.WriteInt32LittleEndian(bytes, index + 1);
             return new EntityId(new Guid(bytes));
         }

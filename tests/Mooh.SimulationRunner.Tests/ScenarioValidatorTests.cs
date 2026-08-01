@@ -45,6 +45,41 @@ namespace Mooh.SimulationRunner.Tests
             Assert.All(exceptions, exception => Assert.IsType<ScenarioValidationException>(exception));
         }
 
+        /// <summary>Verifies event discriminators require exactly their own fields.</summary>
+        [Fact]
+        public void RejectsInvalidEventDiscriminatorShapes()
+        {
+            ExpectedEvent[] invalidEvents =
+            [
+                new ExpectedEvent { Type = "CellEntered", Entity = "player" },
+                new ExpectedEvent { Type = "PlayerAte", Entity = "player" },
+                new ExpectedEvent { Type = "PlayerStopped", Entity = "player", Direction = "Down" },
+            ];
+            Exception?[] exceptions =
+            [
+                .. invalidEvents.Select(
+                    expected => Record.Exception(
+                        () => ScenarioValidator.Validate(
+                            WithExpectedEvent(expected),
+                            "event-shape.json"))),
+            ];
+
+            Assert.All(exceptions, exception => Assert.IsType<ScenarioValidationException>(exception));
+        }
+
+        /// <summary>Verifies enum values must use names rather than numeric spellings.</summary>
+        [Fact]
+        public void RejectsNumericEnumSpelling()
+        {
+            ScenarioDocument scenario = ScenarioTestData.CreateValid();
+            scenario = ScenarioTestData.WithWorld(scenario, gravity: "3");
+
+            ScenarioValidationException exception = Assert.Throws<ScenarioValidationException>(
+                () => ScenarioValidator.Validate(scenario, "numeric.json"));
+
+            Assert.Contains("world.gravity", exception.Message, StringComparison.Ordinal);
+        }
+
         private static List<ScenarioDocument> CreateInvalidScenarios()
         {
             ScenarioDocument valid = ScenarioTestData.CreateValid();
@@ -93,6 +128,20 @@ namespace Mooh.SimulationRunner.Tests
                 ScenarioTestData.WithFinal(valid, [badFinal]),
                 ScenarioTestData.WithFinal(valid, [valid.ExpectFinal.Entities[0], valid.ExpectFinal.Entities[0]]),
             ];
+        }
+
+        private static ScenarioDocument WithExpectedEvent(ExpectedEvent expected)
+        {
+            ScenarioDocument scenario = ScenarioTestData.CreateValid();
+            return ScenarioTestData.WithSteps(
+                scenario,
+                [
+                    new ScenarioStep
+                    {
+                        AdvanceMilliseconds = 1,
+                        ExpectEvents = [expected],
+                    },
+                ]);
         }
     }
 }

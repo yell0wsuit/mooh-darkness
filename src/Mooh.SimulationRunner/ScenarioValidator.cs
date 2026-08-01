@@ -11,6 +11,20 @@ namespace Mooh.SimulationRunner
     /// <summary>Validates scenario schema and cross-reference rules before execution.</summary>
     public static class ScenarioValidator
     {
+        private static readonly long MaximumAdvanceMilliseconds =
+            TimeSpan.MaxValue.Ticks / TimeSpan.TicksPerMillisecond;
+
+        [Flags]
+        private enum EventFields
+        {
+            None = 0,
+            EatenEntity = 1 << 0,
+            Direction = 1 << 1,
+            From = 1 << 2,
+            To = 1 << 3,
+            Position = 1 << 4,
+        }
+
         /// <summary>Validates a scenario document.</summary>
         /// <param name="scenario">The scenario to validate.</param>
         /// <param name="source">The source name used in diagnostics.</param>
@@ -132,9 +146,13 @@ namespace Mooh.SimulationRunner
                 ScenarioStep step = scenario.Steps[stepIndex]
                     ?? throw Invalid(source, $"steps[{stepIndex}]", "must be an object.");
                 string path = $"steps[{stepIndex}]";
-                if (step.AdvanceMilliseconds <= 0)
+                if (step.AdvanceMilliseconds <= 0
+                    || step.AdvanceMilliseconds > MaximumAdvanceMilliseconds)
                 {
-                    throw Invalid(source, $"{path}.advanceMilliseconds", "must be positive.");
+                    throw Invalid(
+                        source,
+                        $"{path}.advanceMilliseconds",
+                        $"must be within [1, {MaximumAdvanceMilliseconds}].");
                 }
 
                 HashSet<Direction> inputs = [];
@@ -190,6 +208,7 @@ namespace Mooh.SimulationRunner
                 throw Invalid(source, $"{path}.type", $"has unsupported value '{expected.Type}'.");
             }
 
+            ValidateEventFields(expected, source, path);
             ValidateAliasReference(expected.Entity, aliases, source, $"{path}.entity");
             if (expected.EatenEntity is string eatenEntity)
             {
@@ -214,6 +233,34 @@ namespace Mooh.SimulationRunner
             if (expected.Position is not null)
             {
                 ValidatePosition(expected.Position, world, source, $"{path}.position");
+            }
+        }
+
+        private static void ValidateEventFields(ExpectedEvent expected, string source, string path)
+        {
+            EventFields required = expected.Type switch
+            {
+                "CellEntered" or "PlayerReturned" => EventFields.Position,
+                "FallStarted" or "Landed" or "PlayerBlocked" or "PlayerMoveStarted"
+                    or "PlayerReversed" or "PlayerRotationCompleted" or "PushStarted"
+                    or "SlideStarted" => EventFields.Direction,
+                "PlayerAte" => EventFields.EatenEntity,
+                "PlayerRotationStarted" => EventFields.From | EventFields.To,
+                "PlayerStopped" => EventFields.None,
+                _ => EventFields.None,
+            };
+            EventFields actual = EventFields.None;
+            actual |= expected.EatenEntity is null ? EventFields.None : EventFields.EatenEntity;
+            actual |= expected.Direction is null ? EventFields.None : EventFields.Direction;
+            actual |= expected.From is null ? EventFields.None : EventFields.From;
+            actual |= expected.To is null ? EventFields.None : EventFields.To;
+            actual |= expected.Position is null ? EventFields.None : EventFields.Position;
+            if (actual != required)
+            {
+                throw Invalid(
+                    source,
+                    path,
+                    $"event type '{expected.Type}' requires exactly fields '{required}'.");
             }
         }
 
@@ -365,6 +412,7 @@ namespace Mooh.SimulationRunner
             return !string.IsNullOrWhiteSpace(value)
                 && Enum.TryParse(value, ignoreCase: false, out TEnum parsed)
                 && Enum.IsDefined(parsed)
+                && string.Equals(Enum.GetName(parsed), value, StringComparison.Ordinal)
                 ? parsed
                 : throw Invalid(source, path, $"has unsupported value '{value}'.");
         }

@@ -34,6 +34,28 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Contains("steps[0].expectEvents", result.Diagnostic, StringComparison.Ordinal);
         }
 
+        /// <summary>Verifies an elapsed duration outside <see cref="TimeSpan"/> is a validation failure.</summary>
+        [Fact]
+        public void ReturnsValidationFailureForUnrepresentableDuration()
+        {
+            ScenarioDocument scenario = CreateFallingScenario();
+            scenario = ScenarioTestData.WithSteps(
+                scenario,
+                [
+                    new ScenarioStep
+                    {
+                        AdvanceMilliseconds = long.MaxValue,
+                        ExpectEvents = [],
+                    },
+                ]);
+
+            ScenarioRunResult result = ScenarioExecutor.Run(scenario, "duration.json");
+
+            Assert.False(result.Passed);
+            Assert.Equal(ScenarioFailureKind.Validation, result.FailureKind);
+            Assert.Contains("advanceMilliseconds", result.Diagnostic, StringComparison.Ordinal);
+        }
+
         private static ScenarioDocument CreateFallingScenario()
         {
             return new ScenarioDocument
