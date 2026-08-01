@@ -3,6 +3,7 @@ using Mooh.Core.Enemies;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
+using Mooh.Core.Legacy;
 using Mooh.Core.Motion;
 using Mooh.Core.Player;
 
@@ -19,6 +20,7 @@ namespace Mooh.Core.Entities
     /// <param name="healthBody">The entity's optional health behavior.</param>
     /// <param name="greenMonsterBody">The entity's optional green-monster behavior.</param>
     /// <param name="blueMonsterBody">The entity's optional blue-monster behavior.</param>
+    /// <param name="legacyBody">The entity's optional archival type metadata.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -27,7 +29,8 @@ namespace Mooh.Core.Entities
         PlayerBody? playerBody = null,
         HealthBody? healthBody = null,
         GreenMonsterBody? greenMonsterBody = null,
-        BlueMonsterBody? blueMonsterBody = null)
+        BlueMonsterBody? blueMonsterBody = null,
+        LegacyEntityBody? legacyBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -52,6 +55,9 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's optional blue-monster behavior.</summary>
         public BlueMonsterBody? BlueMonsterBody { get; } = blueMonsterBody;
+
+        /// <summary>Gets the entity's optional archival type metadata.</summary>
+        public LegacyEntityBody? LegacyBody { get; } = legacyBody;
 
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }

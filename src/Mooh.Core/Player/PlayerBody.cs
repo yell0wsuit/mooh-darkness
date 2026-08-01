@@ -72,6 +72,9 @@ namespace Mooh.Core.Player
         /// <summary>Gets the player's current damage reaction.</summary>
         public PlayerReaction Reaction { get; } = new();
 
+        /// <summary>Gets the player's score, treasure, inventory, keys, and timed bonuses.</summary>
+        public PlayerProgress Progress { get; } = new();
+
         /// <summary>Gets the active uncontrollable rotation, if any.</summary>
         public PlayerRotation? Rotation { get; internal set; }
     }

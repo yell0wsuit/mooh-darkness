@@ -49,6 +49,16 @@ namespace Mooh.Core.Combat
             ImmunityRemaining = ImmunityDuration;
         }
 
+        internal void Heal(double amount)
+        {
+            if (!double.IsFinite(amount) || amount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amount));
+            }
+
+            Current = Math.Min(Maximum, Current + amount);
+        }
+
         internal void AdvanceImmunity(TimeSpan elapsed)
         {
             if (ImmunityRemaining <= TimeSpan.Zero)
