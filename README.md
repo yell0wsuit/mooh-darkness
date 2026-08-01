@@ -13,4 +13,21 @@ dotnet build Mooh.slnx
 dotnet test Mooh.slnx
 ```
 
+## Deterministic simulation scenarios
+
+`Mooh.SimulationRunner` executes self-verifying headless simulation scenarios. Each JSON
+file declares a runtime grid, ordered entities, a random seed, timed held inputs, the exact
+event trace for every update, and the expected final entity state.
+
+Run one scenario or every top-level JSON scenario in a directory:
+
+```bash
+dotnet run --project src/Mooh.SimulationRunner -- scenarios/001-falling-and-landing.json
+dotnet run --project src/Mooh.SimulationRunner -- scenarios
+```
+
+The runner prints one `PASS` or `FAIL` line per scenario and returns a nonzero exit code for
+invalid source data or an expectation mismatch. These scenarios construct supported runtime
+components directly; they do not materialize objects from the archival level corpus.
+
 The recovered Python 2.3 source is research material only; the new implementation does not execute or depend on it.

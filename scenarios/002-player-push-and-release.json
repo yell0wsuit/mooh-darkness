@@ -1,0 +1,119 @@
+{
+    "formatVersion": 1,
+    "name": "player push and release",
+    "world": {
+        "width": 6,
+        "height": 3,
+        "gravity": "Down",
+        "randomSeed": 0,
+        "entities": [
+            {
+                "alias": "player",
+                "position": {
+                    "x": 1,
+                    "y": 1
+                },
+                "interactions": [
+                    "BlocksMovement"
+                ],
+                "playerBody": {
+                    "moveSpeed": 1,
+                    "pushSpeedMultiplier": 1.5,
+                    "facingDirection": "Right"
+                }
+            },
+            {
+                "alias": "block",
+                "position": {
+                    "x": 2,
+                    "y": 1
+                },
+                "interactions": [
+                    "BlocksMovement",
+                    "PlayerPushable"
+                ]
+            },
+            {
+                "alias": "wall",
+                "position": {
+                    "x": 5,
+                    "y": 1
+                },
+                "interactions": [
+                    "BlocksMovement"
+                ]
+            }
+        ]
+    },
+    "steps": [
+        {
+            "input": [
+                "Right"
+            ],
+            "advanceMilliseconds": 100,
+            "expectEvents": [
+                {
+                    "type": "PushStarted",
+                    "entity": "block",
+                    "direction": "Right"
+                },
+                {
+                    "type": "PlayerMoveStarted",
+                    "entity": "player",
+                    "direction": "Right"
+                }
+            ]
+        },
+        {
+            "advanceMilliseconds": 1900,
+            "expectEvents": [
+                {
+                    "type": "CellEntered",
+                    "entity": "block",
+                    "position": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "type": "CellEntered",
+                    "entity": "player",
+                    "position": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "type": "PlayerStopped",
+                    "entity": "player"
+                }
+            ]
+        }
+    ],
+    "expectFinal": {
+        "entities": [
+            {
+                "alias": "player",
+                "position": {
+                    "x": 2,
+                    "y": 1
+                },
+                "facingDirection": "Right"
+            },
+            {
+                "alias": "block",
+                "position": {
+                    "x": 3,
+                    "y": 1
+                }
+            },
+            {
+                "alias": "wall",
+                "position": {
+                    "x": 5,
+                    "y": 1
+                }
+            }
+        ]
+    }
+}

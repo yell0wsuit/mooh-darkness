@@ -10,4 +10,9 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Mooh.SimulationRunner/Mooh.SimulationRunner.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../scenarios/**/*.json"
+             Link="scenarios/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

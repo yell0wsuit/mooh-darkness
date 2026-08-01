@@ -1,0 +1,85 @@
+{
+    "formatVersion": 1,
+    "name": "falling and landing",
+    "world": {
+        "width": 5,
+        "height": 5,
+        "gravity": "Down",
+        "randomSeed": 0,
+        "entities": [
+            {
+                "alias": "rock",
+                "position": {
+                    "x": 2,
+                    "y": 0
+                },
+                "interactions": [],
+                "gravityBody": {
+                    "fallSpeed": 1,
+                    "canSlide": false
+                }
+            },
+            {
+                "alias": "support",
+                "position": {
+                    "x": 2,
+                    "y": 3
+                },
+                "interactions": [
+                    "BlocksMovement"
+                ]
+            }
+        ]
+    },
+    "steps": [
+        {
+            "advanceMilliseconds": 2000,
+            "expectEvents": [
+                {
+                    "type": "FallStarted",
+                    "entity": "rock",
+                    "direction": "Down"
+                },
+                {
+                    "type": "CellEntered",
+                    "entity": "rock",
+                    "position": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "type": "CellEntered",
+                    "entity": "rock",
+                    "position": {
+                        "x": 2,
+                        "y": 2
+                    }
+                },
+                {
+                    "type": "Landed",
+                    "entity": "rock",
+                    "direction": "Down"
+                }
+            ]
+        }
+    ],
+    "expectFinal": {
+        "entities": [
+            {
+                "alias": "rock",
+                "position": {
+                    "x": 2,
+                    "y": 2
+                }
+            },
+            {
+                "alias": "support",
+                "position": {
+                    "x": 2,
+                    "y": 3
+                }
+            }
+        ]
+    }
+}
