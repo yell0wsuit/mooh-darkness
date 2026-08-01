@@ -97,6 +97,54 @@ namespace Mooh.Core.Tests.Player
                 events);
         }
 
+        /// <summary>Verifies a quarter-turn completes at 105 milliseconds and then starts a fresh cell lock.</summary>
+        [Fact]
+        public void QuarterTurnCompletionStartsFullVacatedCellLock()
+        {
+            WorldGrid world = new(6, 6);
+            Entity fallingBody = new(
+                EntityId.New(),
+                new GridPosition(2, 1),
+                InteractionMask.None,
+                new GravityBody(fallSpeed: 1, canSlide: false));
+            Entity player = new(
+                EntityId.New(),
+                new GridPosition(2, 2),
+                InteractionMask.BlocksMovement,
+                playerBody: new PlayerBody(moveSpeed: 10, pushSpeedMultiplier: 1.5, Direction.Up));
+            world.Add(fallingBody);
+            world.Add(player);
+            SimulationWorld simulation = new(
+                world,
+                Direction.Down,
+                new DefaultGravityCollisionPolicy());
+            simulation.SetPlayerInput(Held(Direction.Right));
+
+            IReadOnlyList<SimulationEvent> rotationEvents =
+                simulation.Advance(TimeSpan.FromMilliseconds(105));
+
+            Assert.Null(player.PlayerBody!.Rotation);
+            Assert.NotNull(player.Motion);
+            Assert.Equal(
+                [
+                    new PlayerRotationStarted(player.Id, Direction.Up, Direction.Right),
+                    new PlayerRotationCompleted(player.Id, Direction.Right),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
+                ],
+                rotationEvents);
+
+            simulation.SetPlayerInput(default);
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(149));
+
+            Assert.Null(fallingBody.Motion);
+
+            IReadOnlyList<SimulationEvent> expiryEvents =
+                simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.NotNull(fallingBody.Motion);
+            Assert.Equal([new FallStarted(fallingBody.Id, Direction.Down)], expiryEvents);
+        }
+
         /// <summary>Verifies that perpendicular input does not alter an active segment.</summary>
         [Fact]
         public void PerpendicularInputDoesNotAlterActiveSegment()

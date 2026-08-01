@@ -175,8 +175,8 @@ namespace Mooh.Core.Simulation
                     KinematicsSystem.Advance(entity, substepSeconds);
                 }
 
-                _playerController?.AdvanceRotation(substepSeconds, events);
                 _world.AdvanceTime(substepSeconds);
+                _playerController?.AdvanceRotation(substepSeconds, events);
 
                 remainingSeconds -= substepSeconds;
                 if (remainingSeconds < TimeTolerance)
