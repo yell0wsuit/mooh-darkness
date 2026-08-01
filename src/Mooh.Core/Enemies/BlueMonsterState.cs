@@ -17,5 +17,11 @@ namespace Mooh.Core.Enemies
 
         /// <summary>The monster is turning toward its right-hand cell.</summary>
         TurningRight,
+
+        /// <summary>The monster is winding up a strike.</summary>
+        AttackWindup,
+
+        /// <summary>The monster is recovering and turning around after a strike.</summary>
+        AttackRecovery,
     }
 }

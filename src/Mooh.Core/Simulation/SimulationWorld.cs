@@ -308,7 +308,11 @@ namespace Mooh.Core.Simulation
                 }
                 else if (entity.BlueMonsterBody is not null)
                 {
-                    BlueMonsterSystem.AdvanceTimer(entity, elapsedSeconds, events);
+                    _blueMonsters.AdvanceTimer(
+                        entity,
+                        elapsedSeconds,
+                        events,
+                        request => ApplyDamage(request, events));
                 }
             }
 

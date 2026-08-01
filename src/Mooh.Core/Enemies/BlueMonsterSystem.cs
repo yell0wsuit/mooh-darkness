@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Mooh.Core.Combat;
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
@@ -31,7 +32,9 @@ namespace Mooh.Core.Enemies
             TimeSpan? remaining = _world.Entities
                 .Where(
                     entity => entity.BlueMonsterBody?.State is BlueMonsterState.TurningLeft
-                        or BlueMonsterState.TurningRight)
+                        or BlueMonsterState.TurningRight
+                        or BlueMonsterState.AttackWindup
+                        or BlueMonsterState.AttackRecovery)
                 .Min(entity => entity.BlueMonsterBody?.Remaining);
             return remaining?.TotalSeconds;
         }
@@ -46,6 +49,12 @@ namespace Mooh.Core.Enemies
             GridPosition forward = monster.Position.Offset(body.FacingDirection);
             Direction leftDirection = body.FacingDirection.TurnLeft();
             GridPosition left = monster.Position.Offset(leftDirection);
+
+            if (FindAttackablePlayer(forward) is not null)
+            {
+                StartAttack(monster, body, forward, events);
+                return;
+            }
 
             if (FindAttackablePlayer(left) is not null || CanEnter(monster, left))
             {
@@ -62,13 +71,18 @@ namespace Mooh.Core.Enemies
             StartTurn(monster, body, turnLeft: false, events);
         }
 
-        internal static void AdvanceTimer(
+        internal void AdvanceTimer(
             Entity monster,
             double elapsedSeconds,
-            List<SimulationEvent> events)
+            List<SimulationEvent> events,
+            Action<DamageRequest> applyDamage)
         {
+            ArgumentNullException.ThrowIfNull(applyDamage);
             BlueMonsterBody? body = monster.BlueMonsterBody;
-            if (body?.State is not (BlueMonsterState.TurningLeft or BlueMonsterState.TurningRight))
+            if (body?.State is not (BlueMonsterState.TurningLeft
+                or BlueMonsterState.TurningRight
+                or BlueMonsterState.AttackWindup
+                or BlueMonsterState.AttackRecovery))
             {
                 return;
             }
@@ -80,15 +94,7 @@ namespace Mooh.Core.Enemies
                 return;
             }
 
-            bool turnedLeft = body.State == BlueMonsterState.TurningLeft;
-            body.FacingDirection = turnedLeft
-                ? body.FacingDirection.TurnLeft()
-                : body.FacingDirection.TurnRight();
-            body.State = turnedLeft
-                ? BlueMonsterState.DecidingAfterLeftTurn
-                : BlueMonsterState.Deciding;
-            body.Remaining = TimeSpan.Zero;
-            events.Add(new EnemyTurnCompleted(monster.Id, body.FacingDirection));
+            CompleteTimedState(monster, body, events, applyDamage);
         }
 
         internal static void CompleteWalking(Entity monster)
@@ -106,6 +112,12 @@ namespace Mooh.Core.Enemies
         {
             BlueMonsterBody body = monster.BlueMonsterBody!;
             GridPosition forward = monster.Position.Offset(body.FacingDirection);
+            if (FindAttackablePlayer(forward) is not null)
+            {
+                StartAttack(monster, body, forward, events);
+                return;
+            }
+
             if (CanEnter(monster, forward))
             {
                 StartWalking(monster, body, forward, resolutionOrder, events);
@@ -154,6 +166,86 @@ namespace Mooh.Core.Enemies
                 : null;
         }
 
+        private void CompleteTimedState(
+            Entity monster,
+            BlueMonsterBody body,
+            List<SimulationEvent> events,
+            Action<DamageRequest> applyDamage)
+        {
+            switch (body.State)
+            {
+                case BlueMonsterState.TurningLeft:
+                    CompleteTurn(monster, body, turnLeft: true, events);
+                    break;
+                case BlueMonsterState.TurningRight:
+                    CompleteTurn(monster, body, turnLeft: false, events);
+                    break;
+                case BlueMonsterState.AttackWindup:
+                    ResolveStrike(monster, body, events, applyDamage);
+                    break;
+                case BlueMonsterState.AttackRecovery:
+                    body.FacingDirection = body.FacingDirection.Opposite();
+                    body.State = BlueMonsterState.Deciding;
+                    body.Remaining = TimeSpan.Zero;
+                    events.Add(new EnemyTurnCompleted(monster.Id, body.FacingDirection));
+                    break;
+                case BlueMonsterState.Deciding:
+                case BlueMonsterState.DecidingAfterLeftTurn:
+                case BlueMonsterState.Walking:
+                    throw new InvalidOperationException("A non-timed blue-monster state cannot expire.");
+                default:
+                    throw new InvalidOperationException("Undefined blue-monster state.");
+            }
+        }
+
+        private static void CompleteTurn(
+            Entity monster,
+            BlueMonsterBody body,
+            bool turnLeft,
+            List<SimulationEvent> events)
+        {
+            body.FacingDirection = turnLeft
+                ? body.FacingDirection.TurnLeft()
+                : body.FacingDirection.TurnRight();
+            body.State = turnLeft
+                ? BlueMonsterState.DecidingAfterLeftTurn
+                : BlueMonsterState.Deciding;
+            body.Remaining = TimeSpan.Zero;
+            events.Add(new EnemyTurnCompleted(monster.Id, body.FacingDirection));
+        }
+
+        private void ResolveStrike(
+            Entity monster,
+            BlueMonsterBody body,
+            List<SimulationEvent> events,
+            Action<DamageRequest> applyDamage)
+        {
+            GridPosition targetCell = monster.Position.Offset(body.FacingDirection);
+            body.State = BlueMonsterState.AttackRecovery;
+            body.Remaining = body.FacingDirection == Direction.Left
+                ? body.LeftAttackRecoveryDuration
+                : body.AttackRecoveryDuration;
+            events.Add(new EnemyStrike(monster.Id, targetCell));
+
+            Entity? target = FindAttackablePlayer(targetCell);
+            if (target is not null)
+            {
+                applyDamage(
+                    new DamageRequest(
+                        monster.Id,
+                        target.Id,
+                        DamageKind.Strike,
+                        body.StrikeDamage));
+            }
+
+            events.Add(
+                new EnemyTurnStarted(
+                    monster.Id,
+                    body.FacingDirection,
+                    body.FacingDirection.Opposite(),
+                    body.Remaining));
+        }
+
         private bool HasCounterMotion(GridPosition position, Direction direction)
         {
             return _world.GetOccupants(position).Any(
@@ -180,6 +272,21 @@ namespace Mooh.Core.Enemies
                     body.FacingDirection,
                     nextDirection,
                     body.TurnDuration));
+        }
+
+        private static void StartAttack(
+            Entity monster,
+            BlueMonsterBody body,
+            GridPosition targetCell,
+            List<SimulationEvent> events)
+        {
+            body.State = BlueMonsterState.AttackWindup;
+            body.Remaining = body.AttackWindupDuration;
+            events.Add(
+                new EnemyAttackStarted(
+                    monster.Id,
+                    targetCell,
+                    body.AttackWindupDuration));
         }
     }
 }
