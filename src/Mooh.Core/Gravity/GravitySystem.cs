@@ -57,7 +57,7 @@ namespace Mooh.Core.Gravity
             }
 
             GridPosition destination = entity.Position.Offset(gravityDirection);
-            if (_collisionPolicy.CanEnter(world, entity, destination))
+            if (CanEnter(world, entity, destination))
             {
                 world.CommitMoves([new PlannedMove(entity.Id, entity.Position, destination)]);
                 KinematicsSystem.Start(entity, MotionCause.Falling, gravityDirection, body.FallSpeed);
@@ -82,7 +82,11 @@ namespace Mooh.Core.Gravity
             {
                 GridPosition side = entity.Position.Offset(candidate);
                 GridPosition diagonal = side.Offset(gravityDirection);
-                if (_collisionPolicy.CanEnter(world, entity, side)
+                if (world.Contains(side)
+                    && world.Contains(diagonal)
+                    && world.IsCellUnlocked(side)
+                    && world.IsCellUnlocked(diagonal)
+                    && _collisionPolicy.CanEnter(world, entity, side)
                     && _collisionPolicy.CanEnter(world, entity, diagonal))
                 {
                     viable.Add(candidate);
@@ -104,7 +108,9 @@ namespace Mooh.Core.Gravity
 
         internal bool CanEnter(WorldGrid world, Entity entity, GridPosition destination)
         {
-            return _collisionPolicy.CanEnter(world, entity, destination);
+            return world.Contains(destination)
+                && world.IsCellUnlocked(destination)
+                && _collisionPolicy.CanEnter(world, entity, destination);
         }
     }
 }

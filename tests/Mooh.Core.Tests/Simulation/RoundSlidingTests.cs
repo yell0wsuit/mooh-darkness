@@ -115,6 +115,26 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Empty(events);
         }
 
+        /// <summary>Verifies that an explicit 500-millisecond cell lock gates a slide route.</summary>
+        [Fact]
+        public void ExplosionStyleCellLockBlocksSlideRouteFor500Milliseconds()
+        {
+            SlidingScenario scenario = CreateScenario();
+            _ = AddSolid(scenario.World, new GridPosition(1, 1));
+            scenario.World.LockCell(new GridPosition(3, 1), TimeSpan.FromMilliseconds(500));
+            SimulationWorld simulation = CreateSimulation(scenario.World, seed: 0);
+
+            IReadOnlyList<SimulationEvent> earlyEvents = simulation.Advance(TimeSpan.FromMilliseconds(499));
+
+            Assert.Null(scenario.Body.Motion);
+            Assert.Empty(earlyEvents);
+
+            IReadOnlyList<SimulationEvent> expiryEvents = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            AssertSlide(scenario.Body, Direction.Right, expectedProgress: 0);
+            Assert.Equal([new SlideStarted(scenario.Body.Id, Direction.Right)], expiryEvents);
+        }
+
         /// <summary>Verifies the ordered transition from a completed slide into falling.</summary>
         [Fact]
         public void CompletedRightSlideTransitionsToFalling()
@@ -216,12 +236,15 @@ namespace Mooh.Core.Tests.Simulation
             return entity;
         }
 
-        private static void AssertSlide(Entity body, Direction direction)
+        private static void AssertSlide(
+            Entity body,
+            Direction direction,
+            double expectedProgress = 0.25)
         {
             Assert.NotNull(body.Motion);
             Assert.Equal(MotionCause.Sliding, body.Motion.Cause);
             Assert.Equal(direction, body.Motion.SegmentDirection);
-            Assert.Equal(0.25, body.Motion.Progress, precision: 10);
+            Assert.Equal(expectedProgress, body.Motion.Progress, precision: 10);
         }
 
         private sealed record SlidingScenario(WorldGrid World, Entity Body);

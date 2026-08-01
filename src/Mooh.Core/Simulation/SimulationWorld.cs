@@ -136,10 +136,7 @@ namespace Mooh.Core.Simulation
                 _playerController?.HandleInTransit(events);
                 Entity[] moving = [.. _world.Entities.Where(entity => entity.Motion is not null)];
                 double? rotationSeconds = _playerController?.RotationSecondsRemaining;
-                if (moving.Length == 0 && rotationSeconds is null)
-                {
-                    break;
-                }
+                double? unlockSeconds = _world.SecondsUntilNextCellUnlock();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -159,12 +156,26 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingRotation);
                 }
 
+                if (unlockSeconds is double remainingUntilUnlock)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingUntilUnlock);
+                }
+
+                if (moving.Length == 0
+                    && rotationSeconds is null
+                    && unlockSeconds is null)
+                {
+                    _world.AdvanceTime(remainingSeconds);
+                    break;
+                }
+
                 foreach (Entity entity in moving)
                 {
                     KinematicsSystem.Advance(entity, substepSeconds);
                 }
 
                 _playerController?.AdvanceRotation(substepSeconds, events);
+                _world.AdvanceTime(substepSeconds);
 
                 remainingSeconds -= substepSeconds;
                 if (remainingSeconds < TimeTolerance)
@@ -172,7 +183,13 @@ namespace Mooh.Core.Simulation
                     remainingSeconds = 0;
                 }
 
-                ResolveBoundaries(events);
+                bool resolvedBoundary = ResolveBoundaries(events);
+                if (!resolvedBoundary
+                    && unlockSeconds is double expiringLock
+                    && substepSeconds >= expiringLock - TimeTolerance)
+                {
+                    _gravity.EvaluateStationary(_world, _gravityDirection, events);
+                }
             }
 
             return events;
@@ -199,7 +216,7 @@ namespace Mooh.Core.Simulation
             }
         }
 
-        private void ResolveBoundaries(List<SimulationEvent> events)
+        private bool ResolveBoundaries(List<SimulationEvent> events)
         {
             Entity[] ready =
             [
@@ -210,7 +227,7 @@ namespace Mooh.Core.Simulation
             ];
             if (ready.Length == 0)
             {
-                return;
+                return false;
             }
 
             foreach (Entity entity in ready)
@@ -261,6 +278,7 @@ namespace Mooh.Core.Simulation
             }
 
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
+            return true;
         }
 
         private static bool IsAtBoundary(Entity entity)

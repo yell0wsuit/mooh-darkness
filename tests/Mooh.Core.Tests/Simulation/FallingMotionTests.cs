@@ -6,6 +6,7 @@ using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
+using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
 using Xunit;
@@ -57,6 +58,39 @@ namespace Mooh.Core.Tests.Simulation
 
             Assert.Null(entity.Motion);
             Assert.Empty(events);
+        }
+
+        /// <summary>Verifies that a vacated cell cannot receive a falling body for 150 milliseconds.</summary>
+        [Fact]
+        public void VacatedCellBlocksFallingFor150Milliseconds()
+        {
+            WorldGrid world = new(5, 5);
+            Entity body = AddEntity(
+                world,
+                new GridPosition(2, 1),
+                InteractionMask.None,
+                new GravityBody(1, canSlide: false));
+            Entity player = new(
+                EntityId.New(),
+                new GridPosition(2, 2),
+                InteractionMask.BlocksMovement,
+                playerBody: new PlayerBody(10, 1, Direction.Right));
+            world.Add(player);
+            SimulationWorld simulation = CreateSimulation(world);
+            simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
+
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(100));
+            simulation.SetPlayerInput(default);
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(49));
+
+            Assert.Equal(new GridPosition(2, 1), body.Position);
+            Assert.Null(body.Motion);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(new GridPosition(2, 2), body.Position);
+            Assert.NotNull(body.Motion);
+            Assert.Equal([new FallStarted(body.Id, Direction.Down)], events);
         }
 
         /// <summary>Verifies that entities without gravity behavior remain stationary.</summary>
