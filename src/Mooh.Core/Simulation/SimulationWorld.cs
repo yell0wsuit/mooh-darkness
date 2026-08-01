@@ -275,6 +275,8 @@ namespace Mooh.Core.Simulation
                 }
             }
 
+            _world.Player?.PlayerBody?.Progress.Advance(elapsed);
+
             return events;
         }
 

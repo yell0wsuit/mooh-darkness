@@ -5,6 +5,7 @@ using System.Linq;
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
+using Mooh.Core.Legacy;
 using Mooh.Core.Motion;
 using Mooh.Core.Movement;
 using Mooh.Core.Simulation;
@@ -117,6 +118,11 @@ namespace Mooh.Core.Player
         {
 
             GridPosition destination = _player.Position.Offset(direction);
+            if (_world.Contains(destination))
+            {
+                LegacyDoorSystem.TryOpen(_player, _world, destination, events);
+            }
+
             EatDestination(destination, events);
             MovementPlan plan = _movement.Plan(
                 new MoveRequest(_player.Id, direction),
@@ -285,6 +291,7 @@ namespace Mooh.Core.Player
                     continue;
                 }
 
+                LegacyPickupSystem.Collect(_player, entity, events);
                 _ = _world.Remove(entity.Id);
                 events.Add(new PlayerAte(_player.Id, entity.Id));
             }

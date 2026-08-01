@@ -43,7 +43,8 @@ namespace Mooh.Core.Combat
                 return DamageResult.IgnoredDead;
             }
 
-            if (health.ImmunityRemaining > TimeSpan.Zero
+            if (target.PlayerBody?.Progress.ColaRemaining > TimeSpan.Zero
+                || health.ImmunityRemaining > TimeSpan.Zero
                 || target.PlayerBody?.Reaction.Kind == PlayerReactionKind.Shocked)
             {
                 events.Add(new DamageIgnored(
