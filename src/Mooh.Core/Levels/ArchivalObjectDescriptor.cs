@@ -1,3 +1,4 @@
+using Mooh.Core.Gravity;
 using Mooh.Core.Interactions;
 
 namespace Mooh.Core.Levels
@@ -9,11 +10,13 @@ namespace Mooh.Core.Levels
     /// <param name="HasGravity">Whether the object participates in directional gravity.</param>
     /// <param name="FallSpeedMultiplier">The multiplier applied to the normal fall speed.</param>
     /// <param name="Variant">The family-specific variant or cardinal direction.</param>
+    /// <param name="ImpactStrength">The shake strength produced by a falling landing.</param>
     public sealed record ArchivalObjectDescriptor(
         string ArchivalType,
         EntityKind Kind,
         InteractionMask Interactions,
         bool HasGravity = false,
         double FallSpeedMultiplier = 1,
-        int Variant = 0);
+        int Variant = 0,
+        GravityImpactStrength ImpactStrength = GravityImpactStrength.Ordinary);
 }

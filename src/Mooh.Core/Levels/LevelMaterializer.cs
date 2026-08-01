@@ -27,10 +27,10 @@ namespace Mooh.Core.Levels
             return Materialize(level, Direction.Down, DifficultySpeeds.Standard);
         }
 
-        /// <summary>Materializes a level with an explicit initial gravity and speed profile.</summary>
+        /// <summary>Materializes a level with an explicit initial gravity and difficulty profile.</summary>
         /// <param name="level">The validated archival level.</param>
         /// <param name="gravityDirection">The initial cardinal gravity direction.</param>
-        /// <param name="speeds">The recovered difficulty speed profile.</param>
+        /// <param name="speeds">The recovered difficulty gameplay values.</param>
         /// <returns>The live runtime level.</returns>
         /// <exception cref="ArgumentNullException">A required argument is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="gravityDirection"/> is undefined.</exception>
@@ -99,7 +99,9 @@ namespace Mooh.Core.Levels
                 world,
                 gravityDirection,
                 new DefaultGravityCollisionPolicy(),
-                new Random(0));
+                new Random(0),
+                0.5,
+                speeds);
             return new MaterializedLevel(
                 level,
                 world,
@@ -124,7 +126,8 @@ namespace Mooh.Core.Levels
                 descriptor.HasGravity
                     ? new GravityBody(
                         speeds.NormalSpeed * descriptor.FallSpeedMultiplier,
-                        canSlide: true)
+                        canSlide: true,
+                        descriptor.ImpactStrength)
                     : null,
                 descriptor.Kind == EntityKind.Player
                     ? new PlayerBody(speeds.PlayerSpeed, 1.5, Direction.Down)

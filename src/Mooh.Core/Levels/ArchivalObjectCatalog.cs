@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using Mooh.Core.Gravity;
 using Mooh.Core.Interactions;
 
 namespace Mooh.Core.Levels
@@ -54,7 +55,8 @@ namespace Mooh.Core.Levels
             Add(result, "OWeight", EntityKind.Weight,
                 PushableRound | InteractionMask.PushesThroughOccupants,
                 hasGravity: true,
-                fallSpeedMultiplier: 2);
+                fallSpeedMultiplier: 2,
+                impactStrength: GravityImpactStrength.Hard);
             Add(result, "OBottle", EntityKind.Bottle, PushableRound, hasGravity: true);
             Add(result, "OBarel", EntityKind.Barrel, PushableRound, hasGravity: true);
             Add(result, "OBaloon", EntityKind.Balloon,
@@ -144,7 +146,8 @@ namespace Mooh.Core.Levels
             InteractionMask interactions,
             bool hasGravity = false,
             double fallSpeedMultiplier = 1,
-            int variant = 0)
+            int variant = 0,
+            GravityImpactStrength impactStrength = GravityImpactStrength.Ordinary)
         {
             result.Add(
                 archivalType,
@@ -154,7 +157,8 @@ namespace Mooh.Core.Levels
                     interactions,
                     hasGravity,
                     fallSpeedMultiplier,
-                    variant));
+                    variant,
+                    impactStrength));
         }
     }
 }

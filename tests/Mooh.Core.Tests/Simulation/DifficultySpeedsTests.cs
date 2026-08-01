@@ -4,18 +4,20 @@ using Xunit;
 
 namespace Mooh.Core.Tests.Simulation
 {
-    /// <summary>Verifies the movement speeds recovered from the original difficulty table.</summary>
+    /// <summary>Verifies the gameplay values recovered from the original difficulty table.</summary>
     public sealed class DifficultySpeedsTests
     {
         /// <summary>Verifies the shared speed values used by standard difficulties.</summary>
         [Fact]
         public void StandardProfileUsesRecoveredCellsPerSecond()
         {
-            DifficultySpeeds speeds = DifficultySpeeds.Standard;
+            DifficultySpeeds profile = DifficultySpeeds.Standard;
 
-            Assert.Equal(2.5, speeds.PlayerSpeed, precision: 12);
-            Assert.Equal(1.875, speeds.NormalSpeed, precision: 12);
-            Assert.Equal(1.5625, speeds.MonsterSpeed, precision: 12);
+            Assert.Equal(2.5, profile.PlayerSpeed, precision: 12);
+            Assert.Equal(1.875, profile.NormalSpeed, precision: 12);
+            Assert.Equal(1.5625, profile.MonsterSpeed, precision: 12);
+            Assert.Equal(20, profile.ShakeDamage);
+            Assert.Equal(30, profile.HardShakeDamage);
         }
 
         /// <summary>Verifies that difficulty zero scales every recovered speed by 0.75.</summary>
@@ -28,6 +30,16 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(standard.PlayerSpeed * 0.75, easy.PlayerSpeed, precision: 12);
             Assert.Equal(standard.NormalSpeed * 0.75, easy.NormalSpeed, precision: 12);
             Assert.Equal(standard.MonsterSpeed * 0.75, easy.MonsterSpeed, precision: 12);
+            Assert.Equal(10, easy.ShakeDamage);
+            Assert.Equal(15, easy.HardShakeDamage);
+        }
+
+        /// <summary>Verifies timed mode retains standard impact damage.</summary>
+        [Fact]
+        public void TimedProfileUsesRecoveredImpactDamage()
+        {
+            Assert.Equal(20, DifficultySpeeds.Timed.ShakeDamage);
+            Assert.Equal(30, DifficultySpeeds.Timed.HardShakeDamage);
         }
     }
 }

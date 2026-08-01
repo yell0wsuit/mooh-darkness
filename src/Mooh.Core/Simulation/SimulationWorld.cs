@@ -24,6 +24,7 @@ namespace Mooh.Core.Simulation
         private static readonly TimeSpan TimerTolerance = TimeSpan.FromTicks(1);
 
         private readonly BlueMonsterSystem _blueMonsters;
+        private readonly DifficultySpeeds _difficultySpeeds;
         private readonly GravitySystem _gravity;
         private readonly GreenMonsterSystem _greenMonsters;
         private readonly double _maximumTravelPerSubstep;
@@ -50,7 +51,8 @@ namespace Mooh.Core.Simulation
                 gravityDirection,
                 collisionPolicy,
                 Random.Shared,
-                maximumTravelPerSubstep)
+                maximumTravelPerSubstep,
+                DifficultySpeeds.Standard)
         {
         }
 
@@ -69,6 +71,34 @@ namespace Mooh.Core.Simulation
             IGravityCollisionPolicy collisionPolicy,
             Random random,
             double maximumTravelPerSubstep = 0.5)
+            : this(
+                world,
+                gravityDirection,
+                collisionPolicy,
+                random,
+                maximumTravelPerSubstep,
+                DifficultySpeeds.Standard)
+        {
+        }
+
+        /// <summary>Initializes a simulation coordinator with explicit random and difficulty sources.</summary>
+        /// <param name="world">The authoritative world.</param>
+        /// <param name="gravityDirection">The direction in which unsupported bodies fall.</param>
+        /// <param name="collisionPolicy">The gravity collision policy.</param>
+        /// <param name="random">The random generator used to select equivalent slide routes.</param>
+        /// <param name="maximumTravelPerSubstep">The maximum cell fraction traveled in one substep.</param>
+        /// <param name="difficultySpeeds">The active recovered gameplay difficulty values.</param>
+        /// <exception cref="ArgumentNullException">A required argument is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maximumTravelPerSubstep"/> is not finite or lies outside (0, 1].
+        /// </exception>
+        public SimulationWorld(
+            WorldGrid world,
+            Direction gravityDirection,
+            IGravityCollisionPolicy collisionPolicy,
+            Random random,
+            double maximumTravelPerSubstep,
+            DifficultySpeeds difficultySpeeds)
         {
             if (!double.IsFinite(maximumTravelPerSubstep)
                 || maximumTravelPerSubstep <= 0
@@ -78,6 +108,7 @@ namespace Mooh.Core.Simulation
             }
 
             _world = world ?? throw new ArgumentNullException(nameof(world));
+            _difficultySpeeds = difficultySpeeds ?? throw new ArgumentNullException(nameof(difficultySpeeds));
             _gravityDirection = gravityDirection;
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
             _gravity = new GravitySystem(collisionPolicy, random);
@@ -440,7 +471,10 @@ namespace Mooh.Core.Simulation
 
             foreach (Entity entity in ready)
             {
-                MotionState motion = entity.Motion!;
+                if (entity.Motion is not MotionState motion)
+                {
+                    continue;
+                }
                 if (motion.Cause == MotionCause.PlayerWalking
                     && motion.TravelSign < 0)
                 {
@@ -497,6 +531,7 @@ namespace Mooh.Core.Simulation
                 {
                     KinematicsSystem.Stop(entity);
                     events.Add(new Landed(entity.Id, _gravityDirection));
+                    ResolveFallingImpact(entity, following, events);
                 }
                 else
                 {
@@ -507,6 +542,33 @@ namespace Mooh.Core.Simulation
             DecideMonsters(events);
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
             return true;
+        }
+
+        private void ResolveFallingImpact(
+            Entity source,
+            GridPosition impactedPosition,
+            List<SimulationEvent> events)
+        {
+            if (!_world.Contains(impactedPosition))
+            {
+                return;
+            }
+
+            Entity? player = _world.GetOccupants(impactedPosition).FirstOrDefault(
+                occupant => occupant.PlayerBody is not null && occupant.HealthBody is not null);
+            if (player is null)
+            {
+                return;
+            }
+
+            GravityImpactStrength strength = source.GravityBody!.ImpactStrength;
+            DamageKind kind = strength == GravityImpactStrength.Hard
+                ? DamageKind.HardShake
+                : DamageKind.Shake;
+            double amount = strength == GravityImpactStrength.Hard
+                ? _difficultySpeeds.HardShakeDamage
+                : _difficultySpeeds.ShakeDamage;
+            ApplyDamage(new DamageRequest(source.Id, player.Id, kind, amount), events);
         }
 
         private static bool IsAtBoundary(Entity entity)
