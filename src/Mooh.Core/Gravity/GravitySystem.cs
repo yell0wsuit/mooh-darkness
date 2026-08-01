@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Motion;
+using Mooh.Core.Movement;
 using Mooh.Core.Simulation;
 
 namespace Mooh.Core.Gravity
@@ -54,6 +55,7 @@ namespace Mooh.Core.Gravity
             GridPosition destination = entity.Position.Offset(gravityDirection);
             if (_collisionPolicy.CanEnter(world, entity, destination))
             {
+                world.CommitMoves([new PlannedMove(entity.Id, entity.Position, destination)]);
                 KinematicsSystem.Start(entity, MotionCause.Falling, gravityDirection, body.FallSpeed);
                 events.Add(new FallStarted(entity.Id, gravityDirection));
                 return true;
@@ -83,6 +85,8 @@ namespace Mooh.Core.Gravity
             }
 
             Direction slideDirection = viable.Count == 1 ? viable[0] : viable[_random.Next(2)];
+            GridPosition slideDestination = entity.Position.Offset(slideDirection);
+            world.CommitMoves([new PlannedMove(entity.Id, entity.Position, slideDestination)]);
             KinematicsSystem.Start(entity, MotionCause.Sliding, slideDirection, body.FallSpeed);
             events.Add(new SlideStarted(entity.Id, slideDirection));
             return true;

@@ -31,7 +31,9 @@ namespace Mooh.Core.Tests.Simulation
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
-            Assert.Equal(new GridPosition(2, 1), entity.Position);
+            Assert.Equal(new GridPosition(2, 2), entity.Position);
+            Assert.Empty(world.GetOccupants(new GridPosition(2, 1)));
+            Assert.Equal([entity], world.GetOccupants(new GridPosition(2, 2)));
             Assert.NotNull(entity.Motion);
             Assert.Equal(MotionCause.Falling, entity.Motion.Cause);
             Assert.Equal(Direction.Down, entity.Motion.SegmentDirection);

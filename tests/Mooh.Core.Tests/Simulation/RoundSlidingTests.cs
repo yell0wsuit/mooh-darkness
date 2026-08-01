@@ -113,7 +113,7 @@ namespace Mooh.Core.Tests.Simulation
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(1));
 
-            Assert.Equal(new GridPosition(3, 1), scenario.Body.Position);
+            Assert.Equal(new GridPosition(3, 2), scenario.Body.Position);
             Assert.NotNull(scenario.Body.Motion);
             Assert.Equal(MotionCause.Falling, scenario.Body.Motion.Cause);
             Assert.Equal(Direction.Down, scenario.Body.Motion.SegmentDirection);
@@ -126,9 +126,9 @@ namespace Mooh.Core.Tests.Simulation
                 events);
         }
 
-        /// <summary>Verifies that a slide is cancelled when an earlier mover occupies its destination.</summary>
+        /// <summary>Verifies that an authoritative destination prevents a conflicting slide from starting.</summary>
         [Fact]
-        public void OccupiedSlideDestinationIsRevalidatedAtBoundary()
+        public void AuthoritativeDestinationPreventsConflictingSlideStart()
         {
             WorldGrid world = new(5, 5);
             Entity earlier = new(
@@ -148,13 +148,12 @@ namespace Mooh.Core.Tests.Simulation
 
             IReadOnlyList<SimulationEvent> events = CreateSimulation(world, seed: 0).Advance(TimeSpan.FromSeconds(1));
 
-            Assert.Equal(new GridPosition(3, 1), earlier.Position);
+            Assert.Equal(new GridPosition(3, 2), earlier.Position);
             Assert.Equal(new GridPosition(2, 1), body.Position);
             Assert.Null(body.Motion);
             Assert.Equal(
                 [
                     new FallStarted(earlier.Id, Direction.Down),
-                    new SlideStarted(body.Id, Direction.Right),
                     new CellEntered(earlier.Id, new GridPosition(3, 1)),
                 ],
                 events);

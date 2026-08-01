@@ -43,7 +43,7 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
-            Assert.Equal(new GridPosition(4, 4), player.Position);
+            Assert.Equal(new GridPosition(4, 4).Offset(direction), player.Position);
             Assert.NotNull(player.Motion);
             Assert.Equal(direction, player.Motion.SegmentDirection);
             Assert.Equal(0.5, player.Motion.Progress, precision: 12);
@@ -88,7 +88,7 @@ namespace Mooh.Core.Tests.Player
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
             GridPosition entered = new GridPosition(4, 4).Offset(direction);
-            Assert.Equal(entered, player.Position);
+            Assert.Equal(entered.Offset(turn), player.Position);
             Assert.NotNull(player.Motion);
             Assert.Equal(turn, player.Motion.SegmentDirection);
             Assert.Equal(
@@ -116,8 +116,8 @@ namespace Mooh.Core.Tests.Player
                 TimeSpan.FromSeconds(2.0 / 3.0));
 
             GridPosition blockDestination = blockStart.Offset(direction);
-            Assert.Equal(blockDestination, block.Position);
-            Assert.Equal(new GridPosition(4, 4), player.Position);
+            Assert.Equal(blockDestination.Offset(direction), block.Position);
+            Assert.Equal(blockStart, player.Position);
             Assert.Equal(
                 [
                     new PushStarted(block.Id, direction),
@@ -151,7 +151,7 @@ namespace Mooh.Core.Tests.Player
                 TimeSpan.FromSeconds(2.0 / 3.0));
 
             GridPosition blockDestination = blockStart.Offset(direction);
-            Assert.Equal(blockDestination, block.Position);
+            Assert.Equal(blockDestination.Offset(gravityDirection), block.Position);
             Assert.NotNull(block.Motion);
             Assert.Equal(MotionCause.Falling, block.Motion.Cause);
             Assert.Equal(gravityDirection, block.Motion.SegmentDirection);

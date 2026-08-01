@@ -34,10 +34,10 @@ namespace Mooh.Core.Tests.Player
             IReadOnlyList<SimulationEvent> events = simulation.Advance(
                 TimeSpan.FromSeconds(2.0 / 3.0));
 
-            Assert.Equal(new GridPosition(3, 1), block.Position);
+            Assert.Equal(new GridPosition(4, 1), block.Position);
             Assert.NotNull(block.Motion);
             Assert.Equal(MotionCause.PlayerPushed, block.Motion.Cause);
-            Assert.Equal(new GridPosition(1, 1), player.Position);
+            Assert.Equal(new GridPosition(2, 1), player.Position);
             Assert.NotNull(player.Motion);
             Assert.Equal(2.0 / 3.0, player.Motion.Progress, precision: 6);
             Assert.Equal(
@@ -75,8 +75,8 @@ namespace Mooh.Core.Tests.Player
             simulation.SetPlayerInput(default);
             IReadOnlyList<SimulationEvent> crossed = simulation.Advance(TimeSpan.FromSeconds(0.9));
 
-            Assert.Equal(new GridPosition(4, 1), second.Position);
-            Assert.Equal(new GridPosition(3, 1), first.Position);
+            Assert.Equal(new GridPosition(5, 1), second.Position);
+            Assert.Equal(new GridPosition(4, 1), first.Position);
             Assert.Equal(new GridPosition(2, 1), player.Position);
             Assert.Equal(
                 [
@@ -103,7 +103,7 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.9));
 
-            Assert.Equal([first, second], world.GetOccupants(new GridPosition(3, 1)));
+            Assert.Equal([first, second], world.GetOccupants(new GridPosition(4, 1)));
             Assert.Equal(new GridPosition(2, 1), player.Position);
             Assert.Equal(
                 [
@@ -144,9 +144,9 @@ namespace Mooh.Core.Tests.Player
                 events);
         }
 
-        /// <summary>Verifies revalidation when an occupant appears in a pushed destination mid-segment.</summary>
+        /// <summary>Verifies that an occupant added to the authoritative destination does not cancel transit.</summary>
         [Fact]
-        public void NewlyOccupiedDestinationStopsPushedBlockInSourceCell()
+        public void NewlyOccupiedAuthoritativeDestinationDoesNotCancelPushedBlock()
         {
             (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
                 moveSpeed: 1,
@@ -157,13 +157,13 @@ namespace Mooh.Core.Tests.Player
             simulation.SetPlayerInput(default);
             Entity blocker = Add(world, x: 3, InteractionMask.BlocksMovement);
 
-            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.6));
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.5));
 
-            Assert.Equal(new GridPosition(2, 1), block.Position);
-            Assert.Null(block.Motion);
-            Assert.Equal([block], world.GetOccupants(new GridPosition(2, 1)));
-            Assert.Equal([blocker], world.GetOccupants(new GridPosition(3, 1)));
-            Assert.Equal(new GridPosition(1, 1), player.Position);
+            Assert.Equal(new GridPosition(3, 1), block.Position);
+            Assert.NotNull(block.Motion);
+            Assert.Equal([player], world.GetOccupants(new GridPosition(2, 1)));
+            Assert.Equal([block, blocker], world.GetOccupants(new GridPosition(3, 1)));
+            Assert.Equal(new GridPosition(2, 1), player.Position);
             Assert.DoesNotContain(events, item => item is CellEntered entered && entered.EntityId == block.Id);
         }
 

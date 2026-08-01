@@ -203,21 +203,6 @@ namespace Mooh.Core.Simulation
                 return;
             }
 
-            HashSet<EntityId> readyPushedIds =
-            [
-                .. ready
-                    .Where(entity => entity.Motion!.Cause == MotionCause.PlayerPushed)
-                    .Select(entity => entity.Id),
-            ];
-            Dictionary<EntityId, bool> pushedCanCross = [];
-            foreach (Entity pushed in ready.Where(
-                entity => entity.Motion!.Cause == MotionCause.PlayerPushed))
-            {
-                pushedCanCross.Add(
-                    pushed.Id,
-                    CanPushedCross(pushed, pushed.Motion!, readyPushedIds, pushedCanCross));
-            }
-
             foreach (Entity entity in ready)
             {
                 MotionState motion = entity.Motion!;
@@ -233,29 +218,17 @@ namespace Mooh.Core.Simulation
 
                 if (motion.Cause == MotionCause.PlayerPushed)
                 {
-                    ResolvePushedBoundary(entity, motion, pushedCanCross[entity.Id], events);
+                    ResolvePushedBoundary(entity, motion, events);
                     continue;
                 }
 
                 if (motion.Cause == MotionCause.PlayerWalking)
                 {
-                    ResolvePlayerBoundary(entity, motion, events);
+                    ResolvePlayerBoundary(entity, events);
                     continue;
                 }
 
-                GridPosition destination = entity.Position.Offset(motion.SegmentDirection);
-                if (!_gravity.CanEnter(_world, entity, destination))
-                {
-                    KinematicsSystem.Stop(entity);
-                    if (motion.Cause == MotionCause.Falling)
-                    {
-                        events.Add(new Landed(entity.Id, _gravityDirection));
-                    }
-
-                    continue;
-                }
-
-                _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, destination)]);
+                GridPosition destination = entity.Position;
                 motion.Progress = 0;
                 events.Add(new CellEntered(entity.Id, destination));
 
@@ -270,6 +243,10 @@ namespace Mooh.Core.Simulation
                 {
                     KinematicsSystem.Stop(entity);
                     events.Add(new Landed(entity.Id, _gravityDirection));
+                }
+                else
+                {
+                    _world.CommitMoves([new PlannedMove(entity.Id, destination, following)]);
                 }
             }
 
@@ -297,56 +274,15 @@ namespace Mooh.Core.Simulation
             };
         }
 
-        private bool CanPushedCross(
-            Entity entity,
-            MotionState motion,
-            HashSet<EntityId> readyPushedIds,
-            Dictionary<EntityId, bool> earlierResults)
-        {
-            GridPosition destination = entity.Position.Offset(motion.SegmentDirection);
-            if (!_world.Contains(destination))
-            {
-                return false;
-            }
-
-            foreach (Entity occupant in _world.GetOccupants(destination))
-            {
-                if (readyPushedIds.Contains(occupant.Id))
-                {
-                    if (earlierResults.TryGetValue(occupant.Id, out bool willCross) && willCross)
-                    {
-                        continue;
-                    }
-
-                    return false;
-                }
-
-                if (_interactions.Classify(entity, occupant) != OccupantInteraction.Allow)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         private void ResolvePushedBoundary(
             Entity entity,
             MotionState motion,
-            bool canCross,
             List<SimulationEvent> events)
         {
-            if (!canCross)
-            {
-                KinematicsSystem.Stop(entity);
-                return;
-            }
-
             Direction direction = motion.SegmentDirection;
             double speed = motion.Speed;
             int resolutionOrder = motion.ResolutionOrder;
-            GridPosition destination = entity.Position.Offset(direction);
-            _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, destination)]);
+            GridPosition destination = entity.Position;
             events.Add(new CellEntered(entity.Id, destination));
             KinematicsSystem.Stop(entity);
 
@@ -357,6 +293,8 @@ namespace Mooh.Core.Simulation
 
             if (CanContinuePush(entity, direction, resolutionOrder))
             {
+                GridPosition following = entity.Position.Offset(direction);
+                _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, following)]);
                 KinematicsSystem.Start(
                     entity,
                     MotionCause.PlayerPushed,
@@ -393,23 +331,12 @@ namespace Mooh.Core.Simulation
 
         private void ResolvePlayerBoundary(
             Entity player,
-            MotionState motion,
             List<SimulationEvent> events)
         {
-            Direction direction = motion.SegmentDirection;
             KinematicsSystem.Stop(player);
             _playerController!.EndSegment();
 
-            MovementPlan plan = _movement.Plan(new MoveRequest(player.Id, direction));
-            if (plan.Result != MoveResult.Moved)
-            {
-                events.Add(new PlayerBlocked(player.Id, direction));
-                return;
-            }
-
-            MovementStep step = plan.Steps.Single();
-            _world.CommitMoves([new PlannedMove(step.EntityId, step.From, step.To)]);
-            events.Add(new CellEntered(player.Id, step.To));
+            events.Add(new CellEntered(player.Id, player.Position));
             _playerController.TryStart(events, emitStoppedWhenNoInput: true);
         }
     }

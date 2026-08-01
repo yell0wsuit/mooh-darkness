@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
@@ -59,6 +60,9 @@ namespace Mooh.Core.Player
                 events.Add(new PlayerBlocked(_player.Id, heldDirection));
                 return;
             }
+
+            _world.CommitMoves(
+                [.. plan.Steps.Select(step => new PlannedMove(step.EntityId, step.From, step.To))]);
 
             if (plan.Result == MoveResult.Pushed)
             {
@@ -122,6 +126,8 @@ namespace Mooh.Core.Player
                 return;
             }
 
+            GridPosition destination = _player.Position.Offset(direction);
+            _world.CommitMoves([new PlannedMove(_player.Id, _player.Position, destination)]);
             KinematicsSystem.Reverse(_player);
             PlayerBody body = _player.PlayerBody
                 ?? throw new InvalidOperationException("The player entity has no player body.");

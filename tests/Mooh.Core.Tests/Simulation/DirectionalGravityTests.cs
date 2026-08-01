@@ -108,7 +108,7 @@ namespace Mooh.Core.Tests.Simulation
             IReadOnlyList<SimulationEvent> events =
                 CreateSimulation(world, gravityDirection).Advance(TimeSpan.FromSeconds(1));
 
-            Assert.Equal(expectedEntry, body.Position);
+            Assert.Equal(expectedEntry.Offset(gravityDirection), body.Position);
             Assert.NotNull(body.Motion);
             Assert.Equal(MotionCause.Falling, body.Motion.Cause);
             Assert.Equal(gravityDirection, body.Motion.SegmentDirection);

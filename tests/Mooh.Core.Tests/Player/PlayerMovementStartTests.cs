@@ -18,7 +18,7 @@ namespace Mooh.Core.Tests.Player
     /// </summary>
     public sealed class PlayerMovementStartTests
     {
-        /// <summary>Verifies that held input starts fractional walking without committing occupancy.</summary>
+        /// <summary>Verifies that held input commits destination authority before fractional walking completes.</summary>
         [Fact]
         public void HeldDirectionStartsFractionalWalking()
         {
@@ -32,7 +32,9 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = context.Simulation.Advance(TimeSpan.FromSeconds(0.25));
 
-            Assert.Equal(new GridPosition(2, 2), context.Player.Position);
+            Assert.Equal(new GridPosition(3, 2), context.Player.Position);
+            Assert.Empty(context.World.GetOccupants(new GridPosition(2, 2)));
+            Assert.Equal([context.Player], context.World.GetOccupants(new GridPosition(3, 2)));
             Assert.NotNull(context.Player.Motion);
             Assert.Equal(MotionCause.PlayerWalking, context.Player.Motion.Cause);
             Assert.Equal(Direction.Right, context.Player.Motion.SegmentDirection);

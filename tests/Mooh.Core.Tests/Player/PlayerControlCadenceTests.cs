@@ -77,7 +77,7 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
-            Assert.Equal(new GridPosition(2, 2), player.Position);
+            Assert.Equal(new GridPosition(1, 2), player.Position);
             Assert.NotNull(player.Motion);
             Assert.Equal(Direction.Left, player.Motion.SegmentDirection);
             Assert.Equal(0, player.Motion.Progress, precision: 12);
@@ -135,7 +135,7 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.5));
 
-            Assert.Equal(new GridPosition(3, 2), player.Position);
+            Assert.Equal(new GridPosition(4, 2), player.Position);
             Assert.NotNull(player.Motion);
             Assert.Equal(Direction.Right, player.Motion.SegmentDirection);
             Assert.Equal(0.5, player.Motion.Progress, precision: 12);
@@ -157,7 +157,7 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
-            Assert.Equal(new GridPosition(3, 2), player.Position);
+            Assert.Equal(new GridPosition(3, 1), player.Position);
             Assert.NotNull(player.Motion);
             Assert.Equal(Direction.Up, player.Motion.SegmentDirection);
             Assert.Equal(Direction.Up, player.PlayerBody!.FacingDirection);
@@ -201,7 +201,7 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
-            Assert.Equal(new GridPosition(3, 2), player.Position);
+            Assert.Equal(new GridPosition(3, 1), player.Position);
             Assert.NotNull(player.Motion);
             Assert.Equal(Direction.Up, player.Motion.SegmentDirection);
             Assert.Equal(
@@ -236,9 +236,9 @@ namespace Mooh.Core.Tests.Player
                 events);
         }
 
-        /// <summary>Verifies that a new push requirement at the active destination blocks safely.</summary>
+        /// <summary>Verifies that a new same-cell occupant cannot undo an already-authoritative segment.</summary>
         [Fact]
-        public void PushableAddedToActiveDestinationBlocksBoundaryRevalidation()
+        public void OccupantAddedToAuthoritativeDestinationDoesNotCancelSegment()
         {
             (WorldGrid world, Entity player, SimulationWorld simulation) = CreateWorldScenario();
             StartRightToHalfCell(simulation);
@@ -250,11 +250,16 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
-            Assert.Equal(new GridPosition(2, 2), player.Position);
-            Assert.Null(player.Motion);
+            Assert.Equal(new GridPosition(4, 2), player.Position);
+            Assert.NotNull(player.Motion);
             Assert.Equal(new GridPosition(3, 2), pushable.Position);
             Assert.Null(pushable.Motion);
-            Assert.Equal([new PlayerBlocked(player.Id, Direction.Right)], events);
+            Assert.Equal(
+                [
+                    new CellEntered(player.Id, new GridPosition(3, 2)),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
+                ],
+                events);
         }
 
         private static void StartRightToHalfCell(SimulationWorld simulation)
