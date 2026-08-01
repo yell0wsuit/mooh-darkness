@@ -116,7 +116,7 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(new GridPosition(3, 1), scenario.Body.Position);
             Assert.NotNull(scenario.Body.Motion);
             Assert.Equal(MotionCause.Falling, scenario.Body.Motion.Cause);
-            Assert.Equal(Direction.Down, scenario.Body.Motion.Direction);
+            Assert.Equal(Direction.Down, scenario.Body.Motion.SegmentDirection);
             Assert.Equal(
                 [
                     new SlideStarted(scenario.Body.Id, Direction.Right),
@@ -200,7 +200,7 @@ namespace Mooh.Core.Tests.Simulation
         {
             Assert.NotNull(body.Motion);
             Assert.Equal(MotionCause.Sliding, body.Motion.Cause);
-            Assert.Equal(direction, body.Motion.Direction);
+            Assert.Equal(direction, body.Motion.SegmentDirection);
             Assert.Equal(0.25, body.Motion.Progress, precision: 10);
         }
 

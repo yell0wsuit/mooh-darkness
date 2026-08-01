@@ -15,6 +15,7 @@ namespace Mooh.Core.Grid
         private readonly Dictionary<EntityId, Entity> _entities = [];
         private readonly List<EntityId> _entityOrder = [];
         private readonly Dictionary<GridPosition, List<EntityId>> _occupancy = [];
+        private EntityId? _playerId;
 
         /// <summary>
         /// Initializes a world grid with the specified positive dimensions.
@@ -41,6 +42,9 @@ namespace Mooh.Core.Grid
         /// <summary>Gets all entities registered in the world.</summary>
         public IReadOnlyList<Entity> Entities => [.. _entityOrder.Select(GetEntity)];
 
+        /// <summary>Gets the world's player entity, if one is registered.</summary>
+        public Entity? Player => _playerId is EntityId id ? GetEntity(id) : null;
+
         /// <summary>
         /// Determines whether a position lies within the world bounds.
         /// </summary>
@@ -58,7 +62,9 @@ namespace Mooh.Core.Grid
         /// <param name="entity">The entity to register.</param>
         /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentOutOfRangeException">The entity's position is outside the world.</exception>
-        /// <exception cref="InvalidOperationException">The entity identifier is already registered.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// The entity identifier is already registered, or the world already has a player.
+        /// </exception>
         public void Add(Entity entity)
         {
             ArgumentNullException.ThrowIfNull(entity);
@@ -67,9 +73,19 @@ namespace Mooh.Core.Grid
                 throw new ArgumentOutOfRangeException(nameof(entity), entity.Position, "Entity position is outside the world.");
             }
 
+            if (entity.PlayerBody is not null && _playerId is not null)
+            {
+                throw new InvalidOperationException("The world already has a player.");
+            }
+
             if (!_entities.TryAdd(entity.Id, entity))
             {
                 throw new InvalidOperationException($"Entity '{entity.Id}' is already registered.");
+            }
+
+            if (entity.PlayerBody is not null)
+            {
+                _playerId = entity.Id;
             }
 
             _entityOrder.Add(entity.Id);

@@ -33,46 +33,59 @@ namespace Mooh.Core.Gravity
             ArgumentNullException.ThrowIfNull(events);
             foreach (Entity entity in world.Entities)
             {
-                if (entity.GravityBody is not GravityBody body || entity.Motion is not null)
-                {
-                    continue;
-                }
-
-                GridPosition destination = entity.Position.Offset(gravityDirection);
-                if (_collisionPolicy.CanEnter(world, entity, destination))
-                {
-                    KinematicsSystem.Start(entity, MotionCause.Falling, gravityDirection, body.FallSpeed);
-                    events.Add(new FallStarted(entity.Id, gravityDirection));
-                    continue;
-                }
-
-                if (!body.CanSlide)
-                {
-                    continue;
-                }
-
-                Direction[] candidates = [gravityDirection.TurnLeft(), gravityDirection.TurnRight()];
-                List<Direction> viable = [];
-                foreach (Direction candidate in candidates)
-                {
-                    GridPosition side = entity.Position.Offset(candidate);
-                    GridPosition diagonal = side.Offset(gravityDirection);
-                    if (_collisionPolicy.CanEnter(world, entity, side)
-                        && _collisionPolicy.CanEnter(world, entity, diagonal))
-                    {
-                        viable.Add(candidate);
-                    }
-                }
-
-                if (viable.Count == 0)
-                {
-                    continue;
-                }
-
-                Direction slideDirection = viable.Count == 1 ? viable[0] : viable[_random.Next(2)];
-                KinematicsSystem.Start(entity, MotionCause.Sliding, slideDirection, body.FallSpeed);
-                events.Add(new SlideStarted(entity.Id, slideDirection));
+                _ = EvaluateStationary(world, entity, gravityDirection, events);
             }
+        }
+
+        internal bool EvaluateStationary(
+            WorldGrid world,
+            Entity entity,
+            Direction gravityDirection,
+            ICollection<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(world);
+            ArgumentNullException.ThrowIfNull(entity);
+            ArgumentNullException.ThrowIfNull(events);
+            if (entity.GravityBody is not GravityBody body || entity.Motion is not null)
+            {
+                return false;
+            }
+
+            GridPosition destination = entity.Position.Offset(gravityDirection);
+            if (_collisionPolicy.CanEnter(world, entity, destination))
+            {
+                KinematicsSystem.Start(entity, MotionCause.Falling, gravityDirection, body.FallSpeed);
+                events.Add(new FallStarted(entity.Id, gravityDirection));
+                return true;
+            }
+
+            if (!body.CanSlide)
+            {
+                return false;
+            }
+
+            Direction[] candidates = [gravityDirection.TurnLeft(), gravityDirection.TurnRight()];
+            List<Direction> viable = [];
+            foreach (Direction candidate in candidates)
+            {
+                GridPosition side = entity.Position.Offset(candidate);
+                GridPosition diagonal = side.Offset(gravityDirection);
+                if (_collisionPolicy.CanEnter(world, entity, side)
+                    && _collisionPolicy.CanEnter(world, entity, diagonal))
+                {
+                    viable.Add(candidate);
+                }
+            }
+
+            if (viable.Count == 0)
+            {
+                return false;
+            }
+
+            Direction slideDirection = viable.Count == 1 ? viable[0] : viable[_random.Next(2)];
+            KinematicsSystem.Start(entity, MotionCause.Sliding, slideDirection, body.FallSpeed);
+            events.Add(new SlideStarted(entity.Id, slideDirection));
+            return true;
         }
 
         internal bool CanEnter(WorldGrid world, Entity entity, GridPosition destination)

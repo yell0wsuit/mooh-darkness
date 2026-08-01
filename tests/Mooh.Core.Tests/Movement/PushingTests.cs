@@ -15,19 +15,25 @@ namespace Mooh.Core.Tests.Movement
         private const InteractionMask Pushable =
             InteractionMask.BlocksMovement | InteractionMask.PlayerPushable;
 
-        /// <summary>Verifies that a successful push moves the block and mover together.</summary>
+        /// <summary>Verifies that a successful push is planned farthest-first without mutation.</summary>
         [Fact]
-        public void PushMovesBlockAndMoverTogether()
+        public void PushPlansBlockBeforeMoverWithoutMutation()
         {
             (WorldGrid World, MovementSystem Movement) context = CreateContext();
             Entity mover = Add(context.World, 2, InteractionMask.None);
             Entity block = Add(context.World, 3, Pushable);
 
-            MoveResult result = context.Movement.Move(new MoveRequest(mover.Id, Direction.Right));
+            MovementPlan plan = context.Movement.Plan(new MoveRequest(mover.Id, Direction.Right));
 
-            Assert.Equal(MoveResult.Pushed, result);
-            Assert.Equal(new GridPosition(3, 1), mover.Position);
-            Assert.Equal(new GridPosition(4, 1), block.Position);
+            Assert.Equal(MoveResult.Pushed, plan.Result);
+            Assert.Equal(
+                [
+                    new MovementStep(block.Id, new GridPosition(3, 1), new GridPosition(4, 1)),
+                    new MovementStep(mover.Id, new GridPosition(2, 1), new GridPosition(3, 1)),
+                ],
+                plan.Steps);
+            Assert.Equal(new GridPosition(2, 1), mover.Position);
+            Assert.Equal(new GridPosition(3, 1), block.Position);
         }
 
         /// <summary>Verifies that a push chain moves its farthest block first.</summary>
@@ -39,12 +45,19 @@ namespace Mooh.Core.Tests.Movement
             Entity first = Add(context.World, 3, Pushable);
             Entity second = Add(context.World, 4, Pushable);
 
-            MoveResult result = context.Movement.Move(new MoveRequest(mover.Id, Direction.Right));
+            MovementPlan plan = context.Movement.Plan(new MoveRequest(mover.Id, Direction.Right));
 
-            Assert.Equal(MoveResult.Pushed, result);
-            Assert.Equal(new GridPosition(3, 1), mover.Position);
-            Assert.Equal(new GridPosition(4, 1), first.Position);
-            Assert.Equal(new GridPosition(5, 1), second.Position);
+            Assert.Equal(MoveResult.Pushed, plan.Result);
+            Assert.Equal(
+                [
+                    new MovementStep(second.Id, new GridPosition(4, 1), new GridPosition(5, 1)),
+                    new MovementStep(first.Id, new GridPosition(3, 1), new GridPosition(4, 1)),
+                    new MovementStep(mover.Id, new GridPosition(2, 1), new GridPosition(3, 1)),
+                ],
+                plan.Steps);
+            Assert.Equal(new GridPosition(2, 1), mover.Position);
+            Assert.Equal(new GridPosition(3, 1), first.Position);
+            Assert.Equal(new GridPosition(4, 1), second.Position);
         }
 
         /// <summary>Verifies that multiple pushables sharing a cell move together.</summary>
@@ -56,10 +69,19 @@ namespace Mooh.Core.Tests.Movement
             Entity first = Add(context.World, 3, Pushable);
             Entity second = Add(context.World, 3, Pushable);
 
-            MoveResult result = context.Movement.Move(new MoveRequest(mover.Id, Direction.Right));
+            MovementPlan plan = context.Movement.Plan(new MoveRequest(mover.Id, Direction.Right));
 
-            Assert.Equal(MoveResult.Pushed, result);
-            Assert.Equal([first, second], context.World.GetOccupants(new GridPosition(4, 1)));
+            Assert.Equal(MoveResult.Pushed, plan.Result);
+            Assert.Equal(
+                [
+                    new MovementStep(first.Id, new GridPosition(3, 1), new GridPosition(4, 1)),
+                    new MovementStep(second.Id, new GridPosition(3, 1), new GridPosition(4, 1)),
+                    new MovementStep(mover.Id, new GridPosition(2, 1), new GridPosition(3, 1)),
+                ],
+                plan.Steps);
+            Assert.Equal(new GridPosition(2, 1), mover.Position);
+            Assert.Equal(new GridPosition(3, 1), first.Position);
+            Assert.Equal(new GridPosition(3, 1), second.Position);
         }
 
         /// <summary>Verifies that a boundary-blocked push leaves every entity unchanged.</summary>
@@ -71,9 +93,10 @@ namespace Mooh.Core.Tests.Movement
             Entity first = Add(context.World, 3, Pushable);
             Entity second = Add(context.World, 4, Pushable);
 
-            MoveResult result = context.Movement.Move(new MoveRequest(mover.Id, Direction.Right));
+            MovementPlan plan = context.Movement.Plan(new MoveRequest(mover.Id, Direction.Right));
 
-            Assert.Equal(MoveResult.Blocked, result);
+            Assert.Equal(MoveResult.Blocked, plan.Result);
+            Assert.Empty(plan.Steps);
             Assert.Equal(new GridPosition(2, 1), mover.Position);
             Assert.Equal(new GridPosition(3, 1), first.Position);
             Assert.Equal(new GridPosition(4, 1), second.Position);
@@ -88,9 +111,10 @@ namespace Mooh.Core.Tests.Movement
             Entity block = Add(context.World, 3, Pushable);
             Entity wall = Add(context.World, 4, InteractionMask.BlocksMovement);
 
-            MoveResult result = context.Movement.Move(new MoveRequest(mover.Id, Direction.Right));
+            MovementPlan plan = context.Movement.Plan(new MoveRequest(mover.Id, Direction.Right));
 
-            Assert.Equal(MoveResult.Blocked, result);
+            Assert.Equal(MoveResult.Blocked, plan.Result);
+            Assert.Empty(plan.Steps);
             Assert.Equal(new GridPosition(2, 1), mover.Position);
             Assert.Equal(new GridPosition(3, 1), block.Position);
             Assert.Equal(new GridPosition(4, 1), wall.Position);
@@ -104,9 +128,10 @@ namespace Mooh.Core.Tests.Movement
             Entity mover = Add(context.World, 2, InteractionMask.None);
             Entity block = Add(context.World, 3, Pushable | InteractionMask.MovementLocked);
 
-            MoveResult result = context.Movement.Move(new MoveRequest(mover.Id, Direction.Right));
+            MovementPlan plan = context.Movement.Plan(new MoveRequest(mover.Id, Direction.Right));
 
-            Assert.Equal(MoveResult.Blocked, result);
+            Assert.Equal(MoveResult.Blocked, plan.Result);
+            Assert.Empty(plan.Steps);
             Assert.Equal(new GridPosition(2, 1), mover.Position);
             Assert.Equal(new GridPosition(3, 1), block.Position);
         }

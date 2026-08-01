@@ -32,9 +32,25 @@ namespace Mooh.Core.Tests.Motion
             MotionState motion = new(MotionCause.Sliding, Direction.Right, 2.5);
 
             Assert.Equal(MotionCause.Sliding, motion.Cause);
-            Assert.Equal(Direction.Right, motion.Direction);
+            Assert.Equal(Direction.Right, motion.SegmentDirection);
             Assert.Equal(2.5, motion.Speed);
             Assert.Equal(0, motion.Progress);
+        }
+
+        /// <summary>Verifies the direction and ordering metadata for a walking segment.</summary>
+        [Fact]
+        public void WalkingMotionExposesSegmentState()
+        {
+            MotionState motion = new(
+                MotionCause.PlayerWalking,
+                Direction.Right,
+                2,
+                resolutionOrder: 3);
+
+            Assert.Equal(Direction.Right, motion.SegmentDirection);
+            Assert.Equal(1, motion.TravelSign);
+            Assert.Equal(Direction.Right, motion.TravelDirection);
+            Assert.Equal(3, motion.ResolutionOrder);
         }
     }
 }

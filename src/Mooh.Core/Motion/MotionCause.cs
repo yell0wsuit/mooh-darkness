@@ -1,7 +1,7 @@
 namespace Mooh.Core.Motion
 {
     /// <summary>
-    /// Identifies the gravity behavior responsible for active motion.
+    /// Identifies the behavior responsible for active motion.
     /// </summary>
     public enum MotionCause
     {
@@ -10,5 +10,11 @@ namespace Mooh.Core.Motion
 
         /// <summary>The entity is moving laterally around support.</summary>
         Sliding,
+
+        /// <summary>The player is walking under held-input control.</summary>
+        PlayerWalking,
+
+        /// <summary>An object is moving after being pushed by the player.</summary>
+        PlayerPushed,
     }
 }

@@ -111,7 +111,7 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(expectedEntry, body.Position);
             Assert.NotNull(body.Motion);
             Assert.Equal(MotionCause.Falling, body.Motion.Cause);
-            Assert.Equal(gravityDirection, body.Motion.Direction);
+            Assert.Equal(gravityDirection, body.Motion.SegmentDirection);
             Assert.Equal(
                 [
                     new SlideStarted(body.Id, expectedSlide),
@@ -134,7 +134,7 @@ namespace Mooh.Core.Tests.Simulation
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.25));
 
             Assert.NotNull(body.Motion);
-            Assert.Equal(Direction.Right, body.Motion.Direction);
+            Assert.Equal(Direction.Right, body.Motion.SegmentDirection);
             Assert.Equal([new FallStarted(body.Id, Direction.Right)], events);
         }
 
@@ -152,7 +152,7 @@ namespace Mooh.Core.Tests.Simulation
             _ = Assert.Throws<InvalidOperationException>(() => simulation.SetGravity(Direction.Right));
 
             Assert.Same(originalMotion, body.Motion);
-            Assert.Equal(Direction.Down, body.Motion.Direction);
+            Assert.Equal(Direction.Down, body.Motion.SegmentDirection);
             Assert.Equal(originalProgress, body.Motion.Progress);
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.75));
             Assert.Contains(new Landed(body.Id, Direction.Down), events);
