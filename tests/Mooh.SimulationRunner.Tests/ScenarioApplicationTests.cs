@@ -237,7 +237,7 @@ namespace Mooh.SimulationRunner.Tests
 
         private static string CreateLevelJson()
         {
-            return """
+            return /*lang=json,strict*/ """
                 {
                     "formatVersion": 1,
                     "size": { "width": 1, "height": 1 },

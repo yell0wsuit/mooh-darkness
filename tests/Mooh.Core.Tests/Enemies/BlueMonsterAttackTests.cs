@@ -65,7 +65,7 @@ namespace Mooh.Core.Tests.Enemies
             Assert.Equal(80, player.HealthBody.Current);
             Assert.Equal(PlayerReactionKind.Shocked, player.PlayerBody!.Reaction.Kind);
             Assert.Equal(BlueMonsterState.AttackRecovery, monster.BlueMonsterBody.State);
-            Assert.Equal(TimeSpan.FromMilliseconds(1150), monster.BlueMonsterBody.Remaining);
+            Assert.Equal(TimeSpan.FromMilliseconds(850), monster.BlueMonsterBody.Remaining);
             Assert.Equal(
                 [
                     new EnemyStrike(monster.Id, new GridPosition(1, 0)),
@@ -102,25 +102,29 @@ namespace Mooh.Core.Tests.Enemies
 
         /// <summary>Verifies recovered post-strike duration depends on the attack direction.</summary>
         /// <param name="direction">The attack direction.</param>
-        /// <param name="expectedMilliseconds">The expected post-strike duration.</param>
+        /// <param name="expectedTotalMilliseconds">The expected total turnaround duration.</param>
+        /// <param name="expectedPhaseMilliseconds">The expected initial recovery-phase duration.</param>
         [Theory]
-        [InlineData(Direction.Left, 985)]
-        [InlineData(Direction.Up, 1150)]
-        [InlineData(Direction.Right, 1150)]
-        [InlineData(Direction.Down, 1150)]
+        [InlineData(Direction.Left, 985, 685)]
+        [InlineData(Direction.Up, 1150, 850)]
+        [InlineData(Direction.Right, 1150, 850)]
+        [InlineData(Direction.Down, 1150, 850)]
         public void StrikeStartsRecoveredTurnaround(
             Direction direction,
-            int expectedMilliseconds)
+            int expectedTotalMilliseconds,
+            int expectedPhaseMilliseconds)
         {
             (WorldGrid world, Entity monster, _) = NewFacingScenario(direction);
             SimulationWorld simulation = CreateSimulation(world);
 
-            _ = simulation.Advance(TimeSpan.FromMilliseconds(600));
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(600));
+            EnemyTurnStarted turnaround = Assert.Single(events.OfType<EnemyTurnStarted>());
 
             Assert.Equal(BlueMonsterState.AttackRecovery, monster.BlueMonsterBody!.State);
             Assert.Equal(
-                TimeSpan.FromMilliseconds(expectedMilliseconds),
+                TimeSpan.FromMilliseconds(expectedPhaseMilliseconds),
                 monster.BlueMonsterBody.Remaining);
+            Assert.Equal(TimeSpan.FromMilliseconds(expectedTotalMilliseconds), turnaround.Duration);
         }
 
         /// <summary>Verifies turnaround completion leaves the monster facing away from its strike.</summary>
@@ -137,6 +141,22 @@ namespace Mooh.Core.Tests.Enemies
             Assert.Contains(
                 new EnemyTurnCompleted(monster.Id, Direction.Right),
                 events);
+        }
+
+        /// <summary>Verifies facing changes for the recovered final 300-millisecond turn phase.</summary>
+        [Fact]
+        public void FacingChangesBeforeTurnaroundCompletes()
+        {
+            (WorldGrid world, Entity monster, _) = NewFacingScenario(Direction.Left);
+            SimulationWorld simulation = CreateSimulation(world);
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(600));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(685));
+
+            Assert.Equal(Direction.Right, monster.BlueMonsterBody!.FacingDirection);
+            Assert.Equal(BlueMonsterState.AttackTurnaround, monster.BlueMonsterBody.State);
+            Assert.Equal(TimeSpan.FromMilliseconds(300), monster.BlueMonsterBody.Remaining);
+            Assert.DoesNotContain(events, simulationEvent => simulationEvent is EnemyTurnCompleted);
         }
 
         /// <summary>Verifies simultaneous green and blue strikes resolve in registration order.</summary>

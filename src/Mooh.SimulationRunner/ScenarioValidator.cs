@@ -217,10 +217,28 @@ namespace Mooh.SimulationRunner
                         blueMonsterBody.LeftAttackRecoveryMilliseconds,
                         source,
                         $"{path}.blueMonsterBody.leftAttackRecoveryMilliseconds");
+                    if (blueMonsterBody.LeftAttackRecoveryMilliseconds
+                        <= blueMonsterBody.TurnMilliseconds)
+                    {
+                        throw Invalid(
+                            source,
+                            $"{path}.blueMonsterBody.leftAttackRecoveryMilliseconds",
+                            "must exceed turnMilliseconds.");
+                    }
+
                     ValidatePositiveMilliseconds(
                         blueMonsterBody.AttackRecoveryMilliseconds,
                         source,
                         $"{path}.blueMonsterBody.attackRecoveryMilliseconds");
+                    if (blueMonsterBody.AttackRecoveryMilliseconds
+                        <= blueMonsterBody.TurnMilliseconds)
+                    {
+                        throw Invalid(
+                            source,
+                            $"{path}.blueMonsterBody.attackRecoveryMilliseconds",
+                            "must exceed turnMilliseconds.");
+                    }
+
                     if (!double.IsFinite(blueMonsterBody.StrikeDamage)
                         || blueMonsterBody.StrikeDamage <= 0)
                     {

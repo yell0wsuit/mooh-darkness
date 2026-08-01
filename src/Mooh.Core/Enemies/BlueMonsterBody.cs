@@ -22,7 +22,8 @@ namespace Mooh.Core.Enemies
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="moveSpeed"/> is not finite and positive,
         /// <paramref name="facingDirection"/> is undefined, or
-        /// a duration is not positive, or <paramref name="strikeDamage"/> is not finite and positive.
+        /// a duration is not positive, an attack recovery does not exceed
+        /// <paramref name="turnDuration"/>, or <paramref name="strikeDamage"/> is not finite and positive.
         /// </exception>
         public BlueMonsterBody(
             double moveSpeed,
@@ -58,12 +59,20 @@ namespace Mooh.Core.Enemies
                 resolvedLeftAttackRecoveryDuration,
                 TimeSpan.Zero,
                 nameof(leftAttackRecoveryDuration));
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(
+                turnDuration,
+                resolvedLeftAttackRecoveryDuration,
+                nameof(leftAttackRecoveryDuration));
 
             TimeSpan resolvedAttackRecoveryDuration = attackRecoveryDuration
                 ?? DefaultAttackRecoveryDuration;
             ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(
                 resolvedAttackRecoveryDuration,
                 TimeSpan.Zero,
+                nameof(attackRecoveryDuration));
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(
+                turnDuration,
+                resolvedAttackRecoveryDuration,
                 nameof(attackRecoveryDuration));
 
             if (!double.IsFinite(strikeDamage) || strikeDamage <= 0)

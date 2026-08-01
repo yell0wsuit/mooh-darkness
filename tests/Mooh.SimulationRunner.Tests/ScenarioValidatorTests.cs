@@ -132,7 +132,7 @@ namespace Mooh.SimulationRunner.Tests
                     FacingDirection = "Right",
                     TurnMilliseconds = 300,
                     AttackWindupMilliseconds = 600,
-                    LeftAttackRecoveryMilliseconds = 0,
+                    LeftAttackRecoveryMilliseconds = 300,
                     AttackRecoveryMilliseconds = 1150,
                     StrikeDamage = 20,
                 },

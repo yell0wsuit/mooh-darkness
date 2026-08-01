@@ -83,7 +83,7 @@
                 "position": { "x": 0, "y": 0 },
                 "blueMonsterState": "AttackRecovery",
                 "blueMonsterFacingDirection": "Right",
-                "blueMonsterRemainingMilliseconds": 1150
+                "blueMonsterRemainingMilliseconds": 850
             },
             {
                 "alias": "player",

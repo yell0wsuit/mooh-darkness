@@ -23,5 +23,8 @@ namespace Mooh.Core.Enemies
 
         /// <summary>The monster is recovering and turning around after a strike.</summary>
         AttackRecovery,
+
+        /// <summary>The monster is completing the final facing-changing turnaround phase.</summary>
+        AttackTurnaround,
     }
 }

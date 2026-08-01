@@ -34,7 +34,8 @@ namespace Mooh.Core.Enemies
                     entity => entity.BlueMonsterBody?.State is BlueMonsterState.TurningLeft
                         or BlueMonsterState.TurningRight
                         or BlueMonsterState.AttackWindup
-                        or BlueMonsterState.AttackRecovery)
+                        or BlueMonsterState.AttackRecovery
+                        or BlueMonsterState.AttackTurnaround)
                 .Min(entity => entity.BlueMonsterBody?.Remaining);
             return remaining?.TotalSeconds;
         }
@@ -82,7 +83,8 @@ namespace Mooh.Core.Enemies
             if (body?.State is not (BlueMonsterState.TurningLeft
                 or BlueMonsterState.TurningRight
                 or BlueMonsterState.AttackWindup
-                or BlueMonsterState.AttackRecovery))
+                or BlueMonsterState.AttackRecovery
+                or BlueMonsterState.AttackTurnaround))
             {
                 return;
             }
@@ -185,6 +187,10 @@ namespace Mooh.Core.Enemies
                     break;
                 case BlueMonsterState.AttackRecovery:
                     body.FacingDirection = body.FacingDirection.Opposite();
+                    body.State = BlueMonsterState.AttackTurnaround;
+                    body.Remaining = body.TurnDuration;
+                    break;
+                case BlueMonsterState.AttackTurnaround:
                     body.State = BlueMonsterState.Deciding;
                     body.Remaining = TimeSpan.Zero;
                     events.Add(new EnemyTurnCompleted(monster.Id, body.FacingDirection));
@@ -222,9 +228,10 @@ namespace Mooh.Core.Enemies
         {
             GridPosition targetCell = monster.Position.Offset(body.FacingDirection);
             body.State = BlueMonsterState.AttackRecovery;
-            body.Remaining = body.FacingDirection == Direction.Left
+            TimeSpan turnaroundDuration = body.FacingDirection == Direction.Left
                 ? body.LeftAttackRecoveryDuration
                 : body.AttackRecoveryDuration;
+            body.Remaining = turnaroundDuration - body.TurnDuration;
             events.Add(new EnemyStrike(monster.Id, targetCell));
 
             Entity? target = FindAttackablePlayer(targetCell);
@@ -243,7 +250,7 @@ namespace Mooh.Core.Enemies
                     monster.Id,
                     body.FacingDirection,
                     body.FacingDirection.Opposite(),
-                    body.Remaining));
+                    turnaroundDuration));
         }
 
         private bool HasCounterMotion(GridPosition position, Direction direction)
