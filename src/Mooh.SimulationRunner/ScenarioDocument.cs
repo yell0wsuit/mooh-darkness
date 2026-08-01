@@ -96,7 +96,7 @@ namespace Mooh.SimulationRunner
     public sealed class ScenarioStep
     {
         /// <summary>Gets held cardinal input names, or an empty list when no input is held.</summary>
-        public List<string> Input { get; init; } = [];
+        public List<string>? Input { get; init; }
 
         /// <summary>Gets the positive elapsed simulation duration in milliseconds.</summary>
         public required long AdvanceMilliseconds { get; init; }

@@ -31,7 +31,7 @@ namespace Mooh.SimulationRunner
                     ScenarioStep step = scenario.Steps[stepIndex];
                     if (materialized.World.Player is not null)
                     {
-                        materialized.Simulation.SetPlayerInput(CreateInput(step.Input));
+                        materialized.Simulation.SetPlayerInput(CreateInput(step.Input ?? []));
                     }
 
                     IReadOnlyList<SimulationEvent> events = materialized.Simulation.Advance(

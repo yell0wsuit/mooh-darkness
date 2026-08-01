@@ -137,16 +137,12 @@ namespace Mooh.SimulationRunner
                     throw Invalid(source, $"{path}.advanceMilliseconds", "must be positive.");
                 }
 
-                if (step.Input is null)
-                {
-                    throw Invalid(source, $"{path}.input", "must be an array when present.");
-                }
-
                 HashSet<Direction> inputs = [];
-                for (int inputIndex = 0; inputIndex < step.Input.Count; inputIndex++)
+                List<string> declaredInput = step.Input ?? [];
+                for (int inputIndex = 0; inputIndex < declaredInput.Count; inputIndex++)
                 {
                     Direction direction = ParseEnum<Direction>(
-                        step.Input[inputIndex],
+                        declaredInput[inputIndex],
                         source,
                         $"{path}.input[{inputIndex}]");
                     if (!inputs.Add(direction))
