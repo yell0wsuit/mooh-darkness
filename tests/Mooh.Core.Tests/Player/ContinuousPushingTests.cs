@@ -180,6 +180,36 @@ namespace Mooh.Core.Tests.Player
                 events);
         }
 
+        /// <summary>Verifies one push-through member enables the whole same-cell group.</summary>
+        [Fact]
+        public void AnySameCellPushableCanEnablePushThroughForTheGroup()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
+                moveSpeed: 1,
+                pushSpeedMultiplier: 1.5);
+            Entity ordinary = Add(world, x: 2, Pushable);
+            Entity pushThrough = Add(
+                world,
+                x: 2,
+                Pushable | InteractionMask.PushesThroughOccupants);
+            Entity eligible = Add(world, x: 3, InteractionMask.CanBePushedThrough);
+            simulation.SetPlayerInput(HeldRight);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.NotNull(player.Motion);
+            Assert.NotNull(ordinary.Motion);
+            Assert.NotNull(pushThrough.Motion);
+            _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(eligible.Id));
+            Assert.Equal(
+                [
+                    new PushStarted(pushThrough.Id, Direction.Right),
+                    new PushStarted(ordinary.Id, Direction.Right),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
+                ],
+                events);
+        }
+
         /// <summary>Verifies push-through removal locks its cell against gravity for 150 milliseconds.</summary>
         [Fact]
         public void PushThroughRemovalStartsCellLock()

@@ -89,8 +89,8 @@ namespace Mooh.Core.Movement
                 : [];
             if (!_world.Contains(pushedDestination)
                 || (pushedDestinationOccupants.Count != 0
-                    && pushed.Exists(
-                        entity => !entity.Interactions.HasFlag(InteractionMask.PushesThroughOccupants)))
+                    && !pushed.Exists(
+                        entity => entity.Interactions.HasFlag(InteractionMask.PushesThroughOccupants)))
                 || pushedDestinationOccupants.Any(
                     entity => !entity.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
                 || pushed.Exists(
