@@ -388,6 +388,12 @@ namespace Mooh.Core.Simulation
             Entity? player = _world.Player;
             foreach (Entity entity in _world.Entities)
             {
+                if (entity.GreenMonsterBody is not null && entity.BlueMonsterBody is not null)
+                {
+                    throw new InvalidOperationException(
+                        "An entity cannot have both green- and blue-monster bodies.");
+                }
+
                 MotionState? motion = entity.Motion;
                 if (motion?.Cause == MotionCause.PlayerWalking
                     && (player is null || entity.Id != player.Id || entity.PlayerBody is null))

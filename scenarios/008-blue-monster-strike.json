@@ -1,0 +1,99 @@
+{
+    "formatVersion": 1,
+    "name": "blue monster strikes player and turns around",
+    "world": {
+        "width": 2,
+        "height": 1,
+        "gravity": "Down",
+        "randomSeed": 0,
+        "entities": [
+            {
+                "alias": "blue",
+                "position": { "x": 0, "y": 0 },
+                "interactions": ["BlocksMovement"],
+                "blueMonsterBody": {
+                    "moveSpeed": 1.5625,
+                    "facingDirection": "Right",
+                    "turnMilliseconds": 300,
+                    "attackWindupMilliseconds": 600,
+                    "leftAttackRecoveryMilliseconds": 985,
+                    "attackRecoveryMilliseconds": 1150,
+                    "strikeDamage": 20
+                }
+            },
+            {
+                "alias": "player",
+                "position": { "x": 1, "y": 0 },
+                "interactions": ["BlocksMovement"],
+                "playerBody": {
+                    "moveSpeed": 2.5,
+                    "pushSpeedMultiplier": 1.5,
+                    "facingDirection": "Left"
+                },
+                "healthBody": {
+                    "maximum": 100,
+                    "current": 100,
+                    "immunityMilliseconds": 500
+                }
+            }
+        ]
+    },
+    "steps": [
+        {
+            "advanceMilliseconds": 600,
+            "expectEvents": [
+                {
+                    "type": "EnemyAttackStarted",
+                    "entity": "blue",
+                    "position": { "x": 1, "y": 0 },
+                    "durationMilliseconds": 600
+                },
+                {
+                    "type": "EnemyStrike",
+                    "entity": "blue",
+                    "position": { "x": 1, "y": 0 }
+                },
+                {
+                    "type": "DamageApplied",
+                    "entity": "player",
+                    "sourceEntity": "blue",
+                    "damageKind": "Strike",
+                    "amount": 20,
+                    "remainingHealth": 80
+                },
+                {
+                    "type": "PlayerShockStarted",
+                    "entity": "player",
+                    "durationMilliseconds": 700
+                },
+                {
+                    "type": "EnemyTurnStarted",
+                    "entity": "blue",
+                    "from": "Right",
+                    "to": "Left",
+                    "durationMilliseconds": 1150
+                }
+            ]
+        }
+    ],
+    "expectFinal": {
+        "entities": [
+            {
+                "alias": "blue",
+                "position": { "x": 0, "y": 0 },
+                "blueMonsterState": "AttackRecovery",
+                "blueMonsterFacingDirection": "Right",
+                "blueMonsterRemainingMilliseconds": 1150
+            },
+            {
+                "alias": "player",
+                "position": { "x": 1, "y": 0 },
+                "facingDirection": "Left",
+                "currentHealth": 80,
+                "immunityMilliseconds": 500,
+                "playerReaction": "Shocked",
+                "reactionMilliseconds": 700
+            }
+        ]
+    }
+}

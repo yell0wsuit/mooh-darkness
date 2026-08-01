@@ -44,6 +44,9 @@ namespace Mooh.SimulationRunner
     /// <param name="GreenMonsterState">Current green-monster state, if applicable.</param>
     /// <param name="GreenMonsterFacingDirection">Green-monster facing direction, if applicable.</param>
     /// <param name="GreenMonsterRemainingMilliseconds">Remaining monster-state time in milliseconds, if applicable.</param>
+    /// <param name="BlueMonsterState">Current blue-monster state, if applicable.</param>
+    /// <param name="BlueMonsterFacingDirection">Blue-monster facing direction, if applicable.</param>
+    /// <param name="BlueMonsterRemainingMilliseconds">Remaining blue-monster state time in milliseconds, if applicable.</param>
     public sealed record ObservedEntityState(
         string Alias,
         GridPosition Position,
@@ -56,5 +59,8 @@ namespace Mooh.SimulationRunner
         long? ReactionMilliseconds,
         GreenMonsterState? GreenMonsterState,
         Direction? GreenMonsterFacingDirection,
-        long? GreenMonsterRemainingMilliseconds);
+        long? GreenMonsterRemainingMilliseconds,
+        BlueMonsterState? BlueMonsterState,
+        Direction? BlueMonsterFacingDirection,
+        long? BlueMonsterRemainingMilliseconds);
 }

@@ -73,6 +73,9 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets optional green-monster behavior.</summary>
         public ScenarioGreenMonsterBody? GreenMonsterBody { get; init; }
+
+        /// <summary>Gets optional blue-monster behavior.</summary>
+        public ScenarioBlueMonsterBody? BlueMonsterBody { get; init; }
     }
 
     /// <summary>Describes gravity behavior for a scenario entity.</summary>
@@ -127,6 +130,31 @@ namespace Mooh.SimulationRunner
         public required long AttackWindupMilliseconds { get; init; }
 
         /// <summary>Gets the attack recovery duration in milliseconds.</summary>
+        public required long AttackRecoveryMilliseconds { get; init; }
+
+        /// <summary>Gets the damage dealt by one strike.</summary>
+        public required double StrikeDamage { get; init; }
+    }
+
+    /// <summary>Describes autonomous blue-monster behavior for a scenario entity.</summary>
+    public sealed class ScenarioBlueMonsterBody
+    {
+        /// <summary>Gets the walking speed in cells per second.</summary>
+        public required double MoveSpeed { get; init; }
+
+        /// <summary>Gets the initial facing direction name.</summary>
+        public required string FacingDirection { get; init; }
+
+        /// <summary>Gets the quarter-turn duration in milliseconds.</summary>
+        public required long TurnMilliseconds { get; init; }
+
+        /// <summary>Gets the attack wind-up duration in milliseconds.</summary>
+        public required long AttackWindupMilliseconds { get; init; }
+
+        /// <summary>Gets the left-facing attack recovery duration in milliseconds.</summary>
+        public required long LeftAttackRecoveryMilliseconds { get; init; }
+
+        /// <summary>Gets the non-left attack recovery duration in milliseconds.</summary>
         public required long AttackRecoveryMilliseconds { get; init; }
 
         /// <summary>Gets the damage dealt by one strike.</summary>
@@ -240,6 +268,15 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets expected remaining green-monster state time in milliseconds, if applicable.</summary>
         public long? GreenMonsterRemainingMilliseconds { get; init; }
+
+        /// <summary>Gets the expected blue-monster state name, if applicable.</summary>
+        public string? BlueMonsterState { get; init; }
+
+        /// <summary>Gets the expected blue-monster facing direction, if applicable.</summary>
+        public string? BlueMonsterFacingDirection { get; init; }
+
+        /// <summary>Gets expected remaining blue-monster state time in milliseconds, if applicable.</summary>
+        public long? BlueMonsterRemainingMilliseconds { get; init; }
     }
 
     /// <summary>Describes expected observable continuous motion.</summary>

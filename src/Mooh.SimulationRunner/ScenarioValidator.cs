@@ -105,6 +105,14 @@ namespace Mooh.SimulationRunner
 
                 ValidatePosition(entity.Position, world, source, $"{path}.position");
                 ValidateInteractions(entity.Interactions, source, $"{path}.interactions");
+                if (entity.GreenMonsterBody is not null && entity.BlueMonsterBody is not null)
+                {
+                    throw Invalid(
+                        source,
+                        path,
+                        "cannot combine green and blue monster bodies.");
+                }
+
                 if (entity.GravityBody is ScenarioGravityBody gravityBody
                     && (!double.IsFinite(gravityBody.FallSpeed) || gravityBody.FallSpeed <= 0))
                 {
@@ -183,6 +191,43 @@ namespace Mooh.SimulationRunner
                     if (!double.IsFinite(monsterBody.StrikeDamage) || monsterBody.StrikeDamage <= 0)
                     {
                         throw Invalid(source, $"{path}.greenMonsterBody.strikeDamage", "must be finite and positive.");
+                    }
+                }
+
+                if (entity.BlueMonsterBody is ScenarioBlueMonsterBody blueMonsterBody)
+                {
+                    if (!double.IsFinite(blueMonsterBody.MoveSpeed) || blueMonsterBody.MoveSpeed <= 0)
+                    {
+                        throw Invalid(source, $"{path}.blueMonsterBody.moveSpeed", "must be finite and positive.");
+                    }
+
+                    _ = ParseEnum<Direction>(
+                        blueMonsterBody.FacingDirection,
+                        source,
+                        $"{path}.blueMonsterBody.facingDirection");
+                    ValidatePositiveMilliseconds(
+                        blueMonsterBody.TurnMilliseconds,
+                        source,
+                        $"{path}.blueMonsterBody.turnMilliseconds");
+                    ValidatePositiveMilliseconds(
+                        blueMonsterBody.AttackWindupMilliseconds,
+                        source,
+                        $"{path}.blueMonsterBody.attackWindupMilliseconds");
+                    ValidatePositiveMilliseconds(
+                        blueMonsterBody.LeftAttackRecoveryMilliseconds,
+                        source,
+                        $"{path}.blueMonsterBody.leftAttackRecoveryMilliseconds");
+                    ValidatePositiveMilliseconds(
+                        blueMonsterBody.AttackRecoveryMilliseconds,
+                        source,
+                        $"{path}.blueMonsterBody.attackRecoveryMilliseconds");
+                    if (!double.IsFinite(blueMonsterBody.StrikeDamage)
+                        || blueMonsterBody.StrikeDamage <= 0)
+                    {
+                        throw Invalid(
+                            source,
+                            $"{path}.blueMonsterBody.strikeDamage",
+                            "must be finite and positive.");
                     }
                 }
             }
@@ -554,6 +599,28 @@ namespace Mooh.SimulationRunner
                 || expected.GreenMonsterRemainingMilliseconds is not null)
             {
                 throw Invalid(source, path, "cannot declare green-monster state without a green-monster body.");
+            }
+
+            if (declaration.BlueMonsterBody is not null)
+            {
+                _ = ParseEnum<BlueMonsterState>(
+                    expected.BlueMonsterState ?? string.Empty,
+                    source,
+                    $"{path}.blueMonsterState");
+                _ = ParseEnum<Direction>(
+                    expected.BlueMonsterFacingDirection ?? string.Empty,
+                    source,
+                    $"{path}.blueMonsterFacingDirection");
+                ValidateNonNegativeMilliseconds(
+                    expected.BlueMonsterRemainingMilliseconds,
+                    source,
+                    $"{path}.blueMonsterRemainingMilliseconds");
+            }
+            else if (expected.BlueMonsterState is not null
+                || expected.BlueMonsterFacingDirection is not null
+                || expected.BlueMonsterRemainingMilliseconds is not null)
+            {
+                throw Invalid(source, path, "cannot declare blue-monster state without a blue-monster body.");
             }
         }
 

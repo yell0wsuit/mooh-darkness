@@ -245,6 +245,34 @@ namespace Mooh.Core.Tests.Enemies
                 events);
         }
 
+        /// <summary>Verifies one entity cannot carry both monster behavior components.</summary>
+        [Fact]
+        public void EntityCannotHaveBothMonsterBodies()
+        {
+            WorldGrid world = new(2, 1);
+            Entity ambiguous = new(
+                EntityId.New(),
+                new GridPosition(0, 0),
+                InteractionMask.BlocksMovement,
+                greenMonsterBody: new GreenMonsterBody(
+                    1.5625,
+                    Direction.Right,
+                    TimeSpan.FromMilliseconds(250)),
+                blueMonsterBody: new BlueMonsterBody(
+                    1.5625,
+                    Direction.Right,
+                    TimeSpan.FromMilliseconds(300)));
+            world.Add(ambiguous);
+            SimulationWorld simulation = CreateSimulation(world);
+
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => simulation.Advance(TimeSpan.FromMilliseconds(1)));
+
+            Assert.Equal(
+                "An entity cannot have both green- and blue-monster bodies.",
+                exception.Message);
+        }
+
         private static SimulationWorld CreateSimulation(WorldGrid world)
         {
             return new SimulationWorld(

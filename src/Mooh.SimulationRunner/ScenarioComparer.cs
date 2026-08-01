@@ -149,6 +149,21 @@ namespace Mooh.SimulationRunner
                 actual.GreenMonsterRemainingMilliseconds,
                 source,
                 $"{path}.greenMonsterRemainingMilliseconds");
+            CompareValue(
+                ParseOptionalEnum<BlueMonsterState>(expected.BlueMonsterState),
+                actual.BlueMonsterState,
+                source,
+                $"{path}.blueMonsterState");
+            CompareValue(
+                ParseOptionalDirection(expected.BlueMonsterFacingDirection),
+                actual.BlueMonsterFacingDirection,
+                source,
+                $"{path}.blueMonsterFacingDirection");
+            CompareValue(
+                expected.BlueMonsterRemainingMilliseconds,
+                actual.BlueMonsterRemainingMilliseconds,
+                source,
+                $"{path}.blueMonsterRemainingMilliseconds");
         }
 
         private static void CompareMotion(
@@ -269,7 +284,12 @@ namespace Mooh.SimulationRunner
                 entity.GreenMonsterBody?.FacingDirection,
                 entity.GreenMonsterBody is null
                     ? null
-                    : entity.GreenMonsterBody.Remaining.Ticks / TimeSpan.TicksPerMillisecond);
+                    : entity.GreenMonsterBody.Remaining.Ticks / TimeSpan.TicksPerMillisecond,
+                entity.BlueMonsterBody?.State,
+                entity.BlueMonsterBody?.FacingDirection,
+                entity.BlueMonsterBody is null
+                    ? null
+                    : entity.BlueMonsterBody.Remaining.Ticks / TimeSpan.TicksPerMillisecond);
         }
 
         private static void CompareOptionalDouble(

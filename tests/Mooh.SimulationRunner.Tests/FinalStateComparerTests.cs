@@ -125,5 +125,45 @@ namespace Mooh.SimulationRunner.Tests
 
             ScenarioComparer.CompareFinalState(scenario.ExpectFinal, materialized, "components.json");
         }
+
+        /// <summary>Verifies exact blue-monster state is observable.</summary>
+        [Fact]
+        public void AcceptsExactBlueMonsterState()
+        {
+            ScenarioDocument scenario = ScenarioTestData.CreateValid();
+            ScenarioEntity monster = new()
+            {
+                Alias = "blue",
+                Position = new ScenarioPosition { X = 3, Y = 3 },
+                Interactions = ["BlocksMovement"],
+                BlueMonsterBody = new ScenarioBlueMonsterBody
+                {
+                    MoveSpeed = 1.5625,
+                    FacingDirection = "Right",
+                    TurnMilliseconds = 300,
+                    AttackWindupMilliseconds = 600,
+                    LeftAttackRecoveryMilliseconds = 985,
+                    AttackRecoveryMilliseconds = 1150,
+                    StrikeDamage = 20,
+                },
+            };
+            scenario = ScenarioTestData.WithWorld(scenario, entities: [scenario.World.Entities[0], monster]);
+            scenario = ScenarioTestData.WithFinal(
+                scenario,
+                [
+                    scenario.ExpectFinal.Entities[0],
+                    new ExpectedEntityState
+                    {
+                        Alias = "blue",
+                        Position = monster.Position,
+                        BlueMonsterState = "Deciding",
+                        BlueMonsterFacingDirection = "Right",
+                        BlueMonsterRemainingMilliseconds = 0,
+                    },
+                ]);
+            MaterializedScenario materialized = ScenarioMaterializer.Materialize(scenario);
+
+            ScenarioComparer.CompareFinalState(scenario.ExpectFinal, materialized, "blue-state.json");
+        }
     }
 }

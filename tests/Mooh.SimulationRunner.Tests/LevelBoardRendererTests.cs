@@ -53,6 +53,27 @@ namespace Mooh.SimulationRunner.Tests
                 result);
         }
 
+        /// <summary>Verifies every directional legacy blue monster renders with the blue glyph.</summary>
+        [Fact]
+        public void RendersDirectionalBlueMonsters()
+        {
+            LevelDocument level = CreateLevel(
+                4,
+                1,
+                NewObject(1, "MBlueL", 0, 0),
+                NewObject(2, "MBlueT", 1, 0),
+                NewObject(3, "MBlueR", 2, 0),
+                NewObject(4, "MBlueB", 3, 0));
+
+            string result = LevelBoardRenderer.Render(level, "blue.json");
+
+            Assert.Equal(
+                $"Emoji board: blue.json (4×1, 4 objects){Environment.NewLine}"
+                + $"🔵🔵🔵🔵{Environment.NewLine}"
+                + $"Legend: 🔵 blue monster{Environment.NewLine}",
+                result);
+        }
+
         private static LevelDocument CreateLevel(
             int width,
             int height,

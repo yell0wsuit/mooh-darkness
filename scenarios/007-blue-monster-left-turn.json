@@ -1,0 +1,70 @@
+{
+    "formatVersion": 1,
+    "name": "blue monster follows open left cell",
+    "world": {
+        "width": 3,
+        "height": 3,
+        "gravity": "Down",
+        "randomSeed": 0,
+        "entities": [
+            {
+                "alias": "blue",
+                "position": { "x": 1, "y": 1 },
+                "interactions": ["BlocksMovement"],
+                "blueMonsterBody": {
+                    "moveSpeed": 1.5625,
+                    "facingDirection": "Right",
+                    "turnMilliseconds": 300,
+                    "attackWindupMilliseconds": 600,
+                    "leftAttackRecoveryMilliseconds": 985,
+                    "attackRecoveryMilliseconds": 1150,
+                    "strikeDamage": 20
+                }
+            }
+        ]
+    },
+    "steps": [
+        {
+            "advanceMilliseconds": 300,
+            "expectEvents": [
+                {
+                    "type": "EnemyTurnStarted",
+                    "entity": "blue",
+                    "from": "Right",
+                    "to": "Up",
+                    "durationMilliseconds": 300
+                },
+                {
+                    "type": "EnemyTurnCompleted",
+                    "entity": "blue",
+                    "direction": "Up"
+                },
+                {
+                    "type": "EnemyMoveStarted",
+                    "entity": "blue",
+                    "fromPosition": { "x": 1, "y": 1 },
+                    "toPosition": { "x": 1, "y": 0 }
+                }
+            ]
+        }
+    ],
+    "expectFinal": {
+        "entities": [
+            {
+                "alias": "blue",
+                "position": { "x": 1, "y": 0 },
+                "motion": {
+                    "cause": "MonsterWalking",
+                    "segmentDirection": "Up",
+                    "travelSign": 1,
+                    "speed": 1.5625,
+                    "progress": 0,
+                    "resolutionOrder": 0
+                },
+                "blueMonsterState": "Walking",
+                "blueMonsterFacingDirection": "Up",
+                "blueMonsterRemainingMilliseconds": 0
+            }
+        ]
+    }
+}

@@ -43,7 +43,8 @@ namespace Mooh.SimulationRunner
                     CreateGravityBody(definition.GravityBody),
                     CreatePlayerBody(definition.PlayerBody, scenario.Name),
                     CreateHealthBody(definition.HealthBody),
-                    CreateGreenMonsterBody(definition.GreenMonsterBody, scenario.Name));
+                    CreateGreenMonsterBody(definition.GreenMonsterBody, scenario.Name),
+                    CreateBlueMonsterBody(definition.BlueMonsterBody, scenario.Name));
                 world.Add(entity);
                 idsByAlias.Add(definition.Alias, id);
                 aliasesById.Add(id, definition.Alias);
@@ -125,6 +126,25 @@ namespace Mooh.SimulationRunner
                         "greenMonsterBody.facingDirection"),
                     TimeSpan.FromMilliseconds(definition.TurnMilliseconds),
                     TimeSpan.FromMilliseconds(definition.AttackWindupMilliseconds),
+                    TimeSpan.FromMilliseconds(definition.AttackRecoveryMilliseconds),
+                    definition.StrikeDamage);
+        }
+
+        private static BlueMonsterBody? CreateBlueMonsterBody(
+            ScenarioBlueMonsterBody? definition,
+            string source)
+        {
+            return definition is null
+                ? null
+                : new BlueMonsterBody(
+                    definition.MoveSpeed,
+                    ScenarioValidator.ParseEnum<Direction>(
+                        definition.FacingDirection,
+                        source,
+                        "blueMonsterBody.facingDirection"),
+                    TimeSpan.FromMilliseconds(definition.TurnMilliseconds),
+                    TimeSpan.FromMilliseconds(definition.AttackWindupMilliseconds),
+                    TimeSpan.FromMilliseconds(definition.LeftAttackRecoveryMilliseconds),
                     TimeSpan.FromMilliseconds(definition.AttackRecoveryMilliseconds),
                     definition.StrikeDamage);
         }

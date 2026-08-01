@@ -116,6 +116,80 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Contains("healthBody.maximum", exception.Message, StringComparison.Ordinal);
         }
 
+        /// <summary>Verifies invalid blue-monster timing is rejected.</summary>
+        [Fact]
+        public void RejectsInvalidBlueMonsterComponent()
+        {
+            ScenarioDocument valid = ScenarioTestData.CreateValid();
+            ScenarioEntity invalidMonster = new()
+            {
+                Alias = "blue",
+                Position = new ScenarioPosition { X = 2, Y = 2 },
+                Interactions = ["BlocksMovement"],
+                BlueMonsterBody = new ScenarioBlueMonsterBody
+                {
+                    MoveSpeed = 1.5625,
+                    FacingDirection = "Right",
+                    TurnMilliseconds = 300,
+                    AttackWindupMilliseconds = 600,
+                    LeftAttackRecoveryMilliseconds = 0,
+                    AttackRecoveryMilliseconds = 1150,
+                    StrikeDamage = 20,
+                },
+            };
+            ScenarioDocument scenario = ScenarioTestData.WithWorld(
+                valid,
+                entities: [valid.World.Entities[0], invalidMonster]);
+
+            ScenarioValidationException exception = Assert.Throws<ScenarioValidationException>(
+                () => ScenarioValidator.Validate(scenario, "blue-component.json"));
+
+            Assert.Contains(
+                "blueMonsterBody.leftAttackRecoveryMilliseconds",
+                exception.Message,
+                StringComparison.Ordinal);
+        }
+
+        /// <summary>Verifies one declaration cannot combine both monster species.</summary>
+        [Fact]
+        public void RejectsCombinedMonsterBodies()
+        {
+            ScenarioDocument valid = ScenarioTestData.CreateValid();
+            ScenarioEntity ambiguous = new()
+            {
+                Alias = "ambiguous",
+                Position = new ScenarioPosition { X = 2, Y = 2 },
+                Interactions = ["BlocksMovement"],
+                GreenMonsterBody = new ScenarioGreenMonsterBody
+                {
+                    MoveSpeed = 1.5625,
+                    FacingDirection = "Right",
+                    TurnMilliseconds = 250,
+                    AttackWindupMilliseconds = 625,
+                    AttackRecoveryMilliseconds = 500,
+                    StrikeDamage = 20,
+                },
+                BlueMonsterBody = new ScenarioBlueMonsterBody
+                {
+                    MoveSpeed = 1.5625,
+                    FacingDirection = "Right",
+                    TurnMilliseconds = 300,
+                    AttackWindupMilliseconds = 600,
+                    LeftAttackRecoveryMilliseconds = 985,
+                    AttackRecoveryMilliseconds = 1150,
+                    StrikeDamage = 20,
+                },
+            };
+            ScenarioDocument scenario = ScenarioTestData.WithWorld(
+                valid,
+                entities: [valid.World.Entities[0], ambiguous]);
+
+            ScenarioValidationException exception = Assert.Throws<ScenarioValidationException>(
+                () => ScenarioValidator.Validate(scenario, "ambiguous.json"));
+
+            Assert.Contains("cannot combine green and blue", exception.Message, StringComparison.Ordinal);
+        }
+
         /// <summary>Verifies zero initial health is rejected before materialization.</summary>
         [Fact]
         public void RejectsZeroInitialHealth()

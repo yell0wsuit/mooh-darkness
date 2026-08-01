@@ -113,5 +113,43 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Equal(TimeSpan.FromMilliseconds(625), body.AttackWindupDuration);
             Assert.Equal(20, body.StrikeDamage);
         }
+
+        /// <summary>Verifies blue-monster declarations create recovered runtime configuration.</summary>
+        [Fact]
+        public void MaterializesBlueMonsterBody()
+        {
+            ScenarioDocument scenario = ScenarioTestData.CreateValid();
+            ScenarioEntity monster = new()
+            {
+                Alias = "blue",
+                Position = new ScenarioPosition { X = 2, Y = 1 },
+                Interactions = ["BlocksMovement"],
+                BlueMonsterBody = new ScenarioBlueMonsterBody
+                {
+                    MoveSpeed = 1.5625,
+                    FacingDirection = "Left",
+                    TurnMilliseconds = 300,
+                    AttackWindupMilliseconds = 600,
+                    LeftAttackRecoveryMilliseconds = 985,
+                    AttackRecoveryMilliseconds = 1150,
+                    StrikeDamage = 20,
+                },
+            };
+            scenario = ScenarioTestData.WithWorld(
+                scenario,
+                entities: [scenario.World.Entities[0], monster]);
+            ScenarioValidator.Validate(scenario, "blue.json");
+
+            MaterializedScenario materialized = ScenarioMaterializer.Materialize(scenario);
+
+            BlueMonsterBody body = Assert.IsType<BlueMonsterBody>(
+                materialized.World.Entities[1].BlueMonsterBody);
+            Assert.Equal(Direction.Left, body.FacingDirection);
+            Assert.Equal(TimeSpan.FromMilliseconds(300), body.TurnDuration);
+            Assert.Equal(TimeSpan.FromMilliseconds(600), body.AttackWindupDuration);
+            Assert.Equal(TimeSpan.FromMilliseconds(985), body.LeftAttackRecoveryDuration);
+            Assert.Equal(TimeSpan.FromMilliseconds(1150), body.AttackRecoveryDuration);
+            Assert.Equal(20, body.StrikeDamage);
+        }
     }
 }
