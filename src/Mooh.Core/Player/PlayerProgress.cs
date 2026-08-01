@@ -1,7 +1,7 @@
 using System;
 
 using Mooh.Core.Combat;
-using Mooh.Core.Legacy;
+using Mooh.Core.Levels;
 
 namespace Mooh.Core.Player
 {
@@ -59,15 +59,16 @@ namespace Mooh.Core.Player
             TotalTreasure = totalTreasure;
         }
 
-        internal int Collect(LegacyObjectDescriptor descriptor, HealthBody health)
+        internal int Collect(ArchivalObjectDescriptor descriptor, HealthBody health)
         {
             ArgumentNullException.ThrowIfNull(descriptor);
             ArgumentNullException.ThrowIfNull(health);
             int score = ScoreFor(descriptor.Kind, descriptor.Variant);
+#pragma warning disable IDE0010 // Most runtime entity kinds intentionally have no collection side effect.
             switch (descriptor.Kind)
             {
-                case LegacyEntityKind.Coin:
-                case LegacyEntityKind.Diamond:
+                case EntityKind.Coin:
+                case EntityKind.Diamond:
                     TreasureCollected++;
                     if (HasAllTreasure && !_treasureBonusAwarded)
                     {
@@ -76,33 +77,36 @@ namespace Mooh.Core.Player
                     }
 
                     break;
-                case LegacyEntityKind.Food:
+                case EntityKind.Food:
                     health.Heal(40);
                     break;
-                case LegacyEntityKind.Key:
+                case EntityKind.Key:
                     _keyMask |= 1 << (descriptor.Variant - 1);
                     break;
-                case LegacyEntityKind.Grenade:
-                case LegacyEntityKind.GrenadeBox:
+                case EntityKind.Grenade:
+                case EntityKind.GrenadeBox:
                     Grenades += descriptor.Variant;
                     break;
-                case LegacyEntityKind.Rocket:
-                case LegacyEntityKind.RocketBox:
+                case EntityKind.Rocket:
+                case EntityKind.RocketBox:
                     Rockets += descriptor.Variant;
                     break;
-                case LegacyEntityKind.MineBox:
+                case EntityKind.MineBox:
                     Mines += descriptor.Variant;
                     break;
-                case LegacyEntityKind.BigBomb:
+                case EntityKind.BigBomb:
                     BigBombs += descriptor.Variant;
                     break;
-                case LegacyEntityKind.Cola:
+                case EntityKind.Cola:
                     ColaRemaining = BonusDuration;
                     break;
-                case LegacyEntityKind.Ice:
+                case EntityKind.Ice:
                     IceRemaining = BonusDuration;
                     break;
+                default:
+                    break;
             }
+#pragma warning restore IDE0010
 
             Score += score;
             return score;
@@ -122,19 +126,16 @@ namespace Mooh.Core.Player
             return DoorScore;
         }
 
-        private static int ScoreFor(LegacyEntityKind kind, int variant)
+        private static int ScoreFor(EntityKind kind, int variant)
         {
-            return kind switch
-            {
-                LegacyEntityKind.Coin => variant switch { 1 => 1, 2 => 5, 3 => 10, _ => 0 },
-                LegacyEntityKind.Diamond => 50,
-                LegacyEntityKind.Food => 50,
-                LegacyEntityKind.Key => 100,
-                LegacyEntityKind.Grenade or LegacyEntityKind.Rocket => 5,
-                LegacyEntityKind.GrenadeBox or LegacyEntityKind.RocketBox or LegacyEntityKind.MineBox => 100,
-                LegacyEntityKind.BigBomb or LegacyEntityKind.Cola or LegacyEntityKind.Ice => 250,
-                _ => 0,
-            };
+            return kind == EntityKind.Coin
+                ? variant switch { 1 => 1, 2 => 5, 3 => 10, _ => 0 }
+                : kind is EntityKind.Diamond or EntityKind.Food ? 50
+                : kind == EntityKind.Key ? 100
+                : kind is EntityKind.Grenade or EntityKind.Rocket ? 5
+                : kind is EntityKind.GrenadeBox or EntityKind.RocketBox or EntityKind.MineBox ? 100
+                : kind is EntityKind.BigBomb or EntityKind.Cola or EntityKind.Ice ? 250
+                : 0;
         }
 
         private static TimeSpan Reduce(TimeSpan remaining, TimeSpan elapsed)

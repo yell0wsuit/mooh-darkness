@@ -6,10 +6,10 @@ using Mooh.Core.Grid;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
-namespace Mooh.Core.Legacy
+namespace Mooh.Core.Levels
 {
     /// <summary>Resolves colored doors before ordinary movement collision planning.</summary>
-    internal static class LegacyDoorSystem
+    internal static class KeyDoorSystem
     {
         public static void TryOpen(
             Entity player,
@@ -24,15 +24,15 @@ namespace Mooh.Core.Legacy
                 ?? throw new InvalidOperationException("Door interaction requires a player.");
             foreach (Entity occupant in world.GetOccupants(destination))
             {
-                LegacyEntityBody? legacy = occupant.LegacyBody;
-                if (legacy?.Kind != LegacyEntityKind.KeyDoor || !progress.HasKey(legacy.Variant))
+                ArchivalObjectIdentity? archival = occupant.ArchivalIdentity;
+                if (archival?.Kind != EntityKind.KeyDoor || !progress.HasKey(archival.Variant))
                 {
                     continue;
                 }
 
                 _ = world.Remove(occupant.Id);
                 int score = progress.OpenDoor();
-                events.Add(new LegacyDoorOpened(player.Id, occupant.Id, legacy.Variant, score));
+                events.Add(new KeyDoorOpened(player.Id, occupant.Id, archival.Variant, score));
             }
         }
     }

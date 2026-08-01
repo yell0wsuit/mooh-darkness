@@ -7,7 +7,7 @@ namespace Mooh.Core.Simulation
     /// <param name="DoorEntityId">The removed door entity.</param>
     /// <param name="KeyNumber">The matching key number.</param>
     /// <param name="ScoreAwarded">The recovered door score.</param>
-    public sealed record LegacyDoorOpened(
+    public sealed record KeyDoorOpened(
         EntityId EntityId,
         EntityId DoorEntityId,
         int KeyNumber,

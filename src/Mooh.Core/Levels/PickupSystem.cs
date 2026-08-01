@@ -5,10 +5,10 @@ using Mooh.Core.Entities;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
-namespace Mooh.Core.Legacy
+namespace Mooh.Core.Levels
 {
     /// <summary>Applies recovered collection effects for explicitly materialized archival pickups.</summary>
-    internal static class LegacyPickupSystem
+    internal static class PickupSystem
     {
         public static void Collect(
             Entity player,
@@ -19,18 +19,18 @@ namespace Mooh.Core.Legacy
             ArgumentNullException.ThrowIfNull(pickup);
             ArgumentNullException.ThrowIfNull(events);
             PlayerBody playerBody = player.PlayerBody
-                ?? throw new InvalidOperationException("Legacy pickup collection requires a player.");
-            LegacyEntityBody? legacy = pickup.LegacyBody;
-            if (legacy is null)
+                ?? throw new InvalidOperationException("Pickup collection requires a player.");
+            ArchivalObjectIdentity? archival = pickup.ArchivalIdentity;
+            if (archival is null)
             {
                 return;
             }
 
             int score = playerBody.Progress.Collect(
-                legacy.Descriptor,
+                archival.Descriptor,
                 player.HealthBody
-                    ?? throw new InvalidOperationException("Legacy pickup collection requires player health."));
-            events.Add(new LegacyPickupCollected(player.Id, pickup.Id, legacy.Kind, score));
+                    ?? throw new InvalidOperationException("Pickup collection requires player health."));
+            events.Add(new PickupCollected(player.Id, pickup.Id, archival.Kind, score));
         }
     }
 }

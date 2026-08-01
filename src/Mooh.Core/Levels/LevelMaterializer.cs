@@ -11,10 +11,10 @@ using Mooh.Core.Grid;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
-namespace Mooh.Core.Legacy
+namespace Mooh.Core.Levels
 {
-    /// <summary>Translates validated archival levels through the explicit legacy object catalog.</summary>
-    public static class LegacyLevelMaterializer
+    /// <summary>Translates validated archival levels through the explicit archival object catalog.</summary>
+    public static class LevelMaterializer
     {
         private static readonly TimeSpan MonsterTurnDuration = TimeSpan.FromMilliseconds(300);
         private static readonly TimeSpan PlayerImmunityDuration = TimeSpan.FromMilliseconds(1000);
@@ -34,7 +34,7 @@ namespace Mooh.Core.Legacy
         /// <returns>The live runtime level.</returns>
         /// <exception cref="ArgumentNullException">A required argument is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="gravityDirection"/> is undefined.</exception>
-        /// <exception cref="LegacyMaterializationException">An object cannot cross the explicit catalog boundary.</exception>
+        /// <exception cref="LevelMaterializationException">An object cannot cross the explicit catalog boundary.</exception>
         public static MaterializedLevel Materialize(
             LevelDocument level,
             Direction gravityDirection,
@@ -48,20 +48,20 @@ namespace Mooh.Core.Legacy
             }
 
             IReadOnlyList<LevelObject> objects = level.Objects
-                ?? throw new LegacyMaterializationException("The archival level has no object collection.");
+                ?? throw new LevelMaterializationException("The archival level has no object collection.");
             WorldGrid world = new(level.Size.Width, level.Size.Height);
             Dictionary<int, EntityId> idsByObjectId = [];
 
             foreach (LevelObject source in objects)
             {
-                LegacyObjectDescriptor descriptor;
+                ArchivalObjectDescriptor descriptor;
                 try
                 {
-                    descriptor = LegacyObjectCatalog.Get(source.Type ?? string.Empty);
+                    descriptor = ArchivalObjectCatalog.Get(source.Type ?? string.Empty);
                 }
                 catch (Exception exception) when (exception is ArgumentException or KeyNotFoundException)
                 {
-                    throw new LegacyMaterializationException(
+                    throw new LevelMaterializationException(
                         $"Archival object {source.Id} of type '{source.Type ?? "<null>"}' cannot be materialized.",
                         exception);
                 }
@@ -75,8 +75,8 @@ namespace Mooh.Core.Legacy
                 }
                 catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
                 {
-                    throw new LegacyMaterializationException(
-                        $"Archival object {source.Id} of type '{descriptor.LegacyType}' is invalid for this runtime world.",
+                    throw new LevelMaterializationException(
+                        $"Archival object {source.Id} of type '{descriptor.ArchivalType}' is invalid for this runtime world.",
                         exception);
                 }
             }
@@ -86,7 +86,7 @@ namespace Mooh.Core.Legacy
                 int totalTreasure = 0;
                 foreach (Entity entity in world.Entities)
                 {
-                    if (entity.LegacyBody?.Kind is LegacyEntityKind.Coin or LegacyEntityKind.Diamond)
+                    if (entity.ArchivalIdentity?.Kind is EntityKind.Coin or EntityKind.Diamond)
                     {
                         totalTreasure++;
                     }
@@ -111,7 +111,7 @@ namespace Mooh.Core.Legacy
         private static Entity CreateEntity(
             EntityId id,
             LevelObject source,
-            LegacyObjectDescriptor descriptor,
+            ArchivalObjectDescriptor descriptor,
             DifficultySpeeds speeds)
         {
             Direction facing = descriptor.Variant is >= 0 and <= 3
@@ -126,19 +126,19 @@ namespace Mooh.Core.Legacy
                         speeds.NormalSpeed * descriptor.FallSpeedMultiplier,
                         canSlide: true)
                     : null,
-                descriptor.Kind == LegacyEntityKind.Player
+                descriptor.Kind == EntityKind.Player
                     ? new PlayerBody(speeds.PlayerSpeed, 1.5, Direction.Down)
                     : null,
-                descriptor.Kind == LegacyEntityKind.Player
+                descriptor.Kind == EntityKind.Player
                     ? new HealthBody(100, 100, PlayerImmunityDuration)
                     : null,
-                descriptor.Kind == LegacyEntityKind.GreenMonster
+                descriptor.Kind == EntityKind.GreenMonster
                     ? new GreenMonsterBody(speeds.MonsterSpeed, facing, MonsterTurnDuration)
                     : null,
-                descriptor.Kind == LegacyEntityKind.BlueMonster
+                descriptor.Kind == EntityKind.BlueMonster
                     ? new BlueMonsterBody(speeds.MonsterSpeed, facing, MonsterTurnDuration)
                     : null,
-                new LegacyEntityBody(source, descriptor));
+                new ArchivalObjectIdentity(source, descriptor));
         }
 
         private static EntityId CreateDeterministicId(int objectId)

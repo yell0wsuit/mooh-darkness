@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 
 using Mooh.Core.Content;
-using Mooh.Core.Legacy;
+using Mooh.Core.Levels;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
 using Xunit;
 
-namespace Mooh.Core.Tests.Legacy
+namespace Mooh.Core.Tests.Levels
 {
     /// <summary>Verifies recovered colored key-door behavior.</summary>
-    public sealed class LegacyDoorTests
+    public sealed class KeyDoorTests
     {
         /// <summary>Verifies a matching collected key removes its door and awards 100 points.</summary>
         [Fact]
@@ -22,9 +22,9 @@ namespace Mooh.Core.Tests.Legacy
 
             IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(TimeSpan.FromSeconds(1));
 
-            Assert.Contains(events, item => item is LegacyDoorOpened opened && opened.DoorEntityId == level.EntityIdsByObjectId[3]);
+            Assert.Contains(events, item => item is KeyDoorOpened opened && opened.DoorEntityId == level.EntityIdsByObjectId[3]);
             Assert.Equal(200, level.World.Player!.PlayerBody!.Progress.Score);
-            Assert.DoesNotContain(level.World.Entities, entity => entity.LegacyBody?.Kind == LegacyEntityKind.KeyDoor);
+            Assert.DoesNotContain(level.World.Entities, entity => entity.ArchivalIdentity?.Kind == EntityKind.KeyDoor);
         }
 
         /// <summary>Verifies a door remains solid when its matching key is absent.</summary>
@@ -37,7 +37,7 @@ namespace Mooh.Core.Tests.Legacy
             IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(TimeSpan.FromSeconds(1));
 
             Assert.Contains(events, item => item is PlayerBlocked);
-            Assert.Contains(level.World.Entities, entity => entity.LegacyBody?.Kind == LegacyEntityKind.KeyDoor);
+            Assert.Contains(level.World.Entities, entity => entity.ArchivalIdentity?.Kind == EntityKind.KeyDoor);
         }
 
         private static MaterializedLevel Materialize(bool includeKey)
@@ -51,12 +51,14 @@ namespace Mooh.Core.Tests.Legacy
             objects.Add(Object(3, "OKDDoor1", includeKey ? 3 : 2, 1));
             objects.Add(Object(4, "CellsSolid01", 2, 2));
             objects.Add(Object(5, "CellsSolid01", 3, 2));
-            return LegacyLevelMaterializer.Materialize(new LevelDocument(
+            return LevelMaterializer.Materialize(new LevelDocument(
                 1, null, new LevelSize(6, 4), new EditorPreview(0, 0, 6, 4), objects));
         }
 
-        private static LevelObject Object(int id, string type, int x, int y) => new(
-            id, type, 0, new LevelPosition(x, y), Array.Empty<LevelSavedState>(),
-            new Dictionary<string, System.Text.Json.JsonElement>());
+        private static LevelObject Object(int id, string type, int x, int y)
+        {
+            Dictionary<string, System.Text.Json.JsonElement> properties = [];
+            return new LevelObject(id, type, 0, new LevelPosition(x, y), [], properties);
+        }
     }
 }

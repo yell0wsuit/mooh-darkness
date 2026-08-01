@@ -5,14 +5,14 @@ using System.Linq;
 
 using Mooh.Core.Content;
 using Mooh.Core.Grid;
-using Mooh.Core.Legacy;
+using Mooh.Core.Levels;
 
 using Xunit;
 
 namespace Mooh.Core.Tests.Content
 {
     /// <summary>Verifies translation from archival level objects to live runtime entities.</summary>
-    public sealed class LegacyLevelMaterializerTests
+    public sealed class LevelMaterializerTests
     {
         /// <summary>Verifies representative placed types receive their recovered runtime components.</summary>
         [Fact]
@@ -27,7 +27,7 @@ namespace Mooh.Core.Tests.Content
                 Object(6, "MGrT", 5, 1),
                 Object(7, "MBlueR", 6, 1));
 
-            MaterializedLevel result = LegacyLevelMaterializer.Materialize(level);
+            MaterializedLevel result = LevelMaterializer.Materialize(level);
 
             Assert.Equal(7, result.World.Entities.Count);
             Assert.NotNull(result.World.Player?.PlayerBody);
@@ -36,7 +36,7 @@ namespace Mooh.Core.Tests.Content
             Assert.NotNull(result.GetEntity(3).GravityBody);
             Assert.Equal(1.875, result.GetEntity(3).GravityBody!.FallSpeed);
             Assert.Equal(3.75, result.GetEntity(4).GravityBody!.FallSpeed);
-            Assert.Equal(LegacyEntityKind.Coin, result.GetEntity(5).LegacyBody!.Kind);
+            Assert.Equal(EntityKind.Coin, result.GetEntity(5).ArchivalIdentity!.Kind);
             Assert.Equal(Direction.Up, result.GetEntity(6).GreenMonsterBody!.FacingDirection);
             Assert.Equal(Direction.Right, result.GetEntity(7).BlueMonsterBody!.FacingDirection);
         }
@@ -50,13 +50,13 @@ namespace Mooh.Core.Tests.Content
                 Object(11, "OCoin01", 2, 2),
                 Object(12, "OPlayer", 1, 1));
 
-            MaterializedLevel result = LegacyLevelMaterializer.Materialize(level);
+            MaterializedLevel result = LevelMaterializer.Materialize(level);
 
-            Assert.Equal([10, 11, 12], result.World.Entities.Select(entity => entity.LegacyBody!.ObjectId));
+            Assert.Equal([10, 11, 12], result.World.Entities.Select(entity => entity.ArchivalIdentity!.ObjectId));
             Assert.Equal(
                 [11, 10],
                 result.World.GetOccupants(new GridPosition(2, 2))
-                    .Select(entity => entity.LegacyBody!.ObjectId));
+                    .Select(entity => entity.ArchivalIdentity!.ObjectId));
             Assert.Equal(result.GetEntity(11).Id, result.EntityIdsByObjectId[11]);
         }
 
@@ -70,7 +70,7 @@ namespace Mooh.Core.Tests.Content
                 "levels",
                 "manifest.json"));
 
-            MaterializedLevel[] levels = [.. pack.Levels.Select(LegacyLevelMaterializer.Materialize)];
+            MaterializedLevel[] levels = [.. pack.Levels.Select(LevelMaterializer.Materialize)];
 
             Assert.Equal(150, levels.Length);
             Assert.Equal(81_211, levels.Sum(level => level.World.Entities.Count));
@@ -83,8 +83,8 @@ namespace Mooh.Core.Tests.Content
         {
             LevelDocument level = CreateLevel(Object(42, "OChest", 1, 1));
 
-            LegacyMaterializationException exception = Assert.Throws<LegacyMaterializationException>(
-                () => LegacyLevelMaterializer.Materialize(level));
+            LevelMaterializationException exception = Assert.Throws<LevelMaterializationException>(
+                () => LevelMaterializer.Materialize(level));
 
             Assert.Contains("OChest", exception.Message, StringComparison.Ordinal);
             Assert.Contains("42", exception.Message, StringComparison.Ordinal);
@@ -102,13 +102,14 @@ namespace Mooh.Core.Tests.Content
 
         private static LevelObject Object(int id, string type, int x, int y)
         {
+            Dictionary<string, System.Text.Json.JsonElement> properties = [];
             return new LevelObject(
                 id,
                 type,
                 0,
                 new LevelPosition(x, y),
-                Array.Empty<LevelSavedState>(),
-                new Dictionary<string, System.Text.Json.JsonElement>());
+                [],
+                properties);
         }
     }
 }

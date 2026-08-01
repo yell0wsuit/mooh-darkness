@@ -1,7 +1,7 @@
-namespace Mooh.Core.Legacy
+namespace Mooh.Core.Levels
 {
     /// <summary>Identifies the runtime family of an explicitly supported archival object.</summary>
-    public enum LegacyEntityKind
+    public enum EntityKind
     {
         /// <summary>The player character.</summary>
         Player,

@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 
 using Mooh.Core.Content;
-using Mooh.Core.Legacy;
+using Mooh.Core.Levels;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
 using Xunit;
 
-namespace Mooh.Core.Tests.Legacy
+namespace Mooh.Core.Tests.Levels
 {
     /// <summary>Verifies recovered collection effects for placed archival pickups.</summary>
-    public sealed class LegacyPickupTests
+    public sealed class PickupTests
     {
         /// <summary>Verifies score, treasure, healing, keys, ammunition, and bonuses update player state.</summary>
         [Theory]
@@ -30,7 +30,7 @@ namespace Mooh.Core.Tests.Legacy
         [InlineData("BCola", 250, 0, 5, 0, 0, 0, false, true, 50)]
         [InlineData("BIce", 250, 0, 5, 0, 0, 0, false, false, 50)]
         public void AppliesRecoveredPickupEffects(
-            string legacyType,
+            string archivalType,
             int score,
             int treasure,
             int grenades,
@@ -41,12 +41,12 @@ namespace Mooh.Core.Tests.Legacy
             bool colaActive,
             double health)
         {
-            MaterializedLevel level = MaterializePickup(legacyType);
+            MaterializedLevel level = MaterializePickup(archivalType);
             EntityPair pair = GetPlayerAndPickup(level);
-            _ = level.Simulation.ApplyDamage(new Mooh.Core.Combat.DamageRequest(
+            _ = level.Simulation.ApplyDamage(new Core.Combat.DamageRequest(
                 pair.Pickup.Id,
                 pair.Player.Id,
-                Mooh.Core.Combat.DamageKind.Fire,
+                Core.Combat.DamageKind.Fire,
                 50));
             _ = level.Simulation.Advance(TimeSpan.FromSeconds(1));
 
@@ -63,9 +63,9 @@ namespace Mooh.Core.Tests.Legacy
             Assert.Equal(bigBombs, progress.BigBombs);
             Assert.Equal(hasKeyTwo, progress.HasKey(2));
             Assert.Equal(colaActive, progress.ColaRemaining > TimeSpan.Zero);
-            Assert.Equal(legacyType == "BIce", progress.IceRemaining > TimeSpan.Zero);
+            Assert.Equal(archivalType == "BIce", progress.IceRemaining > TimeSpan.Zero);
             Assert.Equal(health, pair.Player.HealthBody!.Current);
-            Assert.Contains(events, item => item is LegacyPickupCollected collected
+            Assert.Contains(events, item => item is PickupCollected collected
                 && collected.PickupEntityId == pair.Pickup.Id
                 && collected.ScoreAwarded == score);
         }
@@ -82,8 +82,8 @@ namespace Mooh.Core.Tests.Legacy
 
             Assert.Contains(events, item => item is PlayerAte);
             Assert.Equal(5050, pair.Player.PlayerBody!.Progress.Score);
-            LegacyPickupCollected collected = Assert.Single(events, item => item is LegacyPickupCollected)
-                as LegacyPickupCollected ?? throw new InvalidOperationException();
+            PickupCollected collected = Assert.Single(events, item => item is PickupCollected)
+                as PickupCollected ?? throw new InvalidOperationException();
             Assert.Equal(5050, collected.ScoreAwarded);
             Assert.True(pair.Player.PlayerBody.Progress.HasAllTreasure);
         }
@@ -99,35 +99,35 @@ namespace Mooh.Core.Tests.Legacy
             level.Simulation.SetPlayerInput(default);
 
             IReadOnlyList<SimulationEvent> protectedEvents = level.Simulation.ApplyDamage(
-                new Mooh.Core.Combat.DamageRequest(
+                new Core.Combat.DamageRequest(
                     pair.Pickup.Id,
                     pair.Player.Id,
-                    Mooh.Core.Combat.DamageKind.Fire,
+                    Core.Combat.DamageKind.Fire,
                     20));
             _ = level.Simulation.Advance(TimeSpan.FromSeconds(45));
             IReadOnlyList<SimulationEvent> appliedEvents = level.Simulation.ApplyDamage(
-                new Mooh.Core.Combat.DamageRequest(
+                new Core.Combat.DamageRequest(
                     pair.Pickup.Id,
                     pair.Player.Id,
-                    Mooh.Core.Combat.DamageKind.Fire,
+                    Core.Combat.DamageKind.Fire,
                     20));
 
-            Assert.Contains(protectedEvents, item => item is Mooh.Core.Simulation.DamageIgnored);
-            Assert.Contains(appliedEvents, item => item is Mooh.Core.Simulation.DamageApplied);
+            Assert.Contains(protectedEvents, item => item is DamageIgnored);
+            Assert.Contains(appliedEvents, item => item is DamageApplied);
         }
 
         private static MaterializedLevel MaterializePickup(
-            string legacyType,
+            string archivalType,
             bool includeExtraTreasure = true)
         {
             List<LevelObject> objects =
             [
                 Object(1, "OPlayer", 1, 1),
-                Object(2, legacyType, 2, 1),
+                Object(2, archivalType, 2, 1),
                 Object(3, "CellsSolid01", 2, 2),
             ];
             if (includeExtraTreasure
-                && LegacyObjectCatalog.Get(legacyType).Kind is LegacyEntityKind.Coin or LegacyEntityKind.Diamond)
+                && ArchivalObjectCatalog.Get(archivalType).Kind is EntityKind.Coin or EntityKind.Diamond)
             {
                 objects.Add(Object(4, "OCoin01", 4, 1));
             }
@@ -138,7 +138,7 @@ namespace Mooh.Core.Tests.Legacy
                 new LevelSize(5, 4),
                 new EditorPreview(0, 0, 5, 4),
                 objects);
-            return LegacyLevelMaterializer.Materialize(level);
+            return LevelMaterializer.Materialize(level);
         }
 
         private static EntityPair GetPlayerAndPickup(MaterializedLevel level)
@@ -148,17 +148,18 @@ namespace Mooh.Core.Tests.Legacy
 
         private static LevelObject Object(int id, string type, int x, int y)
         {
+            Dictionary<string, System.Text.Json.JsonElement> properties = [];
             return new LevelObject(
                 id,
                 type,
                 0,
                 new LevelPosition(x, y),
-                Array.Empty<LevelSavedState>(),
-                new Dictionary<string, System.Text.Json.JsonElement>());
+                [],
+                properties);
         }
 
         private sealed record EntityPair(
-            Mooh.Core.Entities.Entity Player,
-            Mooh.Core.Entities.Entity Pickup);
+            Entities.Entity Player,
+            Entities.Entity Pickup);
     }
 }

@@ -1,5 +1,5 @@
 using Mooh.Core.Entities;
-using Mooh.Core.Legacy;
+using Mooh.Core.Levels;
 
 namespace Mooh.Core.Simulation
 {
@@ -8,10 +8,10 @@ namespace Mooh.Core.Simulation
     /// <param name="PickupEntityId">The collected runtime entity.</param>
     /// <param name="Kind">The collected semantic family.</param>
     /// <param name="ScoreAwarded">The score awarded, including any all-treasure bonus.</param>
-    public sealed record LegacyPickupCollected(
+    public sealed record PickupCollected(
         EntityId EntityId,
         EntityId PickupEntityId,
-        LegacyEntityKind Kind,
+        EntityKind Kind,
         int ScoreAwarded)
         : SimulationEvent(EntityId);
 }

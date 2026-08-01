@@ -6,7 +6,7 @@ using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Simulation;
 
-namespace Mooh.Core.Legacy
+namespace Mooh.Core.Levels
 {
     /// <summary>Contains a live runtime world and its archival object identity mapping.</summary>
     public sealed class MaterializedLevel(
