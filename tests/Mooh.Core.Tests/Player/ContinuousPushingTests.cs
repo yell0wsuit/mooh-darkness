@@ -180,6 +180,37 @@ namespace Mooh.Core.Tests.Player
                 events);
         }
 
+        /// <summary>Verifies push-through removal locks its cell against gravity for 150 milliseconds.</summary>
+        [Fact]
+        public void PushThroughRemovalStartsCellLock()
+        {
+            (WorldGrid world, Entity _, SimulationWorld simulation) = CreateScenario(
+                moveSpeed: 1,
+                pushSpeedMultiplier: 1.5);
+            _ = Add(
+                world,
+                x: 2,
+                InteractionMask.PlayerPushable | InteractionMask.PushesThroughOccupants);
+            _ = Add(world, x: 3, InteractionMask.CanBePushedThrough);
+            Entity fallingBody = new(
+                EntityId.New(),
+                new GridPosition(3, 0),
+                InteractionMask.None,
+                new GravityBody(fallSpeed: 1, canSlide: false));
+            world.Add(fallingBody);
+            simulation.SetPlayerInput(HeldRight);
+
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(149));
+
+            Assert.Null(fallingBody.Motion);
+
+            IReadOnlyList<SimulationEvent> events =
+                simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.NotNull(fallingBody.Motion);
+            Assert.Equal([new FallStarted(fallingBody.Id, Direction.Down)], events);
+        }
+
         /// <summary>Verifies an ineligible beyond-cell occupant atomically blocks push-through.</summary>
         [Fact]
         public void IneligibleBeyondOccupantBlocksPushThroughAtomically()
