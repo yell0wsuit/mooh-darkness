@@ -20,10 +20,21 @@ namespace Mooh.SimulationRunner.Tests
                 [Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid():N}")],
                 output,
                 error);
+            using StringWriter reservedPathOutput = new();
+            using StringWriter reservedPathError = new();
+            int reservedPath = ScenarioApplication.Run(
+                ["level-board"],
+                reservedPathOutput,
+                reservedPathError);
 
             Assert.Equal(2, missingArgument);
             Assert.Equal(2, missingPath);
+            Assert.Equal(2, reservedPath);
             Assert.Contains("Usage:", error.ToString(), StringComparison.Ordinal);
+            Assert.Contains(
+                "Scenario path does not exist: 'level-board'.",
+                reservedPathError.ToString(),
+                StringComparison.Ordinal);
         }
 
         /// <summary>Verifies one passing scenario file returns success and prints its name.</summary>
@@ -74,6 +85,59 @@ namespace Mooh.SimulationRunner.Tests
                     output.ToString());
                 Assert.Contains("a-fail.json", error.ToString(), StringComparison.Ordinal);
                 Assert.DoesNotContain("ignored", output.ToString(), StringComparison.Ordinal);
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        /// <summary>Verifies the board command loads an archival level and prints its emoji grid.</summary>
+        [Fact]
+        public void RendersEmojiBoardForLevelFile()
+        {
+            string directory = CreateTemporaryDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "level.json");
+                File.WriteAllText(path, CreateLevelJson());
+                using StringWriter output = new();
+                using StringWriter error = new();
+
+                int exitCode = ScenarioApplication.Run(["level-board", path], output, error);
+
+                Assert.Equal(0, exitCode);
+                Assert.Equal(
+                    $"Emoji board: level.json (1×1, 1 objects){Environment.NewLine}"
+                    + $"🐔{Environment.NewLine}"
+                    + $"Legend: 🐔 player{Environment.NewLine}",
+                    output.ToString());
+                Assert.Equal(string.Empty, error.ToString());
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        /// <summary>Verifies invalid archival levels produce a diagnostic and usage exit code.</summary>
+        [Fact]
+        public void ReportsInvalidLevelForBoardCommand()
+        {
+            string directory = CreateTemporaryDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "broken.json");
+                File.WriteAllText(path, "{}");
+                using StringWriter output = new();
+                using StringWriter error = new();
+
+                int exitCode = ScenarioApplication.Run(["level-board", path], output, error);
+
+                Assert.Equal(2, exitCode);
+                Assert.Equal(string.Empty, output.ToString());
+                Assert.Contains("broken.json", error.ToString(), StringComparison.Ordinal);
+                Assert.Contains("formatVersion must be 1", error.ToString(), StringComparison.Ordinal);
             }
             finally
             {
@@ -167,6 +231,27 @@ namespace Mooh.SimulationRunner.Tests
                             }
                         ]
                     }
+                }
+                """;
+        }
+
+        private static string CreateLevelJson()
+        {
+            return """
+                {
+                    "formatVersion": 1,
+                    "size": { "width": 1, "height": 1 },
+                    "editorPreview": { "x": 0, "y": 0, "width": 1, "height": 1 },
+                    "objects": [
+                        {
+                            "id": 1,
+                            "type": "OPlayer",
+                            "editorIndex": 0,
+                            "position": { "x": 0, "y": 0 },
+                            "savedState": [],
+                            "properties": {}
+                        }
+                    ]
                 }
                 """;
         }

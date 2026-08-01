@@ -30,4 +30,17 @@ The runner prints one `PASS` or `FAIL` line per scenario and returns a nonzero e
 invalid source data or an expectation mismatch. These scenarios construct supported runtime
 components directly; they do not materialize objects from the archival level corpus.
 
+## Emoji level board
+
+Inspect the logical board of one authoritative archival level without starting a renderer:
+
+```bash
+dotnet run --project src/Mooh.SimulationRunner -- level-board assets/levels/tutor_0009_mon_green_attack.json
+```
+
+The command prints one emoji per grid cell, favors gameplay objects over underlying terrain
+when a cell has multiple occupants, includes a legend, and reports any unclassified legacy
+object types. This is an observational content tool; it does not create runtime simulation
+entities or assign gameplay behavior to legacy object types.
+
 The recovered Python 2.3 source is research material only; the new implementation does not execute or depend on it.

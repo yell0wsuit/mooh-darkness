@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+using Mooh.Core.Content;
+
 namespace Mooh.SimulationRunner
 {
     /// <summary>Runs scenario files selected by command-line paths.</summary>
     public static class ScenarioApplication
     {
         /// <summary>Runs the deterministic scenario command-line application.</summary>
-        /// <param name="arguments">Exactly one scenario file or directory path.</param>
+        /// <param name="arguments">A scenario path, or <c>level-board</c> followed by a level path.</param>
         /// <param name="output">The pass/fail summary destination.</param>
         /// <param name="error">The usage and failure diagnostic destination.</param>
         /// <returns>Zero on success, one on scenario failure, or two on usage/path failure.</returns>
@@ -24,6 +26,12 @@ namespace Mooh.SimulationRunner
             ArgumentNullException.ThrowIfNull(arguments);
             ArgumentNullException.ThrowIfNull(output);
             ArgumentNullException.ThrowIfNull(error);
+
+            if (arguments.Count == 2
+                && string.Equals(arguments[0], "level-board", StringComparison.Ordinal))
+            {
+                return RunBoard(arguments, output, error);
+            }
 
             if (arguments.Count != 1)
             {
@@ -88,6 +96,49 @@ namespace Mooh.SimulationRunner
             return failed ? 1 : 0;
         }
 
+        private static int RunBoard(
+            IReadOnlyList<string> arguments,
+            TextWriter output,
+            TextWriter error)
+        {
+            if (arguments.Count != 2)
+            {
+                WriteUsage(error);
+                return 2;
+            }
+
+            string path = arguments[1];
+            if (!File.Exists(path))
+            {
+                error.WriteLine($"Level path does not exist: '{path}'.");
+                WriteUsage(error);
+                return 2;
+            }
+
+            try
+            {
+                string json = File.ReadAllText(path);
+                LevelDocument level = JsonLevelLoader.Load(json, path);
+                output.Write(LevelBoardRenderer.Render(level, Path.GetFileName(path)));
+                return 0;
+            }
+            catch (LevelValidationException exception)
+            {
+                error.WriteLine(exception.Message);
+                return 2;
+            }
+            catch (IOException exception)
+            {
+                error.WriteLine($"{path}: Unable to read level: {exception.Message}");
+                return 2;
+            }
+            catch (UnauthorizedAccessException exception)
+            {
+                error.WriteLine($"{path}: Unable to read level: {exception.Message}");
+                return 2;
+            }
+        }
+
         private static ScenarioRunResult RunFile(string path)
         {
             string fallbackName = Path.GetFileNameWithoutExtension(path);
@@ -129,6 +180,7 @@ namespace Mooh.SimulationRunner
         private static void WriteUsage(TextWriter error)
         {
             error.WriteLine("Usage: Mooh.SimulationRunner <scenario.json|directory>");
+            error.WriteLine("       Mooh.SimulationRunner level-board <level.json>");
         }
     }
 }
