@@ -1,0 +1,134 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace Mooh.SimulationRunner
+{
+    /// <summary>Runs scenario files selected by command-line paths.</summary>
+    public static class ScenarioApplication
+    {
+        /// <summary>Runs the deterministic scenario command-line application.</summary>
+        /// <param name="arguments">Exactly one scenario file or directory path.</param>
+        /// <param name="output">The pass/fail summary destination.</param>
+        /// <param name="error">The usage and failure diagnostic destination.</param>
+        /// <returns>Zero on success, one on scenario failure, or two on usage/path failure.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Any argument is <see langword="null"/>.
+        /// </exception>
+        public static int Run(
+            IReadOnlyList<string> arguments,
+            TextWriter output,
+            TextWriter error)
+        {
+            ArgumentNullException.ThrowIfNull(arguments);
+            ArgumentNullException.ThrowIfNull(output);
+            ArgumentNullException.ThrowIfNull(error);
+
+            if (arguments.Count != 1)
+            {
+                WriteUsage(error);
+                return 2;
+            }
+
+            string selectedPath = arguments[0];
+            string[] files;
+            if (File.Exists(selectedPath))
+            {
+                files = [selectedPath];
+            }
+            else if (Directory.Exists(selectedPath))
+            {
+                try
+                {
+                    files =
+                    [
+                        .. Directory.EnumerateFiles(selectedPath, "*", SearchOption.TopDirectoryOnly)
+                            .Where(path => string.Equals(
+                                Path.GetExtension(path),
+                                ".json",
+                                StringComparison.OrdinalIgnoreCase))
+                            .OrderBy(path => Path.GetFileName(path), StringComparer.Ordinal),
+                    ];
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                {
+                    error.WriteLine($"Unable to enumerate scenario directory '{selectedPath}': {exception.Message}");
+                    return 2;
+                }
+
+                if (files.Length == 0)
+                {
+                    error.WriteLine($"No top-level JSON scenario files found in '{selectedPath}'.");
+                    return 2;
+                }
+            }
+            else
+            {
+                error.WriteLine($"Scenario path does not exist: '{selectedPath}'.");
+                WriteUsage(error);
+                return 2;
+            }
+
+            bool failed = false;
+            foreach (string file in files)
+            {
+                ScenarioRunResult result = RunFile(file);
+                if (result.Passed)
+                {
+                    output.WriteLine($"PASS {result.Name}");
+                    continue;
+                }
+
+                failed = true;
+                output.WriteLine($"FAIL {result.Name}");
+                error.WriteLine(result.Diagnostic);
+            }
+
+            return failed ? 1 : 0;
+        }
+
+        private static ScenarioRunResult RunFile(string path)
+        {
+            string fallbackName = Path.GetFileNameWithoutExtension(path);
+            try
+            {
+                string json = File.ReadAllText(path);
+                ScenarioDocument scenario = ScenarioLoader.Load(json, path);
+                return ScenarioExecutor.Run(scenario, path);
+            }
+            catch (ScenarioValidationException exception)
+            {
+                return new ScenarioRunResult(
+                    fallbackName,
+                    path,
+                    false,
+                    ScenarioFailureKind.Validation,
+                    exception.Message);
+            }
+            catch (IOException exception)
+            {
+                return new ScenarioRunResult(
+                    fallbackName,
+                    path,
+                    false,
+                    ScenarioFailureKind.Validation,
+                    $"{path}: Unable to read scenario: {exception.Message}");
+            }
+            catch (UnauthorizedAccessException exception)
+            {
+                return new ScenarioRunResult(
+                    fallbackName,
+                    path,
+                    false,
+                    ScenarioFailureKind.Validation,
+                    $"{path}: Unable to read scenario: {exception.Message}");
+            }
+        }
+
+        private static void WriteUsage(TextWriter error)
+        {
+            error.WriteLine("Usage: Mooh.SimulationRunner <scenario.json|directory>");
+        }
+    }
+}
