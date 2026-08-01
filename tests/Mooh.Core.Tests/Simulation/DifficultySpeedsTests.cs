@@ -18,6 +18,7 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(1.5625, profile.MonsterSpeed, precision: 12);
             Assert.Equal(20, profile.ShakeDamage);
             Assert.Equal(30, profile.HardShakeDamage);
+            Assert.Equal(20, profile.ExplosionDamage);
         }
 
         /// <summary>Verifies that difficulty zero scales every recovered speed by 0.75.</summary>
@@ -32,6 +33,7 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(standard.MonsterSpeed * 0.75, easy.MonsterSpeed, precision: 12);
             Assert.Equal(10, easy.ShakeDamage);
             Assert.Equal(15, easy.HardShakeDamage);
+            Assert.Equal(10, easy.ExplosionDamage);
         }
 
         /// <summary>Verifies timed mode retains standard impact damage.</summary>
@@ -40,6 +42,7 @@ namespace Mooh.Core.Tests.Simulation
         {
             Assert.Equal(20, DifficultySpeeds.Timed.ShakeDamage);
             Assert.Equal(30, DifficultySpeeds.Timed.HardShakeDamage);
+            Assert.Equal(20, DifficultySpeeds.Timed.ExplosionDamage);
         }
     }
 }

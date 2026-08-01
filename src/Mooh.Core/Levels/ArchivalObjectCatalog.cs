@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Interactions;
 
@@ -37,39 +38,55 @@ namespace Mooh.Core.Levels
         {
             Dictionary<string, ArchivalObjectDescriptor> result = [];
 
-            AddMany(result, EntityKind.DiggableTerrain, FixedBlock,
+            AddExplodableMany(result, EntityKind.DiggableTerrain, FixedBlock,
                 "CellsEat01", "DCellsEat01", "JCellsEat01");
-            AddMany(result, EntityKind.DestructibleTerrain, FixedBlock,
+            AddExplodableMany(result, EntityKind.DestructibleTerrain, FixedBlock,
                 "CellsSolid01", "CellsSolidPl", "CellsSolidWd", "DCellsSolid01", "JCellsSolid01");
             AddMany(result, EntityKind.MetalTerrain, FixedBlock | InteractionMask.RoundSupport,
                 "CellsMetal01", "CellsMetalLeft", "CellsMetalTop", "CellsMetalRight", "CellsMetalBottom");
-            AddMany(result, EntityKind.WoodTerrain, FixedBlock,
+            AddExplodableMany(result, EntityKind.WoodTerrain, FixedBlock,
                 "CellsWdLeft", "CellsWdTop", "CellsWdRight", "CellsWdBottom");
 
             Add(result, "OPlayer", EntityKind.Player, InteractionMask.BlocksMovement);
-            AddDirectional(result, "MGr", EntityKind.GreenMonster, InteractionMask.BlocksMovement);
-            AddDirectional(result, "MBlue", EntityKind.BlueMonster, InteractionMask.BlocksMovement);
-            Add(result, "MMBio", EntityKind.BioMass, InteractionMask.BlocksMovement);
+            AddDirectional(result, "MGr", EntityKind.GreenMonster, InteractionMask.BlocksMovement,
+                explosionReaction: ExplosionReaction.Destroy);
+            AddDirectional(result, "MBlue", EntityKind.BlueMonster, InteractionMask.BlocksMovement,
+                explosionReaction: ExplosionReaction.Destroy);
+            Add(result, "MMBio", EntityKind.BioMass, InteractionMask.BlocksMovement,
+                explosionReaction: ExplosionReaction.Destroy);
 
-            Add(result, "ORock01", EntityKind.Rock, PushableRound, hasGravity: true);
+            Add(result, "ORock01", EntityKind.Rock, PushableRound, hasGravity: true,
+                explosionReaction: ExplosionReaction.Destroy);
             Add(result, "OWeight", EntityKind.Weight,
                 PushableRound | InteractionMask.PushesThroughOccupants,
                 hasGravity: true,
                 fallSpeedMultiplier: 2,
-                impactStrength: GravityImpactStrength.Hard);
-            Add(result, "OBottle", EntityKind.Bottle, PushableRound, hasGravity: true);
+                impactStrength: GravityImpactStrength.Hard,
+                explosionReaction: ExplosionReaction.Destroy);
+            Add(result, "OBottle", EntityKind.Bottle, PushableRound, hasGravity: true,
+                explosionReaction: ExplosionReaction.Detonate3x3,
+                detonatesOnLanding: true);
             Add(result, "OBarel", EntityKind.Barrel, PushableRound, hasGravity: true);
             Add(result, "OBaloon", EntityKind.Balloon,
-                PushableRound | InteractionMask.CanBePushedThrough);
+                PushableRound | InteractionMask.CanBePushedThrough,
+                explosionReaction: ExplosionReaction.Detonate3x3);
             Add(result, "OBubble", EntityKind.Bubble,
-                PushableRound | InteractionMask.CanBePushedThrough);
-            AddVariants(result, EntityKind.Coin, Collectible, true, "OCoin01", "OCoin02", "OCoin03");
-            AddVariants(result, EntityKind.Diamond, Collectible, true,
+                PushableRound | InteractionMask.CanBePushedThrough,
+                explosionReaction: ExplosionReaction.Destroy);
+            AddExplodableVariants(result, EntityKind.Coin, Collectible, true,
+                "OCoin01", "OCoin02", "OCoin03");
+            AddExplodableVariants(result, EntityKind.Diamond, Collectible, true,
                 "ODiam01", "ODiam02", "ODiam03", "ODiam04", "ODiam05");
-            AddVariants(result, EntityKind.Food, Collectible, true, "OEat01", "OEat02", "OEat03");
-            Add(result, "OMagic", EntityKind.MagicGem, PushableRound, hasGravity: true);
-            Add(result, "BCola", EntityKind.Cola, Collectible, hasGravity: true);
-            Add(result, "BIce", EntityKind.Ice, Collectible, hasGravity: true);
+            AddExplodableVariants(result, EntityKind.Food, Collectible, true,
+                "OEat01", "OEat02", "OEat03");
+            Add(result, "OMagic", EntityKind.MagicGem, PushableRound, hasGravity: true,
+                explosionReaction: ExplosionReaction.Destroy);
+            Add(result, "BCola", EntityKind.Cola, Collectible, hasGravity: true,
+                explosionReaction: ExplosionReaction.Destroy,
+                detonatesOnLanding: true);
+            Add(result, "BIce", EntityKind.Ice, Collectible, hasGravity: true,
+                explosionReaction: ExplosionReaction.Destroy,
+                detonatesOnLanding: true);
             AddVariants(result, EntityKind.Key,
                 InteractionMask.BlocksMovement | Collectible,
                 true,
@@ -84,19 +101,20 @@ namespace Mooh.Core.Levels
             Add(result, "OTPort", EntityKind.Teleporter, InteractionMask.None);
             Add(result, "OTable", EntityKind.MessageTable, InteractionMask.None);
 
-            AddMany(result, EntityKind.Pipe, FixedBlock | InteractionMask.RoundSupport,
+            AddExplodableMany(result, EntityKind.Pipe, FixedBlock | InteractionMask.RoundSupport,
                 "PipeHor", "PipeVert", "PipeLeftTop", "PipeRightBottom", "PipeTopRight", "PipeBottomLeft");
             AddMany(result, EntityKind.Tunnel, FixedBlock | InteractionMask.RoundSupport,
                 "TonnelHor", "TonnelVert", "TonnelLeftTop", "TonnelRightBottom", "TonnelTopRight",
                 "TonnelBottomLeft", "TonnelDL2R", "TonnelDR2L", "TonnelDT2B", "TonnelDB2T");
 
-            Add(result, "WBomb", EntityKind.Grenade, Collectible, hasGravity: true, variant: 1);
-            Add(result, "WGrBox", EntityKind.GrenadeBox, Collectible, hasGravity: true, variant: 5);
-            Add(result, "WROne", EntityKind.Rocket, Collectible, hasGravity: true, variant: 1);
-            Add(result, "WRBox", EntityKind.RocketBox, Collectible, hasGravity: true, variant: 5);
-            Add(result, "WMine", EntityKind.Mine, InteractionMask.None);
-            Add(result, "WMinesBox", EntityKind.MineBox, Collectible, hasGravity: true, variant: 5);
-            Add(result, "WBBomb", EntityKind.BigBomb, Collectible, hasGravity: true, variant: 1);
+            AddLandingDetonator(result, "WBomb", EntityKind.Grenade, Collectible, variant: 1);
+            AddLandingDetonator(result, "WGrBox", EntityKind.GrenadeBox, Collectible, variant: 5);
+            AddLandingDetonator(result, "WROne", EntityKind.Rocket, Collectible, variant: 1);
+            AddLandingDetonator(result, "WRBox", EntityKind.RocketBox, Collectible, variant: 5);
+            Add(result, "WMine", EntityKind.Mine, InteractionMask.None,
+                explosionReaction: ExplosionReaction.Detonate3x3);
+            AddLandingDetonator(result, "WMinesBox", EntityKind.MineBox, Collectible, variant: 5);
+            AddLandingDetonator(result, "WBBomb", EntityKind.BigBomb, Collectible, variant: 1);
 
             return result;
         }
@@ -106,12 +124,17 @@ namespace Mooh.Core.Levels
             string prefix,
             EntityKind kind,
             InteractionMask interactions,
-            bool hasGravity = false)
+            bool hasGravity = false,
+            ExplosionReaction? explosionReaction = null)
         {
-            Add(result, prefix + "L", kind, interactions, hasGravity, variant: 0);
-            Add(result, prefix + "T", kind, interactions, hasGravity, variant: 1);
-            Add(result, prefix + "R", kind, interactions, hasGravity, variant: 2);
-            Add(result, prefix + "B", kind, interactions, hasGravity, variant: 3);
+            Add(result, prefix + "L", kind, interactions, hasGravity, variant: 0,
+                explosionReaction: explosionReaction);
+            Add(result, prefix + "T", kind, interactions, hasGravity, variant: 1,
+                explosionReaction: explosionReaction);
+            Add(result, prefix + "R", kind, interactions, hasGravity, variant: 2,
+                explosionReaction: explosionReaction);
+            Add(result, prefix + "B", kind, interactions, hasGravity, variant: 3,
+                explosionReaction: explosionReaction);
         }
 
         private static void AddVariants(
@@ -139,6 +162,46 @@ namespace Mooh.Core.Levels
             }
         }
 
+        private static void AddExplodableMany(
+            IDictionary<string, ArchivalObjectDescriptor> result,
+            EntityKind kind,
+            InteractionMask interactions,
+            params string[] archivalTypes)
+        {
+            foreach (string archivalType in archivalTypes)
+            {
+                Add(result, archivalType, kind, interactions,
+                    explosionReaction: ExplosionReaction.Destroy);
+            }
+        }
+
+        private static void AddExplodableVariants(
+            IDictionary<string, ArchivalObjectDescriptor> result,
+            EntityKind kind,
+            InteractionMask interactions,
+            bool hasGravity,
+            params string[] archivalTypes)
+        {
+            for (int index = 0; index < archivalTypes.Length; index++)
+            {
+                Add(result, archivalTypes[index], kind, interactions, hasGravity,
+                    variant: index + 1,
+                    explosionReaction: ExplosionReaction.Destroy);
+            }
+        }
+
+        private static void AddLandingDetonator(
+            IDictionary<string, ArchivalObjectDescriptor> result,
+            string archivalType,
+            EntityKind kind,
+            InteractionMask interactions,
+            int variant)
+        {
+            Add(result, archivalType, kind, interactions, hasGravity: true, variant: variant,
+                explosionReaction: ExplosionReaction.Detonate3x3,
+                detonatesOnLanding: true);
+        }
+
         private static void Add(
             IDictionary<string, ArchivalObjectDescriptor> result,
             string archivalType,
@@ -147,7 +210,9 @@ namespace Mooh.Core.Levels
             bool hasGravity = false,
             double fallSpeedMultiplier = 1,
             int variant = 0,
-            GravityImpactStrength impactStrength = GravityImpactStrength.Ordinary)
+            GravityImpactStrength impactStrength = GravityImpactStrength.Ordinary,
+            ExplosionReaction? explosionReaction = null,
+            bool detonatesOnLanding = false)
         {
             result.Add(
                 archivalType,
@@ -158,7 +223,9 @@ namespace Mooh.Core.Levels
                     hasGravity,
                     fallSpeedMultiplier,
                     variant,
-                    impactStrength));
+                    impactStrength,
+                    explosionReaction,
+                    detonatesOnLanding));
         }
     }
 }

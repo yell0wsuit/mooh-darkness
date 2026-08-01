@@ -1,3 +1,4 @@
+using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Interactions;
 
@@ -11,6 +12,8 @@ namespace Mooh.Core.Levels
     /// <param name="FallSpeedMultiplier">The multiplier applied to the normal fall speed.</param>
     /// <param name="Variant">The family-specific variant or cardinal direction.</param>
     /// <param name="ImpactStrength">The shake strength produced by a falling landing.</param>
+    /// <param name="ExplosionReaction">The reaction when reached by an explosion, if any.</param>
+    /// <param name="DetonatesOnLanding">Whether a completed fall starts a 3x3 explosion.</param>
     public sealed record ArchivalObjectDescriptor(
         string ArchivalType,
         EntityKind Kind,
@@ -18,5 +21,7 @@ namespace Mooh.Core.Levels
         bool HasGravity = false,
         double FallSpeedMultiplier = 1,
         int Variant = 0,
-        GravityImpactStrength ImpactStrength = GravityImpactStrength.Ordinary);
+        GravityImpactStrength ImpactStrength = GravityImpactStrength.Ordinary,
+        ExplosionReaction? ExplosionReaction = null,
+        bool DetonatesOnLanding = false);
 }

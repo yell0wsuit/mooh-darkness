@@ -2,6 +2,7 @@ using System;
 
 using Mooh.Core.Combat;
 using Mooh.Core.Enemies;
+using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
@@ -24,6 +25,11 @@ namespace Mooh.SimulationRunner.Tests
                 Position = new ScenarioPosition { X = 2, Y = 1 },
                 Interactions = ["PlayerPushable", "RoundSupport"],
                 GravityBody = new ScenarioGravityBody { FallSpeed = 1.875, CanSlide = true },
+                ExplosionBody = new ScenarioExplosionBody
+                {
+                    Reaction = "Detonate3x3",
+                    DetonatesOnLanding = true,
+                },
             };
             scenario = ScenarioTestData.WithWorld(
                 scenario,
@@ -44,6 +50,10 @@ namespace Mooh.SimulationRunner.Tests
             GravityBody gravityBody = Assert.IsType<GravityBody>(materialized.World.Entities[1].GravityBody);
             Assert.Equal(1.875, gravityBody.FallSpeed);
             Assert.True(gravityBody.CanSlide);
+            ExplosionBody explosionBody = Assert.IsType<ExplosionBody>(
+                materialized.World.Entities[1].ExplosionBody);
+            Assert.Equal(ExplosionReaction.Detonate3x3, explosionBody.Reaction);
+            Assert.True(explosionBody.DetonatesOnLanding);
             Assert.NotNull(materialized.Simulation);
         }
 

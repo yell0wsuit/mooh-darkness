@@ -9,7 +9,7 @@ namespace Mooh.SimulationRunner.Tests
     /// <summary>Verifies all committed end-to-end simulation specifications.</summary>
     public sealed class CommittedScenarioTests
     {
-        /// <summary>Verifies all eight committed scenarios execute successfully.</summary>
+        /// <summary>Verifies all nine committed scenarios execute successfully.</summary>
         [Fact]
         public void AllCommittedScenariosPass()
         {
@@ -17,7 +17,7 @@ namespace Mooh.SimulationRunner.Tests
 
             Assert.True(Directory.Exists(directory), $"Scenario directory not found: {directory}");
             string[] files = Directory.GetFiles(directory, "*.json", SearchOption.TopDirectoryOnly);
-            Assert.Equal(8, files.Length);
+            Assert.Equal(9, files.Length);
             ScenarioRunResult[] results =
             [
                 .. files.Order(StringComparer.Ordinal).Select(

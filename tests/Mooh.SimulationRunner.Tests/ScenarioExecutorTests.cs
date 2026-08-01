@@ -56,6 +56,18 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Contains("advanceMilliseconds", result.Diagnostic, StringComparison.Ordinal);
         }
 
+        /// <summary>Verifies a declared landing explosive is observable end to end.</summary>
+        [Fact]
+        public void RunsSelfVerifyingLandingExplosionScenario()
+        {
+            ScenarioDocument scenario = CreateLandingExplosionScenario();
+
+            ScenarioRunResult result = ScenarioExecutor.Run(scenario, "explosion.json");
+
+            Assert.True(result.Passed, result.Diagnostic);
+            Assert.Equal("landing explosion", result.Name);
+        }
+
         private static ScenarioDocument CreateFallingScenario()
         {
             return new ScenarioDocument
@@ -122,6 +134,104 @@ namespace Mooh.SimulationRunner.Tests
                                 Progress = 0,
                                 ResolutionOrder = 0,
                             },
+                        },
+                    ],
+                },
+            };
+        }
+
+        private static ScenarioDocument CreateLandingExplosionScenario()
+        {
+            return new ScenarioDocument
+            {
+                FormatVersion = 1,
+                Name = "landing explosion",
+                World = new ScenarioWorld
+                {
+                    Width = 3,
+                    Height = 4,
+                    Gravity = "Down",
+                    RandomSeed = 0,
+                    Entities =
+                    [
+                        new ScenarioEntity
+                        {
+                            Alias = "bomb",
+                            Position = new ScenarioPosition { X = 1, Y = 0 },
+                            Interactions = [],
+                            GravityBody = new ScenarioGravityBody
+                            {
+                                FallSpeed = 1,
+                                CanSlide = false,
+                            },
+                            ExplosionBody = new ScenarioExplosionBody
+                            {
+                                Reaction = "Detonate3x3",
+                                DetonatesOnLanding = true,
+                            },
+                        },
+                        new ScenarioEntity
+                        {
+                            Alias = "support",
+                            Position = new ScenarioPosition { X = 1, Y = 2 },
+                            Interactions = ["BlocksMovement"],
+                        },
+                    ],
+                },
+                Steps =
+                [
+                    new ScenarioStep
+                    {
+                        AdvanceMilliseconds = 1000,
+                        ExpectEvents =
+                        [
+                            new ExpectedEvent
+                            {
+                                Type = "FallStarted",
+                                Entity = "bomb",
+                                Direction = "Down",
+                            },
+                            new ExpectedEvent
+                            {
+                                Type = "CellEntered",
+                                Entity = "bomb",
+                                Position = new ScenarioPosition { X = 1, Y = 1 },
+                            },
+                            new ExpectedEvent
+                            {
+                                Type = "Landed",
+                                Entity = "bomb",
+                                Direction = "Down",
+                            },
+                            new ExpectedEvent
+                            {
+                                Type = "ExplosionStarted",
+                                Entity = "bomb",
+                                Position = new ScenarioPosition { X = 1, Y = 1 },
+                            },
+                            new ExpectedEvent
+                            {
+                                Type = "EntityDestroyed",
+                                Entity = "bomb",
+                                SourceEntity = "bomb",
+                            },
+                            new ExpectedEvent
+                            {
+                                Type = "ExplosionCellReached",
+                                Entity = "bomb",
+                                Position = new ScenarioPosition { X = 1, Y = 1 },
+                            },
+                        ],
+                    },
+                ],
+                ExpectFinal = new ExpectedFinalState
+                {
+                    Entities =
+                    [
+                        new ExpectedEntityState
+                        {
+                            Alias = "support",
+                            Position = new ScenarioPosition { X = 1, Y = 2 },
                         },
                     ],
                 },

@@ -76,6 +76,9 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets optional blue-monster behavior.</summary>
         public ScenarioBlueMonsterBody? BlueMonsterBody { get; init; }
+
+        /// <summary>Gets optional explosion behavior.</summary>
+        public ScenarioExplosionBody? ExplosionBody { get; init; }
     }
 
     /// <summary>Describes gravity behavior for a scenario entity.</summary>
@@ -86,6 +89,16 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets whether the body may slide around round support.</summary>
         public required bool CanSlide { get; init; }
+    }
+
+    /// <summary>Describes explosion behavior for a scenario entity.</summary>
+    public sealed class ScenarioExplosionBody
+    {
+        /// <summary>Gets the exact explosion-reaction name.</summary>
+        public required string Reaction { get; init; }
+
+        /// <summary>Gets whether a completed fall starts a 3x3 explosion.</summary>
+        public required bool DetonatesOnLanding { get; init; }
     }
 
     /// <summary>Describes player behavior for a scenario entity.</summary>

@@ -5,6 +5,7 @@ using System.Linq;
 using Mooh.Core.Combat;
 using Mooh.Core.Enemies;
 using Mooh.Core.Entities;
+using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
@@ -20,7 +21,20 @@ namespace Mooh.Core.Simulation
     public sealed class SimulationWorld
     {
         private const double BoundaryTolerance = 1e-6;
+        private const double ExplosionDelaySeconds = 0.2;
         private const double TimeTolerance = 1e-12;
+        private static readonly TimeSpan ExplosionCellLockDuration = TimeSpan.FromMilliseconds(500);
+        private static readonly (int X, int Y)[] ExplosionNeighborOffsets =
+        [
+            (-1, 0),
+            (1, 0),
+            (-1, -1),
+            (0, -1),
+            (1, -1),
+            (-1, 1),
+            (0, 1),
+            (1, 1),
+        ];
         private static readonly TimeSpan TimerTolerance = TimeSpan.FromTicks(1);
 
         private readonly BlueMonsterSystem _blueMonsters;
@@ -29,9 +43,11 @@ namespace Mooh.Core.Simulation
         private readonly GreenMonsterSystem _greenMonsters;
         private readonly double _maximumTravelPerSubstep;
         private readonly MovementSystem _movement;
+        private readonly List<ScheduledExplosionCell> _pendingExplosionCells = [];
         private readonly PlayerController? _playerController;
         private readonly WorldGrid _world;
         private Direction _gravityDirection;
+        private long _nextExplosionOrder;
 
         /// <summary>Initializes a simulation coordinator.</summary>
         /// <param name="world">The authoritative world.</param>
@@ -143,6 +159,25 @@ namespace Mooh.Core.Simulation
             return events;
         }
 
+        /// <summary>Starts a recovered delayed 3x3 explosion from a registered explosive entity.</summary>
+        /// <param name="sourceEntityId">The entity that becomes the explosion center.</param>
+        /// <returns>The immediate ordered events; neighboring cells remain scheduled.</returns>
+        /// <exception cref="KeyNotFoundException">The source is not registered.</exception>
+        /// <exception cref="InvalidOperationException">The source is not a 3x3 explosive.</exception>
+        public IReadOnlyList<SimulationEvent> Detonate(EntityId sourceEntityId)
+        {
+            Entity source = _world.GetEntity(sourceEntityId);
+            if (source.ExplosionBody?.Reaction != ExplosionReaction.Detonate3x3)
+            {
+                throw new InvalidOperationException("Detonation requires a 3x3 explosive entity.");
+            }
+
+            List<SimulationEvent> events = [];
+            StartExplosion(source, events);
+            _gravity.EvaluateStationary(_world, _gravityDirection, events);
+            return events;
+        }
+
         private void ApplyDamage(DamageRequest request, List<SimulationEvent> events)
         {
             Entity target = _world.GetEntity(request.TargetEntityId);
@@ -219,6 +254,7 @@ namespace Mooh.Core.Simulation
                 double? healthSeconds = SecondsUntilNextImmunityExpiry();
                 double? reactionSeconds = SecondsUntilPlayerReactionEnds();
                 double? monsterSeconds = SecondsUntilNextMonsterTimer();
+                double? explosionSeconds = SecondsUntilNextExplosionCell();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -258,12 +294,18 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingMonsterState);
                 }
 
+                if (explosionSeconds is double remainingExplosionDelay)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingExplosionDelay);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && unlockSeconds is null
                     && healthSeconds is null
                     && reactionSeconds is null
-                    && monsterSeconds is null)
+                    && monsterSeconds is null
+                    && explosionSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -281,6 +323,7 @@ namespace Mooh.Core.Simulation
                     events) == true;
                 playerControlReady |= AdvancePlayerReaction(substepSeconds, events);
                 AdvanceMonsterTimers(substepSeconds, events);
+                bool resolvedExplosion = ResolvePendingExplosionCells(events);
 
                 remainingSeconds -= substepSeconds;
                 if (remainingSeconds < TimeTolerance)
@@ -296,6 +339,10 @@ namespace Mooh.Core.Simulation
                 if (!resolvedBoundary
                     && unlockSeconds is double expiringLock
                     && substepSeconds >= expiringLock - TimeTolerance)
+                {
+                    _gravity.EvaluateStationary(_world, _gravityDirection, events);
+                }
+                else if (resolvedExplosion)
                 {
                     _gravity.EvaluateStationary(_world, _gravityDirection, events);
                 }
@@ -325,6 +372,104 @@ namespace Mooh.Core.Simulation
             double? green = _greenMonsters.SecondsUntilNextTimer();
             double? blue = _blueMonsters.SecondsUntilNextTimer();
             return green is null ? blue : blue is null ? green : Math.Min(green.Value, blue.Value);
+        }
+
+        private double? SecondsUntilNextExplosionCell()
+        {
+            if (_pendingExplosionCells.Count == 0)
+            {
+                return null;
+            }
+
+            double dueTime = _pendingExplosionCells.Min(value => value.DueTimeSeconds);
+            return Math.Max(0, dueTime - _world.CurrentTimeSeconds);
+        }
+
+        private bool ResolvePendingExplosionCells(List<SimulationEvent> events)
+        {
+            ScheduledExplosionCell[] ready =
+            [
+                .. _pendingExplosionCells
+                    .Where(value => value.DueTimeSeconds <= _world.CurrentTimeSeconds + TimeTolerance)
+                    .OrderBy(value => value.Order),
+            ];
+            if (ready.Length == 0)
+            {
+                return false;
+            }
+
+            foreach (ScheduledExplosionCell scheduled in ready)
+            {
+                _ = _pendingExplosionCells.Remove(scheduled);
+                ResolveExplosionCell(scheduled.SourceEntityId, scheduled.Position, events);
+            }
+
+            return true;
+        }
+
+        private void StartExplosion(Entity source, List<SimulationEvent> events)
+        {
+            GridPosition center = source.Position;
+            if (!_world.Remove(source.Id))
+            {
+                return;
+            }
+
+            events.Add(new ExplosionStarted(source.Id, center));
+            events.Add(new EntityDestroyed(source.Id, source.Id));
+            ResolveExplosionCell(source.Id, center, events);
+
+            double dueTime = _world.CurrentTimeSeconds + ExplosionDelaySeconds;
+            foreach ((int offsetX, int offsetY) in ExplosionNeighborOffsets)
+            {
+                GridPosition position = new(center.X + offsetX, center.Y + offsetY);
+                if (_world.Contains(position))
+                {
+                    _pendingExplosionCells.Add(new ScheduledExplosionCell(
+                        source.Id,
+                        position,
+                        dueTime,
+                        _nextExplosionOrder++));
+                }
+            }
+        }
+
+        private void ResolveExplosionCell(
+            EntityId sourceEntityId,
+            GridPosition position,
+            List<SimulationEvent> events)
+        {
+            events.Add(new ExplosionCellReached(sourceEntityId, position));
+            _world.LockCell(position, ExplosionCellLockDuration);
+            foreach (Entity occupant in _world.GetOccupants(position))
+            {
+                if (occupant.PlayerBody is not null && occupant.HealthBody is not null)
+                {
+                    ApplyDamage(new DamageRequest(
+                        sourceEntityId,
+                        occupant.Id,
+                        DamageKind.Explosion,
+                        _difficultySpeeds.ExplosionDamage), events);
+                    continue;
+                }
+
+                if (occupant.ExplosionBody?.Reaction == ExplosionReaction.Destroy)
+                {
+                    DestroyEntity(occupant, sourceEntityId, events);
+                }
+                else if (occupant.ExplosionBody?.Reaction == ExplosionReaction.Detonate3x3)
+                {
+                    StartExplosion(occupant, events);
+                }
+            }
+        }
+
+        private void DestroyEntity(Entity entity, EntityId sourceEntityId, List<SimulationEvent> events)
+        {
+            if (_world.Remove(entity.Id))
+            {
+                events.Add(new EntityDestroyed(entity.Id, sourceEntityId));
+            }
         }
 
         private void AdvanceMonsterTimers(double elapsedSeconds, List<SimulationEvent> events)
@@ -532,6 +677,11 @@ namespace Mooh.Core.Simulation
                     KinematicsSystem.Stop(entity);
                     events.Add(new Landed(entity.Id, _gravityDirection));
                     ResolveFallingImpact(entity, following, events);
+                    if (entity.ExplosionBody?.DetonatesOnLanding == true)
+                    {
+                        StartExplosion(entity, events);
+                        ResolveFallingImpact(entity, following, events);
+                    }
                 }
                 else
                 {
@@ -592,6 +742,12 @@ namespace Mooh.Core.Simulation
                 _ => throw new InvalidOperationException("Unknown motion cause."),
             };
         }
+
+        private sealed record ScheduledExplosionCell(
+            EntityId SourceEntityId,
+            GridPosition Position,
+            double DueTimeSeconds,
+            long Order);
 
         private void ResolvePushedBoundary(
             Entity entity,

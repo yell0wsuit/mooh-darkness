@@ -4,6 +4,7 @@ using System.Linq;
 
 using Mooh.Core.Combat;
 using Mooh.Core.Enemies;
+using Mooh.Core.Explosions;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
@@ -117,6 +118,14 @@ namespace Mooh.SimulationRunner
                     && (!double.IsFinite(gravityBody.FallSpeed) || gravityBody.FallSpeed <= 0))
                 {
                     throw Invalid(source, $"{path}.gravityBody.fallSpeed", "must be finite and positive.");
+                }
+
+                if (entity.ExplosionBody is ScenarioExplosionBody explosionBody)
+                {
+                    _ = ParseEnum<ExplosionReaction>(
+                        explosionBody.Reaction,
+                        source,
+                        $"{path}.explosionBody.reaction");
                 }
 
                 if (entity.PlayerBody is ScenarioPlayerBody playerBody)
@@ -417,11 +426,13 @@ namespace Mooh.SimulationRunner
                     | EventFields.Amount | EventFields.RemainingHealth,
                 "DamageIgnored" => EventFields.SourceEntity | EventFields.DamageKind
                     | EventFields.DamageResult,
+                "EntityDestroyed" => EventFields.SourceEntity,
                 "EnemyAttackStarted" => EventFields.Position | EventFields.DurationMilliseconds,
                 "EnemyMoveStarted" => EventFields.FromPosition | EventFields.ToPosition,
                 "EnemyStrike" => EventFields.Position,
                 "EnemyTurnCompleted" => EventFields.Direction,
                 "EnemyTurnStarted" => EventFields.From | EventFields.To | EventFields.DurationMilliseconds,
+                "ExplosionCellReached" or "ExplosionStarted" => EventFields.Position,
                 "PlayerShockStarted" => EventFields.DurationMilliseconds,
                 "PlayerDied" or "PlayerShockEnded" or "PlayerStopped" => EventFields.None,
                 _ => EventFields.None,
@@ -461,6 +472,9 @@ namespace Mooh.SimulationRunner
             "EnemyStrike",
             "EnemyTurnCompleted",
             "EnemyTurnStarted",
+            "EntityDestroyed",
+            "ExplosionCellReached",
+            "ExplosionStarted",
             "FallStarted",
             "Landed",
             "PlayerAte",

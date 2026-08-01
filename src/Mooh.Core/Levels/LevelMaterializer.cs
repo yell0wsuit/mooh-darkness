@@ -6,6 +6,7 @@ using Mooh.Core.Combat;
 using Mooh.Core.Content;
 using Mooh.Core.Enemies;
 using Mooh.Core.Entities;
+using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Player;
@@ -141,7 +142,10 @@ namespace Mooh.Core.Levels
                 descriptor.Kind == EntityKind.BlueMonster
                     ? new BlueMonsterBody(speeds.MonsterSpeed, facing, MonsterTurnDuration)
                     : null,
-                new ArchivalObjectIdentity(source, descriptor));
+                new ArchivalObjectIdentity(source, descriptor),
+                descriptor.ExplosionReaction is ExplosionReaction reaction
+                    ? new ExplosionBody(reaction, descriptor.DetonatesOnLanding)
+                    : null);
         }
 
         private static EntityId CreateDeterministicId(int objectId)

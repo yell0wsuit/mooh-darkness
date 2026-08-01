@@ -71,6 +71,18 @@ namespace Mooh.SimulationRunner
                         from: value.FromDirection,
                         to: value.ToDirection,
                         durationMilliseconds: (long)value.Duration.TotalMilliseconds),
+                    EntityDestroyed value => new ObservedEvent(
+                        nameof(EntityDestroyed),
+                        entity,
+                        sourceEntity: ResolveAlias(value.SourceEntityId, aliasesById)),
+                    ExplosionCellReached value => new ObservedEvent(
+                        nameof(ExplosionCellReached),
+                        entity,
+                        position: value.Position),
+                    ExplosionStarted value => new ObservedEvent(
+                        nameof(ExplosionStarted),
+                        entity,
+                        position: value.Position),
                     FallStarted value => new ObservedEvent(
                         nameof(FallStarted),
                         entity,

@@ -65,11 +65,14 @@ namespace Mooh.SimulationRunner.Tests
                 new PlayerShockStarted(player, TimeSpan.FromMilliseconds(700)),
                 new PlayerShockEnded(player),
                 new PlayerDied(player),
+                new ExplosionStarted(rock, new GridPosition(2, 2)),
+                new ExplosionCellReached(rock, new GridPosition(1, 2)),
+                new EntityDestroyed(monster, rock),
             ];
 
             IReadOnlyList<ObservedEvent> observed = EventObserver.Observe(events, aliases);
 
-            Assert.Equal(23, observed.Count);
+            Assert.Equal(26, observed.Count);
             Assert.Equal(new ObservedEvent("FallStarted", "rock", direction: Direction.Down), observed[0]);
             Assert.Equal(new ObservedEvent("SlideStarted", "rock", direction: Direction.Left), observed[1]);
             Assert.Equal(
@@ -108,6 +111,15 @@ namespace Mooh.SimulationRunner.Tests
                     "player",
                     durationMilliseconds: 700),
                 observed[20]);
+            Assert.Equal(
+                new ObservedEvent("ExplosionStarted", "rock", position: new GridPosition(2, 2)),
+                observed[23]);
+            Assert.Equal(
+                new ObservedEvent("ExplosionCellReached", "rock", position: new GridPosition(1, 2)),
+                observed[24]);
+            Assert.Equal(
+                new ObservedEvent("EntityDestroyed", "monster", sourceEntity: "rock"),
+                observed[25]);
         }
     }
 }
