@@ -25,5 +25,8 @@ namespace Mooh.Core.Interactions
 
         /// <summary>The entity cannot move or be pushed.</summary>
         MovementLocked = 1 << 4,
+
+        /// <summary>The entity gives its cell a rounded cap that can support sliding objects.</summary>
+        RoundSupport = 1 << 5,
     }
 }

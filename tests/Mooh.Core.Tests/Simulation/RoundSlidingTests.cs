@@ -103,6 +103,18 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Empty(events);
         }
 
+        /// <summary>Verifies that slide capability alone is insufficient without round support below.</summary>
+        [Fact]
+        public void BodyOnNonRoundSupportRemainsStationary()
+        {
+            SlidingScenario scenario = CreateScenario(roundSupport: false);
+
+            IReadOnlyList<SimulationEvent> events = AdvanceFractionally(scenario, seed: 0);
+
+            Assert.Null(scenario.Body.Motion);
+            Assert.Empty(events);
+        }
+
         /// <summary>Verifies the ordered transition from a completed slide into falling.</summary>
         [Fact]
         public void CompletedRightSlideTransitionsToFalling()
@@ -175,7 +187,7 @@ namespace Mooh.Core.Tests.Simulation
                 random: new Random(seed));
         }
 
-        private static SlidingScenario CreateScenario(bool canSlide = true)
+        private static SlidingScenario CreateScenario(bool canSlide = true, bool roundSupport = true)
         {
             WorldGrid world = new(5, 5);
             Entity body = new(
@@ -184,13 +196,22 @@ namespace Mooh.Core.Tests.Simulation
                 InteractionMask.None,
                 new GravityBody(1, canSlide));
             world.Add(body);
-            _ = AddSolid(world, new GridPosition(2, 2));
+            _ = AddSolid(
+                world,
+                new GridPosition(2, 2),
+                roundSupport ? InteractionMask.RoundSupport : InteractionMask.None);
             return new SlidingScenario(world, body);
         }
 
-        private static Entity AddSolid(WorldGrid world, GridPosition position)
+        private static Entity AddSolid(
+            WorldGrid world,
+            GridPosition position,
+            InteractionMask additionalMask = InteractionMask.None)
         {
-            Entity entity = new(EntityId.New(), position, InteractionMask.BlocksMovement);
+            Entity entity = new(
+                EntityId.New(),
+                position,
+                InteractionMask.BlocksMovement | additionalMask);
             world.Add(entity);
             return entity;
         }

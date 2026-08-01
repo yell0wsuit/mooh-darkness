@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
+using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
 using Mooh.Core.Movement;
 using Mooh.Core.Simulation;
@@ -62,6 +64,12 @@ namespace Mooh.Core.Gravity
             }
 
             if (!body.CanSlide)
+            {
+                return false;
+            }
+
+            if (!world.GetOccupants(destination).Any(
+                occupant => occupant.Interactions.HasFlag(InteractionMask.RoundSupport)))
             {
                 return false;
             }

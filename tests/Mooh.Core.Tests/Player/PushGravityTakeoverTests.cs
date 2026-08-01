@@ -128,7 +128,10 @@ namespace Mooh.Core.Tests.Player
 
         private static Entity AddSolid(WorldGrid world, GridPosition position)
         {
-            return Add(world, position, InteractionMask.BlocksMovement);
+            return Add(
+                world,
+                position,
+                InteractionMask.BlocksMovement | InteractionMask.RoundSupport);
         }
     }
 }

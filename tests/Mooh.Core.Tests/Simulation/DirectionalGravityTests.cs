@@ -180,7 +180,10 @@ namespace Mooh.Core.Tests.Simulation
 
         private static Entity AddSolid(WorldGrid world, GridPosition position)
         {
-            Entity entity = new(EntityId.New(), position, InteractionMask.BlocksMovement);
+            Entity entity = new(
+                EntityId.New(),
+                position,
+                InteractionMask.BlocksMovement | InteractionMask.RoundSupport);
             world.Add(entity);
             return entity;
         }
