@@ -16,5 +16,8 @@ namespace Mooh.Core.Motion
 
         /// <summary>An object is moving after being pushed by the player.</summary>
         PlayerPushed,
+
+        /// <summary>A monster is walking under autonomous control.</summary>
+        MonsterWalking,
     }
 }

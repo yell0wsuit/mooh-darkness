@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Mooh.Core.Combat;
+using Mooh.Core.Enemies;
 using Mooh.Core.Entities;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
@@ -23,6 +24,7 @@ namespace Mooh.Core.Simulation
         private static readonly TimeSpan TimerTolerance = TimeSpan.FromTicks(1);
 
         private readonly GravitySystem _gravity;
+        private readonly GreenMonsterSystem _greenMonsters;
         private readonly double _maximumTravelPerSubstep;
         private readonly MovementSystem _movement;
         private readonly PlayerController? _playerController;
@@ -79,6 +81,7 @@ namespace Mooh.Core.Simulation
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
             _gravity = new GravitySystem(collisionPolicy, random);
             _movement = new MovementSystem(world, new DefaultInteractionPolicy());
+            _greenMonsters = new GreenMonsterSystem(world, new DefaultInteractionPolicy());
             _playerController = world.Player is Entity player
                 ? new PlayerController(player, world, _movement, gravityDirection)
                 : null;
@@ -167,6 +170,7 @@ namespace Mooh.Core.Simulation
             List<SimulationEvent> events = [];
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
             _playerController?.TryStart(events);
+            _greenMonsters.DecideAll(events);
 
             double remainingSeconds = elapsed.TotalSeconds;
             while (remainingSeconds > 0)
@@ -177,6 +181,7 @@ namespace Mooh.Core.Simulation
                 double? unlockSeconds = _world.SecondsUntilNextCellUnlock();
                 double? healthSeconds = SecondsUntilNextImmunityExpiry();
                 double? reactionSeconds = SecondsUntilPlayerReactionEnds();
+                double? monsterSeconds = _greenMonsters.SecondsUntilNextTimer();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -211,11 +216,17 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingReaction);
                 }
 
+                if (monsterSeconds is double remainingMonsterState)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingMonsterState);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && unlockSeconds is null
                     && healthSeconds is null
-                    && reactionSeconds is null)
+                    && reactionSeconds is null
+                    && monsterSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -229,6 +240,7 @@ namespace Mooh.Core.Simulation
                 _world.AdvanceTime(substepSeconds);
                 AdvanceHealthImmunity(substepSeconds);
                 _playerController?.AdvanceRotation(substepSeconds, events);
+                _greenMonsters.AdvanceTimers(substepSeconds, events);
                 AdvancePlayerReaction(substepSeconds, events);
 
                 remainingSeconds -= substepSeconds;
@@ -319,6 +331,12 @@ namespace Mooh.Core.Simulation
                 {
                     throw new InvalidOperationException("The player cannot have pushed-object motion.");
                 }
+
+                if (motion?.Cause == MotionCause.MonsterWalking
+                    && entity.GreenMonsterBody is null)
+                {
+                    throw new InvalidOperationException("Monster walking motion requires a green-monster body.");
+                }
             }
         }
 
@@ -361,6 +379,15 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
+                if (motion.Cause == MotionCause.MonsterWalking)
+                {
+                    GridPosition monsterDestination = entity.Position;
+                    KinematicsSystem.Stop(entity);
+                    GreenMonsterSystem.CompleteWalking(entity);
+                    events.Add(new CellEntered(entity.Id, monsterDestination));
+                    continue;
+                }
+
                 GridPosition destination = entity.Position;
                 motion.Progress = 0;
                 events.Add(new CellEntered(entity.Id, destination));
@@ -383,6 +410,7 @@ namespace Mooh.Core.Simulation
                 }
             }
 
+            _greenMonsters.DecideAll(events);
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
             return true;
         }
@@ -403,7 +431,8 @@ namespace Mooh.Core.Simulation
             {
                 MotionCause.PlayerPushed => 0,
                 MotionCause.Falling or MotionCause.Sliding => 1,
-                MotionCause.PlayerWalking => 2,
+                MotionCause.MonsterWalking => 2,
+                MotionCause.PlayerWalking => 3,
                 _ => throw new InvalidOperationException("Unknown motion cause."),
             };
         }

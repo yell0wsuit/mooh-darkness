@@ -1,4 +1,5 @@
 using Mooh.Core.Combat;
+using Mooh.Core.Enemies;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
@@ -16,13 +17,15 @@ namespace Mooh.Core.Entities
     /// <param name="gravityBody">The entity's optional gravity behavior.</param>
     /// <param name="playerBody">The entity's optional player behavior.</param>
     /// <param name="healthBody">The entity's optional health behavior.</param>
+    /// <param name="greenMonsterBody">The entity's optional green-monster behavior.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
         InteractionMask interactions,
         GravityBody? gravityBody = null,
         PlayerBody? playerBody = null,
-        HealthBody? healthBody = null)
+        HealthBody? healthBody = null,
+        GreenMonsterBody? greenMonsterBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -42,7 +45,10 @@ namespace Mooh.Core.Entities
         /// <summary>Gets the entity's optional health behavior.</summary>
         public HealthBody? HealthBody { get; } = healthBody;
 
-        /// <summary>Gets the entity's current gravity-driven motion, if any.</summary>
+        /// <summary>Gets the entity's optional green-monster behavior.</summary>
+        public GreenMonsterBody? GreenMonsterBody { get; } = greenMonsterBody;
+
+        /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }
     }
 }
