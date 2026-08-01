@@ -283,7 +283,7 @@ namespace Mooh.Core.Tests.Enemies
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
                 () => simulation.Advance(TimeSpan.FromMilliseconds(1)));
 
-            Assert.Equal("Monster walking motion requires a green-monster body.", exception.Message);
+            Assert.Equal("Monster walking motion requires a monster body.", exception.Message);
         }
 
         private static SimulationWorld CreateSimulation(WorldGrid world)

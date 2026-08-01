@@ -18,6 +18,7 @@ namespace Mooh.Core.Entities
     /// <param name="playerBody">The entity's optional player behavior.</param>
     /// <param name="healthBody">The entity's optional health behavior.</param>
     /// <param name="greenMonsterBody">The entity's optional green-monster behavior.</param>
+    /// <param name="blueMonsterBody">The entity's optional blue-monster behavior.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -25,7 +26,8 @@ namespace Mooh.Core.Entities
         GravityBody? gravityBody = null,
         PlayerBody? playerBody = null,
         HealthBody? healthBody = null,
-        GreenMonsterBody? greenMonsterBody = null)
+        GreenMonsterBody? greenMonsterBody = null,
+        BlueMonsterBody? blueMonsterBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -47,6 +49,9 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's optional green-monster behavior.</summary>
         public GreenMonsterBody? GreenMonsterBody { get; } = greenMonsterBody;
+
+        /// <summary>Gets the entity's optional blue-monster behavior.</summary>
+        public BlueMonsterBody? BlueMonsterBody { get; } = blueMonsterBody;
 
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }

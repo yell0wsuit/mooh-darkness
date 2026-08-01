@@ -38,48 +38,30 @@ namespace Mooh.Core.Enemies
             return remaining?.TotalSeconds;
         }
 
-        internal void DecideAll(List<SimulationEvent> events)
-        {
-            ArgumentNullException.ThrowIfNull(events);
-            IReadOnlyList<Entity> entities = _world.Entities;
-            for (int index = 0; index < entities.Count; index++)
-            {
-                Entity monster = entities[index];
-                if (monster.GreenMonsterBody?.State == GreenMonsterState.Deciding)
-                {
-                    Decide(monster, index, events);
-                }
-            }
-        }
-
-        internal void AdvanceTimers(
+        internal void AdvanceTimer(
+            Entity monster,
             double elapsedSeconds,
             List<SimulationEvent> events,
             Action<DamageRequest> applyDamage)
         {
             ArgumentNullException.ThrowIfNull(events);
             ArgumentNullException.ThrowIfNull(applyDamage);
-            TimeSpan elapsed = TimeSpan.FromSeconds(elapsedSeconds);
-            foreach (Entity monster in _world.Entities)
+            GreenMonsterBody? body = monster.GreenMonsterBody;
+            if (body?.State is not (GreenMonsterState.Turning
+                or GreenMonsterState.AttackWindup
+                or GreenMonsterState.AttackRecovery))
             {
-                GreenMonsterBody? body = monster.GreenMonsterBody;
-                if (body?.State is not (GreenMonsterState.Turning
-                    or GreenMonsterState.AttackWindup
-                    or GreenMonsterState.AttackRecovery))
-                {
-                    continue;
-                }
-
-                if (body.Remaining - elapsed > TimerTolerance)
-                {
-                    body.Remaining -= elapsed;
-                    continue;
-                }
-
-                CompleteTimedState(monster, body, events, applyDamage);
+                return;
             }
 
-            DecideAll(events);
+            TimeSpan elapsed = TimeSpan.FromSeconds(elapsedSeconds);
+            if (body.Remaining - elapsed > TimerTolerance)
+            {
+                body.Remaining -= elapsed;
+                return;
+            }
+
+            CompleteTimedState(monster, body, events, applyDamage);
         }
 
         internal static void CompleteWalking(Entity monster)
@@ -90,7 +72,7 @@ namespace Mooh.Core.Enemies
             body.State = GreenMonsterState.Deciding;
         }
 
-        private void Decide(Entity monster, int resolutionOrder, List<SimulationEvent> events)
+        internal void Decide(Entity monster, int resolutionOrder, List<SimulationEvent> events)
         {
             GreenMonsterBody body = monster.GreenMonsterBody!;
             GridPosition destination = monster.Position.Offset(body.FacingDirection);

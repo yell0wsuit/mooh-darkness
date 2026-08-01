@@ -23,6 +23,7 @@ namespace Mooh.Core.Simulation
         private const double TimeTolerance = 1e-12;
         private static readonly TimeSpan TimerTolerance = TimeSpan.FromTicks(1);
 
+        private readonly BlueMonsterSystem _blueMonsters;
         private readonly GravitySystem _gravity;
         private readonly GreenMonsterSystem _greenMonsters;
         private readonly double _maximumTravelPerSubstep;
@@ -81,6 +82,7 @@ namespace Mooh.Core.Simulation
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
             _gravity = new GravitySystem(collisionPolicy, random);
             _movement = new MovementSystem(world, new DefaultInteractionPolicy());
+            _blueMonsters = new BlueMonsterSystem(world, new DefaultInteractionPolicy());
             _greenMonsters = new GreenMonsterSystem(world, new DefaultInteractionPolicy());
             _playerController = world.Player is Entity player
                 ? new PlayerController(player, world, _movement, gravityDirection)
@@ -173,7 +175,7 @@ namespace Mooh.Core.Simulation
             ValidateMotionState();
             List<SimulationEvent> events = [];
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
-            _greenMonsters.DecideAll(events);
+            DecideMonsters(events);
             _playerController?.TryStart(events);
 
             double remainingSeconds = elapsed.TotalSeconds;
@@ -185,7 +187,7 @@ namespace Mooh.Core.Simulation
                 double? unlockSeconds = _world.SecondsUntilNextCellUnlock();
                 double? healthSeconds = SecondsUntilNextImmunityExpiry();
                 double? reactionSeconds = SecondsUntilPlayerReactionEnds();
-                double? monsterSeconds = _greenMonsters.SecondsUntilNextTimer();
+                double? monsterSeconds = SecondsUntilNextMonsterTimer();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -247,10 +249,7 @@ namespace Mooh.Core.Simulation
                     substepSeconds,
                     events) == true;
                 playerControlReady |= AdvancePlayerReaction(substepSeconds, events);
-                _greenMonsters.AdvanceTimers(
-                    substepSeconds,
-                    events,
-                    request => ApplyDamage(request, events));
+                AdvanceMonsterTimers(substepSeconds, events);
 
                 remainingSeconds -= substepSeconds;
                 if (remainingSeconds < TimeTolerance)
@@ -286,6 +285,55 @@ namespace Mooh.Core.Simulation
                 .Where(value => value > TimeSpan.Zero)
                 .Min();
             return remaining?.TotalSeconds;
+        }
+
+        private double? SecondsUntilNextMonsterTimer()
+        {
+            double? green = _greenMonsters.SecondsUntilNextTimer();
+            double? blue = _blueMonsters.SecondsUntilNextTimer();
+            return green is null ? blue : blue is null ? green : Math.Min(green.Value, blue.Value);
+        }
+
+        private void AdvanceMonsterTimers(double elapsedSeconds, List<SimulationEvent> events)
+        {
+            foreach (Entity entity in _world.Entities)
+            {
+                if (entity.GreenMonsterBody is not null)
+                {
+                    _greenMonsters.AdvanceTimer(
+                        entity,
+                        elapsedSeconds,
+                        events,
+                        request => ApplyDamage(request, events));
+                }
+                else if (entity.BlueMonsterBody is not null)
+                {
+                    BlueMonsterSystem.AdvanceTimer(entity, elapsedSeconds, events);
+                }
+            }
+
+            DecideMonsters(events);
+        }
+
+        private void DecideMonsters(List<SimulationEvent> events)
+        {
+            IReadOnlyList<Entity> entities = _world.Entities;
+            for (int index = 0; index < entities.Count; index++)
+            {
+                Entity entity = entities[index];
+                if (entity.GreenMonsterBody?.State == GreenMonsterState.Deciding)
+                {
+                    _greenMonsters.Decide(entity, index, events);
+                }
+                else if (entity.BlueMonsterBody?.State == BlueMonsterState.Deciding)
+                {
+                    _blueMonsters.Decide(entity, index, events);
+                }
+                else if (entity.BlueMonsterBody?.State == BlueMonsterState.DecidingAfterLeftTurn)
+                {
+                    _blueMonsters.DecideAfterLeftTurn(entity, index, events);
+                }
+            }
         }
 
         private double? SecondsUntilPlayerReactionEnds()
@@ -351,9 +399,10 @@ namespace Mooh.Core.Simulation
                 }
 
                 if (motion?.Cause == MotionCause.MonsterWalking
-                    && entity.GreenMonsterBody is null)
+                    && entity.GreenMonsterBody is null
+                    && entity.BlueMonsterBody is null)
                 {
-                    throw new InvalidOperationException("Monster walking motion requires a green-monster body.");
+                    throw new InvalidOperationException("Monster walking motion requires a monster body.");
                 }
             }
         }
@@ -408,7 +457,15 @@ namespace Mooh.Core.Simulation
                 {
                     GridPosition monsterDestination = entity.Position;
                     KinematicsSystem.Stop(entity);
-                    GreenMonsterSystem.CompleteWalking(entity);
+                    if (entity.GreenMonsterBody is not null)
+                    {
+                        GreenMonsterSystem.CompleteWalking(entity);
+                    }
+                    else
+                    {
+                        BlueMonsterSystem.CompleteWalking(entity);
+                    }
+
                     events.Add(new CellEntered(entity.Id, monsterDestination));
                     continue;
                 }
@@ -435,7 +492,7 @@ namespace Mooh.Core.Simulation
                 }
             }
 
-            _greenMonsters.DecideAll(events);
+            DecideMonsters(events);
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
             return true;
         }
