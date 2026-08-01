@@ -31,5 +31,8 @@ namespace Mooh.Core.Interactions
 
         /// <summary>The entity permits player pushing along the current gravity axis.</summary>
         GravityAxisPushable = 1 << 6,
+
+        /// <summary>The pushed entity can consume eligible occupants in its destination cell.</summary>
+        PushesThroughOccupants = 1 << 7,
     }
 }

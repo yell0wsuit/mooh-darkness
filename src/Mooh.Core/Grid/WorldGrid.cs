@@ -140,6 +140,7 @@ namespace Mooh.Core.Grid
                 _playerId = null;
             }
 
+            entity.Motion = null;
             return true;
         }
 

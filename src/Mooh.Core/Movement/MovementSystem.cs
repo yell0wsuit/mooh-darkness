@@ -84,8 +84,14 @@ namespace Mooh.Core.Movement
             }
 
             GridPosition pushedDestination = destination.Offset(request.Direction);
+            IReadOnlyList<Entity> pushedDestinationOccupants = _world.Contains(pushedDestination)
+                ? _world.GetOccupants(pushedDestination)
+                : [];
             if (!_world.Contains(pushedDestination)
-                || _world.GetOccupants(pushedDestination).Any(
+                || (pushedDestinationOccupants.Count != 0
+                    && pushed.Exists(
+                        entity => !entity.Interactions.HasFlag(InteractionMask.PushesThroughOccupants)))
+                || pushedDestinationOccupants.Any(
                     entity => !entity.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
                 || pushed.Exists(
                     entity => entity.Motion is not null

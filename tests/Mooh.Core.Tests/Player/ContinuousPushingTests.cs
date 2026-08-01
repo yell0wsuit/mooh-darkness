@@ -132,7 +132,10 @@ namespace Mooh.Core.Tests.Player
             (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
                 moveSpeed: 1,
                 pushSpeedMultiplier: 1.5);
-            Entity block = Add(world, x: 2, Pushable);
+            Entity block = Add(
+                world,
+                x: 2,
+                Pushable | InteractionMask.PushesThroughOccupants);
             Entity counterMover = Add(world, x: 3, InteractionMask.CanBePushedThrough);
             KinematicsSystem.Start(
                 counterMover,
@@ -147,6 +150,76 @@ namespace Mooh.Core.Tests.Player
             Assert.NotNull(block.Motion);
             Assert.Equal(0.75, player.Motion.Speed, precision: 12);
             Assert.Equal(1.125, block.Motion.Speed, precision: 12);
+        }
+
+        /// <summary>Verifies eligible beyond-cell occupants are removed before push authority commits.</summary>
+        [Fact]
+        public void PushThroughOccupantsAreRemovedBeforePushStarts()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
+                moveSpeed: 1,
+                pushSpeedMultiplier: 1.5);
+            Entity block = Add(
+                world,
+                x: 2,
+                Pushable | InteractionMask.PushesThroughOccupants);
+            Entity first = Add(world, x: 3, InteractionMask.CanBePushedThrough);
+            Entity second = Add(world, x: 3, InteractionMask.CanBePushedThrough);
+            simulation.SetPlayerInput(HeldRight);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.Equal([block], world.GetOccupants(new GridPosition(3, 1)));
+            _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(first.Id));
+            _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(second.Id));
+            Assert.Equal(
+                [
+                    new PushStarted(block.Id, Direction.Right),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
+                ],
+                events);
+        }
+
+        /// <summary>Verifies an ineligible beyond-cell occupant atomically blocks push-through.</summary>
+        [Fact]
+        public void IneligibleBeyondOccupantBlocksPushThroughAtomically()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
+                moveSpeed: 1,
+                pushSpeedMultiplier: 1.5);
+            Entity block = Add(
+                world,
+                x: 2,
+                Pushable | InteractionMask.PushesThroughOccupants);
+            Entity eligible = Add(world, x: 3, InteractionMask.CanBePushedThrough);
+            Entity ineligible = Add(world, x: 3, InteractionMask.None);
+            simulation.SetPlayerInput(HeldRight);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.Null(player.Motion);
+            Assert.Null(block.Motion);
+            Assert.Equal([ineligible, eligible], world.GetOccupants(new GridPosition(3, 1)));
+            Assert.Equal([new PlayerBlocked(player.Id, Direction.Right)], events);
+        }
+
+        /// <summary>Verifies a plain pushable cannot consume an otherwise eligible beyond occupant.</summary>
+        [Fact]
+        public void PushableWithoutPushThroughCapabilityIsBlocked()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
+                moveSpeed: 1,
+                pushSpeedMultiplier: 1.5);
+            Entity block = Add(world, x: 2, Pushable);
+            Entity occupant = Add(world, x: 3, InteractionMask.CanBePushedThrough);
+            simulation.SetPlayerInput(HeldRight);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.Null(player.Motion);
+            Assert.Null(block.Motion);
+            Assert.Equal([occupant], world.GetOccupants(new GridPosition(3, 1)));
+            Assert.Equal([new PlayerBlocked(player.Id, Direction.Right)], events);
         }
 
         /// <summary>Verifies that an occupant added to the authoritative destination does not cancel transit.</summary>

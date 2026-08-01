@@ -21,6 +21,7 @@ namespace Mooh.Core.Player
         private const double QuarterTurnSeconds = 0.105;
         private const double CounterMotionMultiplier = 0.75;
         private const double TimeTolerance = 1e-12;
+        private static readonly TimeSpan CellInteractionLock = TimeSpan.FromMilliseconds(150);
 
         private readonly MovementSystem _movement = movement
             ?? throw new ArgumentNullException(nameof(movement));
@@ -96,6 +97,11 @@ namespace Mooh.Core.Player
                     || HasCounterMotion(destination.Offset(direction), direction)
                 : HasCounterMotion(destination, direction);
             double speedMultiplier = hasCounterMotion ? CounterMotionMultiplier : 1;
+
+            if (plan.Result == MoveResult.Pushed)
+            {
+                RemovePushThroughOccupants(destination.Offset(direction));
+            }
 
             _world.CommitMoves(
                 [.. plan.Steps.Select(step => new PlannedMove(step.EntityId, step.From, step.To))]);
@@ -245,6 +251,7 @@ namespace Mooh.Core.Player
                 return;
             }
 
+            _world.LockCell(destination, CellInteractionLock);
             foreach (Entity entity in _world.GetOccupants(destination))
             {
                 if (!entity.Interactions.HasFlag(InteractionMask.PlayerEdible))
@@ -254,6 +261,21 @@ namespace Mooh.Core.Player
 
                 _ = _world.Remove(entity.Id);
                 events.Add(new PlayerAte(_player.Id, entity.Id));
+            }
+        }
+
+        private void RemovePushThroughOccupants(GridPosition destination)
+        {
+            IReadOnlyList<Entity> occupants = _world.GetOccupants(destination);
+            if (occupants.Count == 0)
+            {
+                return;
+            }
+
+            _world.LockCell(destination, CellInteractionLock);
+            foreach (Entity entity in occupants)
+            {
+                _ = _world.Remove(entity.Id);
             }
         }
 
