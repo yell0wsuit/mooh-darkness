@@ -6,6 +6,7 @@ using System.Linq;
 using Mooh.Core.Content;
 using Mooh.Core.Interactions;
 using Mooh.Core.Levels;
+using Mooh.Core.Shakes;
 
 using Xunit;
 
@@ -106,6 +107,56 @@ namespace Mooh.Core.Tests.Content
                 .Order(StringComparer.Ordinal)];
 
             Assert.Equal(["OTPort", "OTable", "WMine"], transparent);
+        }
+
+        /// <summary>Verifies recovered ordinary and hard shake handlers are explicit per type.</summary>
+        /// <param name="archivalType">The archival type under test.</param>
+        /// <param name="expectedOrdinary">The recovered <c>OnShake</c> reaction.</param>
+        /// <param name="expectedHard">The recovered <c>OnShakeHard</c> reaction.</param>
+        [Theory]
+        [InlineData("OBottle", ShakeReaction.Detonate3x3, ShakeReaction.Detonate3x3)]
+        [InlineData("OBaloon", ShakeReaction.Detonate3x3, ShakeReaction.Detonate3x3)]
+        [InlineData("WMine", ShakeReaction.Detonate3x3, ShakeReaction.Detonate3x3)]
+        [InlineData("WBBomb", ShakeReaction.Detonate3x3, ShakeReaction.Detonate3x3)]
+        [InlineData("BCola", ShakeReaction.Detonate3x3, ShakeReaction.Detonate3x3)]
+        [InlineData("MMBio", ShakeReaction.Detonate3x3, ShakeReaction.Detonate3x3)]
+        [InlineData("MGrT", ShakeReaction.Detonate3x3, ShakeReaction.Detonate3x3)]
+        [InlineData("MBlueR", ShakeReaction.Detonate3x3, ShakeReaction.Detonate3x3)]
+        [InlineData("OBubble", ShakeReaction.Destroy, ShakeReaction.Destroy)]
+        [InlineData("OCoin02", ShakeReaction.None, ShakeReaction.Destroy)]
+        [InlineData("ODiam05", ShakeReaction.None, ShakeReaction.Destroy)]
+        [InlineData("OEat01", ShakeReaction.None, ShakeReaction.Destroy)]
+        [InlineData("OBarel", ShakeReaction.Deferred, ShakeReaction.Deferred)]
+        [InlineData("OMagic", ShakeReaction.Deferred, ShakeReaction.Deferred)]
+        [InlineData("OArrowT", ShakeReaction.Deferred, ShakeReaction.Deferred)]
+        [InlineData("ORock01", ShakeReaction.None, ShakeReaction.None)]
+        [InlineData("OWeight", ShakeReaction.None, ShakeReaction.None)]
+        [InlineData("OFire", ShakeReaction.None, ShakeReaction.None)]
+        [InlineData("OKDKey1", ShakeReaction.None, ShakeReaction.None)]
+        [InlineData("CellsMetal01", ShakeReaction.None, ShakeReaction.None)]
+        public void RecoveredShakeReactionsAreExplicit(
+            string archivalType,
+            ShakeReaction expectedOrdinary,
+            ShakeReaction expectedHard)
+        {
+            ArchivalObjectDescriptor descriptor = ArchivalObjectCatalog.Get(archivalType);
+
+            Assert.Equal(expectedOrdinary, descriptor.ShakeReaction);
+            Assert.Equal(expectedHard, descriptor.HardShakeReaction);
+        }
+
+        /// <summary>Verifies the deferred shake handlers are exactly the recovered specializations.</summary>
+        [Fact]
+        public void DeferredShakeReactionsAreTheKnownSpecializations()
+        {
+            string[] deferred = [.. ArchivalObjectCatalog.Types
+                .Where(type => ArchivalObjectCatalog.Get(type).ShakeReaction == ShakeReaction.Deferred
+                    || ArchivalObjectCatalog.Get(type).HardShakeReaction == ShakeReaction.Deferred)
+                .Order(StringComparer.Ordinal)];
+
+            Assert.Equal(
+                ["OArrowB", "OArrowL", "OArrowR", "OArrowT", "OBarel", "OMagic"],
+                deferred);
         }
 
         /// <summary>Verifies unsupported legacy names are rejected at the catalog boundary.</summary>

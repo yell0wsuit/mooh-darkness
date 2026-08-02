@@ -10,6 +10,7 @@ using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Player;
+using Mooh.Core.Shakes;
 using Mooh.Core.Simulation;
 
 namespace Mooh.Core.Levels
@@ -154,7 +155,12 @@ namespace Mooh.Core.Levels
                 new ArchivalObjectIdentity(source, descriptor),
                 descriptor.ExplosionReaction is ExplosionReaction reaction
                     ? new ExplosionBody(reaction, descriptor.DetonatesOnLanding)
-                    : null);
+                    : null,
+                smallBeetleBody: null,
+                shakeBody: descriptor.ShakeReaction == ShakeReaction.None
+                    && descriptor.HardShakeReaction == ShakeReaction.None
+                    ? null
+                    : new ShakeBody(descriptor.ShakeReaction, descriptor.HardShakeReaction));
         }
 
         private static EntityId CreateDeterministicId(int objectId)

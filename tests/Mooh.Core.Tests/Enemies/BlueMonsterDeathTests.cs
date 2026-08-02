@@ -9,6 +9,7 @@ using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
 using Mooh.Core.Player;
+using Mooh.Core.Shakes;
 using Mooh.Core.Simulation;
 
 using Xunit;
@@ -81,7 +82,8 @@ namespace Mooh.Core.Tests.Enemies
                     1.5625,
                     Direction.Right,
                     TimeSpan.FromMilliseconds(300)),
-                explosionBody: new ExplosionBody(ExplosionReaction.Destroy, false));
+                explosionBody: new ExplosionBody(ExplosionReaction.Destroy, false),
+                shakeBody: new ShakeBody(ShakeReaction.Detonate3x3, ShakeReaction.Detonate3x3));
             world.Add(monster);
             return monster;
         }

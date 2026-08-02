@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Interactions;
+using Mooh.Core.Shakes;
 
 namespace Mooh.Core.Levels
 {
@@ -51,11 +52,14 @@ namespace Mooh.Core.Levels
 
             Add(result, "OPlayer", EntityKind.Player, InteractionMask.BlocksMovement);
             AddDirectional(result, "MGr", EntityKind.GreenMonster, InteractionMask.BlocksMovement,
-                explosionReaction: ExplosionReaction.Destroy);
+                explosionReaction: ExplosionReaction.Destroy,
+                shakeReaction: ShakeReaction.Detonate3x3);
             AddDirectional(result, "MBlue", EntityKind.BlueMonster, InteractionMask.BlocksMovement,
-                explosionReaction: ExplosionReaction.Destroy);
+                explosionReaction: ExplosionReaction.Destroy,
+                shakeReaction: ShakeReaction.Detonate3x3);
             Add(result, "MMBio", EntityKind.BioMass, InteractionMask.BlocksMovement,
-                explosionReaction: ExplosionReaction.Destroy);
+                explosionReaction: ExplosionReaction.Destroy,
+                shakeReaction: ShakeReaction.Detonate3x3);
 
             Add(result, "ORock01", EntityKind.Rock, PushableRound, hasGravity: true,
                 explosionReaction: ExplosionReaction.Destroy);
@@ -67,14 +71,18 @@ namespace Mooh.Core.Levels
                 explosionReaction: ExplosionReaction.Destroy);
             Add(result, "OBottle", EntityKind.Bottle, PushableRound, hasGravity: true,
                 explosionReaction: ExplosionReaction.Detonate3x3,
-                detonatesOnLanding: true);
-            Add(result, "OBarel", EntityKind.Barrel, PushableRound, hasGravity: true);
+                detonatesOnLanding: true,
+                shakeReaction: ShakeReaction.Detonate3x3);
+            Add(result, "OBarel", EntityKind.Barrel, PushableRound, hasGravity: true,
+                shakeReaction: ShakeReaction.Deferred);
             Add(result, "OBaloon", EntityKind.Balloon,
                 PushableRound | InteractionMask.CanBePushedThrough,
-                explosionReaction: ExplosionReaction.Detonate3x3);
+                explosionReaction: ExplosionReaction.Detonate3x3,
+                shakeReaction: ShakeReaction.Detonate3x3);
             Add(result, "OBubble", EntityKind.Bubble,
                 PushableRound | InteractionMask.CanBePushedThrough,
-                explosionReaction: ExplosionReaction.Destroy);
+                explosionReaction: ExplosionReaction.Destroy,
+                shakeReaction: ShakeReaction.Destroy);
             AddExplodableVariants(result, EntityKind.Coin, Collectible, true,
                 "OCoin01", "OCoin02", "OCoin03");
             AddExplodableVariants(result, EntityKind.Diamond, Collectible, true,
@@ -82,13 +90,16 @@ namespace Mooh.Core.Levels
             AddExplodableVariants(result, EntityKind.Food, Collectible, true,
                 "OEat01", "OEat02", "OEat03");
             Add(result, "OMagic", EntityKind.MagicGem, PushableRound, hasGravity: true,
-                explosionReaction: ExplosionReaction.Destroy);
+                explosionReaction: ExplosionReaction.Destroy,
+                shakeReaction: ShakeReaction.Deferred);
             Add(result, "BCola", EntityKind.Cola, Collectible, hasGravity: true,
                 explosionReaction: ExplosionReaction.Destroy,
-                detonatesOnLanding: true);
+                detonatesOnLanding: true,
+                shakeReaction: ShakeReaction.Detonate3x3);
             Add(result, "BIce", EntityKind.Ice, Collectible, hasGravity: true,
                 explosionReaction: ExplosionReaction.Destroy,
-                detonatesOnLanding: true);
+                detonatesOnLanding: true,
+                shakeReaction: ShakeReaction.Detonate3x3);
             AddVariants(result, EntityKind.Key,
                 InteractionMask.BlocksMovement | Collectible,
                 true,
@@ -97,7 +108,8 @@ namespace Mooh.Core.Levels
                 false,
                 "OKDDoor1", "OKDDoor2", "OKDDoor3");
             Add(result, "OFire", EntityKind.Fire, InteractionMask.RoundSupport, hasGravity: true);
-            AddDirectional(result, "OArrow", EntityKind.GravityArrow, PushableRound, hasGravity: true);
+            AddDirectional(result, "OArrow", EntityKind.GravityArrow, PushableRound, hasGravity: true,
+                shakeReaction: ShakeReaction.Deferred);
             Add(result, "OWRotL", EntityKind.WorldRotation, WorldRotation, variant: -1);
             Add(result, "OWRotR", EntityKind.WorldRotation, WorldRotation, variant: 1);
             Add(result, "OTPort", EntityKind.Teleporter, InteractionMask.MonsterTransparent);
@@ -114,7 +126,8 @@ namespace Mooh.Core.Levels
             AddLandingDetonator(result, "WROne", EntityKind.Rocket, Collectible, variant: 1);
             AddLandingDetonator(result, "WRBox", EntityKind.RocketBox, Collectible, variant: 5);
             Add(result, "WMine", EntityKind.Mine, InteractionMask.MonsterTransparent,
-                explosionReaction: ExplosionReaction.Detonate3x3);
+                explosionReaction: ExplosionReaction.Detonate3x3,
+                shakeReaction: ShakeReaction.Detonate3x3);
             AddLandingDetonator(result, "WMinesBox", EntityKind.MineBox, Collectible, variant: 5);
             AddLandingDetonator(result, "WBBomb", EntityKind.BigBomb, Collectible, variant: 1);
 
@@ -127,16 +140,17 @@ namespace Mooh.Core.Levels
             EntityKind kind,
             InteractionMask interactions,
             bool hasGravity = false,
-            ExplosionReaction? explosionReaction = null)
+            ExplosionReaction? explosionReaction = null,
+            ShakeReaction shakeReaction = ShakeReaction.None)
         {
             Add(result, prefix + "L", kind, interactions, hasGravity, variant: 0,
-                explosionReaction: explosionReaction);
+                explosionReaction: explosionReaction, shakeReaction: shakeReaction);
             Add(result, prefix + "T", kind, interactions, hasGravity, variant: 1,
-                explosionReaction: explosionReaction);
+                explosionReaction: explosionReaction, shakeReaction: shakeReaction);
             Add(result, prefix + "R", kind, interactions, hasGravity, variant: 2,
-                explosionReaction: explosionReaction);
+                explosionReaction: explosionReaction, shakeReaction: shakeReaction);
             Add(result, prefix + "B", kind, interactions, hasGravity, variant: 3,
-                explosionReaction: explosionReaction);
+                explosionReaction: explosionReaction, shakeReaction: shakeReaction);
         }
 
         private static void AddVariants(
@@ -177,6 +191,11 @@ namespace Mooh.Core.Levels
             }
         }
 
+        /// <summary>
+        /// Adds numbered treasure or food variants. The recovered types define
+        /// <c>OnShakeHard</c> as <c>ObjKill</c> and no ordinary <c>OnShake</c>, so only a hard
+        /// landing destroys them.
+        /// </summary>
         private static void AddExplodableVariants(
             IDictionary<string, ArchivalObjectDescriptor> result,
             EntityKind kind,
@@ -188,7 +207,9 @@ namespace Mooh.Core.Levels
             {
                 Add(result, archivalTypes[index], kind, interactions, hasGravity,
                     variant: index + 1,
-                    explosionReaction: ExplosionReaction.Destroy);
+                    explosionReaction: ExplosionReaction.Destroy,
+                    shakeReaction: ShakeReaction.None,
+                    hardShakeReaction: ShakeReaction.Destroy);
             }
         }
 
@@ -201,7 +222,8 @@ namespace Mooh.Core.Levels
         {
             Add(result, archivalType, kind, interactions, hasGravity: true, variant: variant,
                 explosionReaction: ExplosionReaction.Detonate3x3,
-                detonatesOnLanding: true);
+                detonatesOnLanding: true,
+                shakeReaction: ShakeReaction.Detonate3x3);
         }
 
         private static void Add(
@@ -214,7 +236,9 @@ namespace Mooh.Core.Levels
             int variant = 0,
             GravityImpactStrength impactStrength = GravityImpactStrength.Ordinary,
             ExplosionReaction? explosionReaction = null,
-            bool detonatesOnLanding = false)
+            bool detonatesOnLanding = false,
+            ShakeReaction shakeReaction = ShakeReaction.None,
+            ShakeReaction? hardShakeReaction = null)
         {
             result.Add(
                 archivalType,
@@ -227,7 +251,9 @@ namespace Mooh.Core.Levels
                     variant,
                     impactStrength,
                     explosionReaction,
-                    detonatesOnLanding));
+                    detonatesOnLanding,
+                    shakeReaction,
+                    hardShakeReaction ?? shakeReaction));
         }
     }
 }

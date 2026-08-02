@@ -14,6 +14,7 @@ using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
 using Mooh.Core.Movement;
 using Mooh.Core.Player;
+using Mooh.Core.Shakes;
 
 namespace Mooh.Core.Simulation
 {
@@ -869,19 +870,12 @@ namespace Mooh.Core.Simulation
                 return;
             }
 
+            GravityImpactStrength strength = source.GravityBody!.ImpactStrength;
+            bool hard = strength == GravityImpactStrength.Hard;
             IReadOnlyList<Entity> impacted = _world.GetOccupants(impactedPosition);
-            foreach (Entity monster in impacted)
+            foreach (Entity occupant in impacted)
             {
-                // Both monsters answer a landing shake with their own 3x3 detonation, and an
-                // iced monster is killed outright by the same shake instead.
-                if (monster.GreenMonsterBody is { IsFrozen: true })
-                {
-                    DestroyGreenMonster(monster, source.Id, spawnBeetle: false, events);
-                }
-                else if (monster.GreenMonsterBody is not null || monster.BlueMonsterBody is not null)
-                {
-                    StartExplosion(monster, events);
-                }
+                ApplyShake(occupant, source.Id, hard, events);
             }
 
             Entity? player = impacted.FirstOrDefault(
@@ -891,14 +885,52 @@ namespace Mooh.Core.Simulation
                 return;
             }
 
-            GravityImpactStrength strength = source.GravityBody!.ImpactStrength;
-            DamageKind kind = strength == GravityImpactStrength.Hard
-                ? DamageKind.HardShake
-                : DamageKind.Shake;
-            double amount = strength == GravityImpactStrength.Hard
+            DamageKind kind = hard ? DamageKind.HardShake : DamageKind.Shake;
+            double amount = hard
                 ? _difficultySpeeds.HardShakeDamage
                 : _difficultySpeeds.ShakeDamage;
             ApplyDamage(new DamageRequest(source.Id, player.Id, kind, amount), events);
+        }
+
+        /// <summary>
+        /// Dispatches one occupant's recovered <c>OnShake</c> or <c>OnShakeHard</c> handler.
+        /// Occupants that define neither are only nudged by the original and are left alone,
+        /// and a deferred handler is a recovered specialization that is not implemented yet.
+        /// </summary>
+        private void ApplyShake(
+            Entity occupant,
+            EntityId sourceEntityId,
+            bool hard,
+            List<SimulationEvent> events)
+        {
+            // An iced monster is killed outright by the same shake that would otherwise make
+            // it detonate, and it spawns no child.
+            if (occupant.GreenMonsterBody is { IsFrozen: true })
+            {
+                DestroyGreenMonster(occupant, sourceEntityId, spawnBeetle: false, events);
+                return;
+            }
+
+            ShakeBody? shake = occupant.ShakeBody;
+            if (shake is null)
+            {
+                return;
+            }
+
+            switch (hard ? shake.HardReaction : shake.OrdinaryReaction)
+            {
+                case ShakeReaction.Destroy:
+                    DestroyEntity(occupant, sourceEntityId, events);
+                    break;
+                case ShakeReaction.Detonate3x3:
+                    StartExplosion(occupant, events);
+                    break;
+                case ShakeReaction.None:
+                case ShakeReaction.Deferred:
+                    break;
+                default:
+                    throw new InvalidOperationException("Undefined shake reaction.");
+            }
         }
 
         private static bool IsAtBoundary(Entity entity)

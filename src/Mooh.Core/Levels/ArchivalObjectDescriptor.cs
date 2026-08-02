@@ -1,6 +1,7 @@
 using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Interactions;
+using Mooh.Core.Shakes;
 
 namespace Mooh.Core.Levels
 {
@@ -14,6 +15,8 @@ namespace Mooh.Core.Levels
     /// <param name="ImpactStrength">The shake strength produced by a falling landing.</param>
     /// <param name="ExplosionReaction">The reaction when reached by an explosion, if any.</param>
     /// <param name="DetonatesOnLanding">Whether a completed fall starts a 3x3 explosion.</param>
+    /// <param name="ShakeReaction">The reaction to an ordinary shake of the object's cell.</param>
+    /// <param name="HardShakeReaction">The reaction to a hard shake of the object's cell.</param>
     public sealed record ArchivalObjectDescriptor(
         string ArchivalType,
         EntityKind Kind,
@@ -23,5 +26,7 @@ namespace Mooh.Core.Levels
         int Variant = 0,
         GravityImpactStrength ImpactStrength = GravityImpactStrength.Ordinary,
         ExplosionReaction? ExplosionReaction = null,
-        bool DetonatesOnLanding = false);
+        bool DetonatesOnLanding = false,
+        ShakeReaction ShakeReaction = ShakeReaction.None,
+        ShakeReaction HardShakeReaction = ShakeReaction.None);
 }

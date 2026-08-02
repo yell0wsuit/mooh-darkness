@@ -7,6 +7,7 @@ using Mooh.Core.Interactions;
 using Mooh.Core.Levels;
 using Mooh.Core.Motion;
 using Mooh.Core.Player;
+using Mooh.Core.Shakes;
 
 namespace Mooh.Core.Entities
 {
@@ -24,6 +25,7 @@ namespace Mooh.Core.Entities
     /// <param name="archivalIdentity">The entity's optional archival type metadata.</param>
     /// <param name="explosionBody">The entity's optional explosion behavior.</param>
     /// <param name="smallBeetleBody">The entity's optional spawned small-beetle behavior.</param>
+    /// <param name="shakeBody">The entity's optional cell-shake behavior.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -35,7 +37,8 @@ namespace Mooh.Core.Entities
         BlueMonsterBody? blueMonsterBody = null,
         ArchivalObjectIdentity? archivalIdentity = null,
         ExplosionBody? explosionBody = null,
-        SmallBeetleBody? smallBeetleBody = null)
+        SmallBeetleBody? smallBeetleBody = null,
+        ShakeBody? shakeBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -69,6 +72,9 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's optional spawned small-beetle behavior.</summary>
         public SmallBeetleBody? SmallBeetleBody { get; } = smallBeetleBody;
+
+        /// <summary>Gets the entity's optional cell-shake behavior.</summary>
+        public ShakeBody? ShakeBody { get; } = shakeBody;
 
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }
