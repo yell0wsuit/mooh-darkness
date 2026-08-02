@@ -438,6 +438,7 @@ namespace Mooh.SimulationRunner
                 "ExplosionCellReached" or "ExplosionStarted" => EventFields.Position,
                 "SmallGreenBeetleSpawned" => EventFields.Position,
                 "PlayerShockStarted" => EventFields.DurationMilliseconds,
+                "LevelLost" or "LevelWon" => EventFields.None,
                 "PlayerDied" or "PlayerShockEnded" or "PlayerStopped" => EventFields.None,
                 _ => EventFields.None,
             };
@@ -486,6 +487,8 @@ namespace Mooh.SimulationRunner
             "ExplosionStarted",
             "FallStarted",
             "Landed",
+            "LevelLost",
+            "LevelWon",
             "PlayerAte",
             "PlayerBlocked",
             "PlayerMoveStarted",

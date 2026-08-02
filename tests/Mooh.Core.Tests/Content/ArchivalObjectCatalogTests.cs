@@ -90,7 +90,7 @@ namespace Mooh.Core.Tests.Content
                     | InteractionMask.BlueMonsterTarget,
                 true, 1d, 1];
             yield return ["MBlueR", EntityKind.BlueMonster,
-                InteractionMask.BlocksMovement,
+                InteractionMask.BlocksMovement | InteractionMask.LevelEndLock,
                 false, 1d, 2];
             yield return ["OWRotL", EntityKind.WorldRotation,
                 InteractionMask.BlocksMovement | InteractionMask.RoundSupport,
@@ -158,6 +158,24 @@ namespace Mooh.Core.Tests.Content
                     "WROne",
                 ],
                 targets);
+        }
+
+        /// <summary>
+        /// Verifies exactly the recovered <c>CNT_CMaskLvlEndLock</c> carriers hold the level open.
+        /// Among placed types only the two monsters carry it; the small beetle carries it too but
+        /// is spawned at runtime rather than placed.
+        /// </summary>
+        [Fact]
+        public void OnlyRecoveredMonstersCarryTheLevelEndLock()
+        {
+            string[] carriers = [.. ArchivalObjectCatalog.Types
+                .Where(type => ArchivalObjectCatalog.Get(type).Interactions
+                    .HasFlag(InteractionMask.LevelEndLock))
+                .Order(StringComparer.Ordinal)];
+
+            Assert.Equal(
+                ["MBlueB", "MBlueL", "MBlueR", "MBlueT", "MGrB", "MGrL", "MGrR", "MGrT"],
+                carriers);
         }
 
         /// <summary>Verifies recovered ordinary and hard shake handlers are explicit per type.</summary>

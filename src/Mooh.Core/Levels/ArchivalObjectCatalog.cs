@@ -25,6 +25,14 @@ namespace Mooh.Core.Levels
         private const InteractionMask PushableRound = InteractionMask.BlocksMovement
             | InteractionMask.PlayerPushable | InteractionMask.RoundSupport;
         private const InteractionMask BlueTarget = InteractionMask.BlueMonsterTarget;
+
+        /// <summary>
+        /// Matches the recovered monster mask, whose <c>CNT_CMaskLvlEndLock</c> bit keeps the level
+        /// from completing while the monster is alive.
+        /// </summary>
+        private const InteractionMask LevelEndLockCarrier = InteractionMask.BlocksMovement
+            | InteractionMask.LevelEndLock;
+
         private const InteractionMask WorldRotation = InteractionMask.BlocksMovement
             | InteractionMask.RoundSupport;
 
@@ -61,10 +69,10 @@ namespace Mooh.Core.Levels
                 "CellsWdLeft", "CellsWdTop", "CellsWdRight", "CellsWdBottom");
 
             Add(result, "OPlayer", EntityKind.Player, InteractionMask.BlocksMovement);
-            AddDirectional(result, "MGr", EntityKind.GreenMonster, InteractionMask.BlocksMovement,
+            AddDirectional(result, "MGr", EntityKind.GreenMonster, LevelEndLockCarrier,
                 explosionReaction: ExplosionReaction.Destroy,
                 shakeReaction: ShakeReaction.Detonate3x3);
-            AddDirectional(result, "MBlue", EntityKind.BlueMonster, InteractionMask.BlocksMovement,
+            AddDirectional(result, "MBlue", EntityKind.BlueMonster, LevelEndLockCarrier,
                 explosionReaction: ExplosionReaction.Destroy,
                 shakeReaction: ShakeReaction.Detonate3x3);
             Add(result, "MMBio", EntityKind.BioMass, InteractionMask.BlocksMovement | BlueTarget,

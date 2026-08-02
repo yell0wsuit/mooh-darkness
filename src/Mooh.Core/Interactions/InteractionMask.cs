@@ -40,5 +40,11 @@ namespace Mooh.Core.Interactions
 
         /// <summary>A blue monster treats the entity as a strike target.</summary>
         BlueMonsterTarget = 1 << 9,
+
+        /// <summary>
+        /// The entity holds the level open. A level is completed once no registered entity carries
+        /// this capability, provided at least one carrier existed when the level started.
+        /// </summary>
+        LevelEndLock = 1 << 10,
     }
 }

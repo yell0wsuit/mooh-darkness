@@ -108,7 +108,7 @@ namespace Mooh.Core.Tests.Player
                     new PlayerDied(player.Id),
                 ],
                 damageEvents);
-            Assert.Empty(advanceEvents);
+            Assert.Equal([new LevelLost(player.Id)], advanceEvents);
             Assert.Equal(new GridPosition(0, 0), player.Position);
         }
 

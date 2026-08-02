@@ -45,6 +45,7 @@ namespace Mooh.Core.Simulation
         private readonly DifficultySpeeds _difficultySpeeds;
         private readonly GravitySystem _gravity;
         private readonly GreenMonsterSystem _greenMonsters;
+        private readonly LevelOutcomeSystem _levelOutcome;
         private readonly double _maximumTravelPerSubstep;
         private readonly MovementSystem _movement;
         private readonly List<ScheduledExplosionCell> _pendingExplosionCells = [];
@@ -136,10 +137,17 @@ namespace Mooh.Core.Simulation
             _movement = new MovementSystem(world, new DefaultInteractionPolicy());
             _blueMonsters = new BlueMonsterSystem(world);
             _greenMonsters = new GreenMonsterSystem(world);
+            _levelOutcome = new LevelOutcomeSystem(world, _difficultySpeeds);
             _playerController = world.Player is Entity player
                 ? new PlayerController(player, world, _movement, gravityDirection, _difficultySpeeds)
                 : null;
         }
+
+        /// <summary>
+        /// Gets whether the level has been decided. The outcome becomes observable only after the
+        /// recovered settle following the deciding condition.
+        /// </summary>
+        public LevelOutcome Outcome => _levelOutcome.Outcome;
 
         /// <summary>Replaces the currently held input for the world's player.</summary>
         /// <param name="input">The latest held cardinal inputs.</param>
@@ -269,6 +277,7 @@ namespace Mooh.Core.Simulation
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
             DecideMonsters(events);
             _playerController?.TryStart(events);
+            _levelOutcome.Observe();
 
             double remainingSeconds = elapsed.TotalSeconds;
             while (remainingSeconds > 0)
@@ -282,6 +291,7 @@ namespace Mooh.Core.Simulation
                 double? reactionSeconds = SecondsUntilPlayerReactionEnds();
                 double? monsterSeconds = SecondsUntilNextMonsterTimer();
                 double? explosionSeconds = SecondsUntilNextExplosionCell();
+                double? outcomeSeconds = _levelOutcome.SecondsUntilSettle();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -331,6 +341,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingExplosionDelay);
                 }
 
+                if (outcomeSeconds is double remainingOutcomeSettle)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingOutcomeSettle);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && unlockSeconds is null
@@ -338,7 +353,8 @@ namespace Mooh.Core.Simulation
                     && bonusSeconds is null
                     && reactionSeconds is null
                     && monsterSeconds is null
-                    && explosionSeconds is null)
+                    && explosionSeconds is null
+                    && outcomeSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -386,6 +402,8 @@ namespace Mooh.Core.Simulation
                 {
                     _playerController?.ResumeOrTryStart(events, emitStoppedWhenNoInput);
                 }
+
+                _levelOutcome.Advance(substepSeconds, events);
             }
 
             return events;
@@ -614,7 +632,9 @@ namespace Mooh.Core.Simulation
             Entity beetle = new(
                 CreateSpawnedEntityId(monster.Id),
                 position,
-                InteractionMask.PlayerEdible | InteractionMask.MonsterTransparent,
+                InteractionMask.PlayerEdible
+                    | InteractionMask.MonsterTransparent
+                    | InteractionMask.LevelEndLock,
                 smallBeetleBody: new SmallBeetleBody(SmallBeetleColor.Green));
             _world.Add(beetle);
             events.Add(new SmallGreenBeetleSpawned(monster.Id, beetle.Id, position));

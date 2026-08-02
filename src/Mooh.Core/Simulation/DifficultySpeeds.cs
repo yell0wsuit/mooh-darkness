@@ -15,8 +15,10 @@ namespace Mooh.Core.Simulation
             double shakeDamage,
             double hardShakeDamage,
             double explosionDamage,
-            double foodHeal)
+            double foodHeal,
+            bool isTimed)
         {
+            IsTimed = isTimed;
             PlayerSpeed = playerSpeed;
             NormalSpeed = normalSpeed;
             MonsterSpeed = monsterSpeed;
@@ -34,7 +36,8 @@ namespace Mooh.Core.Simulation
             20,
             30,
             20,
-            40);
+            40,
+            false);
 
         /// <summary>Gets the profile for difficulty zero.</summary>
         public static DifficultySpeeds DifficultyZero { get; } = new(
@@ -44,7 +47,8 @@ namespace Mooh.Core.Simulation
             10,
             15,
             10,
-            40);
+            40,
+            false);
 
         /// <summary>Gets the timed difficulty profile.</summary>
         public static DifficultySpeeds Timed { get; } = new(
@@ -54,7 +58,8 @@ namespace Mooh.Core.Simulation
             20,
             30,
             20,
-            15);
+            15,
+            true);
 
         /// <summary>Gets the player walking speed in cells per second.</summary>
         public double PlayerSpeed { get; }
@@ -76,5 +81,12 @@ namespace Mooh.Core.Simulation
 
         /// <summary>Gets the health restored by eating one food object.</summary>
         public double FoodHeal { get; }
+
+        /// <summary>
+        /// Gets whether the profile replaces the health axis with a countdown clock. The original
+        /// bypasses the health loss condition entirely on this profile, redirecting damage and
+        /// healing to the remaining play time instead. The clock itself is not yet implemented.
+        /// </summary>
+        public bool IsTimed { get; }
     }
 }
