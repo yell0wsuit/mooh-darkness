@@ -16,6 +16,7 @@ namespace Mooh.Core.Simulation
             double hardShakeDamage,
             double explosionDamage,
             double foodHeal,
+            double beetleHeal,
             bool isTimed)
         {
             IsTimed = isTimed;
@@ -26,6 +27,7 @@ namespace Mooh.Core.Simulation
             HardShakeDamage = hardShakeDamage;
             ExplosionDamage = explosionDamage;
             FoodHeal = foodHeal;
+            BeetleHeal = beetleHeal;
         }
 
         /// <summary>Gets the standard non-timed difficulty profile.</summary>
@@ -37,6 +39,7 @@ namespace Mooh.Core.Simulation
             30,
             20,
             40,
+            2,
             false);
 
         /// <summary>Gets the profile for difficulty zero.</summary>
@@ -48,6 +51,7 @@ namespace Mooh.Core.Simulation
             15,
             10,
             40,
+            2,
             false);
 
         /// <summary>Gets the timed difficulty profile.</summary>
@@ -59,6 +63,7 @@ namespace Mooh.Core.Simulation
             30,
             20,
             15,
+            1,
             true);
 
         /// <summary>Gets the player walking speed in cells per second.</summary>
@@ -81,6 +86,13 @@ namespace Mooh.Core.Simulation
 
         /// <summary>Gets the health restored by eating one food object.</summary>
         public double FoodHeal { get; }
+
+        /// <summary>
+        /// Gets the health restored by absorbing one small beetle. The recovered
+        /// <c>Compl.HSmall</c> is <c>100.0 / 50.0</c> on both untimed profiles and drops to 1 on
+        /// the timed profile.
+        /// </summary>
+        public double BeetleHeal { get; }
 
         /// <summary>
         /// Gets whether the profile replaces the health axis with a countdown clock. The original

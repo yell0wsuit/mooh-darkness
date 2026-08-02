@@ -148,8 +148,8 @@ namespace Mooh.SimulationRunner
                         nameof(SlideStarted),
                         entity,
                         direction: value.Direction),
-                    SmallGreenBeetleSpawned value => new ObservedEvent(
-                        nameof(SmallGreenBeetleSpawned),
+                    SmallBeetleSpawned value => new ObservedEvent(
+                        nameof(SmallBeetleSpawned),
                         entity,
                         position: value.Position),
                     _ => throw new InvalidOperationException(

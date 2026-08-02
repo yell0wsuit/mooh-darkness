@@ -26,6 +26,14 @@ namespace Mooh.Core.Simulation
         private const double BoundaryTolerance = 1e-6;
         private const double ExplosionDelaySeconds = 0.2;
         private const int MonsterKillScore = 10;
+        private const int BeetleAbsorbScore = 90;
+
+        /// <summary>
+        /// The recovered <c>CNT_OPrm_SpeedSmBeetle</c> factor against <c>Compl.SpeedMon</c>. The
+        /// original also scales each segment by <c>Rand.FRange(0.9, 1.1)</c>; that jitter is
+        /// deliberately omitted so beetle flight stays reproducible.
+        /// </summary>
+        private const double BeetleSpeedMultiplier = 0.5;
         private const double TimeTolerance = 1e-12;
         private static readonly TimeSpan ExplosionCellLockDuration = TimeSpan.FromMilliseconds(500);
         private static readonly (int X, int Y)[] ExplosionNeighborOffsets =
@@ -50,6 +58,7 @@ namespace Mooh.Core.Simulation
         private readonly MovementSystem _movement;
         private readonly List<ScheduledExplosionCell> _pendingExplosionCells = [];
         private readonly PlayerController? _playerController;
+        private readonly SmallBeetleSystem _smallBeetles;
         private readonly WorldGrid _world;
         private Direction _gravityDirection;
         private long _nextExplosionOrder;
@@ -137,6 +146,7 @@ namespace Mooh.Core.Simulation
             _movement = new MovementSystem(world, new DefaultInteractionPolicy());
             _blueMonsters = new BlueMonsterSystem(world);
             _greenMonsters = new GreenMonsterSystem(world);
+            _smallBeetles = new SmallBeetleSystem(world);
             _levelOutcome = new LevelOutcomeSystem(world, _difficultySpeeds);
             _playerController = world.Player is Entity player
                 ? new PlayerController(player, world, _movement, gravityDirection, _difficultySpeeds)
@@ -291,6 +301,7 @@ namespace Mooh.Core.Simulation
                 double? reactionSeconds = SecondsUntilPlayerReactionEnds();
                 double? monsterSeconds = SecondsUntilNextMonsterTimer();
                 double? explosionSeconds = SecondsUntilNextExplosionCell();
+                double? beetleSeconds = _smallBeetles.SecondsUntilNextTimer();
                 double? outcomeSeconds = _levelOutcome.SecondsUntilSettle();
 
                 double substepSeconds = remainingSeconds;
@@ -341,6 +352,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingExplosionDelay);
                 }
 
+                if (beetleSeconds is double remainingBeetleTimer)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingBeetleTimer);
+                }
+
                 if (outcomeSeconds is double remainingOutcomeSettle)
                 {
                     substepSeconds = Math.Min(substepSeconds, remainingOutcomeSettle);
@@ -354,6 +370,7 @@ namespace Mooh.Core.Simulation
                     && reactionSeconds is null
                     && monsterSeconds is null
                     && explosionSeconds is null
+                    && beetleSeconds is null
                     && outcomeSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
@@ -373,6 +390,10 @@ namespace Mooh.Core.Simulation
                     substepSeconds,
                     events) == true;
                 playerControlReady |= AdvancePlayerReaction(substepSeconds, events);
+                // Beetles advance first, so a wait that expires this substep is decided by the
+                // DecideMonsters pass at the end of AdvanceMonsterTimers rather than one substep
+                // later.
+                AdvanceBeetles(substepSeconds, events);
                 AdvanceMonsterTimers(substepSeconds, events);
                 bool resolvedExplosion = ResolvePendingExplosionCells(events);
 
@@ -502,7 +523,7 @@ namespace Mooh.Core.Simulation
         private void StartExplosion(Entity source, List<SimulationEvent> events)
         {
             GridPosition center = source.Position;
-            if (source.GreenMonsterBody is GreenMonsterBody greenMonster)
+            if (IsMonster(source))
             {
                 if (_world.Entities.All(entity => entity.Id != source.Id))
                 {
@@ -510,11 +531,7 @@ namespace Mooh.Core.Simulation
                 }
 
                 events.Add(new ExplosionStarted(source.Id, center));
-                DestroyGreenMonster(
-                    source,
-                    source.Id,
-                    spawnBeetle: !greenMonster.IsFrozen && !greenMonster.IsSmall,
-                    events);
+                DestroyMonster(source, source.Id, SpawnsBeetleOnDeath(source), events);
             }
             else
             {
@@ -525,7 +542,6 @@ namespace Mooh.Core.Simulation
 
                 events.Add(new ExplosionStarted(source.Id, center));
                 events.Add(new EntityDestroyed(source.Id, source.Id));
-                AwardKillScore(source);
             }
 
             ResolveExplosionCell(source.Id, center, events);
@@ -564,13 +580,17 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
-                if (occupant.GreenMonsterBody is GreenMonsterBody greenMonster)
+                if (IsMonster(occupant))
                 {
-                    DestroyGreenMonster(
-                        occupant,
-                        sourceEntityId,
-                        spawnBeetle: !greenMonster.IsFrozen && !greenMonster.IsSmall,
-                        events);
+                    DestroyMonster(occupant, sourceEntityId, SpawnsBeetleOnDeath(occupant), events);
+                    continue;
+                }
+
+                // A beetle is immune to blasts for the recovered CNT_ImTime after it spawns, so a
+                // monster's own death blast cannot kill the child it just spawned.
+                if (occupant.SmallBeetleBody is { RemainingImmunity: var immunity }
+                    && immunity > TimeSpan.Zero)
+                {
                     continue;
                 }
 
@@ -589,29 +609,47 @@ namespace Mooh.Core.Simulation
             }
         }
 
+        /// <summary>
+        /// Removes one entity. A monster is routed through <see cref="DestroyMonster"/> so no
+        /// path can remove one without running its recovered <c>_OnKillInt</c> spawn.
+        /// </summary>
         private void DestroyEntity(Entity entity, EntityId sourceEntityId, List<SimulationEvent> events)
         {
+            if (IsMonster(entity))
+            {
+                DestroyMonster(entity, sourceEntityId, SpawnsBeetleOnDeath(entity), events);
+                return;
+            }
+
             if (_world.Remove(entity.Id))
             {
                 events.Add(new EntityDestroyed(entity.Id, sourceEntityId));
-                AwardKillScore(entity);
             }
+        }
+
+        private static bool IsMonster(Entity entity)
+        {
+            return entity.GreenMonsterBody is not null || entity.BlueMonsterBody is not null;
         }
 
         /// <summary>
-        /// Awards the recovered kill score for destroyed entities that carry one. Only the
-        /// monsters register a kill score in the original object table; ordinary objects and
-        /// collectibles score when eaten instead.
+        /// Applies the recovered <c>_OnKillInt</c> suppression. The original skips the child while
+        /// the monster is edible under the glasses bonus or while the ice bonus is active. Neither
+        /// bonus is wired to Blue Monsters yet, so a Blue Monster always spawns its beetle.
         /// </summary>
-        private void AwardKillScore(Entity entity)
+        private static bool SpawnsBeetleOnDeath(Entity monster)
         {
-            if (entity.BlueMonsterBody is not null)
-            {
-                _world.Player?.PlayerBody?.Progress.AddScore(MonsterKillScore);
-            }
+            return monster.GreenMonsterBody is GreenMonsterBody green
+                ? !green.IsFrozen && !green.IsSmall
+                : monster.BlueMonsterBody is not null;
         }
 
-        private void DestroyGreenMonster(
+        /// <summary>
+        /// Removes a defeated monster and applies its recovered <c>_OnKillInt</c> hook. Both
+        /// monster families spawn a beetle of their own color at the cell the monster occupied,
+        /// unless the kill came from a bonus that suppresses the child.
+        /// </summary>
+        private void DestroyMonster(
             Entity monster,
             EntityId sourceEntityId,
             bool spawnBeetle,
@@ -621,6 +659,9 @@ namespace Mooh.Core.Simulation
             { Cause: MotionCause.MonsterWalking, Progress: < 0.5 } motion
                 ? monster.Position.Offset(motion.SegmentDirection.Opposite())
                 : monster.Position;
+            SmallBeetleColor color = monster.BlueMonsterBody is not null
+                ? SmallBeetleColor.Blue
+                : SmallBeetleColor.Green;
             if (!_world.Remove(monster.Id))
             {
                 return;
@@ -633,15 +674,19 @@ namespace Mooh.Core.Simulation
                 return;
             }
 
+            // The recovered mask is ShadowObj | LvlEndLock | CellCanExplode | MonShadow. It holds
+            // no CellLockMotion and no PlCanEat, so the beetle neither blocks the player nor is
+            // eaten out of a cell; contact absorbs it instead.
             Entity beetle = new(
                 CreateSpawnedEntityId(monster.Id),
                 position,
-                InteractionMask.PlayerEdible
-                    | InteractionMask.MonsterTransparent
-                    | InteractionMask.LevelEndLock,
-                smallBeetleBody: new SmallBeetleBody(SmallBeetleColor.Green));
+                InteractionMask.MonsterTransparent | InteractionMask.LevelEndLock,
+                smallBeetleBody: new SmallBeetleBody(
+                    color,
+                    _difficultySpeeds.MonsterSpeed * BeetleSpeedMultiplier),
+                explosionBody: new ExplosionBody(ExplosionReaction.Destroy, detonatesOnLanding: false));
             _world.Add(beetle);
-            events.Add(new SmallGreenBeetleSpawned(monster.Id, beetle.Id, position));
+            events.Add(new SmallBeetleSpawned(monster.Id, beetle.Id, position, color));
         }
 
         private EntityId CreateSpawnedEntityId(EntityId parentEntityId)
@@ -706,6 +751,58 @@ namespace Mooh.Core.Simulation
                 {
                     _blueMonsters.DecideAfterLeftTurn(entity, index, events);
                 }
+                else if (entity.SmallBeetleBody?.State == SmallBeetleState.Deciding)
+                {
+                    _smallBeetles.Decide(entity, index, events);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Advances spawned beetles, removing any whose recovered lifetime has run out and
+        /// absorbing any that now shares a cell with a live player.
+        /// </summary>
+        private void AdvanceBeetles(double elapsedSeconds, List<SimulationEvent> events)
+        {
+            foreach (Entity beetle in _world.Entities.Where(entity => entity.SmallBeetleBody is not null))
+            {
+                SmallBeetleSystem.AdvanceTimers(
+                    beetle,
+                    elapsedSeconds,
+                    expired => DestroyEntity(expired, expired.Id, events));
+            }
+
+            AbsorbBeetles(events);
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>_PlHere</c> collision hook. The beetle carries
+        /// <c>CNT_CMaskPlColl</c> and its flight test excludes the player, so it flies into the
+        /// player's cell and is absorbed there rather than being eaten out of a blocking cell.
+        /// </summary>
+        private void AbsorbBeetles(List<SimulationEvent> events)
+        {
+            Entity? player = _world.Player;
+            if (player is null || player.HealthBody is not HealthBody health || health.IsDead)
+            {
+                return;
+            }
+
+            Entity[] absorbed =
+            [
+                .. _world.Entities.Where(
+                    entity => entity.SmallBeetleBody is not null && entity.Position == player.Position),
+            ];
+            foreach (Entity beetle in absorbed)
+            {
+                if (!_world.Remove(beetle.Id))
+                {
+                    continue;
+                }
+
+                player.PlayerBody?.Progress.AddScore(BeetleAbsorbScore);
+                health.Heal(_difficultySpeeds.BeetleHeal);
+                events.Add(new PlayerAte(player.Id, beetle.Id));
             }
         }
 
@@ -779,7 +876,8 @@ namespace Mooh.Core.Simulation
 
                 if (motion?.Cause == MotionCause.MonsterWalking
                     && entity.GreenMonsterBody is null
-                    && entity.BlueMonsterBody is null)
+                    && entity.BlueMonsterBody is null
+                    && entity.SmallBeetleBody is null)
                 {
                     throw new InvalidOperationException("Monster walking motion requires a monster body.");
                 }
@@ -842,6 +940,10 @@ namespace Mooh.Core.Simulation
                     if (entity.GreenMonsterBody is not null)
                     {
                         GreenMonsterSystem.CompleteWalking(entity);
+                    }
+                    else if (entity.SmallBeetleBody is not null)
+                    {
+                        SmallBeetleSystem.CompleteFlight(entity);
                     }
                     else
                     {
@@ -932,7 +1034,7 @@ namespace Mooh.Core.Simulation
             // it detonate, and it spawns no child.
             if (occupant.GreenMonsterBody is { IsFrozen: true })
             {
-                DestroyGreenMonster(occupant, sourceEntityId, spawnBeetle: false, events);
+                DestroyMonster(occupant, sourceEntityId, spawnBeetle: false, events);
                 return;
             }
 

@@ -33,8 +33,8 @@ namespace Mooh.Core.Tests.Enemies
             _ = simulation.Detonate(explosive.Id);
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(200));
 
-            SmallGreenBeetleSpawned spawned = Assert.Single(
-                events.OfType<SmallGreenBeetleSpawned>());
+            SmallBeetleSpawned spawned = Assert.Single(
+                events.OfType<SmallBeetleSpawned>());
             Assert.Equal(monster.Id, spawned.EntityId);
             Assert.Equal(monster.Position, spawned.Position);
             Entity beetle = world.GetEntity(spawned.SpawnedEntityId);
@@ -62,7 +62,7 @@ namespace Mooh.Core.Tests.Enemies
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(1));
 
             Assert.Contains(events, item => item == new ExplosionStarted(monster.Id, monster.Position));
-            _ = Assert.Single(events.OfType<SmallGreenBeetleSpawned>());
+            _ = Assert.Single(events.OfType<SmallBeetleSpawned>());
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(monster.Id));
         }
 
@@ -86,8 +86,8 @@ namespace Mooh.Core.Tests.Enemies
 
             Assert.Contains(events, item => item is ExplosionStarted started
                 && started.EntityId == chain.Id);
-            SmallGreenBeetleSpawned spawned = Assert.Single(
-                events.OfType<SmallGreenBeetleSpawned>());
+            SmallBeetleSpawned spawned = Assert.Single(
+                events.OfType<SmallBeetleSpawned>());
             Assert.Equal(new GridPosition(3, 2), spawned.Position);
             Assert.Equal(spawned.Position, world.GetEntity(spawned.SpawnedEntityId).Position);
         }
@@ -119,9 +119,9 @@ namespace Mooh.Core.Tests.Enemies
                 SimulationWorld simulation = CreateSimulation(world);
 
                 _ = simulation.Detonate(explosive.Id);
-                SmallGreenBeetleSpawned spawned = Assert.Single(
+                SmallBeetleSpawned spawned = Assert.Single(
                     simulation.Advance(TimeSpan.FromMilliseconds(200))
-                        .OfType<SmallGreenBeetleSpawned>());
+                        .OfType<SmallBeetleSpawned>());
                 return spawned.SpawnedEntityId;
             }
         }

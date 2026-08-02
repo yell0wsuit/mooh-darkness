@@ -46,5 +46,12 @@ namespace Mooh.Core.Interactions
         /// this capability, provided at least one carrier existed when the level started.
         /// </summary>
         LevelEndLock = 1 << 10,
+
+        /// <summary>
+        /// The entity stops a flying entity from entering its cell.
+        /// Only terrain cells and tunnels carry it, so a beetle flies
+        /// over rocks, monsters and collectibles but not through a wall.
+        /// </summary>
+        BlocksFlight = 1 << 11,
     }
 }

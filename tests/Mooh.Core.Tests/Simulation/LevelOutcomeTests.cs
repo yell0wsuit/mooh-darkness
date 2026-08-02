@@ -29,7 +29,7 @@ namespace Mooh.Core.Tests.Simulation
         {
             WorldGrid world = new(7, 5);
             Entity player = AddPlayer(world, new GridPosition(0, 0));
-            Entity monster = AddBlueMonster(world, new GridPosition(4, 2));
+            Entity carrier = AddLockCarrier(world, new GridPosition(4, 2));
             Entity explosive = AddExplosive(world, new GridPosition(3, 2));
             SimulationWorld simulation = CreateSimulation(world);
 
@@ -37,7 +37,7 @@ namespace Mooh.Core.Tests.Simulation
             IReadOnlyList<SimulationEvent> beforeSettle = simulation.Advance(
                 TimeSpan.FromMilliseconds(2199));
 
-            _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(monster.Id));
+            _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(carrier.Id));
             Assert.Empty(beforeSettle.OfType<LevelWon>());
             Assert.Equal(LevelOutcome.InProgress, simulation.Outcome);
 
@@ -76,7 +76,7 @@ namespace Mooh.Core.Tests.Simulation
             _ = simulation.Detonate(explosive.Id);
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(5));
 
-            SmallGreenBeetleSpawned spawned = Assert.Single(events.OfType<SmallGreenBeetleSpawned>());
+            SmallBeetleSpawned spawned = Assert.Single(events.OfType<SmallBeetleSpawned>());
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(monster.Id));
             Assert.True(world.GetEntity(spawned.SpawnedEntityId)
                 .Interactions.HasFlag(InteractionMask.LevelEndLock));
@@ -84,22 +84,43 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(LevelOutcome.InProgress, simulation.Outcome);
         }
 
-        /// <summary>Verifies eating the last surviving beetle completes the level.</summary>
+        /// <summary>
+        /// Verifies the beetle a Blue Monster leaves behind also holds the level open. The
+        /// recovered <c>_OnKillInt</c> is identical in both monster families.
+        /// </summary>
         [Fact]
-        public void EatingTheLastSpawnedBeetleWinsTheLevel()
+        public void BeetleSpawnedByTheLastBlueMonsterBlocksTheWin()
         {
             WorldGrid world = new(7, 5);
-            _ = AddPlayer(world, new GridPosition(1, 2));
-            Entity monster = AddGreenMonster(world, new GridPosition(2, 2));
+            _ = AddPlayer(world, new GridPosition(0, 0));
+            Entity monster = AddBlueMonster(world, new GridPosition(4, 2));
             Entity explosive = AddExplosive(world, new GridPosition(3, 2));
             SimulationWorld simulation = CreateSimulation(world);
 
             _ = simulation.Detonate(explosive.Id);
-            _ = simulation.Advance(TimeSpan.FromMilliseconds(200));
-            _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(monster.Id));
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(5));
 
-            simulation.SetPlayerInput(
-                new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+            SmallBeetleSpawned spawned = Assert.Single(events.OfType<SmallBeetleSpawned>());
+            Assert.Equal(SmallBeetleColor.Blue, spawned.Color);
+            _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(monster.Id));
+            Assert.Empty(events.OfType<LevelWon>());
+            Assert.Equal(LevelOutcome.InProgress, simulation.Outcome);
+        }
+
+        /// <summary>
+        /// Verifies the level completes once the last beetle reaches the player and is absorbed.
+        /// The beetle flies at the player on its own, so the player need not chase it.
+        /// </summary>
+        [Fact]
+        public void AbsorbingTheLastSpawnedBeetleWinsTheLevel()
+        {
+            WorldGrid world = new(7, 5);
+            _ = AddPlayer(world, new GridPosition(1, 2));
+            _ = AddGreenMonster(world, new GridPosition(2, 2));
+            Entity explosive = AddExplosive(world, new GridPosition(3, 2));
+            SimulationWorld simulation = CreateSimulation(world);
+
+            _ = simulation.Detonate(explosive.Id);
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(5));
 
             _ = Assert.Single(events.OfType<PlayerAte>());
@@ -294,6 +315,23 @@ namespace Mooh.Core.Tests.Simulation
                 shakeBody: new ShakeBody(ShakeReaction.Detonate3x3, ShakeReaction.Detonate3x3));
             world.Add(monster);
             return monster;
+        }
+
+        /// <summary>
+        /// Adds a level-end lock carrier that is not a monster, so its destruction leaves no
+        /// spawned beetle behind.
+        /// </summary>
+        private static Entity AddLockCarrier(WorldGrid world, GridPosition position)
+        {
+            Entity carrier = new(
+                EntityId.New(),
+                position,
+                InteractionMask.BlocksMovement
+                    | InteractionMask.MovementLocked
+                    | InteractionMask.LevelEndLock,
+                explosionBody: new ExplosionBody(ExplosionReaction.Destroy, false));
+            world.Add(carrier);
+            return carrier;
         }
 
         private static Entity AddExplosive(WorldGrid world, GridPosition position)

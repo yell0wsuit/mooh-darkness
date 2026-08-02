@@ -60,7 +60,7 @@ namespace Mooh.Core.Tests.Enemies
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(1));
 
             Assert.Contains(events, item => item == new PlayerAte(player.Id, monster.Id));
-            Assert.DoesNotContain(events, item => item is SmallGreenBeetleSpawned);
+            Assert.DoesNotContain(events, item => item is SmallBeetleSpawned);
             Assert.Equal(10, player.PlayerBody!.Progress.Score);
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(monster.Id));
         }

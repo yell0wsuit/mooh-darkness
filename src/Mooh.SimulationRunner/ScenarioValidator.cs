@@ -436,7 +436,7 @@ namespace Mooh.SimulationRunner
                 "EnemyTransformationStarted" => EventFields.DurationMilliseconds | EventFields.IsSmall,
                 "EnemyTransformationCompleted" => EventFields.IsSmall,
                 "ExplosionCellReached" or "ExplosionStarted" => EventFields.Position,
-                "SmallGreenBeetleSpawned" => EventFields.Position,
+                "SmallBeetleSpawned" => EventFields.Position,
                 "PlayerShockStarted" => EventFields.DurationMilliseconds,
                 "LevelLost" or "LevelWon" => EventFields.None,
                 "PlayerDied" or "PlayerShockEnded" or "PlayerStopped" => EventFields.None,
@@ -502,7 +502,7 @@ namespace Mooh.SimulationRunner
             "PlayerStopped",
             "PushStarted",
             "SlideStarted",
-            "SmallGreenBeetleSpawned",
+            "SmallBeetleSpawned",
         ];
 
         private static void ValidateFinalState(ScenarioDocument scenario, string source)

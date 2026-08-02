@@ -60,14 +60,17 @@ namespace Mooh.Core.Tests.Content
         public static IEnumerable<object[]> RepresentativeDescriptors()
         {
             yield return ["CellsMetal01", EntityKind.MetalTerrain,
-                InteractionMask.BlocksMovement | InteractionMask.MovementLocked | InteractionMask.RoundSupport,
+                InteractionMask.BlocksMovement | InteractionMask.MovementLocked
+                    | InteractionMask.RoundSupport | InteractionMask.BlocksFlight,
                 false, 1d, 0];
             yield return ["CellsEat01", EntityKind.DiggableTerrain,
                 InteractionMask.BlocksMovement | InteractionMask.MovementLocked
-                    | InteractionMask.PlayerEdible | InteractionMask.CanBePushedThrough,
+                    | InteractionMask.PlayerEdible | InteractionMask.CanBePushedThrough
+                    | InteractionMask.BlocksFlight,
                 false, 1d, 0];
             yield return ["CellsSolid01", EntityKind.DestructibleTerrain,
-                InteractionMask.BlocksMovement | InteractionMask.MovementLocked,
+                InteractionMask.BlocksMovement | InteractionMask.MovementLocked
+                    | InteractionMask.BlocksFlight,
                 false, 1d, 0];
             yield return ["ORock01", EntityKind.Rock,
                 InteractionMask.BlocksMovement | InteractionMask.PlayerPushable | InteractionMask.RoundSupport,
@@ -354,6 +357,27 @@ namespace Mooh.Core.Tests.Content
             return [.. ArchivalObjectCatalog.Types
                 .Where(type => ArchivalObjectCatalog.Get(type).Interactions.HasFlag(capability))
                 .Order(StringComparer.Ordinal)];
+        }
+
+        /// <summary>
+        /// Verifies exactly the recovered <c>CNT_CMaskPartsCollide</c> carriers stop a flying
+        /// entity. Every terrain cell family and every tunnel registers the bit; the pipes, which
+        /// look like tunnels and are equally solid, do not.
+        /// </summary>
+        [Fact]
+        public void OnlyRecoveredPartsCollideTypesBlockFlight()
+        {
+            Assert.Equal(
+                [
+                    "CellsEat01", "CellsMetal01", "CellsMetalBottom", "CellsMetalLeft",
+                    "CellsMetalRight", "CellsMetalTop", "CellsSolid01", "CellsSolidPl",
+                    "CellsSolidWd", "CellsWdBottom", "CellsWdLeft", "CellsWdRight", "CellsWdTop",
+                    "DCellsEat01", "DCellsSolid01", "JCellsEat01", "JCellsSolid01",
+                    "TonnelBottomLeft", "TonnelDB2T", "TonnelDL2R", "TonnelDR2L", "TonnelDT2B",
+                    "TonnelHor", "TonnelLeftTop", "TonnelRightBottom", "TonnelTopRight",
+                    "TonnelVert",
+                ],
+                CarriersOf(InteractionMask.BlocksFlight));
         }
 
         /// <summary>Verifies unsupported legacy names are rejected at the catalog boundary.</summary>

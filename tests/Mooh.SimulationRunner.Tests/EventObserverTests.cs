@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using Mooh.Core.Combat;
+using Mooh.Core.Enemies;
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Simulation;
@@ -63,10 +64,11 @@ namespace Mooh.SimulationRunner.Tests
                     true,
                     TimeSpan.FromMilliseconds(375)),
                 new EnemyTransformationCompleted(monster, true),
-                new SmallGreenBeetleSpawned(
+                new SmallBeetleSpawned(
                     monster,
                     EntityId.New(),
-                    new GridPosition(2, 2)),
+                    new GridPosition(2, 2),
+                    SmallBeetleColor.Green),
                 new DamageApplied(player, monster, DamageKind.Strike, 20, 80),
                 new DamageIgnored(
                     player,
@@ -145,7 +147,7 @@ namespace Mooh.SimulationRunner.Tests
                 observed[21]);
             Assert.Equal(
                 new ObservedEvent(
-                    "SmallGreenBeetleSpawned",
+                    "SmallBeetleSpawned",
                     "monster",
                     position: new GridPosition(2, 2)),
                 observed[22]);

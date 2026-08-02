@@ -24,6 +24,13 @@ namespace Mooh.Core.Levels
         private const InteractionMask FixedBlock = InteractionMask.BlocksMovement | InteractionMask.MovementLocked;
 
         /// <summary>
+        /// Matches the recovered <c>CNT_CMaskPartsCollide</c> bit. Among placed types only the
+        /// terrain cell families and the tunnels register it; the visually similar pipes do not,
+        /// so a small beetle can fly through a pipe cell but not through a wall.
+        /// </summary>
+        private const InteractionMask Flightproof = InteractionMask.BlocksFlight;
+
+        /// <summary>
         /// Matches the recovered edible-cell mask, which adds the player-eat and push-through bits
         /// to a motion-locked cell. The player consumes such a cell instead of being blocked by it,
         /// and a weight pushed into the cell in front consumes it as well.
@@ -77,13 +84,14 @@ namespace Mooh.Core.Levels
         {
             Dictionary<string, ArchivalObjectDescriptor> result = [];
 
-            AddExplodableMany(result, EntityKind.DiggableTerrain, EdibleBlock,
+            AddExplodableMany(result, EntityKind.DiggableTerrain, EdibleBlock | Flightproof,
                 "CellsEat01", "DCellsEat01", "JCellsEat01");
-            AddExplodableMany(result, EntityKind.DestructibleTerrain, FixedBlock,
+            AddExplodableMany(result, EntityKind.DestructibleTerrain, FixedBlock | Flightproof,
                 "CellsSolid01", "CellsSolidPl", "CellsSolidWd", "DCellsSolid01", "JCellsSolid01");
-            AddMany(result, EntityKind.MetalTerrain, FixedBlock | InteractionMask.RoundSupport,
+            AddMany(result, EntityKind.MetalTerrain,
+                FixedBlock | InteractionMask.RoundSupport | Flightproof,
                 "CellsMetal01", "CellsMetalLeft", "CellsMetalTop", "CellsMetalRight", "CellsMetalBottom");
-            AddExplodableMany(result, EntityKind.WoodTerrain, FixedBlock,
+            AddExplodableMany(result, EntityKind.WoodTerrain, FixedBlock | Flightproof,
                 "CellsWdLeft", "CellsWdTop", "CellsWdRight", "CellsWdBottom");
 
             Add(result, "OPlayer", EntityKind.Player, InteractionMask.BlocksMovement);
@@ -153,7 +161,8 @@ namespace Mooh.Core.Levels
 
             AddExplodableMany(result, EntityKind.Pipe, FixedBlock | InteractionMask.RoundSupport,
                 "PipeHor", "PipeVert", "PipeLeftTop", "PipeRightBottom", "PipeTopRight", "PipeBottomLeft");
-            AddMany(result, EntityKind.Tunnel, FixedBlock | InteractionMask.RoundSupport,
+            AddMany(result, EntityKind.Tunnel,
+                FixedBlock | InteractionMask.RoundSupport | Flightproof,
                 "TonnelHor", "TonnelVert", "TonnelLeftTop", "TonnelRightBottom", "TonnelTopRight",
                 "TonnelBottomLeft", "TonnelDL2R", "TonnelDR2L", "TonnelDT2B", "TonnelDB2T");
 
