@@ -13,6 +13,15 @@ namespace Mooh.Core.Levels
     {
         private const InteractionMask Collectible = InteractionMask.PlayerEdible | InteractionMask.RoundSupport;
         private const InteractionMask FixedBlock = InteractionMask.BlocksMovement | InteractionMask.MovementLocked;
+
+        /// <summary>
+        /// Matches the recovered edible-cell mask, which adds the player-eat and push-through bits
+        /// to a motion-locked cell. The player consumes such a cell instead of being blocked by it,
+        /// and a weight pushed into the cell in front consumes it as well.
+        /// </summary>
+        private const InteractionMask EdibleBlock = FixedBlock
+            | InteractionMask.PlayerEdible | InteractionMask.CanBePushedThrough;
+
         private const InteractionMask PushableRound = InteractionMask.BlocksMovement
             | InteractionMask.PlayerPushable | InteractionMask.RoundSupport;
         private const InteractionMask BlueTarget = InteractionMask.BlueMonsterTarget;
@@ -42,7 +51,7 @@ namespace Mooh.Core.Levels
         {
             Dictionary<string, ArchivalObjectDescriptor> result = [];
 
-            AddExplodableMany(result, EntityKind.DiggableTerrain, FixedBlock,
+            AddExplodableMany(result, EntityKind.DiggableTerrain, EdibleBlock,
                 "CellsEat01", "DCellsEat01", "JCellsEat01");
             AddExplodableMany(result, EntityKind.DestructibleTerrain, FixedBlock,
                 "CellsSolid01", "CellsSolidPl", "CellsSolidWd", "DCellsSolid01", "JCellsSolid01");

@@ -61,6 +61,13 @@ namespace Mooh.Core.Tests.Content
             yield return ["CellsMetal01", EntityKind.MetalTerrain,
                 InteractionMask.BlocksMovement | InteractionMask.MovementLocked | InteractionMask.RoundSupport,
                 false, 1d, 0];
+            yield return ["CellsEat01", EntityKind.DiggableTerrain,
+                InteractionMask.BlocksMovement | InteractionMask.MovementLocked
+                    | InteractionMask.PlayerEdible | InteractionMask.CanBePushedThrough,
+                false, 1d, 0];
+            yield return ["CellsSolid01", EntityKind.DestructibleTerrain,
+                InteractionMask.BlocksMovement | InteractionMask.MovementLocked,
+                false, 1d, 0];
             yield return ["ORock01", EntityKind.Rock,
                 InteractionMask.BlocksMovement | InteractionMask.PlayerPushable | InteractionMask.RoundSupport,
                 true, 1d, 0];
@@ -97,6 +104,30 @@ namespace Mooh.Core.Tests.Content
             yield return ["WMine", EntityKind.Mine,
                 InteractionMask.MonsterTransparent,
                 false, 1d, 0];
+        }
+
+        /// <summary>
+        /// Verifies only the recovered eat-cell families carry the player-eat bit. The original
+        /// places that bit and the push-through bit on those three families alone, so every other
+        /// terrain family must remain solid.
+        /// </summary>
+        [Fact]
+        public void OnlyRecoveredEatCellFamiliesAreDiggable()
+        {
+            string[] diggableTerrain = [.. ArchivalObjectCatalog.Types
+                .Where(type => ArchivalObjectCatalog.Get(type).Kind is EntityKind.DiggableTerrain
+                    or EntityKind.DestructibleTerrain
+                    or EntityKind.MetalTerrain
+                    or EntityKind.WoodTerrain)
+                .Where(type => ArchivalObjectCatalog.Get(type).Interactions
+                    .HasFlag(InteractionMask.PlayerEdible))
+                .Order(StringComparer.Ordinal)];
+
+            Assert.Equal(["CellsEat01", "DCellsEat01", "JCellsEat01"], diggableTerrain);
+            Assert.All(
+                diggableTerrain,
+                type => Assert.True(ArchivalObjectCatalog.Get(type).Interactions
+                    .HasFlag(InteractionMask.CanBePushedThrough)));
         }
 
         /// <summary>Verifies only the recovered monster-shadow types are transparent to monster navigation.</summary>
