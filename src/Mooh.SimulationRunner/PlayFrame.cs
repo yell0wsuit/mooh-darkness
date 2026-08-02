@@ -3,7 +3,9 @@ using System.Collections.Generic;
 namespace Mooh.SimulationRunner
 {
     /// <summary>Describes one rendered frame of an interactive play session.</summary>
-    /// <param name="Rows">One emoji string per grid row.</param>
+    /// <param name="Sprites">Every entity at its interpolated position, in ascending draw order.</param>
+    /// <param name="Width">The world width in cells.</param>
+    /// <param name="Height">The world height in cells.</param>
     /// <param name="Level">The one-based level number being played.</param>
     /// <param name="LevelCount">The number of levels in the pack.</param>
     /// <param name="Score">The monotonic cumulative score.</param>
@@ -13,7 +15,9 @@ namespace Mooh.SimulationRunner
     /// <param name="State">The session state name.</param>
     /// <param name="Reaction">The player's damage reaction name.</param>
     public sealed record PlayFrame(
-        IReadOnlyList<string> Rows,
+        IReadOnlyList<PlaySprite> Sprites,
+        int Width,
+        int Height,
         int Level,
         int LevelCount,
         int Score,

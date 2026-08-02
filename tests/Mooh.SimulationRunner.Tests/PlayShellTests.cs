@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Text.Json;
 
 using Mooh.Core.Content;
@@ -20,13 +21,63 @@ namespace Mooh.SimulationRunner.Tests
         {
             PlaySession session = CreateSession();
 
+            string[] board = LiveBoardRenderer.Render(session.Session.Level.World);
+
+            Assert.Equal(4, board.Length);
+            Assert.All(board, row => Assert.Equal(6, CountGlyphs(row)));
+            Assert.Contains("🐔", board[1]);
+            Assert.Contains("🔵", board[1]);
+            Assert.Contains("🧱", board[2]);
+        }
+
+        /// <summary>Verifies a stationary entity is drawn exactly on its authoritative cell.</summary>
+        [Fact]
+        public void StationarySpritesSitOnWholeCells()
+        {
+            PlaySession session = CreateSession();
+
             PlayFrame frame = session.Render();
 
-            Assert.Equal(4, frame.Rows.Count);
-            Assert.All(frame.Rows, row => Assert.Equal(6, CountGlyphs(row)));
-            Assert.Contains("🐔", frame.Rows[1]);
-            Assert.Contains("🔵", frame.Rows[1]);
-            Assert.Contains("🧱", frame.Rows[2]);
+            Assert.Equal(6, frame.Width);
+            Assert.Equal(4, frame.Height);
+            PlaySprite player = Assert.Single(frame.Sprites, sprite => sprite.Glyph == "🐔");
+            Assert.Equal(1, player.X);
+            Assert.Equal(1, player.Y);
+        }
+
+        /// <summary>
+        /// Verifies a moving entity is drawn between cells. The destination cell is committed when
+        /// movement starts, so the drawn position trails it by the unfinished fraction.
+        /// </summary>
+        [Fact]
+        public void MovingSpritesAreDrawnBetweenCells()
+        {
+            FakeTimeProvider time = new();
+            PlaySession session = new(CreatePack(), 0, time);
+
+            // The player materializes facing down, so holding down starts walking with no
+            // rotation first. 100 ms at the recovered 2.5 cells per second is a quarter cell.
+            time.Advance(TimeSpan.FromMilliseconds(100));
+            PlayFrame frame = session.Advance(new PlayerInputState(false, false, false, true));
+
+            PlaySprite player = Assert.Single(frame.Sprites, sprite => sprite.Glyph == "🐔");
+            Assert.Equal(1, player.X);
+            Assert.Equal(1.25, player.Y, 3);
+        }
+
+        /// <summary>Verifies sprites are ordered so gameplay objects draw over terrain.</summary>
+        [Fact]
+        public void SpritesAreOrderedForDrawing()
+        {
+            PlaySession session = CreateSession();
+
+            PlayFrame frame = session.Render();
+
+            int[] layers = [.. frame.Sprites.Select(sprite => sprite.Layer)];
+            Assert.Equal([.. layers.Order()], layers);
+            PlaySprite player = Assert.Single(frame.Sprites, sprite => sprite.Glyph == "🐔");
+            PlaySprite wall = frame.Sprites.First(sprite => sprite.Glyph == "🧱");
+            Assert.True(player.Layer > wall.Layer);
         }
 
         /// <summary>Verifies the frame reports the recovered progress values.</summary>
@@ -142,7 +193,6 @@ namespace Mooh.SimulationRunner.Tests
                 Object(3, "MBlueR", 4, 1),
                 Object(4, "OCoin01", 0, 1),
                 Object(5, "CellsSolid01", 0, 2),
-                Object(6, "CellsSolid01", 1, 2),
                 Object(7, "CellsSolid01", 2, 2),
                 Object(8, "CellsSolid01", 4, 2),
             ];

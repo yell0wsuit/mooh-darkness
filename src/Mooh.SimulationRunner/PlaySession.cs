@@ -92,7 +92,9 @@ namespace Mooh.SimulationRunner
         {
             PlayerBody? body = Session.Level.World.Player?.PlayerBody;
             return new PlayFrame(
-                LiveBoardRenderer.Render(Session.Level.World),
+                LiveBoardRenderer.RenderSprites(Session.Level.World),
+                Session.Level.World.Width,
+                Session.Level.World.Height,
                 Session.LevelIndex + 1,
                 Session.LevelCount,
                 Session.TotalScore,
