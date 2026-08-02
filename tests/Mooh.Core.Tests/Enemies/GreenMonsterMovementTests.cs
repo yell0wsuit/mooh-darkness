@@ -75,7 +75,7 @@ namespace Mooh.Core.Tests.Enemies
             Entity counterMover = new(
                 EntityId.New(),
                 new GridPosition(1, 0),
-                InteractionMask.None);
+                InteractionMask.MonsterTransparent);
             world.Add(monster);
             world.Add(counterMover);
             KinematicsSystem.Start(
@@ -142,6 +142,49 @@ namespace Mooh.Core.Tests.Enemies
             Assert.Null(pushable.Motion);
             Assert.Equal(GreenMonsterState.Turning, monster.GreenMonsterBody!.State);
             _ = Assert.IsType<EnemyTurnStarted>(Assert.Single(events));
+        }
+
+        /// <summary>Verifies an edible collectible occupies the forward cell and forces a turn.</summary>
+        [Fact]
+        public void EdibleOccupantStartsTurnInsteadOfWalking()
+        {
+            WorldGrid world = new(3, 1);
+            Entity monster = NewMonster(0, 0, Direction.Right);
+            Entity collectible = new(
+                EntityId.New(),
+                new GridPosition(1, 0),
+                InteractionMask.PlayerEdible | InteractionMask.RoundSupport);
+            world.Add(monster);
+            world.Add(collectible);
+            SimulationWorld simulation = CreateSimulation(world);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(new GridPosition(0, 0), monster.Position);
+            Assert.Equal(GreenMonsterState.Turning, monster.GreenMonsterBody!.State);
+            _ = Assert.IsType<EnemyTurnStarted>(Assert.Single(events));
+        }
+
+        /// <summary>Verifies recovered monster-shadow occupants leave the forward cell walkable.</summary>
+        [Fact]
+        public void MonsterTransparentOccupantStillAllowsWalking()
+        {
+            WorldGrid world = new(3, 1);
+            Entity monster = NewMonster(0, 0, Direction.Right);
+            Entity teleporter = new(
+                EntityId.New(),
+                new GridPosition(1, 0),
+                InteractionMask.MonsterTransparent);
+            world.Add(monster);
+            world.Add(teleporter);
+            SimulationWorld simulation = CreateSimulation(world);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(GreenMonsterState.Walking, monster.GreenMonsterBody!.State);
+            Assert.Equal(
+                new EnemyMoveStarted(monster.Id, new GridPosition(0, 0), new GridPosition(1, 0)),
+                Assert.Single(events));
         }
 
         /// <summary>Verifies turn completion updates facing and immediately resumes decision-making.</summary>

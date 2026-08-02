@@ -13,10 +13,12 @@ namespace Mooh.Core.Levels
         public static void Collect(
             Entity player,
             Entity pickup,
+            DifficultySpeeds difficultySpeeds,
             ICollection<SimulationEvent> events)
         {
             ArgumentNullException.ThrowIfNull(player);
             ArgumentNullException.ThrowIfNull(pickup);
+            ArgumentNullException.ThrowIfNull(difficultySpeeds);
             ArgumentNullException.ThrowIfNull(events);
             PlayerBody playerBody = player.PlayerBody
                 ?? throw new InvalidOperationException("Pickup collection requires a player.");
@@ -35,7 +37,8 @@ namespace Mooh.Core.Levels
             int score = playerBody.Progress.Collect(
                 archival.Descriptor,
                 player.HealthBody
-                    ?? throw new InvalidOperationException("Pickup collection requires player health."));
+                    ?? throw new InvalidOperationException("Pickup collection requires player health."),
+                difficultySpeeds.FoodHeal);
             events.Add(new PickupCollected(player.Id, pickup.Id, archival.Kind, score));
         }
     }

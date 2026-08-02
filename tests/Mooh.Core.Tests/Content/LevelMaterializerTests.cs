@@ -6,6 +6,7 @@ using System.Linq;
 using Mooh.Core.Content;
 using Mooh.Core.Grid;
 using Mooh.Core.Levels;
+using Mooh.Core.Simulation;
 
 using Xunit;
 
@@ -39,6 +40,63 @@ namespace Mooh.Core.Tests.Content
             Assert.Equal(EntityKind.Coin, result.GetEntity(5).ArchivalIdentity!.Kind);
             Assert.Equal(Direction.Up, result.GetEntity(6).GreenMonsterBody!.FacingDirection);
             Assert.Equal(Direction.Right, result.GetEntity(7).BlueMonsterBody!.FacingDirection);
+        }
+
+        /// <summary>Verifies each monster family receives its own recovered quarter-turn duration.</summary>
+        [Fact]
+        public void MaterializesSeparateRecoveredMonsterTurnDurations()
+        {
+            LevelDocument level = CreateLevel(
+                Object(1, "OPlayer", 1, 1),
+                Object(2, "MGrT", 5, 1),
+                Object(3, "MBlueR", 6, 1));
+
+            MaterializedLevel result = LevelMaterializer.Materialize(level);
+
+            Assert.Equal(
+                TimeSpan.FromMilliseconds(250),
+                result.GetEntity(2).GreenMonsterBody!.TurnDuration);
+            Assert.Equal(
+                TimeSpan.FromMilliseconds(300),
+                result.GetEntity(3).BlueMonsterBody!.TurnDuration);
+        }
+
+        /// <summary>Verifies a monster strike deals the difficulty's recovered ordinary shake damage.</summary>
+        /// <param name="expectedStrikeDamage">The recovered shake damage for the profile.</param>
+        /// <param name="difficultyZero">Whether the easiest recovered profile applies.</param>
+        [Theory]
+        [InlineData(20d, false)]
+        [InlineData(10d, true)]
+        public void MaterializesStrikeDamageFromRecoveredShakeDamage(
+            double expectedStrikeDamage,
+            bool difficultyZero)
+        {
+            LevelDocument level = CreateLevel(
+                Object(1, "OPlayer", 1, 1),
+                Object(2, "MGrT", 5, 1),
+                Object(3, "MBlueR", 6, 1));
+            DifficultySpeeds speeds = difficultyZero
+                ? DifficultySpeeds.DifficultyZero
+                : DifficultySpeeds.Standard;
+
+            MaterializedLevel result = LevelMaterializer.Materialize(level, Direction.Down, speeds);
+
+            Assert.Equal(speeds.ShakeDamage, expectedStrikeDamage);
+            Assert.Equal(expectedStrikeDamage, result.GetEntity(2).GreenMonsterBody!.StrikeDamage);
+            Assert.Equal(expectedStrikeDamage, result.GetEntity(3).BlueMonsterBody!.StrikeDamage);
+        }
+
+        /// <summary>Verifies the player immunity window matches the recovered lock plus shock entry animation.</summary>
+        [Fact]
+        public void MaterializesRecoveredPlayerImmunityWindow()
+        {
+            LevelDocument level = CreateLevel(Object(1, "OPlayer", 1, 1));
+
+            MaterializedLevel result = LevelMaterializer.Materialize(level);
+
+            Assert.Equal(
+                TimeSpan.FromMilliseconds(650),
+                result.World.Player!.HealthBody!.ImmunityDuration);
         }
 
         /// <summary>Verifies archival registration order produces original newest-first same-cell occupancy.</summary>

@@ -34,5 +34,8 @@ namespace Mooh.Core.Interactions
 
         /// <summary>The pushed entity can consume eligible occupants in its destination cell.</summary>
         PushesThroughOccupants = 1 << 7,
+
+        /// <summary>Monster navigation ignores the entity instead of treating its cell as occupied.</summary>
+        MonsterTransparent = 1 << 8,
     }
 }

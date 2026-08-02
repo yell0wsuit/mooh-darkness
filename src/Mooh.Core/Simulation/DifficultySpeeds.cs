@@ -14,7 +14,8 @@ namespace Mooh.Core.Simulation
             double monsterSpeed,
             double shakeDamage,
             double hardShakeDamage,
-            double explosionDamage)
+            double explosionDamage,
+            double foodHeal)
         {
             PlayerSpeed = playerSpeed;
             NormalSpeed = normalSpeed;
@@ -22,6 +23,7 @@ namespace Mooh.Core.Simulation
             ShakeDamage = shakeDamage;
             HardShakeDamage = hardShakeDamage;
             ExplosionDamage = explosionDamage;
+            FoodHeal = foodHeal;
         }
 
         /// <summary>Gets the standard non-timed difficulty profile.</summary>
@@ -31,7 +33,8 @@ namespace Mooh.Core.Simulation
             StandardMonsterSpeed,
             20,
             30,
-            20);
+            20,
+            40);
 
         /// <summary>Gets the profile for difficulty zero.</summary>
         public static DifficultySpeeds DifficultyZero { get; } = new(
@@ -40,7 +43,8 @@ namespace Mooh.Core.Simulation
             StandardMonsterSpeed * DifficultyZeroMultiplier,
             10,
             15,
-            10);
+            10,
+            40);
 
         /// <summary>Gets the timed difficulty profile.</summary>
         public static DifficultySpeeds Timed { get; } = new(
@@ -49,7 +53,8 @@ namespace Mooh.Core.Simulation
             StandardMonsterSpeed,
             20,
             30,
-            20);
+            20,
+            15);
 
         /// <summary>Gets the player walking speed in cells per second.</summary>
         public double PlayerSpeed { get; }
@@ -68,5 +73,8 @@ namespace Mooh.Core.Simulation
 
         /// <summary>Gets player damage caused by an explosion.</summary>
         public double ExplosionDamage { get; }
+
+        /// <summary>Gets the health restored by eating one food object.</summary>
+        public double FoodHeal { get; }
     }
 }

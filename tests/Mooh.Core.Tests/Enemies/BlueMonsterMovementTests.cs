@@ -82,6 +82,28 @@ namespace Mooh.Core.Tests.Enemies
                 Assert.Single(events));
         }
 
+        /// <summary>Verifies an edible collectible on the left counts as occupied and is not entered.</summary>
+        [Fact]
+        public void EdibleOccupantOnLeftDoesNotOpenLeftTurn()
+        {
+            WorldGrid world = new(3, 3);
+            Entity monster = NewMonster(1, 1, Direction.Right);
+            Entity collectible = new(
+                EntityId.New(),
+                new GridPosition(1, 0),
+                InteractionMask.PlayerEdible | InteractionMask.RoundSupport);
+            world.Add(monster);
+            world.Add(collectible);
+            SimulationWorld simulation = CreateSimulation(world);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(BlueMonsterState.Walking, monster.BlueMonsterBody!.State);
+            Assert.Equal(
+                new EnemyMoveStarted(monster.Id, new GridPosition(1, 1), new GridPosition(2, 1)),
+                Assert.Single(events));
+        }
+
         /// <summary>Verifies counter-motion in the entered cell slows monster walking.</summary>
         [Fact]
         public void CounterMotionSlowsWalking()
@@ -91,7 +113,7 @@ namespace Mooh.Core.Tests.Enemies
             Entity counterMover = new(
                 EntityId.New(),
                 new GridPosition(1, 0),
-                InteractionMask.None);
+                InteractionMask.MonsterTransparent);
             world.Add(monster);
             world.Add(counterMover);
             KinematicsSystem.Start(

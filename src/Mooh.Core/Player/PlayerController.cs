@@ -16,7 +16,8 @@ namespace Mooh.Core.Player
         Entity player,
         WorldGrid world,
         MovementSystem movement,
-        Direction gravityDirection)
+        Direction gravityDirection,
+        DifficultySpeeds difficultySpeeds)
     {
         private const double HalfTurnSeconds = 0.210;
         private const double QuarterTurnSeconds = 0.105;
@@ -24,6 +25,8 @@ namespace Mooh.Core.Player
         private const double TimeTolerance = 1e-12;
         private static readonly TimeSpan CellInteractionLock = TimeSpan.FromMilliseconds(150);
 
+        private readonly DifficultySpeeds _difficultySpeeds = difficultySpeeds
+            ?? throw new ArgumentNullException(nameof(difficultySpeeds));
         private readonly MovementSystem _movement = movement
             ?? throw new ArgumentNullException(nameof(movement));
         private readonly Entity _player = player
@@ -291,7 +294,7 @@ namespace Mooh.Core.Player
                     continue;
                 }
 
-                PickupSystem.Collect(_player, entity, events);
+                PickupSystem.Collect(_player, entity, _difficultySpeeds, events);
                 _ = _world.Remove(entity.Id);
                 events.Add(new PlayerAte(_player.Id, entity.Id));
             }

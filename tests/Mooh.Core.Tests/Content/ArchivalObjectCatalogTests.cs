@@ -82,6 +82,30 @@ namespace Mooh.Core.Tests.Content
             yield return ["MBlueR", EntityKind.BlueMonster,
                 InteractionMask.BlocksMovement,
                 false, 1d, 2];
+            yield return ["OWRotL", EntityKind.WorldRotation,
+                InteractionMask.BlocksMovement | InteractionMask.RoundSupport,
+                false, 1d, -1];
+            yield return ["OTPort", EntityKind.Teleporter,
+                InteractionMask.MonsterTransparent,
+                false, 1d, 0];
+            yield return ["OTable", EntityKind.MessageTable,
+                InteractionMask.MonsterTransparent,
+                false, 1d, 0];
+            yield return ["WMine", EntityKind.Mine,
+                InteractionMask.MonsterTransparent,
+                false, 1d, 0];
+        }
+
+        /// <summary>Verifies only the recovered monster-shadow types are transparent to monster navigation.</summary>
+        [Fact]
+        public void OnlyRecoveredMonsterShadowTypesAreTransparent()
+        {
+            string[] transparent = [.. ArchivalObjectCatalog.Types
+                .Where(type => ArchivalObjectCatalog.Get(type).Interactions
+                    .HasFlag(InteractionMask.MonsterTransparent))
+                .Order(StringComparer.Ordinal)];
+
+            Assert.Equal(["OTPort", "OTable", "WMine"], transparent);
         }
 
         /// <summary>Verifies unsupported legacy names are rejected at the catalog boundary.</summary>

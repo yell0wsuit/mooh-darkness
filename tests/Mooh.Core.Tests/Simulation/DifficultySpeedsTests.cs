@@ -19,6 +19,7 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(20, profile.ShakeDamage);
             Assert.Equal(30, profile.HardShakeDamage);
             Assert.Equal(20, profile.ExplosionDamage);
+            Assert.Equal(40, profile.FoodHeal);
         }
 
         /// <summary>Verifies that difficulty zero scales every recovered speed by 0.75.</summary>
@@ -34,15 +35,17 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(10, easy.ShakeDamage);
             Assert.Equal(15, easy.HardShakeDamage);
             Assert.Equal(10, easy.ExplosionDamage);
+            Assert.Equal(40, easy.FoodHeal);
         }
 
-        /// <summary>Verifies timed mode retains standard impact damage.</summary>
+        /// <summary>Verifies timed mode retains standard impact damage but the reduced eat value.</summary>
         [Fact]
         public void TimedProfileUsesRecoveredImpactDamage()
         {
             Assert.Equal(20, DifficultySpeeds.Timed.ShakeDamage);
             Assert.Equal(30, DifficultySpeeds.Timed.HardShakeDamage);
             Assert.Equal(20, DifficultySpeeds.Timed.ExplosionDamage);
+            Assert.Equal(15, DifficultySpeeds.Timed.FoodHeal);
         }
     }
 }

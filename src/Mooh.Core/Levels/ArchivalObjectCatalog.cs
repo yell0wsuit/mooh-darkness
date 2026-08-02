@@ -14,6 +14,8 @@ namespace Mooh.Core.Levels
         private const InteractionMask FixedBlock = InteractionMask.BlocksMovement | InteractionMask.MovementLocked;
         private const InteractionMask PushableRound = InteractionMask.BlocksMovement
             | InteractionMask.PlayerPushable | InteractionMask.RoundSupport;
+        private const InteractionMask WorldRotation = InteractionMask.BlocksMovement
+            | InteractionMask.RoundSupport;
 
         private static readonly Dictionary<string, ArchivalObjectDescriptor> Descriptors = CreateDescriptors();
 
@@ -96,10 +98,10 @@ namespace Mooh.Core.Levels
                 "OKDDoor1", "OKDDoor2", "OKDDoor3");
             Add(result, "OFire", EntityKind.Fire, InteractionMask.RoundSupport, hasGravity: true);
             AddDirectional(result, "OArrow", EntityKind.GravityArrow, PushableRound, hasGravity: true);
-            Add(result, "OWRotL", EntityKind.WorldRotation, InteractionMask.RoundSupport, variant: -1);
-            Add(result, "OWRotR", EntityKind.WorldRotation, InteractionMask.RoundSupport, variant: 1);
-            Add(result, "OTPort", EntityKind.Teleporter, InteractionMask.None);
-            Add(result, "OTable", EntityKind.MessageTable, InteractionMask.None);
+            Add(result, "OWRotL", EntityKind.WorldRotation, WorldRotation, variant: -1);
+            Add(result, "OWRotR", EntityKind.WorldRotation, WorldRotation, variant: 1);
+            Add(result, "OTPort", EntityKind.Teleporter, InteractionMask.MonsterTransparent);
+            Add(result, "OTable", EntityKind.MessageTable, InteractionMask.MonsterTransparent);
 
             AddExplodableMany(result, EntityKind.Pipe, FixedBlock | InteractionMask.RoundSupport,
                 "PipeHor", "PipeVert", "PipeLeftTop", "PipeRightBottom", "PipeTopRight", "PipeBottomLeft");
@@ -111,7 +113,7 @@ namespace Mooh.Core.Levels
             AddLandingDetonator(result, "WGrBox", EntityKind.GrenadeBox, Collectible, variant: 5);
             AddLandingDetonator(result, "WROne", EntityKind.Rocket, Collectible, variant: 1);
             AddLandingDetonator(result, "WRBox", EntityKind.RocketBox, Collectible, variant: 5);
-            Add(result, "WMine", EntityKind.Mine, InteractionMask.None,
+            Add(result, "WMine", EntityKind.Mine, InteractionMask.MonsterTransparent,
                 explosionReaction: ExplosionReaction.Detonate3x3);
             AddLandingDetonator(result, "WMinesBox", EntityKind.MineBox, Collectible, variant: 5);
             AddLandingDetonator(result, "WBBomb", EntityKind.BigBomb, Collectible, variant: 1);

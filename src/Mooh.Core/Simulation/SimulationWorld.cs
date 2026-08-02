@@ -132,10 +132,10 @@ namespace Mooh.Core.Simulation
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
             _gravity = new GravitySystem(collisionPolicy, random);
             _movement = new MovementSystem(world, new DefaultInteractionPolicy());
-            _blueMonsters = new BlueMonsterSystem(world, new DefaultInteractionPolicy());
-            _greenMonsters = new GreenMonsterSystem(world, new DefaultInteractionPolicy());
+            _blueMonsters = new BlueMonsterSystem(world);
+            _greenMonsters = new GreenMonsterSystem(world);
             _playerController = world.Player is Entity player
-                ? new PlayerController(player, world, _movement, gravityDirection)
+                ? new PlayerController(player, world, _movement, gravityDirection, _difficultySpeeds)
                 : null;
         }
 
@@ -597,7 +597,7 @@ namespace Mooh.Core.Simulation
             Entity beetle = new(
                 CreateSpawnedEntityId(monster.Id),
                 position,
-                InteractionMask.PlayerEdible,
+                InteractionMask.PlayerEdible | InteractionMask.MonsterTransparent,
                 smallBeetleBody: new SmallBeetleBody(SmallBeetleColor.Green));
             _world.Add(beetle);
             events.Add(new SmallGreenBeetleSpawned(monster.Id, beetle.Id, position));

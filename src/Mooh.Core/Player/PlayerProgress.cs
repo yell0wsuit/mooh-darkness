@@ -59,7 +59,7 @@ namespace Mooh.Core.Player
             TotalTreasure = totalTreasure;
         }
 
-        internal int Collect(ArchivalObjectDescriptor descriptor, HealthBody health)
+        internal int Collect(ArchivalObjectDescriptor descriptor, HealthBody health, double foodHeal)
         {
             ArgumentNullException.ThrowIfNull(descriptor);
             ArgumentNullException.ThrowIfNull(health);
@@ -78,7 +78,7 @@ namespace Mooh.Core.Player
 
                     break;
                 case EntityKind.Food:
-                    health.Heal(40);
+                    health.Heal(foodHeal);
                     break;
                 case EntityKind.Key:
                     _keyMask |= 1 << (descriptor.Variant - 1);

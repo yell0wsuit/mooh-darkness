@@ -17,8 +17,9 @@ namespace Mooh.Core.Levels
     /// <summary>Translates validated archival levels through the explicit archival object catalog.</summary>
     public static class LevelMaterializer
     {
-        private static readonly TimeSpan MonsterTurnDuration = TimeSpan.FromMilliseconds(300);
-        private static readonly TimeSpan PlayerImmunityDuration = TimeSpan.FromMilliseconds(1000);
+        private static readonly TimeSpan BlueMonsterTurnDuration = TimeSpan.FromMilliseconds(300);
+        private static readonly TimeSpan GreenMonsterTurnDuration = TimeSpan.FromMilliseconds(250);
+        private static readonly TimeSpan PlayerImmunityDuration = TimeSpan.FromMilliseconds(650);
 
         /// <summary>Materializes a level with standard speeds and downward gravity.</summary>
         /// <param name="level">The validated archival level.</param>
@@ -137,10 +138,18 @@ namespace Mooh.Core.Levels
                     ? new HealthBody(100, 100, PlayerImmunityDuration)
                     : null,
                 descriptor.Kind == EntityKind.GreenMonster
-                    ? new GreenMonsterBody(speeds.MonsterSpeed, facing, MonsterTurnDuration)
+                    ? new GreenMonsterBody(
+                        speeds.MonsterSpeed,
+                        facing,
+                        GreenMonsterTurnDuration,
+                        strikeDamage: speeds.ShakeDamage)
                     : null,
                 descriptor.Kind == EntityKind.BlueMonster
-                    ? new BlueMonsterBody(speeds.MonsterSpeed, facing, MonsterTurnDuration)
+                    ? new BlueMonsterBody(
+                        speeds.MonsterSpeed,
+                        facing,
+                        BlueMonsterTurnDuration,
+                        strikeDamage: speeds.ShakeDamage)
                     : null,
                 new ArchivalObjectIdentity(source, descriptor),
                 descriptor.ExplosionReaction is ExplosionReaction reaction

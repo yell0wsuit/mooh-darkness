@@ -18,13 +18,11 @@ namespace Mooh.Core.Enemies
 
         private static readonly TimeSpan TimerTolerance = TimeSpan.FromTicks(1);
 
-        private readonly IInteractionPolicy _interactions;
         private readonly WorldGrid _world;
 
-        internal BlueMonsterSystem(WorldGrid world, IInteractionPolicy interactions)
+        internal BlueMonsterSystem(WorldGrid world)
         {
             _world = world ?? throw new ArgumentNullException(nameof(world));
-            _interactions = interactions ?? throw new ArgumentNullException(nameof(interactions));
         }
 
         internal double? SecondsUntilNextTimer()
@@ -150,12 +148,17 @@ namespace Mooh.Core.Enemies
             events.Add(new EnemyMoveStarted(monster.Id, source, destination));
         }
 
+        /// <summary>
+        /// Applies the recovered forward- and left-cell test. The original inspects the cell with
+        /// every interaction bit except the monster-shadow bit, so any occupant that is not
+        /// explicitly transparent to monsters blocks the walk or the left-hand turn.
+        /// </summary>
         private bool CanEnter(Entity monster, GridPosition destination)
         {
             return !monster.Interactions.HasFlag(InteractionMask.MovementLocked)
                 && _world.Contains(destination)
                 && _world.GetOccupants(destination)
-                    .All(occupant => _interactions.Classify(monster, occupant) == OccupantInteraction.Allow);
+                    .All(occupant => occupant.Interactions.HasFlag(InteractionMask.MonsterTransparent));
         }
 
         private Entity? FindAttackablePlayer(GridPosition position)
