@@ -77,5 +77,16 @@ namespace Mooh.Core.Player
 
         /// <summary>Gets the active uncontrollable rotation, if any.</summary>
         public PlayerRotation? Rotation { get; internal set; }
+
+        /// <summary>Gets the active uncontrollable fire-control action, if any.</summary>
+        public PlayerAction? Action { get; internal set; }
+
+        /// <summary>
+        /// Gets the simulation time at which the player last used the fire control, or
+        /// <see langword="null"/> before the first use. The recovered <c>ulWeapTime</c> is one
+        /// shared timestamp: a weapon use and a hand strike delay each other, and each branch
+        /// compares it against its own repeat time.
+        /// </summary>
+        public double? LastActionSeconds { get; internal set; }
     }
 }

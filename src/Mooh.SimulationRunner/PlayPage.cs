@@ -32,12 +32,13 @@ namespace Mooh.SimulationRunner
 <div id="hud"></div>
 <canvas id="view"></canvas>
 <div id="banner"></div>
-<div id="help">WASD or arrows to walk · R restart level · N next level</div>
+<div id="help">WASD or arrows to walk · space to strike or throw a grenade · R restart level · N next level</div>
 <script>
-const held = { l: 0, u: 0, r: 0, d: 0 };
+const held = { l: 0, u: 0, r: 0, d: 0, f: 0 };
 const codes = {
   ArrowLeft: 'l', KeyA: 'l', ArrowUp: 'u', KeyW: 'u',
   ArrowRight: 'r', KeyD: 'r', ArrowDown: 'd', KeyS: 'd',
+  Space: 'f',
 };
 let pending = '';
 
@@ -52,7 +53,7 @@ addEventListener('keyup', e => {
   if (k) { held[k] = 0; e.preventDefault(); }
 });
 // A hidden tab never delivers the keyup, so clear the state on blur.
-addEventListener('blur', () => { held.l = held.u = held.r = held.d = 0; });
+addEventListener('blur', () => { held.l = held.u = held.r = held.d = held.f = 0; });
 
 const canvas = document.getElementById('view');
 const ctx = canvas.getContext('2d');
@@ -105,7 +106,7 @@ function draw(f) {
 async function frame() {
   const command = pending;
   pending = '';
-  const query = `l=${held.l}&u=${held.u}&r=${held.r}&d=${held.d}`
+  const query = `l=${held.l}&u=${held.u}&r=${held.r}&d=${held.d}&f=${held.f}`
     + (command ? `&command=${command}` : '');
   try {
     const response = await fetch(`/frame?${query}`);

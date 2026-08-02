@@ -291,17 +291,22 @@ namespace Mooh.SimulationRunner
                         $"must be within [1, {MaximumAdvanceMilliseconds}].");
                 }
 
-                HashSet<Direction> inputs = [];
+                HashSet<string> inputs = [];
                 List<string> declaredInput = step.Input ?? [];
                 for (int inputIndex = 0; inputIndex < declaredInput.Count; inputIndex++)
                 {
-                    Direction direction = ParseEnum<Direction>(
-                        declaredInput[inputIndex],
-                        source,
-                        $"{path}.input[{inputIndex}]");
-                    if (!inputs.Add(direction))
+                    string held = declaredInput[inputIndex];
+                    if (!string.Equals(held, ScenarioExecutor.FireInput, StringComparison.Ordinal))
                     {
-                        throw Invalid(source, $"{path}.input[{inputIndex}]", "duplicates a held direction.");
+                        held = ParseEnum<Direction>(
+                            held,
+                            source,
+                            $"{path}.input[{inputIndex}]").ToString();
+                    }
+
+                    if (!inputs.Add(held))
+                    {
+                        throw Invalid(source, $"{path}.input[{inputIndex}]", "duplicates a held control.");
                     }
                 }
 
@@ -422,6 +427,10 @@ namespace Mooh.SimulationRunner
                     or "PlayerReversed" or "PlayerRotationCompleted" or "PushStarted"
                     or "SlideStarted" => EventFields.Direction,
                 "PlayerAte" => EventFields.EatenEntity,
+                "PlayerGrenadeThrowStarted" or "PlayerStrikeStarted" => EventFields.Direction
+                    | EventFields.DurationMilliseconds,
+                "PlayerGrenadePlaced" => EventFields.Position,
+                "PlayerStruck" => EventFields.Direction | EventFields.Position,
                 "PlayerRotationStarted" => EventFields.From | EventFields.To,
                 "DamageApplied" => EventFields.SourceEntity | EventFields.DamageKind
                     | EventFields.Amount | EventFields.RemainingHealth,
@@ -439,7 +448,8 @@ namespace Mooh.SimulationRunner
                 "SmallBeetleSpawned" => EventFields.Position,
                 "PlayerShockStarted" => EventFields.DurationMilliseconds,
                 "LevelLost" or "LevelWon" => EventFields.None,
-                "PlayerDied" or "PlayerShockEnded" or "PlayerStopped" => EventFields.None,
+                "PlayerDied" or "PlayerShockEnded" or "PlayerStopped"
+                    or "PlayerWeaponEmpty" => EventFields.None,
                 _ => EventFields.None,
             };
             EventFields actual = EventFields.None;
@@ -493,6 +503,8 @@ namespace Mooh.SimulationRunner
             "PlayerBlocked",
             "PlayerMoveStarted",
             "PlayerDied",
+            "PlayerGrenadePlaced",
+            "PlayerGrenadeThrowStarted",
             "PlayerReturned",
             "PlayerReversed",
             "PlayerRotationCompleted",
@@ -500,6 +512,9 @@ namespace Mooh.SimulationRunner
             "PlayerShockEnded",
             "PlayerShockStarted",
             "PlayerStopped",
+            "PlayerStrikeStarted",
+            "PlayerStruck",
+            "PlayerWeaponEmpty",
             "PushStarted",
             "SlideStarted",
             "SmallBeetleSpawned",

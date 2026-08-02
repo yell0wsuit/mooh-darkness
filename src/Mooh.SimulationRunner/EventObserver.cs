@@ -117,6 +117,15 @@ namespace Mooh.SimulationRunner
                         entity,
                         direction: value.Direction),
                     PlayerDied => new ObservedEvent(nameof(PlayerDied), entity),
+                    PlayerGrenadePlaced value => new ObservedEvent(
+                        nameof(PlayerGrenadePlaced),
+                        entity,
+                        position: value.Position),
+                    PlayerGrenadeThrowStarted value => new ObservedEvent(
+                        nameof(PlayerGrenadeThrowStarted),
+                        entity,
+                        direction: value.Direction,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds),
                     PlayerReturned value => new ObservedEvent(
                         nameof(PlayerReturned),
                         entity,
@@ -140,6 +149,17 @@ namespace Mooh.SimulationRunner
                         entity,
                         durationMilliseconds: (long)value.Duration.TotalMilliseconds),
                     PlayerStopped => new ObservedEvent(nameof(PlayerStopped), entity),
+                    PlayerStrikeStarted value => new ObservedEvent(
+                        nameof(PlayerStrikeStarted),
+                        entity,
+                        direction: value.Direction,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds),
+                    PlayerStruck value => new ObservedEvent(
+                        nameof(PlayerStruck),
+                        entity,
+                        direction: value.Direction,
+                        position: value.Position),
+                    PlayerWeaponEmpty => new ObservedEvent(nameof(PlayerWeaponEmpty), entity),
                     PushStarted value => new ObservedEvent(
                         nameof(PushStarted),
                         entity,

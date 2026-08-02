@@ -10,6 +10,9 @@ namespace Mooh.SimulationRunner
     /// <summary>Executes complete self-verifying scenarios through the core simulation.</summary>
     public static class ScenarioExecutor
     {
+        /// <summary>The held-input token for the fire control, alongside the direction names.</summary>
+        public const string FireInput = "Fire";
+
         /// <summary>Runs one in-memory scenario and captures validation or expectation failures.</summary>
         /// <param name="scenario">The scenario to execute.</param>
         /// <param name="source">The source name used in diagnostics.</param>
@@ -69,14 +72,21 @@ namespace Mooh.SimulationRunner
             }
         }
 
-        private static PlayerInputState CreateInput(IReadOnlyList<string> directions)
+        private static PlayerInputState CreateInput(IReadOnlyList<string> held)
         {
             bool left = false;
             bool up = false;
             bool right = false;
             bool down = false;
-            foreach (string value in directions)
+            bool fire = false;
+            foreach (string value in held)
             {
+                if (string.Equals(value, FireInput, StringComparison.Ordinal))
+                {
+                    fire = true;
+                    continue;
+                }
+
                 switch (Enum.Parse<Direction>(value, ignoreCase: false))
                 {
                     case Direction.Left:
@@ -92,11 +102,11 @@ namespace Mooh.SimulationRunner
                         down = true;
                         break;
                     default:
-                        throw new InvalidOperationException($"Unsupported input direction '{value}'.");
+                        throw new InvalidOperationException($"Unsupported held input '{value}'.");
                 }
             }
 
-            return new PlayerInputState(left, up, right, down);
+            return new PlayerInputState(left, up, right, down, fire);
         }
     }
 }

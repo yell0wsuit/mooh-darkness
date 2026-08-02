@@ -18,6 +18,12 @@ namespace Mooh.Core.Levels
     /// <summary>Translates validated archival levels through the explicit archival object catalog.</summary>
     public static class LevelMaterializer
     {
+        /// <summary>
+        /// The archival object identifier reported by an entity created at runtime, which has no
+        /// archival source and therefore cannot share the identifier space of placed objects.
+        /// </summary>
+        public const int RuntimeObjectId = -1;
+
         private static readonly TimeSpan BlueMonsterTurnDuration = TimeSpan.FromMilliseconds(300);
         private static readonly TimeSpan GreenMonsterTurnDuration = TimeSpan.FromMilliseconds(250);
         private static readonly TimeSpan PlayerImmunityDuration = TimeSpan.FromMilliseconds(650);
@@ -111,6 +117,39 @@ namespace Mooh.Core.Levels
                 simulation,
                 gravityDirection,
                 idsByObjectId);
+        }
+
+        /// <summary>
+        /// Materializes an object the original creates at runtime rather than placing in a level.
+        /// The recovered engine registers such an object under its own <c>ObjRep</c> name while
+        /// sharing a placed type's behavior: the thrown grenade <c>WBombInt</c> is
+        /// <c>GameTypeBomb</c>, exactly as the placed <c>WBomb</c> pickup is. The entity therefore
+        /// carries the catalog descriptor of the named placed type, and its archival identity
+        /// reports <see cref="RuntimeObjectId"/> because it has no archival source.
+        /// </summary>
+        /// <param name="id">The entity's stable identity.</param>
+        /// <param name="position">The cell the object is created in.</param>
+        /// <param name="archivalType">The placed type whose recovered behavior it shares.</param>
+        /// <param name="speeds">The recovered difficulty gameplay values.</param>
+        /// <returns>The runtime entity, not yet registered in a world.</returns>
+        /// <exception cref="ArgumentNullException">A required argument is null.</exception>
+        /// <exception cref="KeyNotFoundException">The type is not in the placed-type catalog.</exception>
+        public static Entity CreateRuntimeObject(
+            EntityId id,
+            GridPosition position,
+            string archivalType,
+            DifficultySpeeds speeds)
+        {
+            ArgumentNullException.ThrowIfNull(speeds);
+            ArchivalObjectDescriptor descriptor = ArchivalObjectCatalog.Get(archivalType);
+            LevelObject source = new(
+                RuntimeObjectId,
+                descriptor.ArchivalType,
+                0,
+                new LevelPosition(position.X, position.Y),
+                null,
+                null);
+            return CreateEntity(id, source, descriptor, speeds);
         }
 
         private static Entity CreateEntity(

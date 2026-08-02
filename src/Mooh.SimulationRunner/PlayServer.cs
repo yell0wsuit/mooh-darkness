@@ -92,7 +92,8 @@ namespace Mooh.SimulationRunner
                     IsHeld(query, "l"),
                     IsHeld(query, "u"),
                     IsHeld(query, "r"),
-                    IsHeld(query, "d")));
+                    IsHeld(query, "d"),
+                    IsHeld(query, "f")));
             }
 
             return (

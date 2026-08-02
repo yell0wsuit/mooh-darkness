@@ -5,13 +5,21 @@ using Mooh.Core.Grid;
 namespace Mooh.Core.Player
 {
     /// <summary>
-    /// Captures which cardinal movement inputs are currently held.
+    /// Captures which player inputs are currently held. The recovered <c>CCtrl.CState</c> holds
+    /// exactly this: one flag per cardinal direction plus <c>bFire</c>, which the keyboard
+    /// controller fills from <c>App.CtrlKeyFire1</c>.
     /// </summary>
     /// <param name="Left">Whether left is held.</param>
     /// <param name="Up">Whether up is held.</param>
     /// <param name="Right">Whether right is held.</param>
     /// <param name="Down">Whether down is held.</param>
-    public readonly record struct PlayerInputState(bool Left, bool Up, bool Right, bool Down)
+    /// <param name="Fire">Whether the action control is held.</param>
+    public readonly record struct PlayerInputState(
+        bool Left,
+        bool Up,
+        bool Right,
+        bool Down,
+        bool Fire = false)
     {
         /// <summary>
         /// Determines whether a direction is held.

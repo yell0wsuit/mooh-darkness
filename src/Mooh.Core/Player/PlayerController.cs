@@ -17,14 +17,38 @@ namespace Mooh.Core.Player
         WorldGrid world,
         MovementSystem movement,
         Direction gravityDirection,
-        DifficultySpeeds difficultySpeeds)
+        DifficultySpeeds difficultySpeeds,
+        IPlayerActionEffects actionEffects)
     {
         private const double HalfTurnSeconds = 0.210;
         private const double QuarterTurnSeconds = 0.105;
         private const double CounterMotionMultiplier = 0.75;
         private const double TimeTolerance = 1e-12;
+
+        /// <summary>The recovered <c>CNT_StrRTime</c>, the hand strike's own repeat time.</summary>
+        private const double StrikeRepeatSeconds = 1.0;
+
+        /// <summary>The recovered <c>RepTime</c> of <c>WeapGr</c>, the grenade.</summary>
+        private const double GrenadeRepeatSeconds = 1.5;
+
+        /// <summary>The recovered <c>ST_Bomb*</c> duration: ten frames at 35 ms.</summary>
+        private const double GrenadeThrowSeconds = 0.350;
+
+        /// <summary>
+        /// The recovered <c>ST_StrIn*</c> durations, indexed by <see cref="Direction"/>. Each state
+        /// runs its animation at 15 ms per frame, and the frame counts differ per direction; the
+        /// values are the on-ground <c>AList</c> counts, which <c>_OnCell05_Fly</c> selects
+        /// whenever the cell below locks motion, as it does whenever the player is standing.
+        /// </summary>
+        private static readonly double[] StrikeWindupSeconds = [0.150, 0.135, 0.150, 0.105];
+
+        /// <summary>The recovered <c>ST_StrOut*</c> recovery durations, indexed by direction.</summary>
+        private static readonly double[] StrikeRecoverySeconds = [0.045, 0.060, 0.045, 0.075];
+
         private static readonly TimeSpan CellInteractionLock = TimeSpan.FromMilliseconds(150);
 
+        private readonly IPlayerActionEffects _actionEffects = actionEffects
+            ?? throw new ArgumentNullException(nameof(actionEffects));
         private readonly DifficultySpeeds _difficultySpeeds = difficultySpeeds
             ?? throw new ArgumentNullException(nameof(difficultySpeeds));
         private readonly MovementSystem _movement = movement
@@ -48,24 +72,43 @@ namespace Mooh.Core.Player
             _gravityDirection = direction;
         }
 
+        /// <summary>
+        /// Polls the held input for a stationary player, reproducing the recovered
+        /// <c>GamePlayer.DoCtrl</c>: the fire branch is decided first and suppresses walking
+        /// entirely, and only a player that is not firing runs <c>CtrlMove</c>.
+        /// </summary>
+        /// <param name="events">The ordered event sink.</param>
+        /// <param name="fromCellArrival">
+        /// Whether the poll follows a cell arrival. The original resolves an arrival through
+        /// <c>_OnCell_Wlk</c>, which calls <c>CtrlMove</c> alone and never inspects the fire
+        /// control, so a player walking with fire held keeps walking; the same path is the only
+        /// one that reports a stop when nothing is held.
+        /// </param>
         public void TryStart(
-            ICollection<SimulationEvent> events,
-            bool emitStoppedWhenNoInput = false)
+            List<SimulationEvent> events,
+            bool fromCellArrival = false)
         {
             ArgumentNullException.ThrowIfNull(events);
             PlayerBody body = _player.PlayerBody
                 ?? throw new InvalidOperationException("The player entity has no player body.");
             if (_player.Motion is not null
                 || body.Rotation is not null
+                || body.Action is not null
                 || body.Reaction.Kind != PlayerReactionKind.Normal)
             {
+                return;
+            }
+
+            if (_input.Fire && !fromCellArrival)
+            {
+                TryStartAction(body, events);
                 return;
             }
 
             Direction? direction = _input.FirstHeldDirection();
             if (direction is not Direction heldDirection)
             {
-                if (emitStoppedWhenNoInput)
+                if (fromCellArrival)
                 {
                     events.Add(new PlayerStopped(_player.Id));
                 }
@@ -82,13 +125,16 @@ namespace Mooh.Core.Player
             StartMove(heldDirection, body, events);
         }
 
+        /// <summary>Resumes a suspended reversal, or polls the held input.</summary>
+        /// <param name="events">The ordered event sink.</param>
+        /// <param name="fromCellArrival">Whether the poll follows a cell arrival.</param>
         public void ResumeOrTryStart(
-            ICollection<SimulationEvent> events,
-            bool emitStoppedWhenNoInput)
+            List<SimulationEvent> events,
+            bool fromCellArrival)
         {
             if (_pendingResume is not PlayerRotation pendingResume)
             {
-                TryStart(events, emitStoppedWhenNoInput);
+                TryStart(events, fromCellArrival);
                 return;
             }
 
@@ -96,6 +142,7 @@ namespace Mooh.Core.Player
                 ?? throw new InvalidOperationException("The player entity has no player body.");
             if (_player.Motion is not null
                 || body.Rotation is not null
+                || body.Action is not null
                 || body.Reaction.Kind != PlayerReactionKind.Normal)
             {
                 return;
@@ -114,10 +161,209 @@ namespace Mooh.Core.Player
             events.Add(new PlayerMoveStarted(_player.Id, pendingResume.To));
         }
 
+        /// <summary>
+        /// Decides the recovered fire branch. The weapon is used when the faced cell can hold it;
+        /// otherwise the player strikes the cell by hand. Both branches share one repeat
+        /// timestamp, and a branch that is still repeating leaves the player standing rather than
+        /// falling back to walking, because the original returns without reaching <c>CtrlMove</c>.
+        /// </summary>
+        /// <remarks>
+        /// Two earlier steps of the original branch are not reachable yet. The healing shelter
+        /// needs the door the player leaves at level start, and the <c>PlCtrl</c> hook of a
+        /// negative-pass occupant needs the teleporter. Weapon selection is likewise absent: the
+        /// original cycles through four weapons and <c>WeapValReset</c> makes the grenade current,
+        /// which is the only weapon the rewrite implements.
+        /// </remarks>
+        private void TryStartAction(PlayerBody body, List<SimulationEvent> events)
+        {
+            Direction direction = body.FacingDirection;
+            GridPosition target = _player.Position.Offset(direction);
+            double now = _world.CurrentTimeSeconds;
+            if (CanPlaceWeapon(target))
+            {
+                if (IsRepeating(body, now, GrenadeRepeatSeconds))
+                {
+                    return;
+                }
+
+                body.LastActionSeconds = now;
+                if (body.Progress.Grenades <= 0)
+                {
+                    events.Add(new PlayerWeaponEmpty(_player.Id));
+                    return;
+                }
+
+                _actionEffects.ClearWeaponCell(target, events);
+                body.Action = new PlayerAction(
+                    PlayerActionKind.GrenadeThrow,
+                    direction,
+                    GrenadeThrowSeconds);
+                events.Add(new PlayerGrenadeThrowStarted(
+                    _player.Id,
+                    direction,
+                    TimeSpan.FromSeconds(GrenadeThrowSeconds)));
+                return;
+            }
+
+            if (IsRepeating(body, now, StrikeRepeatSeconds))
+            {
+                return;
+            }
+
+            body.LastActionSeconds = now;
+            double windup = StrikeWindupSeconds[(int)direction];
+            body.Action = new PlayerAction(PlayerActionKind.StrikeWindup, direction, windup);
+            events.Add(new PlayerStrikeStarted(
+                _player.Id,
+                direction,
+                TimeSpan.FromSeconds(windup)));
+        }
+
+        /// <summary>Gets the remaining duration of the active action, if any.</summary>
+        public double? ActionSecondsRemaining => _player.PlayerBody?.Action?.RemainingSeconds;
+
+        /// <summary>
+        /// Gets whether the fire control is held by a player that is standing and controllable,
+        /// which is exactly the state the recovered <c>DoCtrl</c> decides its fire branch in.
+        /// </summary>
+        public bool IsAwaitingAction => _input.Fire
+            && _player.Motion is null
+            && _player.PlayerBody is
+            { Rotation: null, Action: null, Reaction.Kind: PlayerReactionKind.Normal };
+
+        /// <summary>
+        /// Gets how long a held fire control still has to wait for its repeat time, or
+        /// <see langword="null"/> when nothing is waiting. The advance loop uses it as a timer, so
+        /// a repeat that expires part way through an advance fires exactly when it expires.
+        /// </summary>
+        public double? SecondsUntilActionReady
+        {
+            get
+            {
+                if (!IsAwaitingAction
+                    || _player.PlayerBody is not { LastActionSeconds: double last } body)
+                {
+                    return null;
+                }
+
+                double repeat = CanPlaceWeapon(_player.Position.Offset(body.FacingDirection))
+                    ? GrenadeRepeatSeconds
+                    : StrikeRepeatSeconds;
+                double remaining = last + repeat - _world.CurrentTimeSeconds;
+                return remaining > TimeTolerance ? remaining : null;
+            }
+        }
+
+        /// <summary>Advances the active action and applies each phase as it ends.</summary>
+        /// <param name="elapsedSeconds">The elapsed simulation time.</param>
+        /// <param name="events">The ordered event sink.</param>
+        /// <returns>Whether the player became controllable again.</returns>
+        public bool AdvanceAction(double elapsedSeconds, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(events);
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            if (body.Action is not PlayerAction action)
+            {
+                return false;
+            }
+
+            action.RemainingSeconds -= elapsedSeconds;
+            if (action.RemainingSeconds > TimeTolerance)
+            {
+                return false;
+            }
+
+            GridPosition target = _player.Position.Offset(action.Direction);
+            switch (action.Kind)
+            {
+                case PlayerActionKind.StrikeWindup:
+                    body.Action = new PlayerAction(
+                        PlayerActionKind.StrikeRecovery,
+                        action.Direction,
+                        StrikeRecoverySeconds[(int)action.Direction]);
+                    ApplyStrike(action.Direction, target, events);
+                    return false;
+                case PlayerActionKind.GrenadeThrow:
+                    body.Action = null;
+                    if (_world.Contains(target))
+                    {
+                        _actionEffects.PlaceGrenade(target, events);
+                        body.Progress.SpendGrenade();
+                    }
+
+                    return true;
+                case PlayerActionKind.StrikeRecovery:
+                    body.Action = null;
+                    return true;
+                default:
+                    throw new InvalidOperationException("Unknown player action.");
+            }
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>_AEnd_Str</c>. The struck cell is consumed first, exactly as
+        /// walking into it would consume it, and every remaining occupant that carries
+        /// <c>CNT_OrMaskPlPush</c> is then pushed. An occupant already moving against the strike
+        /// fails the <c>CellObjStillOrDir</c> gate and nothing is pushed at all.
+        /// </summary>
+        private void ApplyStrike(
+            Direction direction,
+            GridPosition target,
+            List<SimulationEvent> events)
+        {
+            if (!_world.Contains(target))
+            {
+                return;
+            }
+
+            events.Add(new PlayerStruck(_player.Id, target, direction));
+            EatDestination(target, events);
+            IReadOnlyList<Entity> occupants = _world.GetOccupants(target);
+            if (occupants.Any(
+                occupant => occupant.Motion is not null
+                    && occupant.Motion.TravelDirection != direction))
+            {
+                return;
+            }
+
+            foreach (Entity occupant in occupants)
+            {
+                if ((occupant.Interactions
+                    & (InteractionMask.PlayerPushable | InteractionMask.PushesThroughOccupants)) != 0)
+                {
+                    _actionEffects.PushStruck(occupant, direction, events);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the faced cell can receive a placed weapon, applying the recovered
+        /// <c>CellObjCheck(n, -1, CNT_OrMaskPlBombHere, True)</c>. A still occupant blocks the
+        /// weapon unless it is crushable, which <c>Game._CellPlKill</c> then destroys, or a shadow
+        /// object. <c>CNT_CMaskShadowObj</c> has no flag of its own, because every carrier of it —
+        /// the table, the teleporter, fire and the spawned beetle — is exactly an occupant that
+        /// does not lock its cell.
+        /// </summary>
+        private bool CanPlaceWeapon(GridPosition target)
+        {
+            return _world.Contains(target)
+                && !_world.GetOccupants(target).Any(
+                    occupant => occupant.Motion is null
+                        && occupant.Interactions.HasFlag(InteractionMask.BlocksMovement)
+                        && !occupant.Interactions.HasFlag(InteractionMask.CanBePushedThrough));
+        }
+
+        private static bool IsRepeating(PlayerBody body, double now, double repeatSeconds)
+        {
+            return body.LastActionSeconds is double last
+                && now - last < repeatSeconds - TimeTolerance;
+        }
+
         private void StartMove(
             Direction direction,
             PlayerBody body,
-            ICollection<SimulationEvent> events)
+            List<SimulationEvent> events)
         {
 
             GridPosition destination = _player.Position.Offset(direction);
@@ -169,7 +415,7 @@ namespace Mooh.Core.Player
             Direction direction,
             PlayerBody playerBody,
             double speedMultiplier,
-            ICollection<SimulationEvent> events)
+            List<SimulationEvent> events)
         {
             int resolutionOrder = 0;
             foreach (MovementStep step in plan.Steps)
@@ -191,7 +437,7 @@ namespace Mooh.Core.Player
             }
         }
 
-        public void HandleInTransit(ICollection<SimulationEvent> events)
+        public void HandleInTransit(List<SimulationEvent> events)
         {
             ArgumentNullException.ThrowIfNull(events);
             MotionState? motion = _player.Motion;
@@ -222,7 +468,7 @@ namespace Mooh.Core.Player
 
         public double? RotationSecondsRemaining => _player.PlayerBody?.Rotation?.RemainingSeconds;
 
-        public bool AdvanceRotation(double elapsedSeconds, ICollection<SimulationEvent> events)
+        public bool AdvanceRotation(double elapsedSeconds, List<SimulationEvent> events)
         {
             PlayerBody body = _player.PlayerBody
                 ?? throw new InvalidOperationException("The player entity has no player body.");
@@ -252,7 +498,7 @@ namespace Mooh.Core.Player
             PlayerBody body,
             Direction direction,
             double? suspendedProgress,
-            ICollection<SimulationEvent> events)
+            List<SimulationEvent> events)
         {
             Direction from = body.FacingDirection;
             double duration = direction == from.Opposite()
@@ -279,7 +525,7 @@ namespace Mooh.Core.Player
 
         private void EatDestination(
             GridPosition destination,
-            ICollection<SimulationEvent> events)
+            List<SimulationEvent> events)
         {
             if (!_world.Contains(destination))
             {

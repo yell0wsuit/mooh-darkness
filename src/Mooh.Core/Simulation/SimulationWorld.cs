@@ -11,6 +11,7 @@ using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
+using Mooh.Core.Levels;
 using Mooh.Core.Motion;
 using Mooh.Core.Movement;
 using Mooh.Core.Player;
@@ -21,12 +22,19 @@ namespace Mooh.Core.Simulation
     /// <summary>
     /// Coordinates continuous gravity evaluation and kinematic advancement for a world.
     /// </summary>
-    public sealed class SimulationWorld
+    public sealed class SimulationWorld : IPlayerActionEffects
     {
         private const double BoundaryTolerance = 1e-6;
         private const double ExplosionDelaySeconds = 0.2;
         private const int MonsterKillScore = 10;
         private const int BeetleAbsorbScore = 90;
+
+        /// <summary>
+        /// The placed type whose recovered behavior a thrown grenade shares. The original registers
+        /// it separately as <c>WBombInt</c> and gives it the same <c>GameTypeBomb</c> behavior the
+        /// placed <c>WBomb</c> pickup has.
+        /// </summary>
+        private const string ThrownGrenadeType = "WBomb";
 
         /// <summary>
         /// The recovered <c>CNT_OPrm_SpeedSmBeetle</c> factor against <c>Compl.SpeedMon</c>. The
@@ -35,7 +43,17 @@ namespace Mooh.Core.Simulation
         /// </summary>
         private const double BeetleSpeedMultiplier = 0.5;
         private const double TimeTolerance = 1e-12;
+
+        /// <summary>The recovered <c>CNT_OPrm_PlPushSpeed</c> against the player's own speed.</summary>
+        private const double PushSpeedMultiplier = 1.5;
+
         private static readonly TimeSpan ExplosionCellLockDuration = TimeSpan.FromMilliseconds(500);
+
+        /// <summary>
+        /// The recovered <c>CNT_WrdExplLockTime</c> that <c>Game._CellPlKill</c> applies to a cell
+        /// a weapon is placed in.
+        /// </summary>
+        private static readonly TimeSpan WeaponCellLockDuration = TimeSpan.FromMilliseconds(500);
         private static readonly (int X, int Y)[] ExplosionNeighborOffsets =
         [
             (-1, 0),
@@ -149,7 +167,7 @@ namespace Mooh.Core.Simulation
             _smallBeetles = new SmallBeetleSystem(world);
             _levelOutcome = new LevelOutcomeSystem(world, _difficultySpeeds);
             _playerController = world.Player is Entity player
-                ? new PlayerController(player, world, _movement, gravityDirection, _difficultySpeeds)
+                ? new PlayerController(player, world, _movement, gravityDirection, _difficultySpeeds, this)
                 : null;
         }
 
@@ -232,6 +250,7 @@ namespace Mooh.Core.Simulation
 
             KinematicsSystem.Stop(target);
             body.Rotation = null;
+            body.Action = null;
             _playerController?.EndSegment();
             if (target.HealthBody!.IsDead)
             {
@@ -295,6 +314,8 @@ namespace Mooh.Core.Simulation
                 _playerController?.HandleInTransit(events);
                 Entity[] moving = [.. _world.Entities.Where(entity => entity.Motion is not null)];
                 double? rotationSeconds = _playerController?.RotationSecondsRemaining;
+                double? actionSeconds = _playerController?.ActionSecondsRemaining
+                    ?? _playerController?.SecondsUntilActionReady;
                 double? unlockSeconds = _world.SecondsUntilNextCellUnlock();
                 double? healthSeconds = SecondsUntilNextImmunityExpiry();
                 double? bonusSeconds = SecondsUntilNextBonusExpiry();
@@ -320,6 +341,11 @@ namespace Mooh.Core.Simulation
                 if (rotationSeconds is double remainingRotation)
                 {
                     substepSeconds = Math.Min(substepSeconds, remainingRotation);
+                }
+
+                if (actionSeconds is double remainingAction)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingAction);
                 }
 
                 if (unlockSeconds is double remainingUntilUnlock)
@@ -364,6 +390,7 @@ namespace Mooh.Core.Simulation
 
                 if (moving.Length == 0
                     && rotationSeconds is null
+                    && actionSeconds is null
                     && unlockSeconds is null
                     && healthSeconds is null
                     && bonusSeconds is null
@@ -389,6 +416,7 @@ namespace Mooh.Core.Simulation
                 bool playerControlReady = _playerController?.AdvanceRotation(
                     substepSeconds,
                     events) == true;
+                playerControlReady |= _playerController?.AdvanceAction(substepSeconds, events) == true;
                 playerControlReady |= AdvancePlayerReaction(substepSeconds, events);
                 // Beetles advance first, so a wait that expires this substep is decided by the
                 // DecideMonsters pass at the end of AdvanceMonsterTimers rather than one substep
@@ -406,7 +434,7 @@ namespace Mooh.Core.Simulation
                 bool resolvedBoundary = ResolveBoundaries(
                     events,
                     out bool boundaryControlReady,
-                    out bool emitStoppedWhenNoInput);
+                    out bool fromCellArrival);
                 playerControlReady |= boundaryControlReady;
                 if (!resolvedBoundary
                     && unlockSeconds is double expiringLock
@@ -419,9 +447,14 @@ namespace Mooh.Core.Simulation
                     _gravity.EvaluateStationary(_world, _gravityDirection, events);
                 }
 
+                // The original runs DoCtrl once per physics substep, so a repeat time that expires
+                // part way through an advance fires on the next substep instead of waiting for the
+                // next advance. Polling a standing player that holds the fire control reproduces
+                // that without changing any path the control is not held on.
+                playerControlReady |= _playerController?.IsAwaitingAction == true;
                 if (playerControlReady)
                 {
-                    _playerController?.ResumeOrTryStart(events, emitStoppedWhenNoInput);
+                    _playerController?.ResumeOrTryStart(events, fromCellArrival);
                 }
 
                 _levelOutcome.Advance(substepSeconds, events);
@@ -806,6 +839,141 @@ namespace Mooh.Core.Simulation
             }
         }
 
+        void IPlayerActionEffects.PushStruck(
+            Entity target,
+            Direction direction,
+            List<SimulationEvent> events)
+        {
+            AdvanceStrikePush(target, direction, events);
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>Game._CellPlKill</c>: every crushable occupant of the cell is
+        /// destroyed and the cell is locked for the explosion lock time.
+        /// </summary>
+        void IPlayerActionEffects.ClearWeaponCell(GridPosition cell, List<SimulationEvent> events)
+        {
+            ClearWeaponCell(cell, events);
+        }
+
+        void IPlayerActionEffects.PlaceGrenade(GridPosition cell, List<SimulationEvent> events)
+        {
+            Entity player = _world.Player
+                ?? throw new InvalidOperationException("Placing a grenade requires a player.");
+
+            // The recovered _AEnd_Bomb clears the cell a second time, because the cell may have
+            // changed during the placing animation.
+            ClearWeaponCell(cell, events);
+            Entity grenade = LevelMaterializer.CreateRuntimeObject(
+                CreateSpawnedEntityId(player.Id),
+                cell,
+                ThrownGrenadeType,
+                _difficultySpeeds);
+            _world.Add(grenade);
+            events.Add(new PlayerGrenadePlaced(player.Id, grenade.Id, cell));
+        }
+
+        private void ClearWeaponCell(GridPosition cell, List<SimulationEvent> events)
+        {
+            if (!_world.Contains(cell))
+            {
+                return;
+            }
+
+            foreach (Entity occupant in _world.GetOccupants(cell))
+            {
+                if (occupant.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
+                {
+                    DestroyEntity(occupant, occupant.Id, events);
+                }
+            }
+
+            _world.LockCell(cell, WeaponCellLockDuration);
+        }
+
+        /// <summary>
+        /// Runs one step of the recovered <c>CPlPushBase.PlPush_OnCell</c> chain for a struck
+        /// object. The object stops and falls when it is unsupported, consumes crushable occupants
+        /// ahead when it can push through them, and otherwise either enters the cell ahead or
+        /// stops against it. The chain therefore continues cell after cell, unlike the single-cell
+        /// push a walking player applies.
+        /// </summary>
+        private void AdvanceStrikePush(
+            Entity entity,
+            Direction direction,
+            List<SimulationEvent> events)
+        {
+            // The original re-registers PlPush_OnCell as the arrival handler, but _OnFall replaces
+            // it, so a struck object that becomes unsupported stops being pushed.
+            if (_gravity.EvaluateStationary(_world, entity, _gravityDirection, events))
+            {
+                return;
+            }
+
+            GridPosition ahead = entity.Position.Offset(direction);
+            if (_world.Contains(ahead)
+                && entity.Interactions.HasFlag(InteractionMask.PushesThroughOccupants))
+            {
+                foreach (Entity crushed in _world.GetOccupants(ahead))
+                {
+                    if (crushed.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
+                    {
+                        DestroyEntity(crushed, entity.Id, events);
+                    }
+                }
+            }
+
+            if (!_world.Contains(ahead)
+                || !_world.IsCellUnlocked(ahead)
+                || _world.GetOccupants(ahead).Any(occupant => occupant.Motion is null))
+            {
+                ResolveStrikePushImpact(entity, ahead, events);
+                return;
+            }
+
+            _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, ahead)]);
+            KinematicsSystem.Start(
+                entity,
+                MotionCause.StrikePushed,
+                direction,
+                _difficultySpeeds.PlayerSpeed * PushSpeedMultiplier);
+            events.Add(new PushStarted(entity.Id, direction));
+        }
+
+        /// <summary>
+        /// Applies the recovered end of the strike-push chain, which shakes the stopped object
+        /// itself and then every occupant of the cell it stopped against. A struck bottle therefore
+        /// explodes where it stops, and a struck rock detonates whatever it stops against.
+        /// </summary>
+        private void ResolveStrikePushImpact(
+            Entity entity,
+            GridPosition ahead,
+            List<SimulationEvent> events)
+        {
+            ApplyShake(entity, entity.Id, hard: false, events);
+            if (!_world.Contains(ahead))
+            {
+                return;
+            }
+
+            foreach (Entity occupant in _world.GetOccupants(ahead))
+            {
+                if (occupant.PlayerBody is not null && occupant.HealthBody is not null)
+                {
+                    ApplyDamage(
+                        new DamageRequest(
+                            entity.Id,
+                            occupant.Id,
+                            DamageKind.Shake,
+                            _difficultySpeeds.ShakeDamage),
+                        events);
+                    continue;
+                }
+
+                ApplyShake(occupant, entity.Id, hard: false, events);
+            }
+        }
+
         private double? SecondsUntilPlayerReactionEnds()
         {
             PlayerReaction? reaction = _world.Player?.PlayerBody?.Reaction;
@@ -887,10 +1055,10 @@ namespace Mooh.Core.Simulation
         private bool ResolveBoundaries(
             List<SimulationEvent> events,
             out bool playerControlReady,
-            out bool emitStoppedWhenNoInput)
+            out bool fromCellArrival)
         {
             playerControlReady = false;
-            emitStoppedWhenNoInput = false;
+            fromCellArrival = false;
             Entity[] ready =
             [
                 .. _world.Entities
@@ -925,11 +1093,20 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
+                if (motion.Cause == MotionCause.StrikePushed)
+                {
+                    Direction pushDirection = motion.SegmentDirection;
+                    events.Add(new CellEntered(entity.Id, entity.Position));
+                    KinematicsSystem.Stop(entity);
+                    AdvanceStrikePush(entity, pushDirection, events);
+                    continue;
+                }
+
                 if (motion.Cause == MotionCause.PlayerWalking)
                 {
                     ResolvePlayerBoundary(entity, events);
                     playerControlReady = true;
-                    emitStoppedWhenNoInput = true;
+                    fromCellArrival = true;
                     continue;
                 }
 
@@ -1074,7 +1251,7 @@ namespace Mooh.Core.Simulation
         {
             return cause switch
             {
-                MotionCause.PlayerPushed => 0,
+                MotionCause.PlayerPushed or MotionCause.StrikePushed => 0,
                 MotionCause.Falling or MotionCause.Sliding => 1,
                 MotionCause.MonsterWalking => 2,
                 MotionCause.PlayerWalking => 3,

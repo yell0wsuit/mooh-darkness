@@ -126,6 +126,19 @@ namespace Mooh.Core.Player
             return DoorScore;
         }
 
+        /// <summary>
+        /// Spends one grenade, applying the recovered <c>WeapDec</c>. The original also switches to
+        /// the next stocked weapon once the count reaches zero; the rewrite implements only the
+        /// grenade, so there is nothing to switch to.
+        /// </summary>
+        internal void SpendGrenade()
+        {
+            if (Grenades > 0)
+            {
+                Grenades--;
+            }
+        }
+
         internal void AddScore(int amount)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(amount);
