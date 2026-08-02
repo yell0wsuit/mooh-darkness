@@ -114,7 +114,15 @@ namespace Mooh.Core.Tests.Simulation
 
             Assert.Equal(ExplosionReaction.Detonate3x3, level.GetEntity(8).ExplosionBody!.Reaction);
             Assert.Equal(ExplosionReaction.Detonate3x3, level.GetEntity(9).ExplosionBody!.Reaction);
-            foreach (int id in new[] { 10, 11, 12, 13 })
+            // The barrel and the gravity arrow carry CNT_CMaskCellCanExplode, so a blast reaches
+            // them, but their recovered OnExpl handlers are specializations that are not
+            // implemented yet.
+            foreach (int id in new[] { 12, 13 })
+            {
+                Assert.Equal(ExplosionReaction.Deferred, level.GetEntity(id).ExplosionBody!.Reaction);
+            }
+
+            foreach (int id in new[] { 10, 11 })
             {
                 Assert.Null(level.GetEntity(id).ExplosionBody);
             }

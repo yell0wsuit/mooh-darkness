@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 
 using Mooh.Core.Content;
+using Mooh.Core.Explosions;
 using Mooh.Core.Interactions;
 using Mooh.Core.Levels;
 using Mooh.Core.Shakes;
@@ -76,15 +77,31 @@ namespace Mooh.Core.Tests.Content
                     | InteractionMask.PushesThroughOccupants,
                 true, 2d, 0];
             yield return ["OCoin03", EntityKind.Coin,
-                InteractionMask.PlayerEdible | InteractionMask.RoundSupport,
+                InteractionMask.BlocksMovement | InteractionMask.PlayerEdible
+                    | InteractionMask.RoundSupport,
                 true, 1d, 3];
             yield return ["OKDKey2", EntityKind.Key,
                 InteractionMask.BlocksMovement | InteractionMask.PlayerEdible | InteractionMask.RoundSupport,
                 true, 1d, 2];
             yield return ["WGrBox", EntityKind.GrenadeBox,
-                InteractionMask.PlayerEdible | InteractionMask.RoundSupport
-                    | InteractionMask.BlueMonsterTarget,
+                InteractionMask.BlocksMovement | InteractionMask.PlayerEdible
+                    | InteractionMask.RoundSupport | InteractionMask.BlueMonsterTarget,
                 true, 1d, 5];
+            yield return ["OBaloon", EntityKind.Balloon,
+                InteractionMask.BlocksMovement | InteractionMask.PlayerPushable
+                    | InteractionMask.RoundSupport | InteractionMask.PushesThroughOccupants
+                    | InteractionMask.GravityAxisPushable | InteractionMask.BlueMonsterTarget,
+                false, 1d, 0];
+            yield return ["OBubble", EntityKind.Bubble,
+                InteractionMask.BlocksMovement | InteractionMask.PlayerPushable
+                    | InteractionMask.RoundSupport | InteractionMask.PushesThroughOccupants
+                    | InteractionMask.GravityAxisPushable,
+                false, 1d, 0];
+            yield return ["OBarel", EntityKind.Barrel,
+                InteractionMask.BlocksMovement | InteractionMask.PlayerPushable
+                    | InteractionMask.RoundSupport | InteractionMask.GravityAxisPushable
+                    | InteractionMask.BlueMonsterTarget,
+                true, 1d, 0];
             yield return ["OArrowT", EntityKind.GravityArrow,
                 InteractionMask.BlocksMovement | InteractionMask.PlayerPushable | InteractionMask.RoundSupport
                     | InteractionMask.BlueMonsterTarget,
@@ -226,6 +243,117 @@ namespace Mooh.Core.Tests.Content
             Assert.Equal(
                 ["OArrowB", "OArrowL", "OArrowR", "OArrowT", "OBarel", "OMagic"],
                 deferred);
+        }
+
+        /// <summary>
+        /// Verifies exactly the recovered <c>CNT_CMaskCallCanPushTh</c> carriers can be consumed by
+        /// a push. Among placed types the bit reaches only the three eat-cell families, through
+        /// <c>CNT_OrMaskCellSimpleEat</c>.
+        /// </summary>
+        [Fact]
+        public void OnlyRecoveredEatCellsCanBePushedThrough()
+        {
+            Assert.Equal(
+                ["CellsEat01", "DCellsEat01", "JCellsEat01"],
+                CarriersOf(InteractionMask.CanBePushedThrough));
+        }
+
+        /// <summary>
+        /// Verifies exactly the recovered <c>CNT_CMaskPlCanPushThEat</c> carriers consume eligible
+        /// occupants of the cell they are pushed into.
+        /// </summary>
+        [Fact]
+        public void OnlyRecoveredPushThroughEatTypesConsumeOccupants()
+        {
+            Assert.Equal(
+                ["OBaloon", "OBubble", "OWeight"],
+                CarriersOf(InteractionMask.PushesThroughOccupants));
+        }
+
+        /// <summary>
+        /// Verifies exactly the recovered <c>CNT_CMaskObjVPush</c> carriers clear the gravity-axis
+        /// push gate. The barrel carries the bit without the push-through-eat bit, so the recovered
+        /// second gate still refuses it; the flag records the mask rather than the outcome.
+        /// </summary>
+        [Fact]
+        public void OnlyRecoveredObjVPushTypesClearTheGravityAxisGate()
+        {
+            Assert.Equal(
+                ["OBaloon", "OBarel", "OBubble"],
+                CarriersOf(InteractionMask.GravityAxisPushable));
+        }
+
+        /// <summary>
+        /// Verifies every placed collectible also locks its cell. The recovered
+        /// <c>CNT_OrMaskObjEat</c> is <c>CellLockMotion | CellCanExplode | PlCanEat</c>, so a
+        /// collectible supports a falling object rather than letting it pass.
+        /// </summary>
+        [Fact]
+        public void EveryRecoveredCollectibleLocksItsCell()
+        {
+            string[] unlocked = [.. ArchivalObjectCatalog.Types
+                .Where(type => ArchivalObjectCatalog.Get(type).Interactions
+                    .HasFlag(InteractionMask.PlayerEdible))
+                .Where(type => !ArchivalObjectCatalog.Get(type).Interactions
+                    .HasFlag(InteractionMask.BlocksMovement))
+                .Order(StringComparer.Ordinal)];
+
+            Assert.Empty(unlocked);
+        }
+
+        /// <summary>Verifies recovered explosion reactions are explicit per type.</summary>
+        /// <param name="archivalType">The archival type under test.</param>
+        /// <param name="expected">The recovered <c>OnExpl</c> reaction, or <see langword="null"/>
+        /// when the type does not carry <c>CNT_CMaskCellCanExplode</c>.</param>
+        [Theory]
+        [InlineData("ORock01", ExplosionReaction.Destroy)]
+        [InlineData("OBubble", ExplosionReaction.Destroy)]
+        [InlineData("OMagic", ExplosionReaction.Destroy)]
+        [InlineData("CellsSolid01", ExplosionReaction.Destroy)]
+        [InlineData("PipeHor", ExplosionReaction.Destroy)]
+        [InlineData("OBottle", ExplosionReaction.Detonate3x3)]
+        [InlineData("OBaloon", ExplosionReaction.Detonate3x3)]
+        [InlineData("WBomb", ExplosionReaction.Detonate3x3)]
+        [InlineData("OBarel", ExplosionReaction.Deferred)]
+        [InlineData("OArrowL", ExplosionReaction.Deferred)]
+        [InlineData("CellsMetal01", null)]
+        [InlineData("TonnelHor", null)]
+        [InlineData("OKDDoor1", null)]
+        [InlineData("OKDKey1", null)]
+        [InlineData("OFire", null)]
+        [InlineData("OWRotL", null)]
+        [InlineData("OTable", null)]
+        [InlineData("OTPort", null)]
+        public void RecoveredExplosionReactionsAreExplicit(
+            string archivalType,
+            ExplosionReaction? expected)
+        {
+            Assert.Equal(expected, ArchivalObjectCatalog.Get(archivalType).ExplosionReaction);
+        }
+
+        /// <summary>
+        /// Verifies the deferred explosion handlers are exactly the recovered specializations:
+        /// the barrel's cross blast and the gravity arrow's launch.
+        /// </summary>
+        [Fact]
+        public void DeferredExplosionReactionsAreTheKnownSpecializations()
+        {
+            string[] deferred = [.. ArchivalObjectCatalog.Types
+                .Where(type => ArchivalObjectCatalog.Get(type).ExplosionReaction
+                    == ExplosionReaction.Deferred)
+                .Order(StringComparer.Ordinal)];
+
+            Assert.Equal(
+                ["OArrowB", "OArrowL", "OArrowR", "OArrowT", "OBarel"],
+                deferred);
+        }
+
+        /// <summary>Gets every placed type carrying a capability, in ordinal order.</summary>
+        private static string[] CarriersOf(InteractionMask capability)
+        {
+            return [.. ArchivalObjectCatalog.Types
+                .Where(type => ArchivalObjectCatalog.Get(type).Interactions.HasFlag(capability))
+                .Order(StringComparer.Ordinal)];
         }
 
         /// <summary>Verifies unsupported legacy names are rejected at the catalog boundary.</summary>

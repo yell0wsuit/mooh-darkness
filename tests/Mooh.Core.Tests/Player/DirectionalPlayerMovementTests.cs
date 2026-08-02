@@ -21,6 +21,14 @@ namespace Mooh.Core.Tests.Player
         private const InteractionMask Pushable =
             InteractionMask.BlocksMovement | InteractionMask.PlayerPushable;
 
+        /// <summary>
+        /// Matches the only recovered combination that survives both gravity-axis gates: the
+        /// balloon and the bubble carry <c>CNT_CMaskObjVPush</c> and <c>CNT_CMaskPlCanPushThEat</c>
+        /// together.
+        /// </summary>
+        private const InteractionMask GravityAxisPushable = Pushable
+            | InteractionMask.GravityAxisPushable | InteractionMask.PushesThroughOccupants;
+
         /// <summary>Gets every cardinal player movement direction.</summary>
         public static TheoryData<Direction> Directions =>
             [
@@ -115,7 +123,7 @@ namespace Mooh.Core.Tests.Player
                 facingDirection: direction);
             GridPosition blockStart = player.Position.Offset(direction);
             InteractionMask interactions = IsOnSameAxis(direction, Direction.Down)
-                ? Pushable | InteractionMask.GravityAxisPushable
+                ? GravityAxisPushable
                 : Pushable;
             Entity block = Add(world, blockStart, interactions);
             simulation.SetPlayerInput(Held(direction));
@@ -146,10 +154,7 @@ namespace Mooh.Core.Tests.Player
                 gravityDirection: Direction.Down,
                 facingDirection: Direction.Down);
             GridPosition blockStart = player.Position.Offset(Direction.Down);
-            Entity capable = Add(
-                world,
-                blockStart,
-                Pushable | InteractionMask.GravityAxisPushable);
+            Entity capable = Add(world, blockStart, GravityAxisPushable);
             Entity ordinary = Add(world, blockStart, Pushable);
             simulation.SetPlayerInput(Held(Direction.Down));
 
@@ -159,6 +164,62 @@ namespace Mooh.Core.Tests.Player
             Assert.Null(capable.Motion);
             Assert.Null(ordinary.Motion);
             Assert.Equal([new PlayerBlocked(player.Id, Direction.Down)], events);
+        }
+
+        /// <summary>
+        /// Verifies the recovered second gravity-axis gate. <c>GamePlayer.CtrlMove</c> reaches the
+        /// ordinary push branch through <c>elif vm and ...</c>, so an occupant that clears the
+        /// <c>CNT_CMaskObjVPush</c> gate but carries no <c>CNT_CMaskPlCanPushThEat</c> — the
+        /// recovered barrel — still cannot be pushed along gravity.
+        /// </summary>
+        [Fact]
+        public void GravityAxisPushAlsoRequiresThePushThroughEatCapability()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
+                moveSpeed: 1,
+                pushSpeedMultiplier: 1.5,
+                gravityDirection: Direction.Down,
+                facingDirection: Direction.Down);
+            Entity barrel = Add(
+                world,
+                player.Position.Offset(Direction.Down),
+                Pushable | InteractionMask.GravityAxisPushable);
+            simulation.SetPlayerInput(Held(Direction.Down));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.Null(player.Motion);
+            Assert.Null(barrel.Motion);
+            Assert.Equal([new PlayerBlocked(player.Id, Direction.Down)], events);
+        }
+
+        /// <summary>
+        /// Verifies the same occupant is still pushable perpendicular to gravity, where the
+        /// recovered branch only requires an empty destination.
+        /// </summary>
+        [Fact]
+        public void PushThroughEatIsNotRequiredPerpendicularToGravity()
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(
+                moveSpeed: 1,
+                pushSpeedMultiplier: 1.5,
+                gravityDirection: Direction.Down,
+                facingDirection: Direction.Right);
+            Entity barrel = Add(
+                world,
+                player.Position.Offset(Direction.Right),
+                Pushable | InteractionMask.GravityAxisPushable);
+            simulation.SetPlayerInput(Held(Direction.Right));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(0.1));
+
+            Assert.NotNull(barrel.Motion);
+            Assert.Equal(
+                [
+                    new PushStarted(barrel.Id, Direction.Right),
+                    new PlayerMoveStarted(player.Id, Direction.Right),
+                ],
+                events);
         }
 
         /// <summary>Verifies that ordinary pushes remain available perpendicular to gravity.</summary>

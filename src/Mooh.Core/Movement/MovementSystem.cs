@@ -75,10 +75,17 @@ namespace Mooh.Core.Movement
                     [new MovementStep(mover.Id, mover.Position, destination)]);
             }
 
+            // GamePlayer.CtrlMove gates a gravity-axis push twice. The outer gate needs every
+            // occupant to carry CNT_CMaskObjVPush, and the ordinary push branch is then reached
+            // through `elif vm and ...`, so it is unavailable along gravity at all. Only an
+            // occupant that also carries CNT_CMaskPlCanPushThEat takes the earlier branch and
+            // survives both.
             if (gravityDirection is Direction gravity
                 && IsOnSameAxis(request.Direction, gravity)
-                && pushed.Any(
-                    entity => !entity.Interactions.HasFlag(InteractionMask.GravityAxisPushable)))
+                && (pushed.Any(
+                        entity => !entity.Interactions.HasFlag(InteractionMask.GravityAxisPushable))
+                    || !pushed.Exists(
+                        entity => entity.Interactions.HasFlag(InteractionMask.PushesThroughOccupants))))
             {
                 return new MovementPlan(MoveResult.Blocked, []);
             }

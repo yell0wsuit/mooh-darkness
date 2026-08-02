@@ -574,6 +574,10 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
+                // ExplosionReaction.Deferred is deliberately inert. Those entities carry
+                // CNT_CMaskCellCanExplode, so a blast does reach them, but their recovered
+                // handlers — the barrel's cross blast and the gravity arrow's launch — are not
+                // implemented yet.
                 if (occupant.ExplosionBody?.Reaction == ExplosionReaction.Destroy)
                 {
                     DestroyEntity(occupant, sourceEntityId, events);

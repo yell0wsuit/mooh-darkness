@@ -11,7 +11,16 @@ namespace Mooh.Core.Levels
     /// <summary>Provides the exhaustive runtime catalog for types placed in the authoritative level corpus.</summary>
     public static class ArchivalObjectCatalog
     {
-        private const InteractionMask Collectible = InteractionMask.PlayerEdible | InteractionMask.RoundSupport;
+        /// <summary>
+        /// Matches the recovered collectible mask. <c>CNT_OrMaskObjEat</c> is
+        /// <c>CellLockMotion | CellCanExplode | PlCanEat</c>, so a collectible locks its cell as
+        /// well as being edible: a falling object rests on a coin instead of passing through it.
+        /// The player never notices the lock, because the eat pass consumes the occupant before
+        /// movement is planned.
+        /// </summary>
+        private const InteractionMask Collectible = InteractionMask.BlocksMovement
+            | InteractionMask.PlayerEdible | InteractionMask.RoundSupport;
+
         private const InteractionMask FixedBlock = InteractionMask.BlocksMovement | InteractionMask.MovementLocked;
 
         /// <summary>
@@ -24,6 +33,15 @@ namespace Mooh.Core.Levels
 
         private const InteractionMask PushableRound = InteractionMask.BlocksMovement
             | InteractionMask.PlayerPushable | InteractionMask.RoundSupport;
+
+        /// <summary>
+        /// Matches the recovered <c>CNT_CMaskObjVPush | CNT_CMaskPlCanPushThEat</c> pair. Only the
+        /// balloon and the bubble carry both, which is what clears the two gravity-axis push gates
+        /// in <c>GamePlayer.CtrlMove</c>.
+        /// </summary>
+        private const InteractionMask PushableAlongGravity = PushableRound
+            | InteractionMask.GravityAxisPushable | InteractionMask.PushesThroughOccupants;
+
         private const InteractionMask BlueTarget = InteractionMask.BlueMonsterTarget;
 
         /// <summary>
@@ -91,14 +109,15 @@ namespace Mooh.Core.Levels
                 explosionReaction: ExplosionReaction.Detonate3x3,
                 detonatesOnLanding: true,
                 shakeReaction: ShakeReaction.Detonate3x3);
-            Add(result, "OBarel", EntityKind.Barrel, PushableRound | BlueTarget, hasGravity: true,
+            Add(result, "OBarel", EntityKind.Barrel,
+                PushableRound | InteractionMask.GravityAxisPushable | BlueTarget,
+                hasGravity: true,
+                explosionReaction: ExplosionReaction.Deferred,
                 shakeReaction: ShakeReaction.Deferred);
-            Add(result, "OBaloon", EntityKind.Balloon,
-                PushableRound | InteractionMask.CanBePushedThrough | BlueTarget,
+            Add(result, "OBaloon", EntityKind.Balloon, PushableAlongGravity | BlueTarget,
                 explosionReaction: ExplosionReaction.Detonate3x3,
                 shakeReaction: ShakeReaction.Detonate3x3);
-            Add(result, "OBubble", EntityKind.Bubble,
-                PushableRound | InteractionMask.CanBePushedThrough,
+            Add(result, "OBubble", EntityKind.Bubble, PushableAlongGravity,
                 explosionReaction: ExplosionReaction.Destroy,
                 shakeReaction: ShakeReaction.Destroy);
             AddExplodableVariants(result, EntityKind.Coin, Collectible, true,
@@ -118,15 +137,14 @@ namespace Mooh.Core.Levels
                 explosionReaction: ExplosionReaction.Destroy,
                 detonatesOnLanding: true,
                 shakeReaction: ShakeReaction.Detonate3x3);
-            AddVariants(result, EntityKind.Key,
-                InteractionMask.BlocksMovement | Collectible,
-                true,
+            AddVariants(result, EntityKind.Key, Collectible, true,
                 "OKDKey1", "OKDKey2", "OKDKey3");
             AddVariants(result, EntityKind.KeyDoor, FixedBlock | InteractionMask.RoundSupport,
                 false,
                 "OKDDoor1", "OKDDoor2", "OKDDoor3");
             Add(result, "OFire", EntityKind.Fire, InteractionMask.RoundSupport, hasGravity: true);
             AddDirectional(result, "OArrow", EntityKind.GravityArrow, PushableRound | BlueTarget, hasGravity: true,
+                explosionReaction: ExplosionReaction.Deferred,
                 shakeReaction: ShakeReaction.Deferred);
             Add(result, "OWRotL", EntityKind.WorldRotation, WorldRotation, variant: -1);
             Add(result, "OWRotR", EntityKind.WorldRotation, WorldRotation, variant: 1);
