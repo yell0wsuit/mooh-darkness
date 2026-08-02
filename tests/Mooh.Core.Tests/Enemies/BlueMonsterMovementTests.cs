@@ -26,6 +26,18 @@ namespace Mooh.Core.Tests.Enemies
                 () => new BlueMonsterBody(0, Direction.Right, TimeSpan.FromMilliseconds(300)));
         }
 
+        /// <summary>Verifies the recovered bonus-state defaults and timing configuration.</summary>
+        [Fact]
+        public void BodyExposesRecoveredBonusConfiguration()
+        {
+            BlueMonsterBody body = new(1, Direction.Right, TimeSpan.FromMilliseconds(300));
+
+            Assert.False(body.IsFrozen);
+            Assert.False(body.IsSmall);
+            Assert.Equal(TimeSpan.FromMilliseconds(300), body.SmallTurnDuration);
+            Assert.Equal(TimeSpan.FromMilliseconds(375), body.TransformationDuration);
+        }
+
         /// <summary>Verifies an open left cell takes priority over an open forward cell.</summary>
         [Fact]
         public void OpenLeftCellStartsLeftTurn()

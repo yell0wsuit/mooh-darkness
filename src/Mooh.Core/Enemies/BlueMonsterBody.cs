@@ -10,6 +10,8 @@ namespace Mooh.Core.Enemies
         private static readonly TimeSpan DefaultAttackRecoveryDuration = TimeSpan.FromMilliseconds(1150);
         private static readonly TimeSpan DefaultAttackWindupDuration = TimeSpan.FromMilliseconds(600);
         private static readonly TimeSpan DefaultLeftAttackRecoveryDuration = TimeSpan.FromMilliseconds(985);
+        private static readonly TimeSpan RecoveredSmallTurnDuration = TimeSpan.FromMilliseconds(300);
+        private static readonly TimeSpan RecoveredTransformationDuration = TimeSpan.FromMilliseconds(375);
 
         /// <summary>Initializes blue-monster movement configuration.</summary>
         /// <param name="moveSpeed">The walking speed in cells per second.</param>
@@ -87,6 +89,8 @@ namespace Mooh.Core.Enemies
             LeftAttackRecoveryDuration = resolvedLeftAttackRecoveryDuration;
             AttackRecoveryDuration = resolvedAttackRecoveryDuration;
             StrikeDamage = strikeDamage;
+            SmallTurnDuration = RecoveredSmallTurnDuration;
+            TransformationDuration = RecoveredTransformationDuration;
         }
 
         /// <summary>Gets the walking speed in cells per second.</summary>
@@ -112,6 +116,18 @@ namespace Mooh.Core.Enemies
 
         /// <summary>Gets the monster's current behavior phase.</summary>
         public BlueMonsterState State { get; internal set; }
+
+        /// <summary>Gets whether the active ice bonus has frozen the monster.</summary>
+        public bool IsFrozen { get; internal set; }
+
+        /// <summary>Gets whether the glasses bonus has made the monster small and player-edible.</summary>
+        public bool IsSmall { get; internal set; }
+
+        /// <summary>Gets the duration of one quarter-turn in small form.</summary>
+        public TimeSpan SmallTurnDuration { get; }
+
+        /// <summary>Gets the duration of a glasses form transition.</summary>
+        public TimeSpan TransformationDuration { get; }
 
         /// <summary>Gets the time remaining in the current timed phase.</summary>
         public TimeSpan Remaining { get; internal set; }
