@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Threading;
 
 using Mooh.Core.Content;
 
@@ -31,6 +33,11 @@ namespace Mooh.SimulationRunner
                 && string.Equals(arguments[0], "level-board", StringComparison.Ordinal))
             {
                 return RunBoard(arguments, output, error);
+            }
+
+            if (arguments.Count >= 1 && string.Equals(arguments[0], "play", StringComparison.Ordinal))
+            {
+                return RunPlay(arguments, output, error);
             }
 
             if (arguments.Count != 1)
@@ -181,6 +188,89 @@ namespace Mooh.SimulationRunner
         {
             error.WriteLine("Usage: Mooh.SimulationRunner <scenario.json|directory>");
             error.WriteLine("       Mooh.SimulationRunner level-board <level.json>");
+            error.WriteLine("       Mooh.SimulationRunner play [manifest.json] [--level N] [--port N]");
+        }
+
+        private static int RunPlay(
+            IReadOnlyList<string> arguments,
+            TextWriter output,
+            TextWriter error)
+        {
+            string manifestPath = Path.Combine("assets", "levels", "manifest.json");
+            int level = 1;
+            int port = 8080;
+            for (int index = 1; index < arguments.Count; index++)
+            {
+                string argument = arguments[index];
+                if (string.Equals(argument, "--level", StringComparison.Ordinal)
+                    || string.Equals(argument, "--port", StringComparison.Ordinal))
+                {
+                    if (index + 1 >= arguments.Count
+                        || !int.TryParse(arguments[index + 1], out int value)
+                        || value < 1)
+                    {
+                        error.WriteLine($"Option '{argument}' requires a positive integer value.");
+                        return 2;
+                    }
+
+                    if (string.Equals(argument, "--level", StringComparison.Ordinal))
+                    {
+                        level = value;
+                    }
+                    else
+                    {
+                        port = value;
+                    }
+
+                    index++;
+                }
+                else
+                {
+                    manifestPath = argument;
+                }
+            }
+
+            LoadedLevelPack pack;
+            try
+            {
+                pack = JsonLevelPackLoader.Load(manifestPath);
+            }
+            catch (Exception exception)
+                when (exception is IOException or UnauthorizedAccessException or LevelValidationException)
+            {
+                error.WriteLine($"Unable to load level pack '{manifestPath}': {exception.Message}");
+                return 2;
+            }
+
+            int levelCount = pack.Levels?.Count ?? 0;
+            if (level > levelCount)
+            {
+                error.WriteLine($"Level {level} is outside the pack, which holds {levelCount} levels.");
+                return 2;
+            }
+
+            using CancellationTokenSource cancellation = new();
+            void Handler(object? sender, ConsoleCancelEventArgs eventArguments)
+            {
+                eventArguments.Cancel = true;
+                cancellation.Cancel();
+            }
+
+            Console.CancelKeyPress += Handler;
+            try
+            {
+                new PlayServer(new PlaySession(pack, level - 1)).Listen(port, output, cancellation.Token);
+                return 0;
+            }
+            catch (HttpListenerException exception)
+            {
+                error.WriteLine($"Unable to listen on port {port}: {exception.Message}");
+                return 2;
+            }
+            finally
+            {
+                Console.CancelKeyPress -= Handler;
+            }
         }
     }
 }

@@ -40,8 +40,15 @@ namespace Mooh.SimulationRunner
         private static readonly BoardGlyph Solid = new("🧱", "solid", 10, 71);
         private static readonly BoardGlyph Wood = new("🪵", "wood", 10, 72);
         private static readonly BoardGlyph Diggable = new("🟫", "diggable", 10, 73);
+        private static readonly BoardGlyph Beetle = new("🐛", "small beetle", 90, 13);
         private static readonly BoardGlyph Unknown = new("❓", "unknown", 80, 90);
         private static readonly BoardGlyph Empty = new("⬜", "empty", 0, 100);
+
+        /// <summary>Gets the glyph used for a cell with no occupants.</summary>
+        internal static BoardGlyph EmptyGlyph { get; } = Empty;
+
+        /// <summary>Gets the glyph used for a beetle spawned at runtime rather than placed.</summary>
+        internal static BoardGlyph BeetleGlyph { get; } = Beetle;
 
         /// <summary>Renders one validated archival level document.</summary>
         /// <param name="level">The archival level to inspect.</param>
@@ -115,7 +122,15 @@ namespace Mooh.SimulationRunner
 
         private static BoardGlyph Classify(LevelObject levelObject, ISet<string> unknownTypes)
         {
-            string type = levelObject.Type ?? string.Empty;
+            return ClassifyType(levelObject.Type ?? string.Empty, unknownTypes);
+        }
+
+        /// <summary>Selects the glyph for one exact archival type name.</summary>
+        /// <param name="type">The exact archival type name.</param>
+        /// <param name="unknownTypes">An optional sink recording unrecognized type names.</param>
+        /// <returns>The matching glyph, or the unknown glyph.</returns>
+        internal static BoardGlyph ClassifyType(string type, ISet<string>? unknownTypes)
+        {
             BoardGlyph? glyph = type switch
             {
                 "OPlayer" => Player,
@@ -162,11 +177,11 @@ namespace Mooh.SimulationRunner
                 return glyph;
             }
 
-            _ = unknownTypes.Add(type);
+            _ = unknownTypes?.Add(type);
             return Unknown;
         }
 
-        private sealed record BoardGlyph(
+        internal sealed record BoardGlyph(
             string Emoji,
             string Label,
             int Priority,
