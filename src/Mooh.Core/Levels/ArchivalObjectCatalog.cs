@@ -15,6 +15,7 @@ namespace Mooh.Core.Levels
         private const InteractionMask FixedBlock = InteractionMask.BlocksMovement | InteractionMask.MovementLocked;
         private const InteractionMask PushableRound = InteractionMask.BlocksMovement
             | InteractionMask.PlayerPushable | InteractionMask.RoundSupport;
+        private const InteractionMask BlueTarget = InteractionMask.BlueMonsterTarget;
         private const InteractionMask WorldRotation = InteractionMask.BlocksMovement
             | InteractionMask.RoundSupport;
 
@@ -57,7 +58,7 @@ namespace Mooh.Core.Levels
             AddDirectional(result, "MBlue", EntityKind.BlueMonster, InteractionMask.BlocksMovement,
                 explosionReaction: ExplosionReaction.Destroy,
                 shakeReaction: ShakeReaction.Detonate3x3);
-            Add(result, "MMBio", EntityKind.BioMass, InteractionMask.BlocksMovement,
+            Add(result, "MMBio", EntityKind.BioMass, InteractionMask.BlocksMovement | BlueTarget,
                 explosionReaction: ExplosionReaction.Destroy,
                 shakeReaction: ShakeReaction.Detonate3x3);
 
@@ -69,14 +70,14 @@ namespace Mooh.Core.Levels
                 fallSpeedMultiplier: 2,
                 impactStrength: GravityImpactStrength.Hard,
                 explosionReaction: ExplosionReaction.Destroy);
-            Add(result, "OBottle", EntityKind.Bottle, PushableRound, hasGravity: true,
+            Add(result, "OBottle", EntityKind.Bottle, PushableRound | BlueTarget, hasGravity: true,
                 explosionReaction: ExplosionReaction.Detonate3x3,
                 detonatesOnLanding: true,
                 shakeReaction: ShakeReaction.Detonate3x3);
-            Add(result, "OBarel", EntityKind.Barrel, PushableRound, hasGravity: true,
+            Add(result, "OBarel", EntityKind.Barrel, PushableRound | BlueTarget, hasGravity: true,
                 shakeReaction: ShakeReaction.Deferred);
             Add(result, "OBaloon", EntityKind.Balloon,
-                PushableRound | InteractionMask.CanBePushedThrough,
+                PushableRound | InteractionMask.CanBePushedThrough | BlueTarget,
                 explosionReaction: ExplosionReaction.Detonate3x3,
                 shakeReaction: ShakeReaction.Detonate3x3);
             Add(result, "OBubble", EntityKind.Bubble,
@@ -89,7 +90,7 @@ namespace Mooh.Core.Levels
                 "ODiam01", "ODiam02", "ODiam03", "ODiam04", "ODiam05");
             AddExplodableVariants(result, EntityKind.Food, Collectible, true,
                 "OEat01", "OEat02", "OEat03");
-            Add(result, "OMagic", EntityKind.MagicGem, PushableRound, hasGravity: true,
+            Add(result, "OMagic", EntityKind.MagicGem, PushableRound | BlueTarget, hasGravity: true,
                 explosionReaction: ExplosionReaction.Destroy,
                 shakeReaction: ShakeReaction.Deferred);
             Add(result, "BCola", EntityKind.Cola, Collectible, hasGravity: true,
@@ -108,7 +109,7 @@ namespace Mooh.Core.Levels
                 false,
                 "OKDDoor1", "OKDDoor2", "OKDDoor3");
             Add(result, "OFire", EntityKind.Fire, InteractionMask.RoundSupport, hasGravity: true);
-            AddDirectional(result, "OArrow", EntityKind.GravityArrow, PushableRound, hasGravity: true,
+            AddDirectional(result, "OArrow", EntityKind.GravityArrow, PushableRound | BlueTarget, hasGravity: true,
                 shakeReaction: ShakeReaction.Deferred);
             Add(result, "OWRotL", EntityKind.WorldRotation, WorldRotation, variant: -1);
             Add(result, "OWRotR", EntityKind.WorldRotation, WorldRotation, variant: 1);
@@ -121,15 +122,15 @@ namespace Mooh.Core.Levels
                 "TonnelHor", "TonnelVert", "TonnelLeftTop", "TonnelRightBottom", "TonnelTopRight",
                 "TonnelBottomLeft", "TonnelDL2R", "TonnelDR2L", "TonnelDT2B", "TonnelDB2T");
 
-            AddLandingDetonator(result, "WBomb", EntityKind.Grenade, Collectible, variant: 1);
-            AddLandingDetonator(result, "WGrBox", EntityKind.GrenadeBox, Collectible, variant: 5);
-            AddLandingDetonator(result, "WROne", EntityKind.Rocket, Collectible, variant: 1);
-            AddLandingDetonator(result, "WRBox", EntityKind.RocketBox, Collectible, variant: 5);
+            AddLandingDetonator(result, "WBomb", EntityKind.Grenade, Collectible | BlueTarget, variant: 1);
+            AddLandingDetonator(result, "WGrBox", EntityKind.GrenadeBox, Collectible | BlueTarget, variant: 5);
+            AddLandingDetonator(result, "WROne", EntityKind.Rocket, Collectible | BlueTarget, variant: 1);
+            AddLandingDetonator(result, "WRBox", EntityKind.RocketBox, Collectible | BlueTarget, variant: 5);
             Add(result, "WMine", EntityKind.Mine, InteractionMask.MonsterTransparent,
                 explosionReaction: ExplosionReaction.Detonate3x3,
                 shakeReaction: ShakeReaction.Detonate3x3);
-            AddLandingDetonator(result, "WMinesBox", EntityKind.MineBox, Collectible, variant: 5);
-            AddLandingDetonator(result, "WBBomb", EntityKind.BigBomb, Collectible, variant: 1);
+            AddLandingDetonator(result, "WMinesBox", EntityKind.MineBox, Collectible | BlueTarget, variant: 5);
+            AddLandingDetonator(result, "WBBomb", EntityKind.BigBomb, Collectible | BlueTarget, variant: 1);
 
             return result;
         }

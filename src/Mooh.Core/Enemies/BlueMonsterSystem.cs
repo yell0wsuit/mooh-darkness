@@ -49,13 +49,13 @@ namespace Mooh.Core.Enemies
             Direction leftDirection = body.FacingDirection.TurnLeft();
             GridPosition left = monster.Position.Offset(leftDirection);
 
-            if (FindAttackablePlayer(forward) is not null)
+            if (HasStrikeTarget(forward))
             {
                 StartAttack(monster, body, forward, events);
                 return;
             }
 
-            if (FindAttackablePlayer(left) is not null || CanEnter(monster, left))
+            if (HasStrikeTarget(left) || CanEnter(monster, left))
             {
                 StartTurn(monster, body, turnLeft: true, events);
                 return;
@@ -74,9 +74,11 @@ namespace Mooh.Core.Enemies
             Entity monster,
             double elapsedSeconds,
             List<SimulationEvent> events,
-            Action<DamageRequest> applyDamage)
+            Action<DamageRequest> applyDamage,
+            Action<Entity, EntityId> applyShake)
         {
             ArgumentNullException.ThrowIfNull(applyDamage);
+            ArgumentNullException.ThrowIfNull(applyShake);
             BlueMonsterBody? body = monster.BlueMonsterBody;
             if (body?.State is not (BlueMonsterState.TurningLeft
                 or BlueMonsterState.TurningRight
@@ -94,7 +96,7 @@ namespace Mooh.Core.Enemies
                 return;
             }
 
-            CompleteTimedState(monster, body, events, applyDamage);
+            CompleteTimedState(monster, body, events, applyDamage, applyShake);
         }
 
         internal static void CompleteWalking(Entity monster)
@@ -112,7 +114,7 @@ namespace Mooh.Core.Enemies
         {
             BlueMonsterBody body = monster.BlueMonsterBody!;
             GridPosition forward = monster.Position.Offset(body.FacingDirection);
-            if (FindAttackablePlayer(forward) is not null)
+            if (HasStrikeTarget(forward))
             {
                 StartAttack(monster, body, forward, events);
                 return;
@@ -161,21 +163,28 @@ namespace Mooh.Core.Enemies
                     .All(occupant => occupant.Interactions.HasFlag(InteractionMask.MonsterTransparent));
         }
 
-        private Entity? FindAttackablePlayer(GridPosition position)
+        /// <summary>
+        /// Reports whether a cell holds anything the monster strikes. The original tests the cell
+        /// for the blue-strike mask bit, which the player and a fixed set of objects carry.
+        /// </summary>
+        private bool HasStrikeTarget(GridPosition position)
         {
             return _world.Contains(position)
-                ? _world.GetOccupants(position)
-                    .FirstOrDefault(
-                        entity => entity.PlayerBody is not null
-                            && entity.HealthBody is { IsDead: false })
-                : null;
+                && _world.GetOccupants(position).Any(IsStrikeTarget);
+        }
+
+        private static bool IsStrikeTarget(Entity entity)
+        {
+            return (entity.PlayerBody is not null && entity.HealthBody is { IsDead: false })
+                || entity.Interactions.HasFlag(InteractionMask.BlueMonsterTarget);
         }
 
         private void CompleteTimedState(
             Entity monster,
             BlueMonsterBody body,
             List<SimulationEvent> events,
-            Action<DamageRequest> applyDamage)
+            Action<DamageRequest> applyDamage,
+            Action<Entity, EntityId> applyShake)
         {
             switch (body.State)
             {
@@ -186,7 +195,7 @@ namespace Mooh.Core.Enemies
                     CompleteTurn(monster, body, turnLeft: false, events);
                     break;
                 case BlueMonsterState.AttackWindup:
-                    ResolveStrike(monster, body, events, applyDamage);
+                    ResolveStrike(monster, body, events, applyDamage, applyShake);
                     break;
                 case BlueMonsterState.AttackRecovery:
                     body.FacingDirection = body.FacingDirection.Opposite();
@@ -225,11 +234,17 @@ namespace Mooh.Core.Enemies
             events.Add(new EnemyTurnCompleted(monster.Id, body.FacingDirection));
         }
 
+        /// <summary>
+        /// Resolves the strike impact. The original rechecks the faced cell and calls
+        /// <c>OnShake</c> on every occupant that carries the blue-strike bit, so the player takes
+        /// ordinary shake damage and eligible objects run their own shake handler.
+        /// </summary>
         private void ResolveStrike(
             Entity monster,
             BlueMonsterBody body,
             List<SimulationEvent> events,
-            Action<DamageRequest> applyDamage)
+            Action<DamageRequest> applyDamage,
+            Action<Entity, EntityId> applyShake)
         {
             GridPosition targetCell = monster.Position.Offset(body.FacingDirection);
             body.State = BlueMonsterState.AttackRecovery;
@@ -239,15 +254,29 @@ namespace Mooh.Core.Enemies
             body.Remaining = turnaroundDuration - body.TurnDuration;
             events.Add(new EnemyStrike(monster.Id, targetCell));
 
-            Entity? target = FindAttackablePlayer(targetCell);
-            if (target is not null)
+            if (_world.Contains(targetCell))
             {
-                applyDamage(
-                    new DamageRequest(
-                        monster.Id,
-                        target.Id,
-                        DamageKind.Strike,
-                        body.StrikeDamage));
+                foreach (Entity target in _world.GetOccupants(targetCell))
+                {
+                    if (!IsStrikeTarget(target))
+                    {
+                        continue;
+                    }
+
+                    if (target.PlayerBody is not null)
+                    {
+                        applyDamage(
+                            new DamageRequest(
+                                monster.Id,
+                                target.Id,
+                                DamageKind.Strike,
+                                body.StrikeDamage));
+                    }
+                    else
+                    {
+                        applyShake(target, monster.Id);
+                    }
+                }
             }
 
             events.Add(

@@ -75,10 +75,12 @@ namespace Mooh.Core.Tests.Content
                 InteractionMask.BlocksMovement | InteractionMask.PlayerEdible | InteractionMask.RoundSupport,
                 true, 1d, 2];
             yield return ["WGrBox", EntityKind.GrenadeBox,
-                InteractionMask.PlayerEdible | InteractionMask.RoundSupport,
+                InteractionMask.PlayerEdible | InteractionMask.RoundSupport
+                    | InteractionMask.BlueMonsterTarget,
                 true, 1d, 5];
             yield return ["OArrowT", EntityKind.GravityArrow,
-                InteractionMask.BlocksMovement | InteractionMask.PlayerPushable | InteractionMask.RoundSupport,
+                InteractionMask.BlocksMovement | InteractionMask.PlayerPushable | InteractionMask.RoundSupport
+                    | InteractionMask.BlueMonsterTarget,
                 true, 1d, 1];
             yield return ["MBlueR", EntityKind.BlueMonster,
                 InteractionMask.BlocksMovement,
@@ -107,6 +109,24 @@ namespace Mooh.Core.Tests.Content
                 .Order(StringComparer.Ordinal)];
 
             Assert.Equal(["OTPort", "OTable", "WMine"], transparent);
+        }
+
+        /// <summary>Verifies exactly the recovered blue-strike mask carriers are strike targets.</summary>
+        [Fact]
+        public void OnlyRecoveredBlueStrikeTypesAreTargets()
+        {
+            string[] targets = [.. ArchivalObjectCatalog.Types
+                .Where(type => ArchivalObjectCatalog.Get(type).Interactions
+                    .HasFlag(InteractionMask.BlueMonsterTarget))
+                .Order(StringComparer.Ordinal)];
+
+            Assert.Equal(
+                [
+                    "MMBio", "OArrowB", "OArrowL", "OArrowR", "OArrowT", "OBaloon", "OBarel",
+                    "OBottle", "OMagic", "WBBomb", "WBomb", "WGrBox", "WMinesBox", "WRBox",
+                    "WROne",
+                ],
+                targets);
         }
 
         /// <summary>Verifies recovered ordinary and hard shake handlers are explicit per type.</summary>

@@ -37,5 +37,8 @@ namespace Mooh.Core.Interactions
 
         /// <summary>Monster navigation ignores the entity instead of treating its cell as occupied.</summary>
         MonsterTransparent = 1 << 8,
+
+        /// <summary>A blue monster treats the entity as a strike target.</summary>
+        BlueMonsterTarget = 1 << 9,
     }
 }

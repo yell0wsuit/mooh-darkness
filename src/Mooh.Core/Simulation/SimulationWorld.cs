@@ -656,7 +656,8 @@ namespace Mooh.Core.Simulation
                         entity,
                         elapsedSeconds,
                         events,
-                        request => ApplyDamage(request, events));
+                        request => ApplyDamage(request, events),
+                        (target, sourceId) => ApplyShake(target, sourceId, hard: false, events));
                 }
             }
 
