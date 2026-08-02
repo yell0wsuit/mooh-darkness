@@ -63,6 +63,15 @@ namespace Mooh.SimulationRunner
                         entity,
                         position: value.TargetCell),
                     EnemyThawed => new ObservedEvent(nameof(EnemyThawed), entity),
+                    EnemyTransformationCompleted value => new ObservedEvent(
+                        nameof(EnemyTransformationCompleted),
+                        entity,
+                        isSmall: value.IsSmall),
+                    EnemyTransformationStarted value => new ObservedEvent(
+                        nameof(EnemyTransformationStarted),
+                        entity,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds,
+                        isSmall: value.IsSmall),
                     EnemyTurnCompleted value => new ObservedEvent(
                         nameof(EnemyTurnCompleted),
                         entity,

@@ -162,6 +162,26 @@ namespace Mooh.Core.Simulation
             return events;
         }
 
+        /// <summary>Applies or removes the recovered glasses effect for every Green Monster.</summary>
+        /// <param name="active">Whether monsters should use their small, player-edible form.</param>
+        /// <returns>The ordered transformation events produced by the change.</returns>
+        public IReadOnlyList<SimulationEvent> SetGreenMonsterGlasses(bool active)
+        {
+            List<SimulationEvent> events = [];
+            if (active && _world.Player?.PlayerBody?.Progress is PlayerProgress progress)
+            {
+                progress.ClearIce();
+                SynchronizeGreenMonsterIce(events);
+            }
+
+            foreach (Entity monster in _world.Entities.Where(entity => entity.GreenMonsterBody is not null))
+            {
+                _greenMonsters.SetSmall(monster, active, events);
+            }
+
+            return events;
+        }
+
         /// <summary>Starts a recovered delayed 3x3 explosion from a registered explosive entity.</summary>
         /// <param name="sourceEntityId">The entity that becomes the explosion center.</param>
         /// <returns>The immediate ordered events; neighboring cells remain scheduled.</returns>
@@ -396,6 +416,11 @@ namespace Mooh.Core.Simulation
             {
                 if (iceActive)
                 {
+                    if (monster.GreenMonsterBody!.IsSmall)
+                    {
+                        _greenMonsters.SetSmall(monster, isSmall: false, events);
+                    }
+
                     _greenMonsters.Freeze(monster, events);
                 }
                 else
@@ -468,7 +493,7 @@ namespace Mooh.Core.Simulation
                 DestroyGreenMonster(
                     source,
                     source.Id,
-                    spawnBeetle: !greenMonster.IsFrozen,
+                    spawnBeetle: !greenMonster.IsFrozen && !greenMonster.IsSmall,
                     events);
             }
             else
@@ -523,7 +548,7 @@ namespace Mooh.Core.Simulation
                     DestroyGreenMonster(
                         occupant,
                         sourceEntityId,
-                        spawnBeetle: !greenMonster.IsFrozen,
+                        spawnBeetle: !greenMonster.IsFrozen && !greenMonster.IsSmall,
                         events);
                     continue;
                 }

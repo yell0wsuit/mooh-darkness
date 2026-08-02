@@ -234,6 +234,9 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets an optional event duration in milliseconds.</summary>
         public long? DurationMilliseconds { get; init; }
+
+        /// <summary>Gets an optional target or resulting monster-form flag.</summary>
+        public bool? IsSmall { get; init; }
     }
 
     /// <summary>Describes the expected state after all simulation steps.</summary>
@@ -281,6 +284,12 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets expected remaining green-monster state time in milliseconds, if applicable.</summary>
         public long? GreenMonsterRemainingMilliseconds { get; init; }
+
+        /// <summary>Gets whether the Green Monster should be frozen.</summary>
+        public bool? GreenMonsterIsFrozen { get; init; }
+
+        /// <summary>Gets whether the Green Monster should use its glasses form.</summary>
+        public bool? GreenMonsterIsSmall { get; init; }
 
         /// <summary>Gets the expected blue-monster state name, if applicable.</summary>
         public string? BlueMonsterState { get; init; }

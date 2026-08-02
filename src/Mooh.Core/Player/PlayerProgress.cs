@@ -132,6 +132,11 @@ namespace Mooh.Core.Player
             Score += amount;
         }
 
+        internal void ClearIce()
+        {
+            IceRemaining = TimeSpan.Zero;
+        }
+
         private static int ScoreFor(EntityKind kind, int variant)
         {
             return kind == EntityKind.Coin

@@ -22,6 +22,7 @@ namespace Mooh.SimulationRunner
         /// <param name="amount">An optional damage amount.</param>
         /// <param name="remainingHealth">Optional remaining health after damage.</param>
         /// <param name="durationMilliseconds">An optional event duration in milliseconds.</param>
+        /// <param name="isSmall">An optional target or resulting monster-form flag.</param>
         public ObservedEvent(
             string type,
             string entity,
@@ -37,7 +38,8 @@ namespace Mooh.SimulationRunner
             DamageResult? damageResult = null,
             double? amount = null,
             double? remainingHealth = null,
-            long? durationMilliseconds = null)
+            long? durationMilliseconds = null,
+            bool? isSmall = null)
         {
             Type = type;
             Entity = entity;
@@ -54,6 +56,7 @@ namespace Mooh.SimulationRunner
             Amount = amount;
             RemainingHealth = remainingHealth;
             DurationMilliseconds = durationMilliseconds;
+            IsSmall = isSmall;
         }
 
         /// <summary>Gets the concrete event type name.</summary>
@@ -100,5 +103,8 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets an optional event duration in milliseconds.</summary>
         public long? DurationMilliseconds { get; }
+
+        /// <summary>Gets an optional target or resulting monster-form flag.</summary>
+        public bool? IsSmall { get; }
     }
 }

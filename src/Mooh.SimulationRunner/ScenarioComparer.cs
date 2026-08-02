@@ -150,6 +150,16 @@ namespace Mooh.SimulationRunner
                 source,
                 $"{path}.greenMonsterRemainingMilliseconds");
             CompareValue(
+                actual.GreenMonsterState is null ? null : expected.GreenMonsterIsFrozen ?? false,
+                actual.GreenMonsterIsFrozen,
+                source,
+                $"{path}.greenMonsterIsFrozen");
+            CompareValue(
+                actual.GreenMonsterState is null ? null : expected.GreenMonsterIsSmall ?? false,
+                actual.GreenMonsterIsSmall,
+                source,
+                $"{path}.greenMonsterIsSmall");
+            CompareValue(
                 ParseOptionalEnum<BlueMonsterState>(expected.BlueMonsterState),
                 actual.BlueMonsterState,
                 source,
@@ -285,6 +295,8 @@ namespace Mooh.SimulationRunner
                 entity.GreenMonsterBody is null
                     ? null
                     : entity.GreenMonsterBody.Remaining.Ticks / TimeSpan.TicksPerMillisecond,
+                entity.GreenMonsterBody?.IsFrozen,
+                entity.GreenMonsterBody?.IsSmall,
                 entity.BlueMonsterBody?.State,
                 entity.BlueMonsterBody?.FacingDirection,
                 entity.BlueMonsterBody is null
@@ -362,7 +374,8 @@ namespace Mooh.SimulationRunner
                 ParseOptionalEnum<DamageResult>(expected.DamageResult),
                 expected.Amount,
                 expected.RemainingHealth,
-                expected.DurationMilliseconds);
+                expected.DurationMilliseconds,
+                expected.IsSmall);
         }
 
         private static Direction? ParseOptionalDirection(string? value)

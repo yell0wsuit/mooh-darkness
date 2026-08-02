@@ -34,7 +34,9 @@ namespace Mooh.Core.Enemies
                     entity => entity.GreenMonsterBody is { IsFrozen: false }
                         && entity.GreenMonsterBody.State is GreenMonsterState.Turning
                             or GreenMonsterState.AttackWindup
-                            or GreenMonsterState.AttackRecovery)
+                            or GreenMonsterState.AttackRecovery
+                            or GreenMonsterState.TransformingSmall
+                            or GreenMonsterState.TransformingNormal)
                 .Min(entity => entity.GreenMonsterBody?.Remaining);
             return remaining?.TotalSeconds;
         }
@@ -52,7 +54,9 @@ namespace Mooh.Core.Enemies
                 || body.IsFrozen
                 || body.State is not (GreenMonsterState.Turning
                 or GreenMonsterState.AttackWindup
-                or GreenMonsterState.AttackRecovery))
+                or GreenMonsterState.AttackRecovery
+                or GreenMonsterState.TransformingSmall
+                or GreenMonsterState.TransformingNormal))
             {
                 return;
             }
@@ -119,11 +123,42 @@ namespace Mooh.Core.Enemies
             events.Add(new EnemyThawed(monster.Id));
         }
 
+        internal void SetSmall(Entity monster, bool isSmall, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(monster);
+            ArgumentNullException.ThrowIfNull(events);
+            GreenMonsterBody body = monster.GreenMonsterBody
+                ?? throw new InvalidOperationException("A glasses transformation requires a green-monster body.");
+            if (body.IsSmall == isSmall)
+            {
+                return;
+            }
+
+            MotionState? motion = monster.Motion;
+            if (motion is { Cause: MotionCause.MonsterWalking, Progress: < 0.5 })
+            {
+                _world.Relocate(
+                    monster.Id,
+                    monster.Position.Offset(motion.SegmentDirection.Opposite()));
+            }
+
+            KinematicsSystem.Stop(monster);
+            body.IsSmall = isSmall;
+            monster.Interactions = isSmall
+                ? monster.Interactions | InteractionMask.PlayerEdible
+                : monster.Interactions & ~InteractionMask.PlayerEdible;
+            body.State = isSmall
+                ? GreenMonsterState.TransformingSmall
+                : GreenMonsterState.TransformingNormal;
+            body.Remaining = body.TransformationDuration;
+            events.Add(new EnemyTransformationStarted(monster.Id, isSmall, body.TransformationDuration));
+        }
+
         internal void Decide(Entity monster, int resolutionOrder, List<SimulationEvent> events)
         {
             GreenMonsterBody body = monster.GreenMonsterBody!;
             GridPosition destination = monster.Position.Offset(body.FacingDirection);
-            if (FindAttackablePlayer(destination) is not null)
+            if (!body.IsSmall && FindAttackablePlayer(destination) is not null)
             {
                 body.State = GreenMonsterState.AttackWindup;
                 body.Remaining = body.AttackWindupDuration;
@@ -190,6 +225,12 @@ namespace Mooh.Core.Enemies
                 case GreenMonsterState.AttackRecovery:
                     StartTurn(monster, body, events);
                     break;
+                case GreenMonsterState.TransformingSmall:
+                case GreenMonsterState.TransformingNormal:
+                    body.State = GreenMonsterState.Deciding;
+                    body.Remaining = TimeSpan.Zero;
+                    events.Add(new EnemyTransformationCompleted(monster.Id, body.IsSmall));
+                    break;
                 case GreenMonsterState.Deciding:
                 case GreenMonsterState.Walking:
                     throw new InvalidOperationException("A non-timed green-monster state cannot expire.");
@@ -237,14 +278,15 @@ namespace Mooh.Core.Enemies
             List<SimulationEvent> events)
         {
             Direction nextDirection = body.FacingDirection.TurnRight();
+            TimeSpan duration = body.IsSmall ? body.SmallTurnDuration : body.TurnDuration;
             body.State = GreenMonsterState.Turning;
-            body.Remaining = body.TurnDuration;
+            body.Remaining = duration;
             events.Add(
                 new EnemyTurnStarted(
                     monster.Id,
                     body.FacingDirection,
                     nextDirection,
-                    body.TurnDuration));
+                    duration));
         }
     }
 }

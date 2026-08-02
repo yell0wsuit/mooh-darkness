@@ -35,6 +35,7 @@ namespace Mooh.SimulationRunner
             Amount = 1 << 10,
             RemainingHealth = 1 << 11,
             DurationMilliseconds = 1 << 12,
+            IsSmall = 1 << 13,
         }
 
         /// <summary>Validates a scenario document.</summary>
@@ -432,7 +433,10 @@ namespace Mooh.SimulationRunner
                 "EnemyStrike" => EventFields.Position,
                 "EnemyTurnCompleted" => EventFields.Direction,
                 "EnemyTurnStarted" => EventFields.From | EventFields.To | EventFields.DurationMilliseconds,
+                "EnemyTransformationStarted" => EventFields.DurationMilliseconds | EventFields.IsSmall,
+                "EnemyTransformationCompleted" => EventFields.IsSmall,
                 "ExplosionCellReached" or "ExplosionStarted" => EventFields.Position,
+                "SmallGreenBeetleSpawned" => EventFields.Position,
                 "PlayerShockStarted" => EventFields.DurationMilliseconds,
                 "PlayerDied" or "PlayerShockEnded" or "PlayerStopped" => EventFields.None,
                 _ => EventFields.None,
@@ -453,6 +457,7 @@ namespace Mooh.SimulationRunner
             actual |= expected.DurationMilliseconds is null
                 ? EventFields.None
                 : EventFields.DurationMilliseconds;
+            actual |= expected.IsSmall is null ? EventFields.None : EventFields.IsSmall;
             if (actual != required)
             {
                 throw Invalid(
@@ -470,6 +475,10 @@ namespace Mooh.SimulationRunner
             "EnemyAttackStarted",
             "EnemyMoveStarted",
             "EnemyStrike",
+            "EnemyFrozen",
+            "EnemyThawed",
+            "EnemyTransformationCompleted",
+            "EnemyTransformationStarted",
             "EnemyTurnCompleted",
             "EnemyTurnStarted",
             "EntityDestroyed",
@@ -490,6 +499,7 @@ namespace Mooh.SimulationRunner
             "PlayerStopped",
             "PushStarted",
             "SlideStarted",
+            "SmallGreenBeetleSpawned",
         ];
 
         private static void ValidateFinalState(ScenarioDocument scenario, string source)
@@ -628,7 +638,9 @@ namespace Mooh.SimulationRunner
             }
             else if (expected.GreenMonsterState is not null
                 || expected.GreenMonsterFacingDirection is not null
-                || expected.GreenMonsterRemainingMilliseconds is not null)
+                || expected.GreenMonsterRemainingMilliseconds is not null
+                || expected.GreenMonsterIsFrozen is not null
+                || expected.GreenMonsterIsSmall is not null)
             {
                 throw Invalid(source, path, "cannot declare green-monster state without a green-monster body.");
             }

@@ -116,12 +116,15 @@ namespace Mooh.SimulationRunner.Tests
                     {
                         Alias = "monster",
                         Position = monster.Position,
-                        GreenMonsterState = "Deciding",
+                        GreenMonsterState = "TransformingSmall",
                         GreenMonsterFacingDirection = "Right",
-                        GreenMonsterRemainingMilliseconds = 0,
+                        GreenMonsterRemainingMilliseconds = 375,
+                        GreenMonsterIsFrozen = false,
+                        GreenMonsterIsSmall = true,
                     },
                 ]);
             MaterializedScenario materialized = ScenarioMaterializer.Materialize(scenario);
+            _ = materialized.Simulation.SetGreenMonsterGlasses(active: true);
 
             ScenarioComparer.CompareFinalState(scenario.ExpectFinal, materialized, "components.json");
         }

@@ -17,5 +17,11 @@ namespace Mooh.Core.Enemies
 
         /// <summary>The monster is recovering after a strike.</summary>
         AttackRecovery,
+
+        /// <summary>The glasses bonus is transforming the monster into its small form.</summary>
+        TransformingSmall,
+
+        /// <summary>The expired glasses bonus is restoring the monster's normal form.</summary>
+        TransformingNormal,
     }
 }

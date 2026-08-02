@@ -58,6 +58,11 @@ namespace Mooh.SimulationRunner.Tests
                 new EnemyStrike(monster, new GridPosition(1, 1)),
                 new EnemyFrozen(monster),
                 new EnemyThawed(monster),
+                new EnemyTransformationStarted(
+                    monster,
+                    true,
+                    TimeSpan.FromMilliseconds(375)),
+                new EnemyTransformationCompleted(monster, true),
                 new SmallGreenBeetleSpawned(
                     monster,
                     EntityId.New(),
@@ -78,7 +83,7 @@ namespace Mooh.SimulationRunner.Tests
 
             IReadOnlyList<ObservedEvent> observed = EventObserver.Observe(events, aliases);
 
-            Assert.Equal(29, observed.Count);
+            Assert.Equal(31, observed.Count);
             Assert.Equal(new ObservedEvent("FallStarted", "rock", direction: Direction.Down), observed[0]);
             Assert.Equal(new ObservedEvent("SlideStarted", "rock", direction: Direction.Left), observed[1]);
             Assert.Equal(
@@ -110,30 +115,40 @@ namespace Mooh.SimulationRunner.Tests
                     damageKind: DamageKind.Strike,
                     amount: 20,
                     remainingHealth: 80),
-                observed[21]);
+                observed[23]);
             Assert.Equal(
                 new ObservedEvent(
                     "PlayerShockStarted",
                     "player",
                     durationMilliseconds: 700),
-                observed[23]);
+                observed[25]);
             Assert.Equal(
                 new ObservedEvent("ExplosionStarted", "rock", position: new GridPosition(2, 2)),
-                observed[26]);
+                observed[28]);
             Assert.Equal(
                 new ObservedEvent("ExplosionCellReached", "rock", position: new GridPosition(1, 2)),
-                observed[27]);
+                observed[29]);
             Assert.Equal(
                 new ObservedEvent("EntityDestroyed", "monster", sourceEntity: "rock"),
-                observed[28]);
+                observed[30]);
             Assert.Equal(new ObservedEvent("EnemyFrozen", "monster"), observed[18]);
             Assert.Equal(new ObservedEvent("EnemyThawed", "monster"), observed[19]);
+            Assert.Equal(
+                new ObservedEvent(
+                    "EnemyTransformationStarted",
+                    "monster",
+                    isSmall: true,
+                    durationMilliseconds: 375),
+                observed[20]);
+            Assert.Equal(
+                new ObservedEvent("EnemyTransformationCompleted", "monster", isSmall: true),
+                observed[21]);
             Assert.Equal(
                 new ObservedEvent(
                     "SmallGreenBeetleSpawned",
                     "monster",
                     position: new GridPosition(2, 2)),
-                observed[20]);
+                observed[22]);
         }
     }
 }

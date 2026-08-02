@@ -44,6 +44,8 @@ namespace Mooh.SimulationRunner
     /// <param name="GreenMonsterState">Current green-monster state, if applicable.</param>
     /// <param name="GreenMonsterFacingDirection">Green-monster facing direction, if applicable.</param>
     /// <param name="GreenMonsterRemainingMilliseconds">Remaining monster-state time in milliseconds, if applicable.</param>
+    /// <param name="GreenMonsterIsFrozen">Whether the Green Monster is frozen, if applicable.</param>
+    /// <param name="GreenMonsterIsSmall">Whether the Green Monster is in its glasses form, if applicable.</param>
     /// <param name="BlueMonsterState">Current blue-monster state, if applicable.</param>
     /// <param name="BlueMonsterFacingDirection">Blue-monster facing direction, if applicable.</param>
     /// <param name="BlueMonsterRemainingMilliseconds">Remaining blue-monster state time in milliseconds, if applicable.</param>
@@ -60,6 +62,8 @@ namespace Mooh.SimulationRunner
         GreenMonsterState? GreenMonsterState,
         Direction? GreenMonsterFacingDirection,
         long? GreenMonsterRemainingMilliseconds,
+        bool? GreenMonsterIsFrozen,
+        bool? GreenMonsterIsSmall,
         BlueMonsterState? BlueMonsterState,
         Direction? BlueMonsterFacingDirection,
         long? BlueMonsterRemainingMilliseconds);

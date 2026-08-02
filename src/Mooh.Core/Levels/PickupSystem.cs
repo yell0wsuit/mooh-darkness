@@ -20,6 +20,12 @@ namespace Mooh.Core.Levels
             ArgumentNullException.ThrowIfNull(events);
             PlayerBody playerBody = player.PlayerBody
                 ?? throw new InvalidOperationException("Pickup collection requires a player.");
+            if (pickup.GreenMonsterBody is { IsSmall: true })
+            {
+                playerBody.Progress.AddScore(10);
+                return;
+            }
+
             ArchivalObjectIdentity? archival = pickup.ArchivalIdentity;
             if (archival is null)
             {
