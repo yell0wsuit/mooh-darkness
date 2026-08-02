@@ -159,6 +159,24 @@ namespace Mooh.Core.Tests.Enemies
             Assert.DoesNotContain(events, simulationEvent => simulationEvent is EnemyTurnCompleted);
         }
 
+        /// <summary>Verifies the post-strike turnaround resumes the forward-only decision.</summary>
+        [Fact]
+        public void CompletedTurnaroundChecksForwardBeforeTurningLeft()
+        {
+            (WorldGrid world, Entity monster, _) = NewFacingScenario(Direction.Right);
+            SimulationWorld simulation = CreateSimulation(world);
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(600));
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(1150));
+
+            Assert.Equal(Direction.Left, monster.BlueMonsterBody!.FacingDirection);
+            Assert.Equal(BlueMonsterState.Walking, monster.BlueMonsterBody.State);
+            Assert.Contains(
+                new EnemyMoveStarted(monster.Id, new GridPosition(1, 1), new GridPosition(0, 1)),
+                events);
+            Assert.DoesNotContain(events, simulationEvent => simulationEvent is EnemyTurnStarted);
+        }
+
         /// <summary>Verifies simultaneous green and blue strikes resolve in registration order.</summary>
         [Fact]
         public void SimultaneousMixedStrikesRespectImmunityInRegistrationOrder()

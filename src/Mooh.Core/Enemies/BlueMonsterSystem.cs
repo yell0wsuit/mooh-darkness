@@ -194,7 +194,9 @@ namespace Mooh.Core.Enemies
                     body.Remaining = body.TurnDuration;
                     break;
                 case BlueMonsterState.AttackTurnaround:
-                    body.State = BlueMonsterState.Deciding;
+                    // The final turnaround phase reuses a left-turn state, whose animation ends
+                    // in the forward-only decision rather than the left-inspecting one.
+                    body.State = BlueMonsterState.DecidingAfterLeftTurn;
                     body.Remaining = TimeSpan.Zero;
                     events.Add(new EnemyTurnCompleted(monster.Id, body.FacingDirection));
                     break;
