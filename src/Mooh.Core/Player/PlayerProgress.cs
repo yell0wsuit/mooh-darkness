@@ -126,6 +126,12 @@ namespace Mooh.Core.Player
             return DoorScore;
         }
 
+        internal void AddScore(int amount)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(amount);
+            Score += amount;
+        }
+
         private static int ScoreFor(EntityKind kind, int variant)
         {
             return kind == EntityKind.Coin

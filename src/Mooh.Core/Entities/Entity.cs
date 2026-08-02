@@ -23,6 +23,7 @@ namespace Mooh.Core.Entities
     /// <param name="blueMonsterBody">The entity's optional blue-monster behavior.</param>
     /// <param name="archivalIdentity">The entity's optional archival type metadata.</param>
     /// <param name="explosionBody">The entity's optional explosion behavior.</param>
+    /// <param name="smallBeetleBody">The entity's optional spawned small-beetle behavior.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -33,7 +34,8 @@ namespace Mooh.Core.Entities
         GreenMonsterBody? greenMonsterBody = null,
         BlueMonsterBody? blueMonsterBody = null,
         ArchivalObjectIdentity? archivalIdentity = null,
-        ExplosionBody? explosionBody = null)
+        ExplosionBody? explosionBody = null,
+        SmallBeetleBody? smallBeetleBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -64,6 +66,9 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's optional explosion behavior.</summary>
         public ExplosionBody? ExplosionBody { get; } = explosionBody;
+
+        /// <summary>Gets the entity's optional spawned small-beetle behavior.</summary>
+        public SmallBeetleBody? SmallBeetleBody { get; } = smallBeetleBody;
 
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }

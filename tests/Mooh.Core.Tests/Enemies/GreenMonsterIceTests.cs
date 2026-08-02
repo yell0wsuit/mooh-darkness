@@ -83,6 +83,7 @@ namespace Mooh.Core.Tests.Enemies
             Assert.Contains(events, item => item == new EntityDestroyed(monster.Id, explosive.Id));
             Assert.DoesNotContain(events, item => item is ExplosionStarted started
                 && started.EntityId == monster.Id);
+            Assert.DoesNotContain(events, item => item is SmallGreenBeetleSpawned);
             _ = Assert.Throws<KeyNotFoundException>(() => level.World.GetEntity(monster.Id));
         }
 

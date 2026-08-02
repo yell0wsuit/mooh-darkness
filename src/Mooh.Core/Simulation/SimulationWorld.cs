@@ -1,6 +1,8 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 
 using Mooh.Core.Combat;
 using Mooh.Core.Enemies;
@@ -48,6 +50,7 @@ namespace Mooh.Core.Simulation
         private readonly WorldGrid _world;
         private Direction _gravityDirection;
         private long _nextExplosionOrder;
+        private long _nextSpawnOrder;
 
         /// <summary>Initializes a simulation coordinator.</summary>
         /// <param name="world">The authoritative world.</param>
@@ -454,13 +457,31 @@ namespace Mooh.Core.Simulation
         private void StartExplosion(Entity source, List<SimulationEvent> events)
         {
             GridPosition center = source.Position;
-            if (!_world.Remove(source.Id))
+            if (source.GreenMonsterBody is GreenMonsterBody greenMonster)
             {
-                return;
+                if (_world.Entities.All(entity => entity.Id != source.Id))
+                {
+                    return;
+                }
+
+                events.Add(new ExplosionStarted(source.Id, center));
+                DestroyGreenMonster(
+                    source,
+                    source.Id,
+                    spawnBeetle: !greenMonster.IsFrozen,
+                    events);
+            }
+            else
+            {
+                if (!_world.Remove(source.Id))
+                {
+                    return;
+                }
+
+                events.Add(new ExplosionStarted(source.Id, center));
+                events.Add(new EntityDestroyed(source.Id, source.Id));
             }
 
-            events.Add(new ExplosionStarted(source.Id, center));
-            events.Add(new EntityDestroyed(source.Id, source.Id));
             ResolveExplosionCell(source.Id, center, events);
 
             double dueTime = _world.CurrentTimeSeconds + ExplosionDelaySeconds;
@@ -497,6 +518,16 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
+                if (occupant.GreenMonsterBody is GreenMonsterBody greenMonster)
+                {
+                    DestroyGreenMonster(
+                        occupant,
+                        sourceEntityId,
+                        spawnBeetle: !greenMonster.IsFrozen,
+                        events);
+                    continue;
+                }
+
                 if (occupant.ExplosionBody?.Reaction == ExplosionReaction.Destroy)
                 {
                     DestroyEntity(occupant, sourceEntityId, events);
@@ -513,6 +544,55 @@ namespace Mooh.Core.Simulation
             if (_world.Remove(entity.Id))
             {
                 events.Add(new EntityDestroyed(entity.Id, sourceEntityId));
+            }
+        }
+
+        private void DestroyGreenMonster(
+            Entity monster,
+            EntityId sourceEntityId,
+            bool spawnBeetle,
+            List<SimulationEvent> events)
+        {
+            GridPosition position = monster.Motion is
+            { Cause: MotionCause.MonsterWalking, Progress: < 0.5 } motion
+                ? monster.Position.Offset(motion.SegmentDirection.Opposite())
+                : monster.Position;
+            if (!_world.Remove(monster.Id))
+            {
+                return;
+            }
+
+            events.Add(new EntityDestroyed(monster.Id, sourceEntityId));
+            _world.Player?.PlayerBody?.Progress.AddScore(10);
+            if (!spawnBeetle)
+            {
+                return;
+            }
+
+            Entity beetle = new(
+                CreateSpawnedEntityId(monster.Id),
+                position,
+                InteractionMask.PlayerEdible,
+                smallBeetleBody: new SmallBeetleBody(SmallBeetleColor.Green));
+            _world.Add(beetle);
+            events.Add(new SmallGreenBeetleSpawned(monster.Id, beetle.Id, position));
+        }
+
+        private EntityId CreateSpawnedEntityId(EntityId parentEntityId)
+        {
+            Span<byte> seed = stackalloc byte[24];
+            Span<byte> hash = stackalloc byte[32];
+            while (true)
+            {
+                seed.Clear();
+                _ = parentEntityId.Value.TryWriteBytes(seed);
+                BinaryPrimitives.WriteInt64LittleEndian(seed[16..], _nextSpawnOrder++);
+                _ = SHA256.HashData(seed, hash);
+                EntityId candidate = new(new Guid(hash[..16]));
+                if (_world.Entities.All(entity => entity.Id != candidate))
+                {
+                    return candidate;
+                }
             }
         }
 
@@ -748,7 +828,20 @@ namespace Mooh.Core.Simulation
                 return;
             }
 
-            Entity? player = _world.GetOccupants(impactedPosition).FirstOrDefault(
+            IReadOnlyList<Entity> impacted = _world.GetOccupants(impactedPosition);
+            foreach (Entity monster in impacted.Where(entity => entity.GreenMonsterBody is not null))
+            {
+                if (monster.GreenMonsterBody!.IsFrozen)
+                {
+                    DestroyGreenMonster(monster, source.Id, spawnBeetle: false, events);
+                }
+                else
+                {
+                    StartExplosion(monster, events);
+                }
+            }
+
+            Entity? player = impacted.FirstOrDefault(
                 occupant => occupant.PlayerBody is not null && occupant.HealthBody is not null);
             if (player is null)
             {

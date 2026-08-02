@@ -137,6 +137,10 @@ namespace Mooh.SimulationRunner
                         nameof(SlideStarted),
                         entity,
                         direction: value.Direction),
+                    SmallGreenBeetleSpawned value => new ObservedEvent(
+                        nameof(SmallGreenBeetleSpawned),
+                        entity,
+                        position: value.Position),
                     _ => throw new InvalidOperationException(
                         $"Unsupported simulation event type '{simulationEvent.GetType().FullName}'."),
                 });
