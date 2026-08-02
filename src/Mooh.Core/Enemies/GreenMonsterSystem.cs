@@ -31,9 +31,10 @@ namespace Mooh.Core.Enemies
         {
             TimeSpan? remaining = _world.Entities
                 .Where(
-                    entity => entity.GreenMonsterBody?.State is GreenMonsterState.Turning
-                        or GreenMonsterState.AttackWindup
-                        or GreenMonsterState.AttackRecovery)
+                    entity => entity.GreenMonsterBody is { IsFrozen: false }
+                        && entity.GreenMonsterBody.State is GreenMonsterState.Turning
+                            or GreenMonsterState.AttackWindup
+                            or GreenMonsterState.AttackRecovery)
                 .Min(entity => entity.GreenMonsterBody?.Remaining);
             return remaining?.TotalSeconds;
         }
@@ -47,7 +48,9 @@ namespace Mooh.Core.Enemies
             ArgumentNullException.ThrowIfNull(events);
             ArgumentNullException.ThrowIfNull(applyDamage);
             GreenMonsterBody? body = monster.GreenMonsterBody;
-            if (body?.State is not (GreenMonsterState.Turning
+            if (body is null
+                || body.IsFrozen
+                || body.State is not (GreenMonsterState.Turning
                 or GreenMonsterState.AttackWindup
                 or GreenMonsterState.AttackRecovery))
             {
@@ -70,6 +73,50 @@ namespace Mooh.Core.Enemies
             GreenMonsterBody body = monster.GreenMonsterBody
                 ?? throw new InvalidOperationException("Monster walking requires a green-monster body.");
             body.State = GreenMonsterState.Deciding;
+        }
+
+        internal void Freeze(Entity monster, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(monster);
+            ArgumentNullException.ThrowIfNull(events);
+            GreenMonsterBody body = monster.GreenMonsterBody
+                ?? throw new InvalidOperationException("Freezing requires a green-monster body.");
+            if (body.IsFrozen)
+            {
+                return;
+            }
+
+            MotionState? motion = monster.Motion;
+            if (motion is { Cause: MotionCause.MonsterWalking, Progress: < 0.5 })
+            {
+                _world.Relocate(
+                    monster.Id,
+                    monster.Position.Offset(motion.SegmentDirection.Opposite()));
+            }
+
+            body.IsFrozen = true;
+            KinematicsSystem.Stop(monster);
+            events.Add(new EnemyFrozen(monster.Id));
+        }
+
+        internal static void Thaw(Entity monster, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(monster);
+            ArgumentNullException.ThrowIfNull(events);
+            GreenMonsterBody body = monster.GreenMonsterBody
+                ?? throw new InvalidOperationException("Thawing requires a green-monster body.");
+            if (!body.IsFrozen)
+            {
+                return;
+            }
+
+            body.IsFrozen = false;
+            if (body.State == GreenMonsterState.Walking)
+            {
+                body.State = GreenMonsterState.Deciding;
+            }
+
+            events.Add(new EnemyThawed(monster.Id));
         }
 
         internal void Decide(Entity monster, int resolutionOrder, List<SimulationEvent> events)

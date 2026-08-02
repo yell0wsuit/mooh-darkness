@@ -90,6 +90,9 @@ namespace Mooh.Core.Enemies
         /// <summary>Gets the monster's current behavior phase.</summary>
         public GreenMonsterState State { get; internal set; }
 
+        /// <summary>Gets whether the active ice bonus has frozen the monster.</summary>
+        public bool IsFrozen { get; internal set; }
+
         /// <summary>Gets the time remaining in the current timed phase.</summary>
         public TimeSpan Remaining { get; internal set; }
     }

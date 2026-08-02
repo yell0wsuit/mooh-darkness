@@ -248,6 +248,39 @@ namespace Mooh.Core.Grid
             }
         }
 
+        internal void Relocate(EntityId id, GridPosition destination)
+        {
+            Entity entity = GetEntity(id);
+            if (!Contains(destination))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(destination),
+                    destination,
+                    "Destination is outside the world.");
+            }
+
+            if (entity.Position == destination)
+            {
+                return;
+            }
+
+            List<EntityId> source = _occupancy[entity.Position];
+            _ = source.Remove(id);
+            if (source.Count == 0)
+            {
+                _ = _occupancy.Remove(entity.Position);
+            }
+
+            entity.Position = destination;
+            if (!_occupancy.TryGetValue(destination, out List<EntityId>? occupants))
+            {
+                occupants = [];
+                _occupancy.Add(destination, occupants);
+            }
+
+            occupants.Insert(0, id);
+        }
+
         private CellState GetOrCreateCellState(GridPosition position)
         {
             if (!_cellStates.TryGetValue(position, out CellState? state))

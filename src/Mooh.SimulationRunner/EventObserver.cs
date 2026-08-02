@@ -52,6 +52,7 @@ namespace Mooh.SimulationRunner
                         entity,
                         position: value.TargetCell,
                         durationMilliseconds: (long)value.Duration.TotalMilliseconds),
+                    EnemyFrozen => new ObservedEvent(nameof(EnemyFrozen), entity),
                     EnemyMoveStarted value => new ObservedEvent(
                         nameof(EnemyMoveStarted),
                         entity,
@@ -61,6 +62,7 @@ namespace Mooh.SimulationRunner
                         nameof(EnemyStrike),
                         entity,
                         position: value.TargetCell),
+                    EnemyThawed => new ObservedEvent(nameof(EnemyThawed), entity),
                     EnemyTurnCompleted value => new ObservedEvent(
                         nameof(EnemyTurnCompleted),
                         entity,

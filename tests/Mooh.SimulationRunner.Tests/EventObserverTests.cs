@@ -56,6 +56,8 @@ namespace Mooh.SimulationRunner.Tests
                     new GridPosition(1, 1),
                     TimeSpan.FromMilliseconds(625)),
                 new EnemyStrike(monster, new GridPosition(1, 1)),
+                new EnemyFrozen(monster),
+                new EnemyThawed(monster),
                 new DamageApplied(player, monster, DamageKind.Strike, 20, 80),
                 new DamageIgnored(
                     player,
@@ -72,7 +74,7 @@ namespace Mooh.SimulationRunner.Tests
 
             IReadOnlyList<ObservedEvent> observed = EventObserver.Observe(events, aliases);
 
-            Assert.Equal(26, observed.Count);
+            Assert.Equal(28, observed.Count);
             Assert.Equal(new ObservedEvent("FallStarted", "rock", direction: Direction.Down), observed[0]);
             Assert.Equal(new ObservedEvent("SlideStarted", "rock", direction: Direction.Left), observed[1]);
             Assert.Equal(
@@ -104,22 +106,24 @@ namespace Mooh.SimulationRunner.Tests
                     damageKind: DamageKind.Strike,
                     amount: 20,
                     remainingHealth: 80),
-                observed[18]);
+                observed[20]);
             Assert.Equal(
                 new ObservedEvent(
                     "PlayerShockStarted",
                     "player",
                     durationMilliseconds: 700),
-                observed[20]);
+                observed[22]);
             Assert.Equal(
                 new ObservedEvent("ExplosionStarted", "rock", position: new GridPosition(2, 2)),
-                observed[23]);
+                observed[25]);
             Assert.Equal(
                 new ObservedEvent("ExplosionCellReached", "rock", position: new GridPosition(1, 2)),
-                observed[24]);
+                observed[26]);
             Assert.Equal(
                 new ObservedEvent("EntityDestroyed", "monster", sourceEntity: "rock"),
-                observed[25]);
+                observed[27]);
+            Assert.Equal(new ObservedEvent("EnemyFrozen", "monster"), observed[18]);
+            Assert.Equal(new ObservedEvent("EnemyThawed", "monster"), observed[19]);
         }
     }
 }

@@ -240,6 +240,7 @@ namespace Mooh.Core.Simulation
 
             ValidateMotionState();
             List<SimulationEvent> events = [];
+            SynchronizeGreenMonsterIce(events);
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
             DecideMonsters(events);
             _playerController?.TryStart(events);
@@ -252,6 +253,7 @@ namespace Mooh.Core.Simulation
                 double? rotationSeconds = _playerController?.RotationSecondsRemaining;
                 double? unlockSeconds = _world.SecondsUntilNextCellUnlock();
                 double? healthSeconds = SecondsUntilNextImmunityExpiry();
+                double? bonusSeconds = SecondsUntilNextBonusExpiry();
                 double? reactionSeconds = SecondsUntilPlayerReactionEnds();
                 double? monsterSeconds = SecondsUntilNextMonsterTimer();
                 double? explosionSeconds = SecondsUntilNextExplosionCell();
@@ -284,6 +286,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingImmunity);
                 }
 
+                if (bonusSeconds is double remainingBonus)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingBonus);
+                }
+
                 if (reactionSeconds is double remainingReaction)
                 {
                     substepSeconds = Math.Min(substepSeconds, remainingReaction);
@@ -303,6 +310,7 @@ namespace Mooh.Core.Simulation
                     && rotationSeconds is null
                     && unlockSeconds is null
                     && healthSeconds is null
+                    && bonusSeconds is null
                     && reactionSeconds is null
                     && monsterSeconds is null
                     && explosionSeconds is null)
@@ -318,6 +326,8 @@ namespace Mooh.Core.Simulation
 
                 _world.AdvanceTime(substepSeconds);
                 AdvanceHealthImmunity(substepSeconds);
+                AdvancePlayerProgress(substepSeconds);
+                SynchronizeGreenMonsterIce(events);
                 bool playerControlReady = _playerController?.AdvanceRotation(
                     substepSeconds,
                     events) == true;
@@ -353,9 +363,43 @@ namespace Mooh.Core.Simulation
                 }
             }
 
-            _world.Player?.PlayerBody?.Progress.Advance(elapsed);
-
             return events;
+        }
+
+        private double? SecondsUntilNextBonusExpiry()
+        {
+            PlayerProgress? progress = _world.Player?.PlayerBody?.Progress;
+            if (progress is null)
+            {
+                return null;
+            }
+
+            TimeSpan remaining = new[] { progress.ColaRemaining, progress.IceRemaining }
+                .Where(value => value > TimeSpan.Zero)
+                .Order()
+                .FirstOrDefault();
+            return remaining > TimeSpan.Zero ? remaining.TotalSeconds : null;
+        }
+
+        private void AdvancePlayerProgress(double elapsedSeconds)
+        {
+            _world.Player?.PlayerBody?.Progress.Advance(TimeSpan.FromSeconds(elapsedSeconds));
+        }
+
+        private void SynchronizeGreenMonsterIce(List<SimulationEvent> events)
+        {
+            bool iceActive = _world.Player?.PlayerBody?.Progress.IceRemaining > TimeSpan.Zero;
+            foreach (Entity monster in _world.Entities.Where(entity => entity.GreenMonsterBody is not null))
+            {
+                if (iceActive)
+                {
+                    _greenMonsters.Freeze(monster, events);
+                }
+                else
+                {
+                    GreenMonsterSystem.Thaw(monster, events);
+                }
+            }
         }
 
         private double? SecondsUntilNextImmunityExpiry()
@@ -503,7 +547,7 @@ namespace Mooh.Core.Simulation
             for (int index = 0; index < entities.Count; index++)
             {
                 Entity entity = entities[index];
-                if (entity.GreenMonsterBody?.State == GreenMonsterState.Deciding)
+                if (entity.GreenMonsterBody is { IsFrozen: false, State: GreenMonsterState.Deciding })
                 {
                     _greenMonsters.Decide(entity, index, events);
                 }
