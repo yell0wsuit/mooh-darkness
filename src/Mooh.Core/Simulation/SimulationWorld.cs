@@ -24,6 +24,7 @@ namespace Mooh.Core.Simulation
     {
         private const double BoundaryTolerance = 1e-6;
         private const double ExplosionDelaySeconds = 0.2;
+        private const int MonsterKillScore = 10;
         private const double TimeTolerance = 1e-12;
         private static readonly TimeSpan ExplosionCellLockDuration = TimeSpan.FromMilliseconds(500);
         private static readonly (int X, int Y)[] ExplosionNeighborOffsets =
@@ -505,6 +506,7 @@ namespace Mooh.Core.Simulation
 
                 events.Add(new ExplosionStarted(source.Id, center));
                 events.Add(new EntityDestroyed(source.Id, source.Id));
+                AwardKillScore(source);
             }
 
             ResolveExplosionCell(source.Id, center, events);
@@ -569,6 +571,20 @@ namespace Mooh.Core.Simulation
             if (_world.Remove(entity.Id))
             {
                 events.Add(new EntityDestroyed(entity.Id, sourceEntityId));
+                AwardKillScore(entity);
+            }
+        }
+
+        /// <summary>
+        /// Awards the recovered kill score for destroyed entities that carry one. Only the
+        /// monsters register a kill score in the original object table; ordinary objects and
+        /// collectibles score when eaten instead.
+        /// </summary>
+        private void AwardKillScore(Entity entity)
+        {
+            if (entity.BlueMonsterBody is not null)
+            {
+                _world.Player?.PlayerBody?.Progress.AddScore(MonsterKillScore);
             }
         }
 
@@ -588,7 +604,7 @@ namespace Mooh.Core.Simulation
             }
 
             events.Add(new EntityDestroyed(monster.Id, sourceEntityId));
-            _world.Player?.PlayerBody?.Progress.AddScore(10);
+            _world.Player?.PlayerBody?.Progress.AddScore(MonsterKillScore);
             if (!spawnBeetle)
             {
                 return;
@@ -854,13 +870,15 @@ namespace Mooh.Core.Simulation
             }
 
             IReadOnlyList<Entity> impacted = _world.GetOccupants(impactedPosition);
-            foreach (Entity monster in impacted.Where(entity => entity.GreenMonsterBody is not null))
+            foreach (Entity monster in impacted)
             {
-                if (monster.GreenMonsterBody!.IsFrozen)
+                // Both monsters answer a landing shake with their own 3x3 detonation, and an
+                // iced monster is killed outright by the same shake instead.
+                if (monster.GreenMonsterBody is { IsFrozen: true })
                 {
                     DestroyGreenMonster(monster, source.Id, spawnBeetle: false, events);
                 }
-                else
+                else if (monster.GreenMonsterBody is not null || monster.BlueMonsterBody is not null)
                 {
                     StartExplosion(monster, events);
                 }
