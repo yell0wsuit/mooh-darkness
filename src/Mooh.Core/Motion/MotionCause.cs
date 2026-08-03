@@ -18,13 +18,16 @@ namespace Mooh.Core.Motion
         PlayerPushed,
 
         /// <summary>
-        /// An object is sliding away from a player hand strike. The recovered
-        /// <c>CPlPushBase.PlPush_OnCell</c> re-registers itself as the arrival handler, so a
-        /// struck object continues cell after cell until it is blocked or starts to fall.
+        /// An object is sliding away from a player hand strike.
         /// </summary>
         StrikePushed,
 
         /// <summary>A monster is walking under autonomous control.</summary>
         MonsterWalking,
+
+        /// <summary>
+        /// The player is being carried along a tunnel.
+        /// </summary>
+        TunnelTransit,
     }
 }

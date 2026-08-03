@@ -23,6 +23,7 @@ namespace Mooh.Core.Levels
     /// Whether a shadow occupant supports the object while it falls, the recovered
     /// <c>bSecondSlideMask</c> flag.
     /// </param>
+    /// <param name="TunnelShape">The tunnel routing tables, for a tunnel cell.</param>
     public sealed record ArchivalObjectDescriptor(
         string ArchivalType,
         EntityKind Kind,
@@ -36,5 +37,6 @@ namespace Mooh.Core.Levels
         ShakeReaction ShakeReaction = ShakeReaction.None,
         ShakeReaction HardShakeReaction = ShakeReaction.None,
         FireContact? FireContact = null,
-        bool TreatsShadowAsSupport = false);
+        bool TreatsShadowAsSupport = false,
+        TunnelShape? TunnelShape = null);
 }

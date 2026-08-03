@@ -4,6 +4,7 @@ using System.Linq;
 
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
+using Mooh.Core.Hazards;
 using Mooh.Core.Interactions;
 using Mooh.Core.Levels;
 using Mooh.Core.Motion;
@@ -44,6 +45,16 @@ namespace Mooh.Core.Player
 
         /// <summary>The recovered <c>ST_StrOut*</c> recovery durations, indexed by direction.</summary>
         private static readonly double[] StrikeRecoverySeconds = [0.045, 0.060, 0.045, 0.075];
+
+        /// <summary>
+        /// The recovered <c>ST_TonIn*</c> and <c>ST_TonOut*</c> durations. Both run seven frames
+        /// at 25 ms and neither moves the player, so entering and leaving a tunnel each cost the
+        /// same fixed pause in every direction.
+        /// </summary>
+        private const double TunnelEntrySeconds = 0.175;
+
+        /// <summary>The recovered <c>CNT_OPrm_SpeedTon</c> against the player's own speed.</summary>
+        private const double TunnelSpeedMultiplier = 2.0;
 
         private static readonly TimeSpan CellInteractionLock = TimeSpan.FromMilliseconds(150);
 
@@ -291,10 +302,17 @@ namespace Mooh.Core.Player
                         _actionEffects.PlaceGrenade(target, events);
                         body.Progress.SpendGrenade();
                     }
-
                     return true;
                 case PlayerActionKind.StrikeRecovery:
                     body.Action = null;
+                    return true;
+                case PlayerActionKind.TunnelEntry:
+                    body.Action = null;
+                    StartTunnelLeg(body.TunnelTransit!.Direction, body);
+                    return false;
+                case PlayerActionKind.TunnelExit:
+                    body.Action = null;
+                    body.FacingDirection = action.Direction;
                     return true;
                 default:
                     throw new InvalidOperationException("Unknown player action.");
@@ -367,6 +385,11 @@ namespace Mooh.Core.Player
         {
 
             GridPosition destination = _player.Position.Offset(direction);
+            if (TryEnterTunnel(destination, direction, body, events))
+            {
+                return;
+            }
+
             if (_world.Contains(destination))
             {
                 KeyDoorSystem.TryOpen(_player, _world, destination, events);
@@ -513,6 +536,161 @@ namespace Mooh.Core.Player
         {
             _lastAppliedTravelDirection = null;
             _pendingResume = null;
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>PlComeHere</c> gate. <c>CtrlMove</c> offers the destination
+        /// cell's occupants the direction of travel before anything else — before the push gate
+        /// and before the cell is eaten — and returns outright as soon as one accepts. A tunnel
+        /// is the only placed type that answers, and it accepts when its <c>EnDirMap</c> has an
+        /// opening on the side the player is arriving from.
+        /// </summary>
+        /// <returns><see langword="true"/> when a tunnel took over the move.</returns>
+        private bool TryEnterTunnel(
+            GridPosition destination,
+            Direction direction,
+            PlayerBody body,
+            List<SimulationEvent> events)
+        {
+            if (!_world.Contains(destination)
+                || !_world.GetOccupants(destination).Any(
+                    occupant => occupant.TunnelBody?.Shape.Route(direction) is not null))
+            {
+                return false;
+            }
+
+            body.TunnelTransit = new PlayerTunnelTransit(direction);
+            body.FacingDirection = direction;
+            body.Action = new PlayerAction(
+                PlayerActionKind.TunnelEntry,
+                direction,
+                TunnelEntrySeconds);
+            ApplyTunnelShadow(true);
+            events.Add(new PlayerEnteredTunnel(
+                _player.Id,
+                destination,
+                direction,
+                TimeSpan.FromSeconds(TunnelEntrySeconds)));
+            return true;
+        }
+
+        /// <summary>
+        /// Starts one leg of tunnel travel, the recovered <c>ST_TonMove*</c>. The player commits
+        /// the destination cell exactly as any other move does and travels at
+        /// <c>CNT_OPrm_SpeedTon</c> times its own speed.
+        /// </summary>
+        private void StartTunnelLeg(Direction direction, PlayerBody body)
+        {
+            GridPosition destination = _player.Position.Offset(direction);
+            _world.CommitMoves([new PlannedMove(_player.Id, _player.Position, destination)]);
+            KinematicsSystem.Start(
+                _player,
+                MotionCause.TunnelTransit,
+                direction,
+                body.MoveSpeed * TunnelSpeedMultiplier);
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>_TonMoveOnCell</c> to a player that has just arrived in a
+        /// cell while travelling. The tunnel in the arrival cell decides where to go next; a cell
+        /// without one ends the journey.
+        /// </summary>
+        /// <param name="events">The ordered event sink.</param>
+        public void ResolveTunnelArrival(List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(events);
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            PlayerTunnelTransit transit = body.TunnelTransit
+                ?? throw new InvalidOperationException("The player is not travelling through a tunnel.");
+            KinematicsSystem.Stop(_player);
+            _lastAppliedTravelDirection = null;
+
+            TunnelBody? tunnel = _world.GetOccupants(_player.Position)
+                .Select(occupant => occupant.TunnelBody)
+                .FirstOrDefault(candidate => candidate is not null);
+            if (tunnel is null)
+            {
+                body.TunnelTransit = null;
+                ApplyTunnelShadow(false);
+                body.Action = new PlayerAction(
+                    PlayerActionKind.TunnelExit,
+                    transit.Direction,
+                    TunnelEntrySeconds);
+                events.Add(new PlayerLeftTunnel(
+                    _player.Id,
+                    _player.Position,
+                    transit.Direction,
+                    TimeSpan.FromSeconds(TunnelEntrySeconds)));
+                return;
+            }
+
+            // A route of null is the recovered DIR_Last, which a connected tunnel run never
+            // produces. Treating it as a blocked exit keeps a malformed layout from walking the
+            // player out of the world instead of failing loudly on an undefined direction.
+            Direction? route = tunnel.Shape.Route(transit.Direction, transit.HasReversed);
+            if (route is Direction exit && TryContinue(exit, transit, events))
+            {
+                StartTunnelLeg(transit.Direction, body);
+                return;
+            }
+
+            transit.HasReversed = true;
+            transit.Direction = transit.Direction.Opposite();
+            events.Add(new PlayerTunnelReversed(_player.Id, _player.Position, transit.Direction));
+            StartTunnelLeg(transit.Direction, body);
+        }
+
+        /// <summary>
+        /// Decides whether travel may continue into the cell beyond, applying the recovered pair
+        /// of tests. The cell is free when it holds no non-shadow occupant lacking
+        /// <c>CNT_CMaskPlCanEat</c>, in which case its edible contents are consumed on the way
+        /// through; otherwise travel continues only when the blocking cell is itself a tunnel
+        /// with an opening on that side.
+        /// </summary>
+        private bool TryContinue(
+            Direction exit,
+            PlayerTunnelTransit transit,
+            List<SimulationEvent> events)
+        {
+            GridPosition next = _player.Position.Offset(exit);
+            if (!_world.Contains(next))
+            {
+                return false;
+            }
+
+            bool blocked = CellQuery.VisibleOccupants(_world, next).Any(
+                occupant => !occupant.Interactions.HasFlag(InteractionMask.PlayerEdible));
+            if (!blocked)
+            {
+                EatDestination(next, events);
+                transit.Direction = exit;
+                return true;
+            }
+
+            bool continues = _world.GetOccupants(next).Any(
+                occupant => occupant.TunnelBody?.Shape.Route(exit, transit.HasReversed) is not null);
+            if (!continues)
+            {
+                return false;
+            }
+
+            transit.Direction = exit;
+            return true;
+        }
+
+        /// <summary>
+        /// Adds or removes the recovered <c>bShadow</c> pair every tunnel state except
+        /// <c>ST_TonOut*</c> carries, which hides the player from monster navigation and from
+        /// every ordinary cell-occupancy query while it travels.
+        /// </summary>
+        private void ApplyTunnelShadow(bool shadowed)
+        {
+            const InteractionMask shadow = InteractionMask.MonsterTransparent
+                | InteractionMask.OccupancyTransparent;
+            _player.Interactions = shadowed
+                ? _player.Interactions | shadow
+                : _player.Interactions & ~shadow;
         }
 
         private void EatDestination(

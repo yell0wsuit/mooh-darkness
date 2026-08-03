@@ -81,6 +81,26 @@ namespace Mooh.Core.Player
         /// <summary>Gets the active uncontrollable fire-control action, if any.</summary>
         public PlayerAction? Action { get; internal set; }
 
+        /// <summary>Gets the active tunnel transit, if the player is inside a tunnel.</summary>
+        public PlayerTunnelTransit? TunnelTransit { get; internal set; }
+
+        /// <summary>
+        /// Gets whether the player is in a recovered <c>bImmort</c> state. Such a state takes no
+        /// damage at all and clears the player's <c>CNT_OrMaskMonStrike</c> bits, so a monster
+        /// does not select it as a target either. Every tunnel state carries the flag.
+        /// </summary>
+        public bool IsImmortal => TunnelTransit is not null
+            || Action?.Kind == PlayerActionKind.TunnelEntry
+            || Action?.Kind == PlayerActionKind.TunnelExit;
+
+        /// <summary>
+        /// Gets whether the player is in a recovered <c>bLockLvlEnd</c> state, which holds the
+        /// win settle open. Among implemented states the shock reaction and every tunnel state
+        /// carry the flag; the death state does not.
+        /// </summary>
+        public bool HoldsLevelEndOpen => IsImmortal
+            || Reaction.Kind == PlayerReactionKind.Shocked;
+
         /// <summary>
         /// Gets the simulation time at which the player last used the fire control, or
         /// <see langword="null"/> before the first use. The recovered <c>ulWeapTime</c> is one

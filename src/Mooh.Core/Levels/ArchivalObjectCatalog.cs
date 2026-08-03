@@ -182,10 +182,16 @@ namespace Mooh.Core.Levels
 
             AddExplodableMany(result, EntityKind.Pipe, FixedBlock | InteractionMask.RoundSupport,
                 "PipeHor", "PipeVert", "PipeLeftTop", "PipeRightBottom", "PipeTopRight", "PipeBottomLeft");
-            AddMany(result, EntityKind.Tunnel,
-                FixedBlock | InteractionMask.RoundSupport | Flightproof,
-                "TonnelHor", "TonnelVert", "TonnelLeftTop", "TonnelRightBottom", "TonnelTopRight",
-                "TonnelBottomLeft", "TonnelDL2R", "TonnelDR2L", "TonnelDT2B", "TonnelDB2T");
+            AddTunnel(result, "TonnelHor", TunnelShape.Horizontal);
+            AddTunnel(result, "TonnelVert", TunnelShape.Vertical);
+            AddTunnel(result, "TonnelLeftTop", TunnelShape.LeftTop);
+            AddTunnel(result, "TonnelRightBottom", TunnelShape.RightBottom);
+            AddTunnel(result, "TonnelTopRight", TunnelShape.TopRight);
+            AddTunnel(result, "TonnelBottomLeft", TunnelShape.BottomLeft);
+            AddTunnel(result, "TonnelDL2R", TunnelShape.LeftToRight);
+            AddTunnel(result, "TonnelDR2L", TunnelShape.RightToLeft);
+            AddTunnel(result, "TonnelDT2B", TunnelShape.TopToBottom);
+            AddTunnel(result, "TonnelDB2T", TunnelShape.BottomToTop);
 
             AddLandingDetonator(result, "WBomb", EntityKind.Grenade, Collectible | BlueTarget, variant: 1);
             AddLandingDetonator(result, "WGrBox", EntityKind.GrenadeBox, Collectible | BlueTarget, variant: 5);
@@ -200,6 +206,20 @@ namespace Mooh.Core.Levels
             AddLandingDetonator(result, "WBBomb", EntityKind.BigBomb, Collectible | BlueTarget, variant: 1);
 
             return result;
+        }
+
+        /// <summary>
+        /// Adds one tunnel cell. Every <c>Tonnel*</c> type shares the mask
+        /// <c>CGameCellPipes.__init__</c> assigns and differs only in its routing tables.
+        /// </summary>
+        private static void AddTunnel(
+            IDictionary<string, ArchivalObjectDescriptor> result,
+            string archivalType,
+            TunnelShape shape)
+        {
+            Add(result, archivalType, EntityKind.Tunnel,
+                FixedBlock | InteractionMask.RoundSupport | Flightproof,
+                tunnelShape: shape);
         }
 
         private static void AddDirectional(
@@ -308,7 +328,8 @@ namespace Mooh.Core.Levels
             ShakeReaction shakeReaction = ShakeReaction.None,
             ShakeReaction? hardShakeReaction = null,
             FireContact? fireContact = null,
-            bool treatsShadowAsSupport = false)
+            bool treatsShadowAsSupport = false,
+            TunnelShape? tunnelShape = null)
         {
             result.Add(
                 archivalType,
@@ -325,7 +346,8 @@ namespace Mooh.Core.Levels
                     shakeReaction,
                     hardShakeReaction ?? shakeReaction,
                     fireContact,
-                    treatsShadowAsSupport));
+                    treatsShadowAsSupport,
+                    tunnelShape));
         }
     }
 }

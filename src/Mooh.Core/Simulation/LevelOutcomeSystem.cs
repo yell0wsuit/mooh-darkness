@@ -154,12 +154,12 @@ namespace Mooh.Core.Simulation
         }
 
         /// <summary>
-        /// Reports the recovered <c>PObj.State.bLockLvlEnd</c> hold. Among implemented player states
-        /// only the shock reaction carries that flag; the death state does not.
+        /// Reports the recovered <c>PObj.State.bLockLvlEnd</c> hold, which
+        /// <see cref="PlayerBody.HoldsLevelEndOpen"/> states once for every carrier.
         /// </summary>
         private bool IsPlayerHoldingLevelEnd()
         {
-            return _world.Player?.PlayerBody?.Reaction.Kind == PlayerReactionKind.Shocked;
+            return _world.Player?.PlayerBody?.HoldsLevelEndOpen == true;
         }
 
         private void Complete(LevelOutcome outcome, List<SimulationEvent> events)

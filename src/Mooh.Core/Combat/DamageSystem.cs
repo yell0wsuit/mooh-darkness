@@ -43,7 +43,12 @@ namespace Mooh.Core.Combat
                 return DamageResult.IgnoredDead;
             }
 
+            // These are the recovered guards of GamePlayer.OnHelthLost, in its order: an active
+            // cola bonus absorbs the hit, an immortal state ignores it, and the post-hit immunity
+            // window swallows it. A shocked player is immortal in the original by virtue of
+            // ST_Shock carrying bImmort.
             if (target.PlayerBody?.Progress.ColaRemaining > TimeSpan.Zero
+                || target.PlayerBody?.IsImmortal == true
                 || health.ImmunityRemaining > TimeSpan.Zero
                 || target.PlayerBody?.Reaction.Kind == PlayerReactionKind.Shocked)
             {

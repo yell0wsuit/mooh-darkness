@@ -28,6 +28,7 @@ namespace Mooh.Core.Entities
     /// <param name="smallBeetleBody">The entity's optional spawned small-beetle behavior.</param>
     /// <param name="shakeBody">The entity's optional cell-shake behavior.</param>
     /// <param name="fireBody">The entity's optional role in the fire-contact rule.</param>
+    /// <param name="tunnelBody">The entity's optional tunnel routing tables.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -41,7 +42,8 @@ namespace Mooh.Core.Entities
         ExplosionBody? explosionBody = null,
         SmallBeetleBody? smallBeetleBody = null,
         ShakeBody? shakeBody = null,
-        FireBody? fireBody = null)
+        FireBody? fireBody = null,
+        TunnelBody? tunnelBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -82,6 +84,9 @@ namespace Mooh.Core.Entities
         /// <summary>Gets the entity's optional role in the fire-contact rule.</summary>
         public FireBody? FireBody { get; } = fireBody;
 
+        /// <summary>Gets the entity's optional tunnel routing tables.</summary>
+        public TunnelBody? TunnelBody { get; } = tunnelBody;
+
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }
 
@@ -89,19 +94,22 @@ namespace Mooh.Core.Entities
         /// Gets whether the entity is a player a monster may select as a target.
         /// </summary>
         /// <remarks>
-        /// The original selects targets by mask, and a player in an immortal state — death
-        /// included — has its <c>CNT_OrMaskMonStrike</c> bits cleared, so a dead player is not a
-        /// target. This is deliberately stricter than <see cref="IsDamageablePlayer"/>.
+        /// The original selects targets by mask, and a player in an immortal state — death and
+        /// tunnel transit included — has its <c>CNT_OrMaskMonStrike</c> bits cleared, so neither
+        /// a dead player nor one inside a tunnel is a target. This is deliberately stricter than
+        /// <see cref="IsDamageablePlayer"/>.
         /// </remarks>
-        public bool IsLivingPlayer => PlayerBody is not null && HealthBody is { IsDead: false };
+        public bool IsLivingPlayer => PlayerBody is { IsImmortal: false }
+            && HealthBody is { IsDead: false };
 
         /// <summary>
         /// Gets whether the entity is a player a damage request can be addressed to.
         /// </summary>
         /// <remarks>
-        /// Unlike <see cref="IsLivingPlayer"/> this does not test death, because the blast, shake
-        /// and landing-impact paths dispatch unconditionally and let
-        /// <c>DamageSystem.Apply</c> reject the request, which reports <c>IgnoredDead</c>.
+        /// Unlike <see cref="IsLivingPlayer"/> this tests neither death nor immortality, because
+        /// the blast, shake, fire and landing-impact paths dispatch unconditionally and let
+        /// <c>DamageSystem.Apply</c> reject the request, which reports <c>IgnoredDead</c> or
+        /// <c>IgnoredImmune</c>.
         /// </remarks>
         public bool IsDamageablePlayer => PlayerBody is not null && HealthBody is not null;
     }

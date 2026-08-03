@@ -204,6 +204,9 @@ namespace Mooh.Core.Levels
                     : new ShakeBody(descriptor.ShakeReaction, descriptor.HardShakeReaction),
                 fireBody: descriptor.FireContact is FireContact fireContact
                     ? new FireBody(fireContact)
+                    : null,
+                tunnelBody: descriptor.TunnelShape is TunnelShape tunnelShape
+                    ? new TunnelBody(tunnelShape)
                     : null);
         }
 

@@ -1129,6 +1129,14 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
+                if (motion.Cause == MotionCause.TunnelTransit)
+                {
+                    events.Add(new CellEntered(entity.Id, entity.Position));
+                    _playerController!.ResolveTunnelArrival(events);
+                    _ = ResolveFireContact(entity, events);
+                    continue;
+                }
+
                 if (motion.Cause == MotionCause.MonsterWalking)
                 {
                     GridPosition monsterDestination = entity.Position;
@@ -1278,7 +1286,7 @@ namespace Mooh.Core.Simulation
                 MotionCause.PlayerPushed or MotionCause.StrikePushed => 0,
                 MotionCause.Falling or MotionCause.Sliding => 1,
                 MotionCause.MonsterWalking => 2,
-                MotionCause.PlayerWalking => 3,
+                MotionCause.PlayerWalking or MotionCause.TunnelTransit => 3,
                 _ => throw new InvalidOperationException("Unknown motion cause."),
             };
         }
@@ -1349,7 +1357,10 @@ namespace Mooh.Core.Simulation
                 return false;
             }
 
-            if (arriving.IsDamageablePlayer)
+            // The recovered branch is isinstance(Other, CGameObjPlayer), not a mortality test, so
+            // an immortal player still spends the fire and the damage request is what gets
+            // rejected. A player inside a tunnel therefore puts the fire out and walks on.
+            if (arriving.PlayerBody is not null && arriving.HealthBody is not null)
             {
                 DestroyEntity(fire, arriving.Id, events);
                 ApplyDamage(
