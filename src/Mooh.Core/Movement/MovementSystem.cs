@@ -90,15 +90,19 @@ namespace Mooh.Core.Movement
                 return new MovementPlan(MoveResult.Blocked, []);
             }
 
+            // Both recovered gates on the cell beyond — CellObjCheck(n, 0, CNT_CMaskCallCanPushTh,
+            // True) and CellObjCheck(n, 0, 0, True) — pass a zero ulMaskAny, so the world list
+            // skips every CNT_OrMaskShadow carrier and the cell reads as empty of them.
             GridPosition pushedDestination = destination.Offset(request.Direction);
-            IReadOnlyList<Entity> pushedDestinationOccupants = _world.Contains(pushedDestination)
-                ? _world.GetOccupants(pushedDestination)
+            List<Entity> pushedDestinationOccupants = _world.Contains(pushedDestination)
+                ? [.. _world.GetOccupants(pushedDestination)
+                    .Where(entity => !entity.Interactions.HasFlag(InteractionMask.OccupancyTransparent))]
                 : [];
             if (!_world.Contains(pushedDestination)
                 || (pushedDestinationOccupants.Count != 0
                     && !pushed.Exists(
                         entity => entity.Interactions.HasFlag(InteractionMask.PushesThroughOccupants)))
-                || pushedDestinationOccupants.Any(
+                || pushedDestinationOccupants.Exists(
                     entity => !entity.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
                 || pushed.Exists(
                     entity => entity.Motion is not null

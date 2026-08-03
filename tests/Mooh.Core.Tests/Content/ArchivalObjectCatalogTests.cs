@@ -116,13 +116,13 @@ namespace Mooh.Core.Tests.Content
                 InteractionMask.BlocksMovement | InteractionMask.RoundSupport,
                 false, 1d, -1];
             yield return ["OTPort", EntityKind.Teleporter,
-                InteractionMask.MonsterTransparent,
+                InteractionMask.MonsterTransparent | InteractionMask.OccupancyTransparent,
                 false, 1d, 0];
             yield return ["OTable", EntityKind.MessageTable,
-                InteractionMask.MonsterTransparent,
+                InteractionMask.MonsterTransparent | InteractionMask.OccupancyTransparent,
                 false, 1d, 0];
             yield return ["WMine", EntityKind.Mine,
-                InteractionMask.MonsterTransparent,
+                InteractionMask.MonsterTransparent | InteractionMask.OccupancyTransparent,
                 false, 1d, 0];
         }
 
@@ -160,6 +160,23 @@ namespace Mooh.Core.Tests.Content
                 .Order(StringComparer.Ordinal)];
 
             Assert.Equal(["OTPort", "OTable", "WMine"], transparent);
+        }
+
+        /// <summary>
+        /// Verifies exactly the recovered <c>CNT_OrMaskShadow</c> carriers hide from ordinary cell
+        /// queries. The world list is built with
+        /// <c>CNT_CMaskShadowObj | CNT_CMaskShadowWeap | CNT_CMaskMonShadow</c>, so the set is the
+        /// monster-shadow types plus fire, which carries <c>CNT_CMaskShadowObj</c> alone.
+        /// </summary>
+        [Fact]
+        public void OnlyRecoveredShadowTypesAreOccupancyTransparent()
+        {
+            string[] transparent = [.. ArchivalObjectCatalog.Types
+                .Where(type => ArchivalObjectCatalog.Get(type).Interactions
+                    .HasFlag(InteractionMask.OccupancyTransparent))
+                .Order(StringComparer.Ordinal)];
+
+            Assert.Equal(["OFire", "OTPort", "OTable", "WMine"], transparent);
         }
 
         /// <summary>Verifies exactly the recovered blue-strike mask carriers are strike targets.</summary>

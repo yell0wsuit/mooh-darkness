@@ -713,7 +713,9 @@ namespace Mooh.Core.Simulation
             Entity beetle = new(
                 CreateSpawnedEntityId(monster.Id),
                 position,
-                InteractionMask.MonsterTransparent | InteractionMask.LevelEndLock,
+                InteractionMask.MonsterTransparent
+                    | InteractionMask.OccupancyTransparent
+                    | InteractionMask.LevelEndLock,
                 smallBeetleBody: new SmallBeetleBody(
                     color,
                     _difficultySpeeds.MonsterSpeed * BeetleSpeedMultiplier),
@@ -923,9 +925,14 @@ namespace Mooh.Core.Simulation
                 }
             }
 
+            // CellObjCheck(c, 0, 0, True) passes a zero ulMaskAny, so a CNT_OrMaskShadow carrier
+            // ahead — a message table, a teleporter, fire or a deployed mine — does not stop the
+            // chain.
             if (!_world.Contains(ahead)
                 || !_world.IsCellUnlocked(ahead)
-                || _world.GetOccupants(ahead).Any(occupant => occupant.Motion is null))
+                || _world.GetOccupants(ahead).Any(
+                    occupant => occupant.Motion is null
+                        && !occupant.Interactions.HasFlag(InteractionMask.OccupancyTransparent)))
             {
                 ResolveStrikePushImpact(entity, ahead, events);
                 return;

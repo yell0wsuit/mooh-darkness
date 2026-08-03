@@ -34,7 +34,9 @@ namespace Mooh.Core.Tests.Enemies
             (WorldGrid world, _, Entity beetle, _, _) = SpawnBeetle(new GridPosition(4, 2));
 
             Assert.Equal(
-                InteractionMask.MonsterTransparent | InteractionMask.LevelEndLock,
+                InteractionMask.MonsterTransparent
+                    | InteractionMask.OccupancyTransparent
+                    | InteractionMask.LevelEndLock,
                 beetle.Interactions);
             Assert.Equal(ExplosionReaction.Destroy, beetle.ExplosionBody!.Reaction);
             Assert.Null(beetle.GravityBody);

@@ -53,5 +53,10 @@ namespace Mooh.Core.Interactions
         /// over rocks, monsters and collectibles but not through a wall.
         /// </summary>
         BlocksFlight = 1 << 11,
+
+        /// <summary>
+        /// Ordinary cell-occupancy queries ignore the entity, so its cell reads as empty.
+        /// </summary>
+        OccupancyTransparent = 1 << 12,
     }
 }

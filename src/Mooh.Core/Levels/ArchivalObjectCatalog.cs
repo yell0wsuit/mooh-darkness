@@ -61,6 +61,15 @@ namespace Mooh.Core.Levels
         private const InteractionMask WorldRotation = InteractionMask.BlocksMovement
             | InteractionMask.RoundSupport;
 
+        /// <summary>
+        /// Matches the recovered <c>CNT_CMaskShadowObj | CNT_CMaskMonShadow</c> pair the message
+        /// table and the teleporter carry. Both bits are in <c>CNT_OrMaskShadow</c>, the world
+        /// list's query filter, so such an occupant hides from monster navigation and from every
+        /// ordinary cell-occupancy query alike.
+        /// </summary>
+        private const InteractionMask Shadow = InteractionMask.MonsterTransparent
+            | InteractionMask.OccupancyTransparent;
+
         private static readonly Dictionary<string, ArchivalObjectDescriptor> Descriptors = CreateDescriptors();
 
         /// <summary>Gets every supported exact archival type name.</summary>
@@ -150,14 +159,18 @@ namespace Mooh.Core.Levels
             AddVariants(result, EntityKind.KeyDoor, FixedBlock | InteractionMask.RoundSupport,
                 false,
                 "OKDDoor1", "OKDDoor2", "OKDDoor3");
-            Add(result, "OFire", EntityKind.Fire, InteractionMask.RoundSupport, hasGravity: true);
+            // Fire carries CNT_CMaskShadowObj | CNT_CMaskRoundCap, so it hides from ordinary cell
+            // queries but keeps CNT_CMaskMonShadow clear and still blocks monster navigation.
+            Add(result, "OFire", EntityKind.Fire,
+                InteractionMask.RoundSupport | InteractionMask.OccupancyTransparent,
+                hasGravity: true);
             AddDirectional(result, "OArrow", EntityKind.GravityArrow, PushableRound | BlueTarget, hasGravity: true,
                 explosionReaction: ExplosionReaction.Deferred,
                 shakeReaction: ShakeReaction.Deferred);
             Add(result, "OWRotL", EntityKind.WorldRotation, WorldRotation, variant: -1);
             Add(result, "OWRotR", EntityKind.WorldRotation, WorldRotation, variant: 1);
-            Add(result, "OTPort", EntityKind.Teleporter, InteractionMask.MonsterTransparent);
-            Add(result, "OTable", EntityKind.MessageTable, InteractionMask.MonsterTransparent);
+            Add(result, "OTPort", EntityKind.Teleporter, Shadow);
+            Add(result, "OTable", EntityKind.MessageTable, Shadow);
 
             AddExplodableMany(result, EntityKind.Pipe, FixedBlock | InteractionMask.RoundSupport,
                 "PipeHor", "PipeVert", "PipeLeftTop", "PipeRightBottom", "PipeTopRight", "PipeBottomLeft");
@@ -170,7 +183,9 @@ namespace Mooh.Core.Levels
             AddLandingDetonator(result, "WGrBox", EntityKind.GrenadeBox, Collectible | BlueTarget, variant: 5);
             AddLandingDetonator(result, "WROne", EntityKind.Rocket, Collectible | BlueTarget, variant: 1);
             AddLandingDetonator(result, "WRBox", EntityKind.RocketBox, Collectible | BlueTarget, variant: 5);
-            Add(result, "WMine", EntityKind.Mine, InteractionMask.MonsterTransparent,
+            // The deployed mine carries CNT_CMaskShadowWeap | CNT_CMaskMonShadow instead of
+            // CNT_CMaskShadowObj, but both bits are in CNT_OrMaskShadow all the same.
+            Add(result, "WMine", EntityKind.Mine, Shadow,
                 explosionReaction: ExplosionReaction.Detonate3x3,
                 shakeReaction: ShakeReaction.Detonate3x3);
             AddLandingDetonator(result, "WMinesBox", EntityKind.MineBox, Collectible | BlueTarget, variant: 5);

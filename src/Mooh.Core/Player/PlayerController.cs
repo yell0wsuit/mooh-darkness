@@ -557,7 +557,13 @@ namespace Mooh.Core.Player
             _world.LockCell(destination, CellInteractionLock);
             foreach (Entity entity in occupants)
             {
-                _ = _world.Remove(entity.Id);
+                // The recovered CellObjDump(n, CNT_CMaskCallCanPushTh) selects crushable occupants
+                // by an explicit positive mask, so anything else sharing the cell — including a
+                // CNT_OrMaskShadow carrier the push gate ignored — survives.
+                if (entity.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
+                {
+                    _ = _world.Remove(entity.Id);
+                }
             }
         }
 
