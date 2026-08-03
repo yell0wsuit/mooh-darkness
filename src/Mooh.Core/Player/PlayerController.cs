@@ -383,9 +383,9 @@ namespace Mooh.Core.Player
             }
 
             bool hasCounterMotion = plan.Result == MoveResult.Pushed
-                ? HasCounterMotion(destination, direction)
-                    || HasCounterMotion(destination.Offset(direction), direction)
-                : HasCounterMotion(destination, direction);
+                ? CellQuery.HasCounterMotion(_world, destination, direction)
+                    || CellQuery.HasCounterMotion(_world, destination.Offset(direction), direction)
+                : CellQuery.HasCounterMotion(_world, destination, direction);
             double speedMultiplier = hasCounterMotion ? CounterMotionMultiplier : 1;
 
             if (plan.Result == MoveResult.Pushed)
@@ -515,14 +515,6 @@ namespace Mooh.Core.Player
             _pendingResume = null;
         }
 
-        private bool HasCounterMotion(GridPosition position, Direction direction)
-        {
-            return _world.Contains(position)
-                && _world.GetOccupants(position).Any(
-                    entity => entity.Motion is not null
-                        && entity.Motion.TravelDirection != direction);
-        }
-
         private void EatDestination(
             GridPosition destination,
             List<SimulationEvent> events)
@@ -555,15 +547,9 @@ namespace Mooh.Core.Player
             }
 
             _world.LockCell(destination, CellInteractionLock);
-            foreach (Entity entity in occupants)
+            foreach (Entity entity in CellQuery.CrushableOccupants(_world, destination))
             {
-                // The recovered CellObjDump(n, CNT_CMaskCallCanPushTh) selects crushable occupants
-                // by an explicit positive mask, so anything else sharing the cell — including a
-                // CNT_OrMaskShadow carrier the push gate ignored — survives.
-                if (entity.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
-                {
-                    _ = _world.Remove(entity.Id);
-                }
+                _ = _world.Remove(entity.Id);
             }
         }
 

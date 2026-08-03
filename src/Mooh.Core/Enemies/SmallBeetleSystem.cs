@@ -116,7 +116,7 @@ namespace Mooh.Core.Enemies
                     beetle,
                     MotionCause.MonsterWalking,
                     direction,
-                    HasCounterMotion(destination, direction)
+                    CellQuery.HasCounterMotion(_world, destination, direction)
                         ? body.MoveSpeed * CounterMotionMultiplier
                         : body.MoveSpeed,
                     resolutionOrder);
@@ -166,13 +166,6 @@ namespace Mooh.Core.Enemies
         {
             body.State = SmallBeetleState.Waiting;
             body.RemainingRecheck = SmallBeetleBody.RecheckDelay;
-        }
-
-        private bool HasCounterMotion(GridPosition position, Direction direction)
-        {
-            return _world.GetOccupants(position).Any(
-                entity => entity.Motion is not null
-                    && entity.Motion.TravelDirection != direction);
         }
 
         private static IEnumerable<TimeSpan> Timers(SmallBeetleBody body)

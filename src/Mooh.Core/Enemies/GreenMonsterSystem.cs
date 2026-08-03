@@ -168,7 +168,7 @@ namespace Mooh.Core.Enemies
                 return;
             }
 
-            if (CanEnter(monster, destination))
+            if (CellQuery.CanMonsterEnter(_world, monster, destination))
             {
                 GridPosition source = monster.Position;
                 _world.CommitMoves([new PlannedMove(monster.Id, source, destination)]);
@@ -176,7 +176,7 @@ namespace Mooh.Core.Enemies
                     monster,
                     MotionCause.MonsterWalking,
                     body.FacingDirection,
-                    HasCounterMotion(destination, body.FacingDirection)
+                    CellQuery.HasCounterMotion(_world, destination, body.FacingDirection)
                         ? body.MoveSpeed * CounterMotionMultiplier
                         : body.MoveSpeed,
                     resolutionOrder);
@@ -193,21 +193,6 @@ namespace Mooh.Core.Enemies
         /// interaction bit except the monster-shadow bit, so any occupant that is not explicitly
         /// transparent to monsters blocks the walk, including collectibles the player could eat.
         /// </summary>
-        private bool CanEnter(Entity monster, GridPosition destination)
-        {
-            return !monster.Interactions.HasFlag(InteractionMask.MovementLocked)
-                && _world.Contains(destination)
-                && _world.GetOccupants(destination)
-                    .All(occupant => occupant.Interactions.HasFlag(InteractionMask.MonsterTransparent));
-        }
-
-        private bool HasCounterMotion(GridPosition position, Direction direction)
-        {
-            return _world.GetOccupants(position).Any(
-                entity => entity.Motion is not null
-                    && entity.Motion.TravelDirection != direction);
-        }
-
         private void CompleteTimedState(
             Entity monster,
             GreenMonsterBody body,
@@ -269,9 +254,7 @@ namespace Mooh.Core.Enemies
         {
             return _world.Contains(position)
                 ? _world.GetOccupants(position)
-                    .FirstOrDefault(
-                        entity => entity.PlayerBody is not null
-                            && entity.HealthBody is { IsDead: false })
+                    .FirstOrDefault(entity => entity.IsLivingPlayer)
                 : null;
         }
 

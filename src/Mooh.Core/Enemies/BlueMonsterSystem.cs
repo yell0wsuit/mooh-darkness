@@ -55,13 +55,13 @@ namespace Mooh.Core.Enemies
                 return;
             }
 
-            if (HasStrikeTarget(left) || CanEnter(monster, left))
+            if (HasStrikeTarget(left) || CellQuery.CanMonsterEnter(_world, monster, left))
             {
                 StartTurn(monster, body, turnLeft: true, events);
                 return;
             }
 
-            if (CanEnter(monster, forward))
+            if (CellQuery.CanMonsterEnter(_world, monster, forward))
             {
                 StartWalking(monster, body, forward, resolutionOrder, events);
                 return;
@@ -120,7 +120,7 @@ namespace Mooh.Core.Enemies
                 return;
             }
 
-            if (CanEnter(monster, forward))
+            if (CellQuery.CanMonsterEnter(_world, monster, forward))
             {
                 StartWalking(monster, body, forward, resolutionOrder, events);
                 return;
@@ -142,7 +142,7 @@ namespace Mooh.Core.Enemies
                 monster,
                 MotionCause.MonsterWalking,
                 body.FacingDirection,
-                HasCounterMotion(destination, body.FacingDirection)
+                CellQuery.HasCounterMotion(_world, destination, body.FacingDirection)
                     ? body.MoveSpeed * CounterMotionMultiplier
                     : body.MoveSpeed,
                 resolutionOrder);
@@ -155,14 +155,6 @@ namespace Mooh.Core.Enemies
         /// every interaction bit except the monster-shadow bit, so any occupant that is not
         /// explicitly transparent to monsters blocks the walk or the left-hand turn.
         /// </summary>
-        private bool CanEnter(Entity monster, GridPosition destination)
-        {
-            return !monster.Interactions.HasFlag(InteractionMask.MovementLocked)
-                && _world.Contains(destination)
-                && _world.GetOccupants(destination)
-                    .All(occupant => occupant.Interactions.HasFlag(InteractionMask.MonsterTransparent));
-        }
-
         /// <summary>
         /// Reports whether a cell holds anything the monster strikes. The original tests the cell
         /// for the blue-strike mask bit, which the player and a fixed set of objects carry.
@@ -175,7 +167,7 @@ namespace Mooh.Core.Enemies
 
         private static bool IsStrikeTarget(Entity entity)
         {
-            return (entity.PlayerBody is not null && entity.HealthBody is { IsDead: false })
+            return entity.IsLivingPlayer
                 || entity.Interactions.HasFlag(InteractionMask.BlueMonsterTarget);
         }
 
@@ -285,13 +277,6 @@ namespace Mooh.Core.Enemies
                     body.FacingDirection,
                     body.FacingDirection.Opposite(),
                     turnaroundDuration));
-        }
-
-        private bool HasCounterMotion(GridPosition position, Direction direction)
-        {
-            return _world.GetOccupants(position).Any(
-                entity => entity.Motion is not null
-                    && entity.Motion.TravelDirection != direction);
         }
 
         private static void StartTurn(

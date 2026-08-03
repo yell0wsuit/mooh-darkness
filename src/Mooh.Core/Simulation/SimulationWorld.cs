@@ -607,7 +607,7 @@ namespace Mooh.Core.Simulation
             _world.LockCell(position, ExplosionCellLockDuration);
             foreach (Entity occupant in _world.GetOccupants(position))
             {
-                if (occupant.PlayerBody is not null && occupant.HealthBody is not null)
+                if (occupant.IsDamageablePlayer)
                 {
                     ApplyDamage(new DamageRequest(
                         sourceEntityId,
@@ -886,12 +886,9 @@ namespace Mooh.Core.Simulation
                 return;
             }
 
-            foreach (Entity occupant in _world.GetOccupants(cell))
+            foreach (Entity occupant in CellQuery.CrushableOccupants(_world, cell))
             {
-                if (occupant.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
-                {
-                    DestroyEntity(occupant, occupant.Id, events);
-                }
+                DestroyEntity(occupant, occupant.Id, events);
             }
 
             _world.LockCell(cell, WeaponCellLockDuration);
@@ -920,24 +917,17 @@ namespace Mooh.Core.Simulation
             if (_world.Contains(ahead)
                 && entity.Interactions.HasFlag(InteractionMask.PushesThroughOccupants))
             {
-                foreach (Entity crushed in _world.GetOccupants(ahead))
+                foreach (Entity crushed in CellQuery.CrushableOccupants(_world, ahead))
                 {
-                    if (crushed.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
-                    {
-                        DestroyEntity(crushed, entity.Id, events);
-                    }
+                    DestroyEntity(crushed, entity.Id, events);
                 }
             }
 
-            // CellObjCheck(c, 0, 0, True) asks whether the cell ahead holds any occupant at all,
-            // not only a stationary one: occupancy is committed when movement starts, so an entity
-            // part-way through its own move already owns the cell it is entering and a struck
-            // object has to stop against it. The zero ulMaskAny still hides every CNT_OrMaskShadow
-            // carrier — a message table, a teleporter, fire or a deployed mine — from the test.
+            // The recovered stop gate is CellObjCheck(c, 0, 0, True), the same ordinary query the
+            // walking push applies to the cell beyond.
             if (!_world.Contains(ahead)
                 || !_world.IsCellUnlocked(ahead)
-                || _world.GetOccupants(ahead).Any(
-                    occupant => !occupant.Interactions.HasFlag(InteractionMask.OccupancyTransparent)))
+                || CellQuery.IsOccupied(_world, ahead))
             {
                 ResolveStrikePushImpact(entity, ahead, events);
                 return;
@@ -970,7 +960,7 @@ namespace Mooh.Core.Simulation
 
             foreach (Entity occupant in _world.GetOccupants(ahead))
             {
-                if (occupant.PlayerBody is not null && occupant.HealthBody is not null)
+                if (occupant.IsDamageablePlayer)
                 {
                     ApplyDamage(
                         new DamageRequest(
@@ -1195,7 +1185,7 @@ namespace Mooh.Core.Simulation
             }
 
             Entity? player = impacted.FirstOrDefault(
-                occupant => occupant.PlayerBody is not null && occupant.HealthBody is not null);
+                occupant => occupant.IsDamageablePlayer);
             if (player is null)
             {
                 return;

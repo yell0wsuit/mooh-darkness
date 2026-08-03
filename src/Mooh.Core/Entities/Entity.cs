@@ -78,5 +78,25 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }
+
+        /// <summary>
+        /// Gets whether the entity is a player a monster may select as a target.
+        /// </summary>
+        /// <remarks>
+        /// The original selects targets by mask, and a player in an immortal state — death
+        /// included — has its <c>CNT_OrMaskMonStrike</c> bits cleared, so a dead player is not a
+        /// target. This is deliberately stricter than <see cref="IsDamageablePlayer"/>.
+        /// </remarks>
+        public bool IsLivingPlayer => PlayerBody is not null && HealthBody is { IsDead: false };
+
+        /// <summary>
+        /// Gets whether the entity is a player a damage request can be addressed to.
+        /// </summary>
+        /// <remarks>
+        /// Unlike <see cref="IsLivingPlayer"/> this does not test death, because the blast, shake
+        /// and landing-impact paths dispatch unconditionally and let
+        /// <c>DamageSystem.Apply</c> reject the request, which reports <c>IgnoredDead</c>.
+        /// </remarks>
+        public bool IsDamageablePlayer => PlayerBody is not null && HealthBody is not null;
     }
 }
