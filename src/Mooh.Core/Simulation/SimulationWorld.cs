@@ -929,14 +929,15 @@ namespace Mooh.Core.Simulation
                 }
             }
 
-            // CellObjCheck(c, 0, 0, True) passes a zero ulMaskAny, so a CNT_OrMaskShadow carrier
-            // ahead — a message table, a teleporter, fire or a deployed mine — does not stop the
-            // chain.
+            // CellObjCheck(c, 0, 0, True) asks whether the cell ahead holds any occupant at all,
+            // not only a stationary one: occupancy is committed when movement starts, so an entity
+            // part-way through its own move already owns the cell it is entering and a struck
+            // object has to stop against it. The zero ulMaskAny still hides every CNT_OrMaskShadow
+            // carrier — a message table, a teleporter, fire or a deployed mine — from the test.
             if (!_world.Contains(ahead)
                 || !_world.IsCellUnlocked(ahead)
                 || _world.GetOccupants(ahead).Any(
-                    occupant => occupant.Motion is null
-                        && !occupant.Interactions.HasFlag(InteractionMask.OccupancyTransparent)))
+                    occupant => !occupant.Interactions.HasFlag(InteractionMask.OccupancyTransparent)))
             {
                 ResolveStrikePushImpact(entity, ahead, events);
                 return;

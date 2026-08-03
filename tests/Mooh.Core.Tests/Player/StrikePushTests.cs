@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Mooh.Core.Content;
 using Mooh.Core.Entities;
@@ -148,6 +149,85 @@ namespace Mooh.Core.Tests.Player
             Assert.Contains(
                 events,
                 value => value is ExplosionStarted explosion && explosion.EntityId == bombId);
+        }
+
+        /// <summary>
+        /// Verifies a struck object stops against a monster that is walking rather than passing
+        /// through it. The recovered gate is <c>CellObjCheck(c, 0, 0, True)</c>, which asks whether
+        /// the cell ahead holds anything at all; an occupant part-way through its own move still
+        /// owns the cell, because occupancy is committed when movement starts.
+        /// </summary>
+        [Fact]
+        public void AStruckRockStopsAgainstAWalkingMonsterAndDetonatesIt()
+        {
+            MaterializedLevel level = Corridor(
+                [
+                    Object(100, "OPlayer", 0, 1),
+                    Object(101, "ORock01", 3, 1),
+                    Object(102, "MGrL", 9, 1),
+                ]);
+            Entity rock = level.GetEntity(101);
+            Entity monster = level.GetEntity(102);
+            EntityId monsterId = monster.Id;
+            WalkRightTo(level, 2);
+
+            level.Simulation.SetPlayerInput(Fire());
+            List<SimulationEvent> events = [];
+            for (int step = 0; step < 30; step++)
+            {
+                events.AddRange(level.Simulation.Advance(TimeSpan.FromMilliseconds(50)));
+                if (!level.World.Entities.Any(entity => entity.Id == monsterId))
+                {
+                    break;
+                }
+
+                Assert.NotEqual(monster.Position, rock.Position);
+            }
+
+            Assert.Contains(
+                events,
+                value => value is ExplosionStarted explosion && explosion.EntityId == monsterId);
+            Assert.DoesNotContain(level.World.Entities, entity => entity.Id == monsterId);
+        }
+
+        /// <summary>
+        /// Verifies a struck bubble pops where it stops. Its recovered <c>OnShake</c> is
+        /// <c>ObjKill</c>, so the shake the chain applies to the object it stopped against is what
+        /// destroys it.
+        /// </summary>
+        [Fact]
+        public void AStruckBubblePopsWhereItStops()
+        {
+            MaterializedLevel level = Corridor(
+                [
+                    Object(100, "OPlayer", 0, 1),
+                    Object(101, "OBubble", 3, 1),
+                    Object(102, "CellsMetal01", 6, 1),
+                ]);
+            EntityId bubbleId = level.GetEntity(101).Id;
+            WalkRightTo(level, 2);
+
+            level.Simulation.SetPlayerInput(Fire());
+            IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(
+                TimeSpan.FromMilliseconds(1500));
+
+            Assert.Contains(events, value => value is PushStarted);
+            Assert.DoesNotContain(level.World.Entities, entity => entity.Id == bubbleId);
+        }
+
+        /// <summary>
+        /// Materializes a one-cell-high corridor with a metal roof and floor, so a walking monster
+        /// stays in the struck object's lane instead of turning out of it.
+        /// </summary>
+        private static MaterializedLevel Corridor(IEnumerable<LevelObject> objects)
+        {
+            List<LevelObject> cells = Floor(0, 9, 2);
+            for (int x = 0; x <= 9; x++)
+            {
+                cells.Add(Object(200 + x, "CellsMetal01", x, 0));
+            }
+
+            return Materialize(cells, objects);
         }
 
         /// <summary>
