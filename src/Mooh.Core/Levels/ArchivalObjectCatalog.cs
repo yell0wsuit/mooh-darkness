@@ -66,7 +66,11 @@ namespace Mooh.Core.Levels
         private const InteractionMask LevelEndLockCarrier = InteractionMask.BlocksMovement
             | InteractionMask.LevelEndLock;
 
-        private const InteractionMask WorldRotation = InteractionMask.BlocksMovement
+        /// <summary>
+        /// Matches the recovered <c>CNT_CMaskRoundCap | CNT_CMaskCellLockMotion</c> the two
+        /// rotator types carry. Both also set <c>bFly=True</c>, so neither falls nor slides.
+        /// </summary>
+        private const InteractionMask WorldRotator = InteractionMask.BlocksMovement
             | InteractionMask.RoundSupport;
 
         /// <summary>
@@ -188,8 +192,11 @@ namespace Mooh.Core.Levels
                 hasGravity: true,
                 explosionReaction: ExplosionReaction.LaunchArrow,
                 shakeReaction: ShakeReaction.LaunchArrow);
-            Add(result, "OWRotL", EntityKind.WorldRotation, WorldRotation, variant: -1);
-            Add(result, "OWRotR", EntityKind.WorldRotation, WorldRotation, variant: 1);
+            // Both rotators are struck rather than pushed: the recovered PlCtrl=GoTo_Work is
+            // reached through _AEnd_Str, exactly like a flying arrow's. The variant carries the
+            // turn direction, which is the only thing separating the two types.
+            Add(result, "OWRotL", EntityKind.WorldRotation, WorldRotator, variant: -1);
+            Add(result, "OWRotR", EntityKind.WorldRotation, WorldRotator, variant: 1);
             Add(result, "OTPort", EntityKind.Teleporter, Shadow);
             Add(result, "OTable", EntityKind.MessageTable, Shadow);
 

@@ -172,6 +172,17 @@ namespace Mooh.SimulationRunner
                         nameof(SmallBeetleSpawned),
                         entity,
                         position: value.Position),
+                    WorldRotationStarted value => new ObservedEvent(
+                        nameof(WorldRotationStarted),
+                        entity,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds,
+                        worldRotation: value.Direction),
+                    WorldRotationCompleted value => new ObservedEvent(
+                        nameof(WorldRotationCompleted),
+                        entity,
+                        worldRotation: value.Direction,
+                        width: value.Width,
+                        height: value.Height),
                     _ => throw new InvalidOperationException(
                         $"Unsupported simulation event type '{simulationEvent.GetType().FullName}'."),
                 });

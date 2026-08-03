@@ -79,6 +79,16 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets optional explosion behavior.</summary>
         public ScenarioExplosionBody? ExplosionBody { get; init; }
+
+        /// <summary>Gets optional world-rotation behavior.</summary>
+        public ScenarioWorldRotationBody? WorldRotationBody { get; init; }
+    }
+
+    /// <summary>Describes world-rotation behavior for a scenario entity.</summary>
+    public sealed class ScenarioWorldRotationBody
+    {
+        /// <summary>Gets the exact <c>WorldRotationDirection</c> name the rotator turns the world.</summary>
+        public required string Direction { get; init; }
     }
 
     /// <summary>Describes gravity behavior for a scenario entity.</summary>
@@ -237,6 +247,15 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets an optional target or resulting monster-form flag.</summary>
         public bool? IsSmall { get; init; }
+
+        /// <summary>Gets an optional exact <c>WorldRotationDirection</c> name.</summary>
+        public string? WorldRotation { get; init; }
+
+        /// <summary>Gets an optional world width in cells, reported after a rotation.</summary>
+        public int? Width { get; init; }
+
+        /// <summary>Gets an optional world height in cells, reported after a rotation.</summary>
+        public int? Height { get; init; }
     }
 
     /// <summary>Describes the expected state after all simulation steps.</summary>

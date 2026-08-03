@@ -399,6 +399,12 @@ namespace Mooh.Core.Player
                     continue;
                 }
 
+                if (occupant.WorldRotationBody is not null)
+                {
+                    _actionEffects.TriggerWorldRotation(occupant, events);
+                    continue;
+                }
+
                 if ((occupant.Interactions
                     & (InteractionMask.PlayerPushable | InteractionMask.PushesThroughOccupants)) != 0)
                 {

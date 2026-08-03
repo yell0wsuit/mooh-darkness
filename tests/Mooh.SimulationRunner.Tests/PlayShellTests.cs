@@ -299,6 +299,51 @@ namespace Mooh.SimulationRunner.Tests
             return new PlaySession(CreatePack());
         }
 
+        /// <summary>
+        /// Verifies a world rotation reaches the shell. The frame reports the world's dimensions
+        /// per frame and the page resizes its canvas from them, so the swap needs no bookkeeping
+        /// here; this pins that down, because a cached board size would survive every other test.
+        /// </summary>
+        [Fact]
+        public void AWorldRotationSwapsTheReportedBoardSize()
+        {
+            FakeTimeProvider time = new();
+            PlaySession session = new(CreateRotatorPack(), 0, time);
+            PlayFrame before = session.Render();
+
+            Assert.Equal(6, before.Width);
+            Assert.Equal(4, before.Height);
+
+            // The player materializes facing down and the rotator sits directly below it, so
+            // holding fire strikes the rotator. The strike, the 1000 ms windup and the 785 ms spin
+            // together need about two seconds, taken in the shell's clamped 100 ms frames.
+            PlayFrame frame = before;
+            for (int step = 0; step < 25; step++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(100));
+                frame = session.Advance(new PlayerInputState(false, false, false, false, true));
+            }
+
+            Assert.Equal(4, frame.Width);
+            Assert.Equal(6, frame.Height);
+            PlaySprite player = Assert.Single(frame.Sprites, sprite => sprite.Glyph == "🐔");
+            Assert.InRange(player.X, 0, 3);
+            Assert.InRange(player.Y, 0, 5);
+        }
+
+        private static LoadedLevelPack CreateRotatorPack()
+        {
+            LevelDocument level = new(
+                1,
+                null,
+                new LevelSize(6, 4),
+                new EditorPreview(0, 0, 6, 4),
+                [Object(1, "OPlayer", 1, 1), Object(2, "OWRotL", 1, 2)]);
+            return new LoadedLevelPack(
+                new LevelPackManifest(1, null, [new LevelManifestEntry(0, "one", "one.json")]),
+                [level]);
+        }
+
         private static LoadedLevelPack CreatePack()
         {
             return new LoadedLevelPack(

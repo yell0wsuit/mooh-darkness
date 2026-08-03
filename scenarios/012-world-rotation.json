@@ -1,0 +1,182 @@
+{
+    "formatVersion": 1,
+    "name": "a struck rotator turns the world and gravity finds a new floor",
+    "world": {
+        "width": 6,
+        "height": 4,
+        "gravity": "Down",
+        "randomSeed": 0,
+        "entities": [
+            {
+                "alias": "player",
+                "position": {
+                    "x": 1,
+                    "y": 1
+                },
+                "interactions": [
+                    "BlocksMovement"
+                ],
+                "playerBody": {
+                    "moveSpeed": 2.5,
+                    "pushSpeedMultiplier": 1.5,
+                    "facingDirection": "Right"
+                }
+            },
+            {
+                "alias": "rotator",
+                "position": {
+                    "x": 2,
+                    "y": 1
+                },
+                "interactions": [
+                    "BlocksMovement",
+                    "RoundSupport"
+                ],
+                "worldRotationBody": {
+                    "direction": "Left"
+                }
+            },
+            {
+                "alias": "rock",
+                "position": {
+                    "x": 4,
+                    "y": 1
+                },
+                "interactions": [
+                    "BlocksMovement"
+                ],
+                "gravityBody": {
+                    "fallSpeed": 1.875,
+                    "canSlide": false
+                }
+            },
+            {
+                "alias": "ledge",
+                "position": {
+                    "x": 4,
+                    "y": 2
+                },
+                "interactions": [
+                    "BlocksMovement"
+                ]
+            }
+        ]
+    },
+    "steps": [
+        {
+            "input": [
+                "Fire"
+            ],
+            "advanceMilliseconds": 1,
+            "expectEvents": [
+                {
+                    "type": "PlayerStrikeStarted",
+                    "entity": "player",
+                    "direction": "Right",
+                    "durationMilliseconds": 150
+                }
+            ]
+        },
+        {
+            "input": [
+                "Fire"
+            ],
+            "advanceMilliseconds": 199,
+            "expectEvents": [
+                {
+                    "type": "PlayerStruck",
+                    "entity": "player",
+                    "direction": "Right",
+                    "position": {
+                        "x": 2,
+                        "y": 1
+                    }
+                }
+            ]
+        },
+        {
+            "input": [],
+            "advanceMilliseconds": 951,
+            "expectEvents": [
+                {
+                    "type": "WorldRotationStarted",
+                    "entity": "rotator",
+                    "worldRotation": "Left",
+                    "durationMilliseconds": 785
+                }
+            ]
+        },
+        {
+            "input": [],
+            "advanceMilliseconds": 800,
+            "expectEvents": [
+                {
+                    "type": "WorldRotationCompleted",
+                    "entity": "rotator",
+                    "worldRotation": "Left",
+                    "width": 4,
+                    "height": 6
+                },
+                {
+                    "type": "FallStarted",
+                    "entity": "rock",
+                    "direction": "Down"
+                }
+            ]
+        },
+        {
+            "input": [],
+            "advanceMilliseconds": 600,
+            "expectEvents": [
+                {
+                    "type": "CellEntered",
+                    "entity": "rock",
+                    "position": {
+                        "x": 2,
+                        "y": 5
+                    }
+                },
+                {
+                    "type": "Landed",
+                    "entity": "rock",
+                    "direction": "Down"
+                }
+            ]
+        }
+    ],
+    "expectFinal": {
+        "entities": [
+            {
+                "alias": "player",
+                "position": {
+                    "x": 2,
+                    "y": 1
+                },
+                "facingDirection": "Right",
+                "playerReaction": "Normal",
+                "reactionMilliseconds": 0
+            },
+            {
+                "alias": "rotator",
+                "position": {
+                    "x": 2,
+                    "y": 2
+                }
+            },
+            {
+                "alias": "rock",
+                "position": {
+                    "x": 2,
+                    "y": 5
+                }
+            },
+            {
+                "alias": "ledge",
+                "position": {
+                    "x": 1,
+                    "y": 4
+                }
+            }
+        ]
+    }
+}

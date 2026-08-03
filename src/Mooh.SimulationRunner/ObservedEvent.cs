@@ -23,6 +23,9 @@ namespace Mooh.SimulationRunner
         /// <param name="remainingHealth">Optional remaining health after damage.</param>
         /// <param name="durationMilliseconds">An optional event duration in milliseconds.</param>
         /// <param name="isSmall">An optional target or resulting monster-form flag.</param>
+        /// <param name="worldRotation">An optional world-rotation direction.</param>
+        /// <param name="width">An optional world width in cells.</param>
+        /// <param name="height">An optional world height in cells.</param>
         public ObservedEvent(
             string type,
             string entity,
@@ -39,7 +42,10 @@ namespace Mooh.SimulationRunner
             double? amount = null,
             double? remainingHealth = null,
             long? durationMilliseconds = null,
-            bool? isSmall = null)
+            bool? isSmall = null,
+            WorldRotationDirection? worldRotation = null,
+            int? width = null,
+            int? height = null)
         {
             Type = type;
             Entity = entity;
@@ -57,6 +63,9 @@ namespace Mooh.SimulationRunner
             RemainingHealth = remainingHealth;
             DurationMilliseconds = durationMilliseconds;
             IsSmall = isSmall;
+            WorldRotation = worldRotation;
+            Width = width;
+            Height = height;
         }
 
         /// <summary>Gets the concrete event type name.</summary>
@@ -106,5 +115,14 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets an optional target or resulting monster-form flag.</summary>
         public bool? IsSmall { get; }
+
+        /// <summary>Gets an optional world-rotation direction.</summary>
+        public WorldRotationDirection? WorldRotation { get; }
+
+        /// <summary>Gets an optional world width in cells, reported after a rotation.</summary>
+        public int? Width { get; }
+
+        /// <summary>Gets an optional world height in cells, reported after a rotation.</summary>
+        public int? Height { get; }
     }
 }

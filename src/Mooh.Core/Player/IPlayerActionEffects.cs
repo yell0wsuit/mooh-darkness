@@ -53,6 +53,15 @@ namespace Mooh.Core.Player
         void LaunchArrow(Entity arrow, List<SimulationEvent> events);
 
         /// <summary>
+        /// Starts a world rotator's <c>ST_Work</c> windup, applying the recovered
+        /// <c>GoTo_Work</c>. It shares the arrow's route in: <c>_AEnd_Str</c> offers the struck
+        /// cell <c>PlCtrl</c> before it offers a push, and a rotator answers.
+        /// </summary>
+        /// <param name="rotator">The struck rotator.</param>
+        /// <param name="events">The ordered event sink.</param>
+        void TriggerWorldRotation(Entity rotator, List<SimulationEvent> events);
+
+        /// <summary>
         /// Applies the recovered <c>Game._ObjExplWrd</c> to one cell: its explodable occupants
         /// are destroyed, the player in it is hurt and the cell is locked. A teleport arrival
         /// runs it when the destination cell is still occupied.

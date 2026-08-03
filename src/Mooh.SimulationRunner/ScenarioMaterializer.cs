@@ -8,6 +8,7 @@ using Mooh.Core.Entities;
 using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
+using Mooh.Core.Hazards;
 using Mooh.Core.Interactions;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
@@ -46,7 +47,10 @@ namespace Mooh.SimulationRunner
                     CreateHealthBody(definition.HealthBody),
                     CreateGreenMonsterBody(definition.GreenMonsterBody, scenario.Name),
                     CreateBlueMonsterBody(definition.BlueMonsterBody, scenario.Name),
-                    explosionBody: CreateExplosionBody(definition.ExplosionBody, scenario.Name));
+                    explosionBody: CreateExplosionBody(definition.ExplosionBody, scenario.Name),
+                    worldRotationBody: CreateWorldRotationBody(
+                        definition.WorldRotationBody,
+                        scenario.Name));
                 world.Add(entity);
                 idsByAlias.Add(definition.Alias, id);
                 aliasesById.Add(id, definition.Alias);
@@ -103,6 +107,19 @@ namespace Mooh.SimulationRunner
                         source,
                         "explosionBody.reaction"),
                     definition.DetonatesOnLanding);
+        }
+
+        private static WorldRotationBody? CreateWorldRotationBody(
+            ScenarioWorldRotationBody? definition,
+            string source)
+        {
+            return definition is null
+                ? null
+                : new WorldRotationBody(
+                    ScenarioValidator.ParseEnum<WorldRotationDirection>(
+                        definition.Direction,
+                        source,
+                        "worldRotationBody.direction"));
         }
 
         private static PlayerBody? CreatePlayerBody(ScenarioPlayerBody? definition, string source)

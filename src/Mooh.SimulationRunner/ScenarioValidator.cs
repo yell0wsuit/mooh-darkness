@@ -36,6 +36,9 @@ namespace Mooh.SimulationRunner
             RemainingHealth = 1 << 11,
             DurationMilliseconds = 1 << 12,
             IsSmall = 1 << 13,
+            WorldRotation = 1 << 14,
+            Width = 1 << 15,
+            Height = 1 << 16,
         }
 
         /// <summary>Validates a scenario document.</summary>
@@ -127,6 +130,14 @@ namespace Mooh.SimulationRunner
                         explosionBody.Reaction,
                         source,
                         $"{path}.explosionBody.reaction");
+                }
+
+                if (entity.WorldRotationBody is ScenarioWorldRotationBody worldRotationBody)
+                {
+                    _ = ParseEnum<WorldRotationDirection>(
+                        worldRotationBody.Direction,
+                        source,
+                        $"{path}.worldRotationBody.direction");
                 }
 
                 if (entity.PlayerBody is ScenarioPlayerBody playerBody)
@@ -378,17 +389,17 @@ namespace Mooh.SimulationRunner
 
             if (expected.Position is not null)
             {
-                ValidatePosition(expected.Position, world, source, $"{path}.position");
+                ValidatePosition(expected.Position, world, source, $"{path}.position", allowRotatedBounds: true);
             }
 
             if (expected.FromPosition is not null)
             {
-                ValidatePosition(expected.FromPosition, world, source, $"{path}.fromPosition");
+                ValidatePosition(expected.FromPosition, world, source, $"{path}.fromPosition", allowRotatedBounds: true);
             }
 
             if (expected.ToPosition is not null)
             {
-                ValidatePosition(expected.ToPosition, world, source, $"{path}.toPosition");
+                ValidatePosition(expected.ToPosition, world, source, $"{path}.toPosition", allowRotatedBounds: true);
             }
 
             if (expected.DamageKind is string damageKind)
@@ -446,6 +457,10 @@ namespace Mooh.SimulationRunner
                 "EnemyTransformationCompleted" => EventFields.IsSmall,
                 "ExplosionCellReached" or "ExplosionStarted" => EventFields.Position,
                 "SmallBeetleSpawned" => EventFields.Position,
+                "WorldRotationStarted" => EventFields.WorldRotation
+                    | EventFields.DurationMilliseconds,
+                "WorldRotationCompleted" => EventFields.WorldRotation | EventFields.Width
+                    | EventFields.Height,
                 "PlayerShockStarted" => EventFields.DurationMilliseconds,
                 "LevelLost" or "LevelWon" => EventFields.None,
                 "PlayerDied" or "PlayerShockEnded" or "PlayerStopped"
@@ -469,6 +484,9 @@ namespace Mooh.SimulationRunner
                 ? EventFields.None
                 : EventFields.DurationMilliseconds;
             actual |= expected.IsSmall is null ? EventFields.None : EventFields.IsSmall;
+            actual |= expected.WorldRotation is null ? EventFields.None : EventFields.WorldRotation;
+            actual |= expected.Width is null ? EventFields.None : EventFields.Width;
+            actual |= expected.Height is null ? EventFields.None : EventFields.Height;
             if (actual != required)
             {
                 throw Invalid(
@@ -518,6 +536,8 @@ namespace Mooh.SimulationRunner
             "PushStarted",
             "SlideStarted",
             "SmallBeetleSpawned",
+            "WorldRotationCompleted",
+            "WorldRotationStarted",
         ];
 
         private static void ValidateFinalState(ScenarioDocument scenario, string source)
@@ -542,7 +562,12 @@ namespace Mooh.SimulationRunner
                     throw Invalid(source, $"{path}.alias", $"duplicates '{entity.Alias}'.");
                 }
 
-                ValidatePosition(entity.Position, scenario.World, source, $"{path}.position");
+                ValidatePosition(
+                    entity.Position,
+                    scenario.World,
+                    source,
+                    $"{path}.position",
+                    allowRotatedBounds: true);
                 if (entity.FacingDirection is string facingDirection)
                 {
                     _ = ParseEnum<Direction>(facingDirection, source, $"{path}.facingDirection");
@@ -715,22 +740,43 @@ namespace Mooh.SimulationRunner
             }
         }
 
+        /// <summary>
+        /// Checks a declared cell against the world bounds.
+        /// </summary>
+        /// <remarks>
+        /// A world rotation swaps the world's width and height, so a scenario that declares a
+        /// rotator has two sets of bounds and which one applies depends on how many turns have
+        /// happened by that point in the run. Positions the scenario expects — event cells and
+        /// final positions — are therefore accepted in either, while the initial roster is always
+        /// checked strictly against the declared world.
+        /// </remarks>
         private static void ValidatePosition(
             ScenarioPosition position,
             ScenarioWorld world,
             string source,
-            string path)
+            string path,
+            bool allowRotatedBounds = false)
         {
             if (position is null)
             {
                 throw Invalid(source, path, "is required.");
             }
 
-            if (position.X < 0 || position.X >= world.Width
-                || position.Y < 0 || position.Y >= world.Height)
+            bool inDeclared = position.X >= 0 && position.X < world.Width
+                && position.Y >= 0 && position.Y < world.Height;
+            bool inRotated = allowRotatedBounds
+                && HasRotator(world)
+                && position.X >= 0 && position.X < world.Height
+                && position.Y >= 0 && position.Y < world.Width;
+            if (!inDeclared && !inRotated)
             {
                 throw Invalid(source, path, "is outside the world.");
             }
+        }
+
+        private static bool HasRotator(ScenarioWorld world)
+        {
+            return world.Entities.Exists(entity => entity.WorldRotationBody is not null);
         }
 
         private static void ValidatePositiveMilliseconds(long value, string source, string path)

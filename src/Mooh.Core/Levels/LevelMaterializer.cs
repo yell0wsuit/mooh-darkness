@@ -220,6 +220,13 @@ namespace Mooh.Core.Levels
                     : null,
                 teleporterBody: descriptor.Kind == EntityKind.Teleporter
                     ? new TeleporterBody(ReadLinkCoordinates(source))
+                    : null,
+                // The catalog separates the two rotator types by variant alone: OWRotL is -1 and
+                // OWRotR is 1, matching the sign of the recovered CNT_GPrm_WorldRotSp each passes.
+                worldRotationBody: descriptor.Kind == EntityKind.WorldRotation
+                    ? new WorldRotationBody(descriptor.Variant < 0
+                        ? WorldRotationDirection.Left
+                        : WorldRotationDirection.Right)
                     : null);
         }
 

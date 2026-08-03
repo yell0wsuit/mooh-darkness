@@ -76,6 +76,12 @@ namespace Mooh.SimulationRunner
         /// from the world itself. The reach time is taken as the end of the step that reported it,
         /// which is accurate to the frame interval.
         /// </summary>
+        /// <remarks>
+        /// A world rotation needs nothing here even though it moves every cell. No blast can be
+        /// reached while the world spins, because the turn freezes the simulation, and the recovered
+        /// spin lasts 785 ms against a 500 ms cell lock, so every marker taken before it has already
+        /// been pruned by the time the world turns.
+        /// </remarks>
         private void RecordBlastCells(IReadOnlyList<SimulationEvent> events)
         {
             WorldGrid world = Session.Level.World;

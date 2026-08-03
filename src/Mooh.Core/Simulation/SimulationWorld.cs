@@ -57,6 +57,21 @@ namespace Mooh.Core.Simulation
         /// <summary>The recovered <c>CNT_OPrmRocketSpeed</c> against <c>Compl.SpeedNrm</c>.</summary>
         private const double ArrowFlightSpeedMultiplier = 2.0;
 
+        /// <summary>
+        /// The recovered <c>ST_Work</c> windup a struck rotator runs before the world starts
+        /// turning: twenty frames at 50 ms, the same in both rotator types. Ordinary play carries
+        /// on for its whole duration; only the turn itself freezes the simulation.
+        /// </summary>
+        private const double WorldRotationWindupSeconds = 1.0;
+
+        /// <summary>
+        /// The recovered spin duration. <c>CNT_GPrm_WorldRotSp</c> is 0.002, and the native
+        /// <c>WorldRotStart</c> (<c>sub_4A09D0</c>) divides it by <c>pi/2</c> before accumulating
+        /// it per millisecond until the total reaches one, so a quarter turn takes
+        /// <c>pi/2 / 0.002</c> milliseconds.
+        /// </summary>
+        private const double WorldRotationSpinSeconds = Math.PI / 2 / 0.002 / 1000;
+
         /// <summary>The recovered <c>CNT_OPrm_AirSlow</c> applied against a counter-moving cell.</summary>
         private const double CounterMotionMultiplier = 0.75;
 
@@ -98,6 +113,9 @@ namespace Mooh.Core.Simulation
         private Direction _gravityDirection;
         private long _nextExplosionOrder;
         private long _nextSpawnOrder;
+        private WorldRotationDirection _rotationDirection;
+        private EntityId? _rotationOwner;
+        private double _rotationRemainingSeconds;
 
         /// <summary>Initializes a simulation coordinator.</summary>
         /// <param name="world">The authoritative world.</param>
@@ -193,6 +211,24 @@ namespace Mooh.Core.Simulation
         /// recovered settle following the deciding condition.
         /// </summary>
         public LevelOutcome Outcome => _levelOutcome.Outcome;
+
+        /// <summary>
+        /// Gets the direction of the quarter turn currently in flight, or <see langword="null"/>
+        /// when the world is not turning. Nothing else in the simulation advances while it is set,
+        /// so a caller that drives its own clock sees elapsed time absorbed by the turn.
+        /// </summary>
+        public WorldRotationDirection? WorldRotationInFlight => _rotationOwner is null
+            ? null
+            : _rotationDirection;
+
+        /// <summary>
+        /// Gets how far the quarter turn in flight has come, from zero to one. It is zero when the
+        /// world is not turning. The turn itself is atomic, so this exists for presentation: it is
+        /// the recovered rotation accumulator a renderer scales to an angle.
+        /// </summary>
+        public double WorldRotationProgress => _rotationOwner is null
+            ? 0
+            : 1 - (_rotationRemainingSeconds / WorldRotationSpinSeconds);
 
         /// <summary>Replaces the currently held input for the world's player.</summary>
         /// <param name="input">The latest held cardinal inputs.</param>
@@ -328,6 +364,27 @@ namespace Mooh.Core.Simulation
             double remainingSeconds = elapsed.TotalSeconds;
             while (remainingSeconds > 0)
             {
+                // A turn in flight replaces everything else, which is the recovered
+                // Game.ModCycle:2693 swapping the whole object cycle for WorldRotCycle. Not even
+                // the world clock advances, so cell locks and repeat times keep their remainders.
+                if (_rotationOwner is not null)
+                {
+                    double spinSeconds = Math.Min(remainingSeconds, _rotationRemainingSeconds);
+                    _rotationRemainingSeconds -= spinSeconds;
+                    remainingSeconds -= spinSeconds;
+                    if (remainingSeconds < TimeTolerance)
+                    {
+                        remainingSeconds = 0;
+                    }
+
+                    if (_rotationRemainingSeconds <= TimeTolerance)
+                    {
+                        CompleteWorldRotation(events);
+                    }
+
+                    continue;
+                }
+
                 _playerController?.HandleInTransit(events);
                 Entity[] moving = [.. _world.Entities.Where(entity => entity.Motion is not null)];
                 double? rotationSeconds = _playerController?.RotationSecondsRemaining;
@@ -342,6 +399,7 @@ namespace Mooh.Core.Simulation
                 double? beetleSeconds = _smallBeetles.SecondsUntilNextTimer();
                 double? outcomeSeconds = _levelOutcome.SecondsUntilSettle();
                 double? arrowSeconds = SecondsUntilNextArrowWindup();
+                double? rotatorSeconds = SecondsUntilNextRotatorWindup();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -411,6 +469,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingArrowWindup);
                 }
 
+                if (rotatorSeconds is double remainingRotatorWindup)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingRotatorWindup);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && actionSeconds is null
@@ -422,7 +485,8 @@ namespace Mooh.Core.Simulation
                     && explosionSeconds is null
                     && beetleSeconds is null
                     && outcomeSeconds is null
-                    && arrowSeconds is null)
+                    && arrowSeconds is null
+                    && rotatorSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -448,6 +512,7 @@ namespace Mooh.Core.Simulation
                 AdvanceBeetles(substepSeconds, events);
                 AdvanceMonsterTimers(substepSeconds, events);
                 AdvanceArrowWindups(substepSeconds, events);
+                AdvanceRotatorWindups(substepSeconds, events);
                 bool resolvedExplosion = ResolvePendingExplosionCells(events);
 
                 remainingSeconds -= substepSeconds;
@@ -735,6 +800,123 @@ namespace Mooh.Core.Simulation
                 arrow.Position,
                 body.Direction,
                 TimeSpan.FromSeconds(ArrowWindupSeconds)));
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>GoTo_Work</c>: a struck rotator enters <c>ST_Work</c>, whose
+        /// animation ends in <c>GMod.WorldRotStart</c>. Striking one that is already winding up
+        /// restarts the animation, because the original re-enters the state it is already in.
+        /// </summary>
+        /// <param name="rotator">The struck rotator.</param>
+        /// <param name="events">The ordered event sink.</param>
+        public void TriggerWorldRotation(Entity rotator, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(rotator);
+            ArgumentNullException.ThrowIfNull(events);
+            if (rotator.WorldRotationBody is not WorldRotationBody body)
+            {
+                return;
+            }
+
+            body.WindupRemainingSeconds = WorldRotationWindupSeconds;
+        }
+
+        private double? SecondsUntilNextRotatorWindup()
+        {
+            double? result = null;
+            foreach (Entity entity in _world.Entities)
+            {
+                if (entity.WorldRotationBody?.WindupRemainingSeconds is double remaining
+                    && (result is null || remaining < result))
+                {
+                    result = remaining;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Ends the <c>ST_Work</c> windup of every rotator whose animation has run out and starts
+        /// the world turning.
+        /// </summary>
+        /// <remarks>
+        /// Two rotators can only finish together, never during a turn, because a turn freezes the
+        /// simulation. When they do, the original's <c>WorldRotStart</c> simply overwrites the
+        /// rotation state, so the last one decides the direction and only one turn happens.
+        /// </remarks>
+        private void AdvanceRotatorWindups(double elapsedSeconds, List<SimulationEvent> events)
+        {
+            Entity[] winding =
+            [
+                .. _world.Entities.Where(entity => entity.WorldRotationBody?.WindupRemainingSeconds is not null),
+            ];
+            foreach (Entity rotator in winding)
+            {
+                WorldRotationBody body = rotator.WorldRotationBody!;
+                double remaining = body.WindupRemainingSeconds!.Value - elapsedSeconds;
+                if (remaining > TimeTolerance)
+                {
+                    body.WindupRemainingSeconds = remaining;
+                    continue;
+                }
+
+                // The recovered WorldRotLeft returns the object to ST_Stay straight away, so it is
+                // ready to be struck again the moment the turn finishes.
+                body.WindupRemainingSeconds = null;
+                _rotationOwner = rotator.Id;
+                _rotationDirection = body.Direction;
+                _rotationRemainingSeconds = WorldRotationSpinSeconds;
+                events.Add(new WorldRotationStarted(
+                    rotator.Id,
+                    body.Direction,
+                    TimeSpan.FromSeconds(WorldRotationSpinSeconds)));
+            }
+        }
+
+        /// <summary>
+        /// Applies the recovered completion branch of <c>WorldRotCycle</c>. Every mid-motion object
+        /// is finished at the destination cell it already owns before the grid is remapped, which
+        /// is byte for byte the movement-completion block of the main object cycle: the trailing
+        /// shift is zeroed, the arriving object is announced to its cell and its arrival handler
+        /// runs. Only then does the world turn.
+        /// </summary>
+        private void CompleteWorldRotation(List<SimulationEvent> events)
+        {
+            EntityId owner = _rotationOwner!.Value;
+            WorldRotationDirection direction = _rotationDirection;
+            _rotationOwner = null;
+            _rotationRemainingSeconds = 0;
+
+            FinishMotionBeforeRotation(events);
+            _world.Rotate(direction);
+            events.Add(new WorldRotationCompleted(owner, direction, _world.Width, _world.Height));
+
+            // Gravity never changes direction, so a turn is what moves the level relative to it and
+            // everything standing still has to be re-checked. The original gets this for free: the
+            // object cycle resumes and re-runs its fall check over every still object.
+            _gravity.EvaluateStationary(_world, _gravityDirection, events);
+        }
+
+        private void FinishMotionBeforeRotation(List<SimulationEvent> events)
+        {
+            Entity[] moving = [.. _world.Entities.Where(entity => entity.Motion is not null)];
+            if (moving.Length == 0)
+            {
+                return;
+            }
+
+            foreach (Entity entity in moving)
+            {
+                MotionState motion = entity.Motion!;
+                motion.Progress = motion.TravelSign > 0 ? 1 : 0;
+            }
+
+            _ = ResolveBoundaries(events, out bool boundaryControlReady, out bool fromCellArrival);
+            if (boundaryControlReady)
+            {
+                _playerController?.ResumeOrTryStart(events, fromCellArrival);
+            }
         }
 
         private double? SecondsUntilNextArrowWindup()

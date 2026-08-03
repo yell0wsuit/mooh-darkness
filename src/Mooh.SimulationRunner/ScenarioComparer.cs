@@ -375,7 +375,10 @@ namespace Mooh.SimulationRunner
                 expected.Amount,
                 expected.RemainingHealth,
                 expected.DurationMilliseconds,
-                expected.IsSmall);
+                expected.IsSmall,
+                ParseOptionalEnum<WorldRotationDirection>(expected.WorldRotation),
+                expected.Width,
+                expected.Height);
         }
 
         private static Direction? ParseOptionalDirection(string? value)

@@ -17,7 +17,7 @@ namespace Mooh.SimulationRunner.Tests
 
             Assert.True(Directory.Exists(directory), $"Scenario directory not found: {directory}");
             string[] files = Directory.GetFiles(directory, "*.json", SearchOption.TopDirectoryOnly);
-            Assert.Equal(11, files.Length);
+            Assert.Equal(12, files.Length);
             ScenarioRunResult[] results =
             [
                 .. files.Order(StringComparer.Ordinal).Select(

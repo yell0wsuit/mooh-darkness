@@ -54,5 +54,24 @@ namespace Mooh.Core.Hazards
             _links.Add(destination);
             return destination;
         }
+
+        /// <summary>
+        /// Rewrites every link through a coordinate transform, keeping the cycle order.
+        /// </summary>
+        /// <remarks>
+        /// A world rotation runs this, applying the recovered <c>WorldRotStopCBack</c> pass over
+        /// every <c>CLinkCoordBase.LinkCoords</c>. Links are absolute cells rather than offsets,
+        /// so a rotation that skipped them would leave every teleporter pointing somewhere else.
+        /// </remarks>
+        /// <param name="transform">The mapping applied to each link.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="transform"/> is <see langword="null"/>.</exception>
+        public void RemapLinks(Func<GridPosition, GridPosition> transform)
+        {
+            ArgumentNullException.ThrowIfNull(transform);
+            for (int index = 0; index < _links.Count; index++)
+            {
+                _links[index] = transform(_links[index]);
+            }
+        }
     }
 }
