@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
+using Mooh.Core.Hazards;
 using Mooh.Core.Interactions;
 using Mooh.Core.Shakes;
 
@@ -134,9 +135,12 @@ namespace Mooh.Core.Levels
             Add(result, "OBaloon", EntityKind.Balloon, PushableAlongGravity | BlueTarget,
                 explosionReaction: ExplosionReaction.Detonate3x3,
                 shakeReaction: ShakeReaction.Detonate3x3);
+            // The bubble is the only placed carrier of the recovered bFireKill flag, so it is the
+            // only object that destroys the fire it touches instead of merely being consumed.
             Add(result, "OBubble", EntityKind.Bubble, PushableAlongGravity,
                 explosionReaction: ExplosionReaction.Destroy,
-                shakeReaction: ShakeReaction.Destroy);
+                shakeReaction: ShakeReaction.Destroy,
+                fireContact: FireContact.MutualDestruction);
             AddExplodableVariants(result, EntityKind.Coin, Collectible, true,
                 "OCoin01", "OCoin02", "OCoin03");
             AddExplodableVariants(result, EntityKind.Diamond, Collectible, true,
@@ -161,9 +165,13 @@ namespace Mooh.Core.Levels
                 "OKDDoor1", "OKDDoor2", "OKDDoor3");
             // Fire carries CNT_CMaskShadowObj | CNT_CMaskRoundCap, so it hides from ordinary cell
             // queries but keeps CNT_CMaskMonShadow clear and still blocks monster navigation.
+            // Fire is also the only placed type setting bSecondSlideMask, which is what lets it
+            // rest on another shadow occupant instead of falling straight through it.
             Add(result, "OFire", EntityKind.Fire,
                 InteractionMask.RoundSupport | InteractionMask.OccupancyTransparent,
-                hasGravity: true);
+                hasGravity: true,
+                fireContact: FireContact.Source,
+                treatsShadowAsSupport: true);
             AddDirectional(result, "OArrow", EntityKind.GravityArrow, PushableRound | BlueTarget, hasGravity: true,
                 explosionReaction: ExplosionReaction.Deferred,
                 shakeReaction: ShakeReaction.Deferred);
@@ -298,7 +306,9 @@ namespace Mooh.Core.Levels
             ExplosionReaction? explosionReaction = null,
             bool detonatesOnLanding = false,
             ShakeReaction shakeReaction = ShakeReaction.None,
-            ShakeReaction? hardShakeReaction = null)
+            ShakeReaction? hardShakeReaction = null,
+            FireContact? fireContact = null,
+            bool treatsShadowAsSupport = false)
         {
             result.Add(
                 archivalType,
@@ -313,7 +323,9 @@ namespace Mooh.Core.Levels
                     explosionReaction,
                     detonatesOnLanding,
                     shakeReaction,
-                    hardShakeReaction ?? shakeReaction));
+                    hardShakeReaction ?? shakeReaction,
+                    fireContact,
+                    treatsShadowAsSupport));
         }
     }
 }

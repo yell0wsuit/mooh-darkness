@@ -15,6 +15,7 @@ namespace Mooh.Core.Simulation
             double shakeDamage,
             double hardShakeDamage,
             double explosionDamage,
+            double fireDamage,
             double foodHeal,
             double beetleHeal,
             bool isTimed)
@@ -26,6 +27,7 @@ namespace Mooh.Core.Simulation
             ShakeDamage = shakeDamage;
             HardShakeDamage = hardShakeDamage;
             ExplosionDamage = explosionDamage;
+            FireDamage = fireDamage;
             FoodHeal = foodHeal;
             BeetleHeal = beetleHeal;
         }
@@ -39,6 +41,7 @@ namespace Mooh.Core.Simulation
             30,
             20,
             40,
+            40,
             2,
             false);
 
@@ -50,6 +53,7 @@ namespace Mooh.Core.Simulation
             10,
             15,
             10,
+            30,
             40,
             2,
             false);
@@ -62,6 +66,7 @@ namespace Mooh.Core.Simulation
             20,
             30,
             20,
+            40,
             15,
             1,
             true);
@@ -83,6 +88,13 @@ namespace Mooh.Core.Simulation
 
         /// <summary>Gets player damage caused by an explosion.</summary>
         public double ExplosionDamage { get; }
+
+        /// <summary>
+        /// Gets player damage caused by walking into fire. The recovered <c>Compl.HFire</c> is
+        /// 30 on difficulty zero and 40 on both standard profiles, so unlike the shake and blast
+        /// values it does not simply halve.
+        /// </summary>
+        public double FireDamage { get; }
 
         /// <summary>Gets the health restored by eating one food object.</summary>
         public double FoodHeal { get; }

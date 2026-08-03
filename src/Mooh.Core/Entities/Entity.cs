@@ -3,6 +3,7 @@ using Mooh.Core.Enemies;
 using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
+using Mooh.Core.Hazards;
 using Mooh.Core.Interactions;
 using Mooh.Core.Levels;
 using Mooh.Core.Motion;
@@ -26,6 +27,7 @@ namespace Mooh.Core.Entities
     /// <param name="explosionBody">The entity's optional explosion behavior.</param>
     /// <param name="smallBeetleBody">The entity's optional spawned small-beetle behavior.</param>
     /// <param name="shakeBody">The entity's optional cell-shake behavior.</param>
+    /// <param name="fireBody">The entity's optional role in the fire-contact rule.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -38,7 +40,8 @@ namespace Mooh.Core.Entities
         ArchivalObjectIdentity? archivalIdentity = null,
         ExplosionBody? explosionBody = null,
         SmallBeetleBody? smallBeetleBody = null,
-        ShakeBody? shakeBody = null)
+        ShakeBody? shakeBody = null,
+        FireBody? fireBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -75,6 +78,9 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's optional cell-shake behavior.</summary>
         public ShakeBody? ShakeBody { get; } = shakeBody;
+
+        /// <summary>Gets the entity's optional role in the fire-contact rule.</summary>
+        public FireBody? FireBody { get; } = fireBody;
 
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }

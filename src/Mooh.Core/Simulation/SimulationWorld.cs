@@ -10,6 +10,7 @@ using Mooh.Core.Entities;
 using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
+using Mooh.Core.Hazards;
 using Mooh.Core.Interactions;
 using Mooh.Core.Levels;
 using Mooh.Core.Motion;
@@ -1111,6 +1112,11 @@ namespace Mooh.Core.Simulation
                     Direction pushDirection = motion.SegmentDirection;
                     events.Add(new CellEntered(entity.Id, entity.Position));
                     KinematicsSystem.Stop(entity);
+                    if (ResolveFireContact(entity, events))
+                    {
+                        continue;
+                    }
+
                     AdvanceStrikePush(entity, pushDirection, events);
                     continue;
                 }
@@ -1141,12 +1147,17 @@ namespace Mooh.Core.Simulation
                     }
 
                     events.Add(new CellEntered(entity.Id, monsterDestination));
+                    _ = ResolveFireContact(entity, events);
                     continue;
                 }
 
                 GridPosition destination = entity.Position;
                 motion.Progress = 0;
                 events.Add(new CellEntered(entity.Id, destination));
+                if (ResolveFireContact(entity, events))
+                {
+                    continue;
+                }
 
                 if (motion.Cause == MotionCause.Sliding)
                 {
@@ -1285,6 +1296,10 @@ namespace Mooh.Core.Simulation
             GridPosition destination = entity.Position;
             events.Add(new CellEntered(entity.Id, destination));
             KinematicsSystem.Stop(entity);
+            if (ResolveFireContact(entity, events))
+            {
+                return;
+            }
 
             if (_gravity.EvaluateStationary(_world, entity, _gravityDirection, events))
             {
@@ -1300,6 +1315,60 @@ namespace Mooh.Core.Simulation
             _playerController!.EndSegment();
 
             events.Add(new CellEntered(player.Id, player.Position));
+            _ = ResolveFireContact(player, events);
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>_ObjHere_Fire</c> to an entity that has just arrived in its
+        /// cell. The handler is registered on the fire through <c>EvObjHere</c>, so it runs for
+        /// the entity that entered and never when the fire itself arrives somewhere: fire falling
+        /// onto a standing player burns nobody.
+        /// </summary>
+        /// <remarks>
+        /// The recovered branches are taken in this order and each kills in this order. A player
+        /// spends the fire and is then burned for <c>Compl.HFire</c>; a <c>bFireKill</c> carrier
+        /// and the fire destroy each other; anything else is consumed while the fire survives.
+        /// The native dispatch point of <c>WEvObjHere</c> could not be located in
+        /// <c>mooh.exe.c</c>, so arrival is a structural reading: the relink that commits
+        /// occupancy at movement start (<c>sub_4A0540</c>) carries no callback at all, and every
+        /// other per-cell interaction in the engine — <c>PlHere</c>, <c>WEvOnCell</c> — resolves
+        /// on arrival.
+        /// </remarks>
+        /// <returns><see langword="true"/> when the arriving entity was destroyed.</returns>
+        private bool ResolveFireContact(Entity arriving, List<SimulationEvent> events)
+        {
+            if (arriving.FireBody?.Contact == FireContact.Source)
+            {
+                return false;
+            }
+
+            Entity? fire = _world.GetOccupants(arriving.Position).FirstOrDefault(
+                occupant => occupant.FireBody?.Contact == FireContact.Source);
+            if (fire is null)
+            {
+                return false;
+            }
+
+            if (arriving.IsDamageablePlayer)
+            {
+                DestroyEntity(fire, arriving.Id, events);
+                ApplyDamage(
+                    new DamageRequest(
+                        fire.Id,
+                        arriving.Id,
+                        DamageKind.Fire,
+                        _difficultySpeeds.FireDamage),
+                    events);
+                return false;
+            }
+
+            DestroyEntity(arriving, fire.Id, events);
+            if (arriving.FireBody?.Contact == FireContact.MutualDestruction)
+            {
+                DestroyEntity(fire, arriving.Id, events);
+            }
+
+            return true;
         }
     }
 }

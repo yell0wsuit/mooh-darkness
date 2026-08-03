@@ -9,6 +9,7 @@ using Mooh.Core.Entities;
 using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
+using Mooh.Core.Hazards;
 using Mooh.Core.Player;
 using Mooh.Core.Shakes;
 using Mooh.Core.Simulation;
@@ -169,7 +170,8 @@ namespace Mooh.Core.Levels
                     ? new GravityBody(
                         speeds.NormalSpeed * descriptor.FallSpeedMultiplier,
                         canSlide: true,
-                        descriptor.ImpactStrength)
+                        descriptor.ImpactStrength,
+                        descriptor.TreatsShadowAsSupport)
                     : null,
                 descriptor.Kind == EntityKind.Player
                     ? new PlayerBody(speeds.PlayerSpeed, 1.5, Direction.Down)
@@ -199,7 +201,10 @@ namespace Mooh.Core.Levels
                 shakeBody: descriptor.ShakeReaction == ShakeReaction.None
                     && descriptor.HardShakeReaction == ShakeReaction.None
                     ? null
-                    : new ShakeBody(descriptor.ShakeReaction, descriptor.HardShakeReaction));
+                    : new ShakeBody(descriptor.ShakeReaction, descriptor.HardShakeReaction),
+                fireBody: descriptor.FireContact is FireContact fireContact
+                    ? new FireBody(fireContact)
+                    : null);
         }
 
         private static EntityId CreateDeterministicId(int objectId)
