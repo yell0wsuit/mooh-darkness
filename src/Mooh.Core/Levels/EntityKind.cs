@@ -49,8 +49,11 @@ namespace Mooh.Core.Levels
         KeyDoor,
         /// <summary>A fire hazard.</summary>
         Fire,
-        /// <summary>A directional flying gravity arrow.</summary>
-        GravityArrow,
+        /// <summary>
+        /// A directional arrow that flies as a projectile once triggered. This is not the
+        /// gravity-flipping <c>CGameObjAntiGArrow</c>, which the committed corpus never places.
+        /// </summary>
+        FlyingArrow,
         /// <summary>A world-rotation trigger.</summary>
         WorldRotation,
         /// <summary>A linked teleporter.</summary>

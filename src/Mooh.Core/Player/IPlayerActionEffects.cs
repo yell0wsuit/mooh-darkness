@@ -43,6 +43,15 @@ namespace Mooh.Core.Player
         /// <param name="events">The ordered event sink.</param>
         void CrushCell(GridPosition cell, List<SimulationEvent> events);
 
+        /// <summary>
+        /// Launches a directional arrow, applying the recovered <c>_DoFly_&lt;dir&gt;</c>. A hand
+        /// strike reaches it through the <c>PlCtrl</c> dispatch <c>_AEnd_Str</c> runs before it
+        /// offers the occupant a push.
+        /// </summary>
+        /// <param name="arrow">The struck arrow.</param>
+        /// <param name="events">The ordered event sink.</param>
+        void LaunchArrow(Entity arrow, List<SimulationEvent> events);
+
         /// <summary>Registers a thrown grenade in a cleared cell.</summary>
         /// <param name="cell">The cell that receives the grenade.</param>
         /// <param name="events">The ordered event sink.</param>

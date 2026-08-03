@@ -49,6 +49,18 @@ namespace Mooh.Core.Simulation
         private const double PushSpeedMultiplier = 1.5;
 
         /// <summary>
+        /// The recovered <c>ST_Work</c> windup an arrow runs before it starts flying: seven
+        /// frames at 35 ms. It is the same in all four directions.
+        /// </summary>
+        private const double ArrowWindupSeconds = 0.245;
+
+        /// <summary>The recovered <c>CNT_OPrmRocketSpeed</c> against <c>Compl.SpeedNrm</c>.</summary>
+        private const double ArrowFlightSpeedMultiplier = 2.0;
+
+        /// <summary>The recovered <c>CNT_OPrm_AirSlow</c> applied against a counter-moving cell.</summary>
+        private const double CounterMotionMultiplier = 0.75;
+
+        /// <summary>
         /// Gets how long a cell a blast has reached stays locked. This is also how long the cell
         /// is dangerous, so a presentation layer can use it as the lifetime of a blast effect.
         /// </summary>
@@ -329,6 +341,7 @@ namespace Mooh.Core.Simulation
                 double? explosionSeconds = SecondsUntilNextExplosionCell();
                 double? beetleSeconds = _smallBeetles.SecondsUntilNextTimer();
                 double? outcomeSeconds = _levelOutcome.SecondsUntilSettle();
+                double? arrowSeconds = SecondsUntilNextArrowWindup();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -393,6 +406,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingOutcomeSettle);
                 }
 
+                if (arrowSeconds is double remainingArrowWindup)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingArrowWindup);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && actionSeconds is null
@@ -403,7 +421,8 @@ namespace Mooh.Core.Simulation
                     && monsterSeconds is null
                     && explosionSeconds is null
                     && beetleSeconds is null
-                    && outcomeSeconds is null)
+                    && outcomeSeconds is null
+                    && arrowSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -428,6 +447,7 @@ namespace Mooh.Core.Simulation
                 // later.
                 AdvanceBeetles(substepSeconds, events);
                 AdvanceMonsterTimers(substepSeconds, events);
+                AdvanceArrowWindups(substepSeconds, events);
                 bool resolvedExplosion = ResolvePendingExplosionCells(events);
 
                 remainingSeconds -= substepSeconds;
@@ -634,8 +654,7 @@ namespace Mooh.Core.Simulation
 
                 // ExplosionReaction.Deferred is deliberately inert. Those entities carry
                 // CNT_CMaskCellCanExplode, so a blast does reach them, but their recovered
-                // handlers — the barrel's cross blast and the gravity arrow's launch — are not
-                // implemented yet.
+                // handlers — the barrel's cross blast and the magic gem — are not implemented yet.
                 if (occupant.ExplosionBody?.Reaction == ExplosionReaction.Destroy)
                 {
                     DestroyEntity(occupant, sourceEntityId, events);
@@ -643,6 +662,10 @@ namespace Mooh.Core.Simulation
                 else if (occupant.ExplosionBody?.Reaction == ExplosionReaction.Detonate3x3)
                 {
                     StartExplosion(occupant, events);
+                }
+                else if (occupant.ExplosionBody?.Reaction == ExplosionReaction.LaunchArrow)
+                {
+                    LaunchArrow(occupant, events);
                 }
             }
         }
@@ -668,6 +691,119 @@ namespace Mooh.Core.Simulation
         private static bool IsMonster(Entity entity)
         {
             return entity.GreenMonsterBody is not null || entity.BlueMonsterBody is not null;
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>_DoFlyAll</c>. The arrow stops participating in gravity for
+        /// good, exactly as the original's dropped <c>WEvOnFall</c> and <c>WEvOnSlide</c>
+        /// registrations do, and enters the <c>ST_Work</c> windup. A second trigger while it is
+        /// already launched changes nothing, because the original would only re-enter the state
+        /// it is already in.
+        /// </summary>
+        public void LaunchArrow(Entity arrow, List<SimulationEvent> events)
+        {
+            if (arrow.FlyingArrowBody is not FlyingArrowBody body || body.IsLaunched)
+            {
+                return;
+            }
+
+            body.IsLaunched = true;
+            body.WindupRemainingSeconds = ArrowWindupSeconds;
+            arrow.GravityBody = null;
+            KinematicsSystem.Stop(arrow);
+            events.Add(new ArrowLaunched(
+                arrow.Id,
+                arrow.Position,
+                body.Direction,
+                TimeSpan.FromSeconds(ArrowWindupSeconds)));
+        }
+
+        private double? SecondsUntilNextArrowWindup()
+        {
+            double? result = null;
+            foreach (Entity entity in _world.Entities)
+            {
+                if (entity.FlyingArrowBody?.WindupRemainingSeconds is double remaining
+                    && (result is null || remaining < result))
+                {
+                    result = remaining;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Ends the <c>ST_Work</c> windup of every arrow whose animation has run out, which is
+        /// the recovered <c>_DlFlyBeg</c>: a still arrow takes its first flight decision at once.
+        /// </summary>
+        private void AdvanceArrowWindups(double elapsedSeconds, List<SimulationEvent> events)
+        {
+            Entity[] winding =
+            [
+                .. _world.Entities.Where(entity => entity.FlyingArrowBody?.WindupRemainingSeconds is not null),
+            ];
+            foreach (Entity arrow in winding)
+            {
+                FlyingArrowBody body = arrow.FlyingArrowBody!;
+                double remaining = body.WindupRemainingSeconds!.Value - elapsedSeconds;
+                if (remaining > TimeTolerance)
+                {
+                    body.WindupRemainingSeconds = remaining;
+                    continue;
+                }
+
+                body.WindupRemainingSeconds = null;
+                AdvanceArrowFlight(arrow, events);
+            }
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>_DoFlyInt</c>, the decision an arrow takes in every cell it
+        /// reaches. Everything ahead that carries <c>CNT_CMaskFlyThrought</c> is destroyed first;
+        /// if the cell ahead still holds a visible occupant the arrow detonates its own 3x3 blast
+        /// and shakes that cell, and otherwise it flies on at
+        /// <c>CNT_OPrmRocketSpeed</c> times the normal speed.
+        /// </summary>
+        private void AdvanceArrowFlight(Entity arrow, List<SimulationEvent> events)
+        {
+            FlyingArrowBody body = arrow.FlyingArrowBody!;
+            Direction direction = body.Direction;
+            GridPosition ahead = arrow.Position.Offset(direction);
+            if (!_world.Contains(ahead))
+            {
+                StartExplosion(arrow, events);
+                return;
+            }
+
+            foreach (Entity occupant in _world.GetOccupants(ahead))
+            {
+                if (occupant.Id != arrow.Id
+                    && occupant.Interactions.HasFlag(InteractionMask.DestroyedByFlyingArrow))
+                {
+                    DestroyEntity(occupant, arrow.Id, events);
+                }
+            }
+
+            if (CellQuery.IsOccupied(_world, ahead))
+            {
+                StartExplosion(arrow, events);
+                foreach (Entity occupant in _world.GetOccupants(ahead))
+                {
+                    ApplyShake(occupant, arrow.Id, hard: false, events);
+                }
+
+                return;
+            }
+
+            double speed = _difficultySpeeds.NormalSpeed * ArrowFlightSpeedMultiplier;
+            if (CellQuery.HasCounterMotion(_world, ahead, direction))
+            {
+                speed *= CounterMotionMultiplier;
+            }
+
+            _world.CommitMoves([new PlannedMove(arrow.Id, arrow.Position, ahead)]);
+            KinematicsSystem.Start(arrow, MotionCause.ArrowFlight, direction, speed);
         }
 
         /// <summary>
@@ -1129,6 +1265,14 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
+                if (motion.Cause == MotionCause.ArrowFlight)
+                {
+                    events.Add(new CellEntered(entity.Id, entity.Position));
+                    KinematicsSystem.Stop(entity);
+                    AdvanceArrowFlight(entity, events);
+                    continue;
+                }
+
                 if (motion.Cause == MotionCause.TunnelTransit)
                 {
                     events.Add(new CellEntered(entity.Id, entity.Position));
@@ -1183,6 +1327,12 @@ namespace Mooh.Core.Simulation
                     {
                         StartExplosion(entity, events);
                         ResolveFallingImpact(entity, following, events);
+                    }
+                    else if (entity.FlyingArrowBody is not null)
+                    {
+                        // The recovered OnLand of every OArrow type is _DoFly_<dir>, so an arrow
+                        // that has been dropped launches itself where a bomb would explode.
+                        LaunchArrow(entity, events);
                     }
                 }
                 else
@@ -1261,6 +1411,9 @@ namespace Mooh.Core.Simulation
                 case ShakeReaction.Detonate3x3:
                     StartExplosion(occupant, events);
                     break;
+                case ShakeReaction.LaunchArrow:
+                    LaunchArrow(occupant, events);
+                    break;
                 case ShakeReaction.None:
                 case ShakeReaction.Deferred:
                     break;
@@ -1284,7 +1437,7 @@ namespace Mooh.Core.Simulation
             return cause switch
             {
                 MotionCause.PlayerPushed or MotionCause.StrikePushed => 0,
-                MotionCause.Falling or MotionCause.Sliding => 1,
+                MotionCause.Falling or MotionCause.Sliding or MotionCause.ArrowFlight => 1,
                 MotionCause.MonsterWalking => 2,
                 MotionCause.PlayerWalking or MotionCause.TunnelTransit => 3,
                 _ => throw new InvalidOperationException("Unknown motion cause."),

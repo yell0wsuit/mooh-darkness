@@ -207,6 +207,9 @@ namespace Mooh.Core.Levels
                     : null,
                 tunnelBody: descriptor.TunnelShape is TunnelShape tunnelShape
                     ? new TunnelBody(tunnelShape)
+                    : null,
+                flyingArrowBody: descriptor.Kind == EntityKind.FlyingArrow
+                    ? new FlyingArrowBody(facing)
                     : null);
         }
 

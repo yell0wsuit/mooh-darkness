@@ -32,6 +32,13 @@ namespace Mooh.Core.Levels
         private const InteractionMask Flightproof = InteractionMask.BlocksFlight;
 
         /// <summary>
+        /// Matches the recovered <c>CNT_CMaskFlyThrought</c> bit. Exactly the twelve breakable
+        /// terrain types carry it, so a flying arrow bores through earth, rock and wood trim and
+        /// is stopped by immortal metal, by a pipe and by a tunnel alike.
+        /// </summary>
+        private const InteractionMask ArrowPermeable = InteractionMask.DestroyedByFlyingArrow;
+
+        /// <summary>
         /// Matches the recovered edible-cell mask, which adds the player-eat and push-through bits
         /// to a motion-locked cell. The player consumes such a cell instead of being blocked by it,
         /// and a weight pushed into the cell in front consumes it as well.
@@ -94,14 +101,17 @@ namespace Mooh.Core.Levels
         {
             Dictionary<string, ArchivalObjectDescriptor> result = [];
 
-            AddExplodableMany(result, EntityKind.DiggableTerrain, EdibleBlock | Flightproof,
+            AddExplodableMany(result, EntityKind.DiggableTerrain,
+                EdibleBlock | Flightproof | ArrowPermeable,
                 "CellsEat01", "DCellsEat01", "JCellsEat01");
-            AddExplodableMany(result, EntityKind.DestructibleTerrain, FixedBlock | Flightproof,
+            AddExplodableMany(result, EntityKind.DestructibleTerrain,
+                FixedBlock | Flightproof | ArrowPermeable,
                 "CellsSolid01", "CellsSolidPl", "CellsSolidWd", "DCellsSolid01", "JCellsSolid01");
             AddMany(result, EntityKind.MetalTerrain,
                 FixedBlock | InteractionMask.RoundSupport | Flightproof,
                 "CellsMetal01", "CellsMetalLeft", "CellsMetalTop", "CellsMetalRight", "CellsMetalBottom");
-            AddExplodableMany(result, EntityKind.WoodTerrain, FixedBlock | Flightproof,
+            AddExplodableMany(result, EntityKind.WoodTerrain,
+                FixedBlock | Flightproof | ArrowPermeable,
                 "CellsWdLeft", "CellsWdTop", "CellsWdRight", "CellsWdBottom");
 
             Add(result, "OPlayer", EntityKind.Player, InteractionMask.BlocksMovement);
@@ -172,9 +182,12 @@ namespace Mooh.Core.Levels
                 hasGravity: true,
                 fireContact: FireContact.Source,
                 treatsShadowAsSupport: true);
-            AddDirectional(result, "OArrow", EntityKind.GravityArrow, PushableRound | BlueTarget, hasGravity: true,
-                explosionReaction: ExplosionReaction.Deferred,
-                shakeReaction: ShakeReaction.Deferred);
+            // The four arrows name one handler for five events, so a landing, either shake
+            // strength, a blast and a hand strike all launch them in their own fixed direction.
+            AddDirectional(result, "OArrow", EntityKind.FlyingArrow, PushableRound | BlueTarget,
+                hasGravity: true,
+                explosionReaction: ExplosionReaction.LaunchArrow,
+                shakeReaction: ShakeReaction.LaunchArrow);
             Add(result, "OWRotL", EntityKind.WorldRotation, WorldRotation, variant: -1);
             Add(result, "OWRotR", EntityKind.WorldRotation, WorldRotation, variant: 1);
             Add(result, "OTPort", EntityKind.Teleporter, Shadow);

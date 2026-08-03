@@ -66,11 +66,11 @@ namespace Mooh.Core.Tests.Content
             yield return ["CellsEat01", EntityKind.DiggableTerrain,
                 InteractionMask.BlocksMovement | InteractionMask.MovementLocked
                     | InteractionMask.PlayerEdible | InteractionMask.CanBePushedThrough
-                    | InteractionMask.BlocksFlight,
+                    | InteractionMask.BlocksFlight | InteractionMask.DestroyedByFlyingArrow,
                 false, 1d, 0];
             yield return ["CellsSolid01", EntityKind.DestructibleTerrain,
                 InteractionMask.BlocksMovement | InteractionMask.MovementLocked
-                    | InteractionMask.BlocksFlight,
+                    | InteractionMask.BlocksFlight | InteractionMask.DestroyedByFlyingArrow,
                 false, 1d, 0];
             yield return ["ORock01", EntityKind.Rock,
                 InteractionMask.BlocksMovement | InteractionMask.PlayerPushable | InteractionMask.RoundSupport,
@@ -105,7 +105,7 @@ namespace Mooh.Core.Tests.Content
                     | InteractionMask.RoundSupport | InteractionMask.GravityAxisPushable
                     | InteractionMask.BlueMonsterTarget,
                 true, 1d, 0];
-            yield return ["OArrowT", EntityKind.GravityArrow,
+            yield return ["OArrowT", EntityKind.FlyingArrow,
                 InteractionMask.BlocksMovement | InteractionMask.PlayerPushable | InteractionMask.RoundSupport
                     | InteractionMask.BlueMonsterTarget,
                 true, 1d, 1];
@@ -234,7 +234,7 @@ namespace Mooh.Core.Tests.Content
         [InlineData("OEat01", ShakeReaction.None, ShakeReaction.Destroy)]
         [InlineData("OBarel", ShakeReaction.Deferred, ShakeReaction.Deferred)]
         [InlineData("OMagic", ShakeReaction.Deferred, ShakeReaction.Deferred)]
-        [InlineData("OArrowT", ShakeReaction.Deferred, ShakeReaction.Deferred)]
+        [InlineData("OArrowT", ShakeReaction.LaunchArrow, ShakeReaction.LaunchArrow)]
         [InlineData("ORock01", ShakeReaction.None, ShakeReaction.None)]
         [InlineData("OWeight", ShakeReaction.None, ShakeReaction.None)]
         [InlineData("OFire", ShakeReaction.None, ShakeReaction.None)]
@@ -261,7 +261,7 @@ namespace Mooh.Core.Tests.Content
                 .Order(StringComparer.Ordinal)];
 
             Assert.Equal(
-                ["OArrowB", "OArrowL", "OArrowR", "OArrowT", "OBarel", "OMagic"],
+                ["OBarel", "OMagic"],
                 deferred);
         }
 
@@ -335,7 +335,7 @@ namespace Mooh.Core.Tests.Content
         [InlineData("OBaloon", ExplosionReaction.Detonate3x3)]
         [InlineData("WBomb", ExplosionReaction.Detonate3x3)]
         [InlineData("OBarel", ExplosionReaction.Deferred)]
-        [InlineData("OArrowL", ExplosionReaction.Deferred)]
+        [InlineData("OArrowL", ExplosionReaction.LaunchArrow)]
         [InlineData("CellsMetal01", null)]
         [InlineData("TonnelHor", null)]
         [InlineData("OKDDoor1", null)]
@@ -352,8 +352,8 @@ namespace Mooh.Core.Tests.Content
         }
 
         /// <summary>
-        /// Verifies the deferred explosion handlers are exactly the recovered specializations:
-        /// the barrel's cross blast and the gravity arrow's launch.
+        /// Verifies the deferred explosion handlers are exactly the recovered specializations
+        /// that remain: the barrel's cross blast.
         /// </summary>
         [Fact]
         public void DeferredExplosionReactionsAreTheKnownSpecializations()
@@ -364,7 +364,7 @@ namespace Mooh.Core.Tests.Content
                 .Order(StringComparer.Ordinal)];
 
             Assert.Equal(
-                ["OArrowB", "OArrowL", "OArrowR", "OArrowT", "OBarel"],
+                ["OBarel"],
                 deferred);
         }
 

@@ -17,6 +17,12 @@ namespace Mooh.Core.Shakes
         /// <summary>The entity is destroyed and starts its own delayed 3x3 blast.</summary>
         Detonate3x3,
 
+        /// <summary>
+        /// The entity is a directional arrow and is launched as a projectile. The recovered
+        /// <c>OArrow*</c> types name <c>_DoFly_&lt;dir&gt;</c> for both shake strengths.
+        /// </summary>
+        LaunchArrow,
+
         /// <summary>The recovered handler is specialized and is not implemented yet.</summary>
         Deferred,
     }

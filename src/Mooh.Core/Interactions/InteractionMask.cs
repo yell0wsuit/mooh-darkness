@@ -58,5 +58,14 @@ namespace Mooh.Core.Interactions
         /// Ordinary cell-occupancy queries ignore the entity, so its cell reads as empty.
         /// </summary>
         OccupancyTransparent = 1 << 12,
+
+        /// <summary>
+        /// A flying arrow destroys the entity and keeps going instead of detonating against it.
+        /// This is the recovered <c>CNT_CMaskFlyThrought</c> bit, carried by exactly the twelve
+        /// breakable terrain types: the three diggable families, the five destructible ones and
+        /// the four wood trim pieces. Immortal metal terrain does not carry it, and neither do
+        /// pipes or tunnels, so an arrow bores through earth and rock but stops dead at metal.
+        /// </summary>
+        DestroyedByFlyingArrow = 1 << 13,
     }
 }

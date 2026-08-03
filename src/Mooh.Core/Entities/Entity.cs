@@ -29,6 +29,7 @@ namespace Mooh.Core.Entities
     /// <param name="shakeBody">The entity's optional cell-shake behavior.</param>
     /// <param name="fireBody">The entity's optional role in the fire-contact rule.</param>
     /// <param name="tunnelBody">The entity's optional tunnel routing tables.</param>
+    /// <param name="flyingArrowBody">The entity's optional directional-arrow behavior.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -43,7 +44,8 @@ namespace Mooh.Core.Entities
         SmallBeetleBody? smallBeetleBody = null,
         ShakeBody? shakeBody = null,
         FireBody? fireBody = null,
-        TunnelBody? tunnelBody = null)
+        TunnelBody? tunnelBody = null,
+        FlyingArrowBody? flyingArrowBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -54,8 +56,12 @@ namespace Mooh.Core.Entities
         /// <summary>Gets or sets the entity's current interaction capabilities.</summary>
         public InteractionMask Interactions { get; set; } = interactions;
 
-        /// <summary>Gets the entity's optional gravity behavior.</summary>
-        public GravityBody? GravityBody { get; } = gravityBody;
+        /// <summary>
+        /// Gets the entity's optional gravity behavior. It is cleared when an entity stops
+        /// participating in gravity for good, which the recovered <c>_DoFlyAll</c> does to a
+        /// launched arrow by dropping its <c>WEvOnFall</c> and <c>WEvOnSlide</c> registrations.
+        /// </summary>
+        public GravityBody? GravityBody { get; internal set; } = gravityBody;
 
         /// <summary>Gets the entity's optional player behavior.</summary>
         public PlayerBody? PlayerBody { get; } = playerBody;
@@ -86,6 +92,9 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's optional tunnel routing tables.</summary>
         public TunnelBody? TunnelBody { get; } = tunnelBody;
+
+        /// <summary>Gets the entity's optional directional-arrow behavior.</summary>
+        public FlyingArrowBody? FlyingArrowBody { get; } = flyingArrowBody;
 
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }

@@ -26,6 +26,12 @@ namespace Mooh.Core.Motion
         MonsterWalking,
 
         /// <summary>
+        /// A launched arrow is flying. The recovered <c>_DoFlyInt</c> re-decides at every cell
+        /// whether to bore through what is ahead, detonate against it, or keep going.
+        /// </summary>
+        ArrowFlight,
+
+        /// <summary>
         /// The player is being carried along a tunnel.
         /// </summary>
         TunnelTransit,
