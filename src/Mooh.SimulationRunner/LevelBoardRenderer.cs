@@ -17,7 +17,7 @@ namespace Mooh.SimulationRunner
         private static readonly BoardGlyph Fire = new("🔥", "fire", 85, 20);
         private static readonly BoardGlyph Grenade = new("💣", "grenade", 80, 21);
         private static readonly BoardGlyph Rocket = new("🚀", "rocket", 80, 22);
-        private static readonly BoardGlyph Mine = new("💥", "mine", 80, 23);
+        private static readonly BoardGlyph Mine = new("🧨", "mine", 80, 23);
         private static readonly BoardGlyph BigBomb = new("☢️", "big bomb", 80, 24);
         private static readonly BoardGlyph Diamond = new("💎", "diamond", 75, 30);
         private static readonly BoardGlyph Coin = new("🪙", "coin", 75, 31);
@@ -41,6 +41,12 @@ namespace Mooh.SimulationRunner
         private static readonly BoardGlyph Wood = new("🪵", "wood", 10, 72);
         private static readonly BoardGlyph Diggable = new("🟫", "diggable", 10, 73);
         private static readonly BoardGlyph Beetle = new("🐛", "small beetle", 90, 13);
+
+        /// <summary>
+        /// A reached blast cell. No archival object produces it, so it never enters the static
+        /// board legend; it is drawn over every entity for as long as the cell's blast lock lasts.
+        /// </summary>
+        private static readonly BoardGlyph Explosion = new("💥", "explosion", 200, 1);
         private static readonly BoardGlyph Unknown = new("❓", "unknown", 80, 90);
         private static readonly BoardGlyph Empty = new("⬜", "empty", 0, 100);
 
@@ -49,6 +55,9 @@ namespace Mooh.SimulationRunner
 
         /// <summary>Gets the glyph used for a beetle spawned at runtime rather than placed.</summary>
         internal static BoardGlyph BeetleGlyph { get; } = Beetle;
+
+        /// <summary>Gets the glyph drawn over a cell a blast has reached.</summary>
+        internal static BoardGlyph ExplosionGlyph { get; } = Explosion;
 
         /// <summary>Renders one validated archival level document.</summary>
         /// <param name="level">The archival level to inspect.</param>

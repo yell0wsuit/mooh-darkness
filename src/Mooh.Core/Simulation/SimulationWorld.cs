@@ -47,7 +47,11 @@ namespace Mooh.Core.Simulation
         /// <summary>The recovered <c>CNT_OPrm_PlPushSpeed</c> against the player's own speed.</summary>
         private const double PushSpeedMultiplier = 1.5;
 
-        private static readonly TimeSpan ExplosionCellLockDuration = TimeSpan.FromMilliseconds(500);
+        /// <summary>
+        /// Gets how long a cell a blast has reached stays locked. This is also how long the cell
+        /// is dangerous, so a presentation layer can use it as the lifetime of a blast effect.
+        /// </summary>
+        public static TimeSpan ExplosionCellLockDuration { get; } = TimeSpan.FromMilliseconds(500);
 
         /// <summary>
         /// The recovered <c>CNT_WrdExplLockTime</c> that <c>Game._CellPlKill</c> applies to a cell

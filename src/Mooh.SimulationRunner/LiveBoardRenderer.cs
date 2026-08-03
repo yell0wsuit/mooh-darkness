@@ -24,12 +24,20 @@ namespace Mooh.SimulationRunner
         /// expression carries the entity back to where it came from.
         /// </remarks>
         /// <param name="world">The authoritative runtime world.</param>
+        /// <param name="blastCells">
+        /// The cells a blast has reached and not yet released. Each is drawn over every entity,
+        /// because an explosion is a timed cell effect rather than an entity of its own.
+        /// </param>
         /// <returns>The sprites in ascending draw order.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="world"/> is <see langword="null"/>.</exception>
-        public static IReadOnlyList<PlaySprite> RenderSprites(WorldGrid world)
+        /// <exception cref="ArgumentNullException">A required argument is <see langword="null"/>.</exception>
+        public static IReadOnlyList<PlaySprite> RenderSprites(
+            WorldGrid world,
+            IReadOnlyCollection<GridPosition> blastCells)
         {
             ArgumentNullException.ThrowIfNull(world);
+            ArgumentNullException.ThrowIfNull(blastCells);
 
+            LevelBoardRenderer.BoardGlyph blast = LevelBoardRenderer.ExplosionGlyph;
             return
             [
                 .. world.Entities
@@ -39,6 +47,9 @@ namespace Mooh.SimulationRunner
                         (double x, double y) = InterpolatedPosition(entity);
                         return new PlaySprite(glyph.Emoji, x, y, glyph.Priority);
                     })
+                    .Concat(
+                        blastCells.Select(
+                            cell => new PlaySprite(blast.Emoji, cell.X, cell.Y, blast.Priority)))
                     .OrderBy(sprite => sprite.Layer),
             ];
         }

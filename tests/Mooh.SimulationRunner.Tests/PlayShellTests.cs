@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 
 using Mooh.Core.Content;
+using Mooh.Core.Grid;
 using Mooh.Core.Player;
 using Mooh.Core.Session;
 
@@ -162,6 +163,130 @@ namespace Mooh.SimulationRunner.Tests
 
             Assert.Equal(GameSessionState.Playing, session.Session.State);
             Assert.Equal(0, session.Session.LevelIndex);
+        }
+
+        /// <summary>
+        /// Verifies a blast draws over every entity for the recovered cell lock and then clears.
+        /// An explosion is a timed cell effect rather than an entity, so the shell has to keep it
+        /// from the reach events instead of reading it back out of the world.
+        /// </summary>
+        [Fact]
+        public void ABlastDrawsOverEveryEntityUntilItsCellLockExpires()
+        {
+            FakeTimeProvider time = new();
+            PlaySession session = new(CreateExplosionPack(), 0, time);
+            PlayerInputState idle = default;
+
+            PlayFrame? blastFrame = null;
+            for (int frameIndex = 0; frameIndex < 20 && blastFrame is null; frameIndex++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(50));
+                PlayFrame frame = session.Advance(idle);
+                if (frame.Sprites.Any(sprite => sprite.Glyph == "💥"))
+                {
+                    blastFrame = frame;
+                }
+            }
+
+            Assert.NotNull(blastFrame);
+            Assert.Equal("💥", blastFrame.Sprites[^1].Glyph);
+            Assert.Contains(
+                blastFrame.Sprites,
+                sprite => sprite.Glyph == "💥" && sprite.X == 4 && sprite.Y == 1);
+
+            // The recovered lock is 500 ms, so the blast is gone well inside a second.
+            for (int frameIndex = 0; frameIndex < 20; frameIndex++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(50));
+                _ = session.Advance(idle);
+            }
+
+            Assert.DoesNotContain(session.Render().Sprites, sprite => sprite.Glyph == "💥");
+        }
+
+        /// <summary>
+        /// Verifies a cell an immortal object survives in is never drawn as a blast. The recovered
+        /// <c>_ObjExplWrd</c> locks such a cell but skips <c>SfxExplAdd1x1</c>, because the cell is
+        /// not empty once the destruction pass has run.
+        /// </summary>
+        [Fact]
+        public void ABlastSkipsACellAnImmortalObjectSurvivesIn()
+        {
+            FakeTimeProvider time = new();
+            PlaySession session = new(CreateExplosionPack(), 0, time);
+
+            // The blast is centred on (4, 1) and reaches its neighbours 200 ms later, so the frame
+            // to inspect is the one where the horizontal neighbours have been reached.
+            PlayFrame? blastFrame = null;
+            for (int frameIndex = 0; frameIndex < 30 && blastFrame is null; frameIndex++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(50));
+                PlayFrame frame = session.Advance(default);
+                if (frame.Sprites.Any(
+                    sprite => sprite.Glyph == "💥" && sprite.X == 3 && sprite.Y == 1))
+                {
+                    blastFrame = frame;
+                }
+            }
+
+            // The metal wall at (5, 1) is immortal and survives, while (3, 1) is cleared.
+            Assert.NotNull(blastFrame);
+            Assert.DoesNotContain(
+                blastFrame.Sprites,
+                sprite => sprite.Glyph == "💥" && sprite.X == 5 && sprite.Y == 1);
+            Assert.Contains(
+                session.Session.Level.World.Entities,
+                entity => entity.Position == new GridPosition(5, 1));
+        }
+
+        /// <summary>Verifies restarting a level drops any blast left on screen.</summary>
+        [Fact]
+        public void RestartingTheLevelClearsTheBlast()
+        {
+            FakeTimeProvider time = new();
+            PlaySession session = new(CreateExplosionPack(), 0, time);
+
+            bool blasted = false;
+            for (int frameIndex = 0; frameIndex < 20 && !blasted; frameIndex++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(50));
+                blasted = session.Advance(default).Sprites.Any(sprite => sprite.Glyph == "💥");
+            }
+
+            Assert.True(blasted, "the level never produced a blast to clear");
+            session.RestartLevel();
+
+            Assert.DoesNotContain(session.Render().Sprites, sprite => sprite.Glyph == "💥");
+        }
+
+        /// <summary>
+        /// Builds a pack whose single level drops a grenade onto a floor, which detonates it on
+        /// landing well away from the player. The immortal metal wall beside the blast is what a
+        /// reached cell looks like when nothing in it can be destroyed.
+        /// </summary>
+        private static LoadedLevelPack CreateExplosionPack()
+        {
+            List<LevelObject> objects =
+            [
+                Object(1, "OPlayer", 0, 1),
+                Object(2, "WBomb", 4, 0),
+                Object(9, "CellsMetal01", 5, 1),
+                Object(3, "CellsSolid01", 0, 2),
+                Object(4, "CellsSolid01", 1, 2),
+                Object(5, "CellsSolid01", 2, 2),
+                Object(6, "CellsSolid01", 3, 2),
+                Object(7, "CellsSolid01", 4, 2),
+                Object(8, "CellsSolid01", 5, 2),
+            ];
+            LevelDocument level = new(
+                1,
+                null,
+                new LevelSize(6, 4),
+                new EditorPreview(0, 0, 6, 4),
+                objects);
+            return new LoadedLevelPack(
+                new LevelPackManifest(1, null, [new LevelManifestEntry(0, "boom", "boom.json")]),
+                [level]);
         }
 
         private static int CountGlyphs(string row)
