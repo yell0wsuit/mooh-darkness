@@ -390,7 +390,7 @@ namespace Mooh.Core.Player
 
             if (plan.Result == MoveResult.Pushed)
             {
-                RemovePushThroughOccupants(destination.Offset(direction));
+                RemovePushThroughOccupants(destination.Offset(direction), events);
             }
 
             _world.CommitMoves(
@@ -538,19 +538,21 @@ namespace Mooh.Core.Player
             }
         }
 
-        private void RemovePushThroughOccupants(GridPosition destination)
+        /// <summary>
+        /// Applies the recovered crush a walking push runs on the cell beyond, which is the same
+        /// <c>CellObjDump(n, CNT_CMaskCallCanPushTh)</c> over <c>Game.ObjKill</c> that a placed
+        /// weapon runs. It is routed through the simulation coordinator so a crushed object leaves
+        /// the world by the one kill path, exactly as the engine's single killed-object flag does.
+        /// </summary>
+        private void RemovePushThroughOccupants(GridPosition destination, List<SimulationEvent> events)
         {
-            IReadOnlyList<Entity> occupants = _world.GetOccupants(destination);
-            if (occupants.Count == 0)
+            if (_world.GetOccupants(destination).Count == 0)
             {
                 return;
             }
 
             _world.LockCell(destination, CellInteractionLock);
-            foreach (Entity entity in CellQuery.CrushableOccupants(_world, destination))
-            {
-                _ = _world.Remove(entity.Id);
-            }
+            _actionEffects.CrushCell(destination, events);
         }
 
         private Direction? FirstHeldAlong(Direction segmentDirection)

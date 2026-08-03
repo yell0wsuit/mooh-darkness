@@ -152,7 +152,12 @@ namespace Mooh.Core.Tests.Player
             Assert.Equal(1.125, block.Motion.Speed, precision: 12);
         }
 
-        /// <summary>Verifies eligible beyond-cell occupants are removed before push authority commits.</summary>
+        /// <summary>
+        /// Verifies eligible beyond-cell occupants are destroyed before push authority commits.
+        /// The recovered order is the kill loop first and <c>ObjMoveDir</c> after, and the crush
+        /// reports <see cref="EntityDestroyed"/> because it runs the same <c>Game.ObjKill</c> a
+        /// placed weapon runs. Occupancy is newest-arrival-first, so the later arrival dies first.
+        /// </summary>
         [Fact]
         public void PushThroughOccupantsAreRemovedBeforePushStarts()
         {
@@ -174,6 +179,8 @@ namespace Mooh.Core.Tests.Player
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(second.Id));
             Assert.Equal(
                 [
+                    new EntityDestroyed(second.Id, second.Id),
+                    new EntityDestroyed(first.Id, first.Id),
                     new PushStarted(block.Id, Direction.Right),
                     new PlayerMoveStarted(player.Id, Direction.Right),
                 ],
@@ -203,6 +210,7 @@ namespace Mooh.Core.Tests.Player
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(eligible.Id));
             Assert.Equal(
                 [
+                    new EntityDestroyed(eligible.Id, eligible.Id),
                     new PushStarted(pushThrough.Id, Direction.Right),
                     new PushStarted(ordinary.Id, Direction.Right),
                     new PlayerMoveStarted(player.Id, Direction.Right),

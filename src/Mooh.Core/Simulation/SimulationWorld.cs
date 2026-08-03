@@ -886,12 +886,23 @@ namespace Mooh.Core.Simulation
                 return;
             }
 
+            CrushCell(cell, events);
+            _world.LockCell(cell, WeaponCellLockDuration);
+        }
+
+        /// <inheritdoc/>
+        public void CrushCell(GridPosition cell, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(events);
+            if (!_world.Contains(cell))
+            {
+                return;
+            }
+
             foreach (Entity occupant in CellQuery.CrushableOccupants(_world, cell))
             {
                 DestroyEntity(occupant, occupant.Id, events);
             }
-
-            _world.LockCell(cell, WeaponCellLockDuration);
         }
 
         /// <summary>

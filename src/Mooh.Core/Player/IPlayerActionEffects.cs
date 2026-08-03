@@ -29,6 +29,20 @@ namespace Mooh.Core.Player
         /// <param name="events">The ordered event sink.</param>
         void ClearWeaponCell(GridPosition cell, List<SimulationEvent> events);
 
+        /// <summary>
+        /// Destroys a cell's crushable occupants, applying the
+        /// <c>CellObjDump(n, CNT_CMaskCallCanPushTh)</c> loop that both <c>GamePlayer.CtrlMove</c>
+        /// and <c>Game._CellPlKill</c> run over <c>Game.ObjKill</c>.
+        /// </summary>
+        /// <remarks>
+        /// The engine has one kill state — a flag every cell query filters on — so a crushed
+        /// object has to leave the world by the same path whatever crushed it, rather than being
+        /// removed silently.
+        /// </remarks>
+        /// <param name="cell">The cell whose crushable occupants are destroyed.</param>
+        /// <param name="events">The ordered event sink.</param>
+        void CrushCell(GridPosition cell, List<SimulationEvent> events);
+
         /// <summary>Registers a thrown grenade in a cleared cell.</summary>
         /// <param name="cell">The cell that receives the grenade.</param>
         /// <param name="events">The ordered event sink.</param>
