@@ -56,6 +56,18 @@ namespace Mooh.Core.Player
         /// <summary>The recovered <c>CNT_OPrm_SpeedTon</c> against the player's own speed.</summary>
         private const double TunnelSpeedMultiplier = 2.0;
 
+        /// <summary>
+        /// The recovered <c>ST_TPortIn</c> and <c>ST_TPortOut</c> durations. Both run twenty
+        /// frames at 50 ms.
+        /// </summary>
+        private const double TeleportAnimationSeconds = 1.0;
+
+        /// <summary>
+        /// The recovered <c>CNT_TPortSp</c> of <c>0.0075 / 2.0</c> cells per millisecond, restated
+        /// in cells per second.
+        /// </summary>
+        private const double TeleportFlightSpeed = 3.75;
+
         private static readonly TimeSpan CellInteractionLock = TimeSpan.FromMilliseconds(150);
 
         private readonly IPlayerActionEffects _actionEffects = actionEffects
@@ -179,14 +191,18 @@ namespace Mooh.Core.Player
         /// falling back to walking, because the original returns without reaching <c>CtrlMove</c>.
         /// </summary>
         /// <remarks>
-        /// Two earlier steps of the original branch are not reachable yet. The healing shelter
-        /// needs the door the player leaves at level start, and the <c>PlCtrl</c> hook of a
-        /// negative-pass occupant needs the teleporter. Weapon selection is likewise absent: the
+        /// One earlier step of the original branch is still unreachable: the healing shelter needs
+        /// the door the player leaves at level start. Weapon selection is likewise absent: the
         /// original cycles through four weapons and <c>WeapValReset</c> makes the grenade current,
         /// which is the only weapon the rewrite implements.
         /// </remarks>
         private void TryStartAction(PlayerBody body, List<SimulationEvent> events)
         {
+            if (TryUseTeleporter(body, events))
+            {
+                return;
+            }
+
             Direction direction = body.FacingDirection;
             GridPosition target = _player.Position.Offset(direction);
             double now = _world.CurrentTimeSeconds;
@@ -280,6 +296,16 @@ namespace Mooh.Core.Player
             }
 
             action.RemainingSeconds -= elapsedSeconds;
+            if (action.Kind == PlayerActionKind.TeleportFlight
+                && body.Teleport is PlayerTeleport flight
+                && flight.TotalSeconds > 0)
+            {
+                flight.Progress = Math.Clamp(
+                    1 - (action.RemainingSeconds / flight.TotalSeconds),
+                    0,
+                    1);
+            }
+
             if (action.RemainingSeconds > TimeTolerance)
             {
                 return false;
@@ -313,6 +339,17 @@ namespace Mooh.Core.Player
                 case PlayerActionKind.TunnelExit:
                     body.Action = null;
                     body.FacingDirection = action.Direction;
+                    return true;
+                case PlayerActionKind.TeleportEntry:
+                    StartTeleportFlight(body, events);
+                    return false;
+                case PlayerActionKind.TeleportFlight:
+                    CompleteTeleportFlight(body, events);
+                    return false;
+                case PlayerActionKind.TeleportExit:
+                    body.Action = null;
+                    body.Teleport = null;
+                    body.FacingDirection = Direction.Down;
                     return true;
                 default:
                     throw new InvalidOperationException("Unknown player action.");
@@ -554,6 +591,96 @@ namespace Mooh.Core.Player
         }
 
         /// <summary>
+        /// Applies the recovered <c>PlCtrl</c> dispatch <c>DoCtrl</c> runs before it reaches any
+        /// weapon: every occupant of the player's own cell with a negative <c>RPass</c> is offered
+        /// the control, and the first that answers consumes it. The teleporter is the only placed
+        /// type that qualifies. Unlike the weapon and strike branches this one never touches
+        /// <c>ulWeapTime</c>, because the original returns before the repeat check.
+        /// </summary>
+        /// <returns><see langword="true"/> when a teleporter took the control.</returns>
+        private bool TryUseTeleporter(PlayerBody body, List<SimulationEvent> events)
+        {
+            Entity? teleporter = _world.GetOccupants(_player.Position)
+                .FirstOrDefault(occupant => occupant.TeleporterBody is not null);
+            if (teleporter?.TeleporterBody is not TeleporterBody links)
+            {
+                return false;
+            }
+
+            GridPosition destination = links.TakeNextDestination(teleporter.Position);
+            double distance = Math.Sqrt(
+                Math.Pow(destination.X - _player.Position.X, 2)
+                + Math.Pow(destination.Y - _player.Position.Y, 2));
+            body.Teleport = new PlayerTeleport(
+                _player.Position,
+                destination,
+                distance / TeleportFlightSpeed);
+            body.Action = new PlayerAction(
+                PlayerActionKind.TeleportEntry,
+                body.FacingDirection,
+                TeleportAnimationSeconds);
+            ApplyShadow(true);
+            events.Add(new PlayerTeleportStarted(
+                _player.Id,
+                _player.Position,
+                destination,
+                TimeSpan.FromSeconds(TeleportAnimationSeconds)));
+            return true;
+        }
+
+        /// <summary>
+        /// Enters the recovered <c>ST_TPortMove</c>. Its length is the straight-line distance
+        /// divided by <c>CNT_TPortSp</c>, which is the continuous limit of the original's
+        /// per-cycle shift, and a teleporter linked to its own cell therefore takes no time at
+        /// all while still costing both animations.
+        /// </summary>
+        private void StartTeleportFlight(PlayerBody body, List<SimulationEvent> events)
+        {
+            PlayerTeleport teleport = body.Teleport
+                ?? throw new InvalidOperationException("The player is not teleporting.");
+            if (teleport.TotalSeconds <= TimeTolerance)
+            {
+                CompleteTeleportFlight(body, events);
+                return;
+            }
+
+            body.Action = new PlayerAction(
+                PlayerActionKind.TeleportFlight,
+                body.FacingDirection,
+                teleport.TotalSeconds);
+        }
+
+        /// <summary>
+        /// Lands the recovered <c>_TPortCFunc</c> arrival. The destination cell is consumed, the
+        /// player is snapped into it, and a cell that still holds a visible occupant is blown open
+        /// by <c>Game._ObjExplWrd</c> — which is what keeps a teleporter linked into solid rock
+        /// from burying the player.
+        /// </summary>
+        private void CompleteTeleportFlight(PlayerBody body, List<SimulationEvent> events)
+        {
+            PlayerTeleport teleport = body.Teleport
+                ?? throw new InvalidOperationException("The player is not teleporting.");
+            teleport.Progress = 1;
+            GridPosition destination = _world.Contains(teleport.Destination)
+                ? teleport.Destination
+                : _player.Position;
+            EatDestination(destination, events);
+            _world.Relocate(_player.Id, destination);
+            if (CellQuery.VisibleOccupants(_world, destination).Any(
+                occupant => occupant.Id != _player.Id))
+            {
+                _actionEffects.ExplodeCell(destination, _player.Id, events);
+            }
+
+            ApplyShadow(false);
+            body.Action = new PlayerAction(
+                PlayerActionKind.TeleportExit,
+                body.FacingDirection,
+                TeleportAnimationSeconds);
+            events.Add(new PlayerTeleportArrived(_player.Id, destination));
+        }
+
+        /// <summary>
         /// Applies the recovered <c>PlComeHere</c> gate. <c>CtrlMove</c> offers the destination
         /// cell's occupants the direction of travel before anything else — before the push gate
         /// and before the cell is eaten — and returns outright as soon as one accepts. A tunnel
@@ -580,7 +707,7 @@ namespace Mooh.Core.Player
                 PlayerActionKind.TunnelEntry,
                 direction,
                 TunnelEntrySeconds);
-            ApplyTunnelShadow(true);
+            ApplyShadow(true);
             events.Add(new PlayerEnteredTunnel(
                 _player.Id,
                 destination,
@@ -627,7 +754,7 @@ namespace Mooh.Core.Player
             if (tunnel is null)
             {
                 body.TunnelTransit = null;
-                ApplyTunnelShadow(false);
+                ApplyShadow(false);
                 body.Action = new PlayerAction(
                     PlayerActionKind.TunnelExit,
                     transit.Direction,
@@ -695,11 +822,12 @@ namespace Mooh.Core.Player
         }
 
         /// <summary>
-        /// Adds or removes the recovered <c>bShadow</c> pair every tunnel state except
-        /// <c>ST_TonOut*</c> carries, which hides the player from monster navigation and from
-        /// every ordinary cell-occupancy query while it travels.
+        /// Adds or removes the recovered <c>bShadow</c> pair, which hides the player from monster
+        /// navigation and from every ordinary cell-occupancy query alike. Every tunnel state
+        /// except <c>ST_TonOut*</c> carries it, and <c>TPortMe</c> sets the same two bits by hand
+        /// for the teleport, which <c>ST_TPortOut</c> then clears by not carrying them.
         /// </summary>
-        private void ApplyTunnelShadow(bool shadowed)
+        private void ApplyShadow(bool shadowed)
         {
             const InteractionMask shadow = InteractionMask.MonsterTransparent
                 | InteractionMask.OccupancyTransparent;

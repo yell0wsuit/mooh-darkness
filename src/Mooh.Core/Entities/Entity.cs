@@ -30,6 +30,7 @@ namespace Mooh.Core.Entities
     /// <param name="fireBody">The entity's optional role in the fire-contact rule.</param>
     /// <param name="tunnelBody">The entity's optional tunnel routing tables.</param>
     /// <param name="flyingArrowBody">The entity's optional directional-arrow behavior.</param>
+    /// <param name="teleporterBody">The entity's optional linked-teleporter behavior.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -45,7 +46,8 @@ namespace Mooh.Core.Entities
         ShakeBody? shakeBody = null,
         FireBody? fireBody = null,
         TunnelBody? tunnelBody = null,
-        FlyingArrowBody? flyingArrowBody = null)
+        FlyingArrowBody? flyingArrowBody = null,
+        TeleporterBody? teleporterBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -95,6 +97,9 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's optional directional-arrow behavior.</summary>
         public FlyingArrowBody? FlyingArrowBody { get; } = flyingArrowBody;
+
+        /// <summary>Gets the entity's optional linked-teleporter behavior.</summary>
+        public TeleporterBody? TeleporterBody { get; } = teleporterBody;
 
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }

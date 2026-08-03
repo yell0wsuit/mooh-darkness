@@ -619,6 +619,25 @@ namespace Mooh.Core.Simulation
             }
         }
 
+        /// <summary>
+        /// Applies the recovered <c>Game._ObjExplWrd</c> to one cell without scheduling any
+        /// neighbours, which is what a teleport arrival into an occupied cell runs.
+        /// </summary>
+        /// <param name="cell">The cell the blast reaches.</param>
+        /// <param name="sourceEntityId">The entity the blast is attributed to.</param>
+        /// <param name="events">The ordered event sink.</param>
+        public void ExplodeCell(
+            GridPosition cell,
+            EntityId sourceEntityId,
+            List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(events);
+            if (_world.Contains(cell))
+            {
+                ResolveExplosionCell(sourceEntityId, cell, events);
+            }
+        }
+
         private void ResolveExplosionCell(
             EntityId sourceEntityId,
             GridPosition position,

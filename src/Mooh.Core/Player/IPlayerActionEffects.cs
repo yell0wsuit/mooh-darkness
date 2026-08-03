@@ -52,6 +52,16 @@ namespace Mooh.Core.Player
         /// <param name="events">The ordered event sink.</param>
         void LaunchArrow(Entity arrow, List<SimulationEvent> events);
 
+        /// <summary>
+        /// Applies the recovered <c>Game._ObjExplWrd</c> to one cell: its explodable occupants
+        /// are destroyed, the player in it is hurt and the cell is locked. A teleport arrival
+        /// runs it when the destination cell is still occupied.
+        /// </summary>
+        /// <param name="cell">The cell the blast reaches.</param>
+        /// <param name="sourceEntityId">The entity the blast is attributed to.</param>
+        /// <param name="events">The ordered event sink.</param>
+        void ExplodeCell(GridPosition cell, EntityId sourceEntityId, List<SimulationEvent> events);
+
         /// <summary>Registers a thrown grenade in a cleared cell.</summary>
         /// <param name="cell">The cell that receives the grenade.</param>
         /// <param name="events">The ordered event sink.</param>

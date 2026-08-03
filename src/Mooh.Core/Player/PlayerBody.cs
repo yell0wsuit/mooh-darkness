@@ -84,19 +84,25 @@ namespace Mooh.Core.Player
         /// <summary>Gets the active tunnel transit, if the player is inside a tunnel.</summary>
         public PlayerTunnelTransit? TunnelTransit { get; internal set; }
 
+        /// <summary>Gets the active teleport, if the player is being carried between teleporters.</summary>
+        public PlayerTeleport? Teleport { get; internal set; }
+
         /// <summary>
         /// Gets whether the player is in a recovered <c>bImmort</c> state. Such a state takes no
         /// damage at all and clears the player's <c>CNT_OrMaskMonStrike</c> bits, so a monster
         /// does not select it as a target either. Every tunnel state carries the flag.
         /// </summary>
         public bool IsImmortal => TunnelTransit is not null
-            || Action?.Kind == PlayerActionKind.TunnelEntry
-            || Action?.Kind == PlayerActionKind.TunnelExit;
+            || Action?.Kind is PlayerActionKind.TunnelEntry
+                or PlayerActionKind.TunnelExit
+                or PlayerActionKind.TeleportEntry
+                or PlayerActionKind.TeleportFlight
+                or PlayerActionKind.TeleportExit;
 
         /// <summary>
         /// Gets whether the player is in a recovered <c>bLockLvlEnd</c> state, which holds the
-        /// win settle open. Among implemented states the shock reaction and every tunnel state
-        /// carry the flag; the death state does not.
+        /// win settle open. Among implemented states the shock reaction and every tunnel and
+        /// teleport state carry the flag; the death state does not.
         /// </summary>
         public bool HoldsLevelEndOpen => IsImmortal
             || Reaction.Kind == PlayerReactionKind.Shocked;

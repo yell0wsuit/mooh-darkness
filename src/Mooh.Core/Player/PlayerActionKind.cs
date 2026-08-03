@@ -19,16 +19,35 @@ namespace Mooh.Core.Player
         GrenadeThrow,
 
         /// <summary>
-        /// The player is climbing into a tunnel. The player does
+        /// The player is climbing into a tunnel, the recovered <c>ST_TonIn*</c>. The player does
         /// not move during it; transit starts when the animation ends.
         /// </summary>
         TunnelEntry,
 
         /// <summary>
-        /// The player is climbing back out of a tunnel. Unlike
+        /// The player is climbing back out of a tunnel, the recovered <c>ST_TonOut*</c>. Unlike
         /// every other tunnel state it is not <c>bShadow</c>, so the player is solid again for
         /// its duration while still being immortal and holding the level end open.
         /// </summary>
         TunnelExit,
+
+        /// <summary>
+        /// The player is dissolving into a teleporter, the recovered <c>ST_TPortIn</c>. It runs
+        /// twenty frames at 50 ms, and <c>TPortMe</c> makes the player a shadow for it.
+        /// </summary>
+        TeleportEntry,
+
+        /// <summary>
+        /// The player is in flight between two teleporters, the recovered <c>ST_TPortMove</c>.
+        /// Its duration is not an animation length but the straight-line distance divided by
+        /// <c>CNT_TPortSp</c>.
+        /// </summary>
+        TeleportFlight,
+
+        /// <summary>
+        /// The player is reappearing at the destination, the recovered <c>ST_TPortOut</c>. It is
+        /// not <c>bShadow</c>, so entering it makes the player solid again.
+        /// </summary>
+        TeleportExit,
     }
 }

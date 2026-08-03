@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Text.Json;
 
 using Mooh.Core.Combat;
 using Mooh.Core.Content;
@@ -24,6 +25,12 @@ namespace Mooh.Core.Levels
         /// archival source and therefore cannot share the identifier space of placed objects.
         /// </summary>
         public const int RuntimeObjectId = -1;
+
+        /// <summary>
+        /// The archival saved-state class name under which a linked object stores its destination
+        /// cells. Only the teleporter uses it in the committed corpus.
+        /// </summary>
+        private const string LinkCoordinateStateClass = "GameLinkBase.CLinkCoordBase";
 
         private static readonly TimeSpan BlueMonsterTurnDuration = TimeSpan.FromMilliseconds(300);
         private static readonly TimeSpan GreenMonsterTurnDuration = TimeSpan.FromMilliseconds(250);
@@ -210,7 +217,56 @@ namespace Mooh.Core.Levels
                     : null,
                 flyingArrowBody: descriptor.Kind == EntityKind.FlyingArrow
                     ? new FlyingArrowBody(facing)
+                    : null,
+                teleporterBody: descriptor.Kind == EntityKind.Teleporter
+                    ? new TeleporterBody(ReadLinkCoordinates(source))
                     : null);
+        }
+
+        /// <summary>
+        /// Reads a linked object's destination cells out of the archival saved state. The
+        /// recovered <c>CLinkCoordBase.__getstate__</c> returns a one-element tuple holding the
+        /// list of <c>(x, y)</c> pairs, which the archival JSON preserves verbatim under the
+        /// <c>GameLinkBase.CLinkCoordBase</c> class name. A malformed or absent entry yields no
+        /// links, which is a state the corpus already contains: fourteen of the forty-six placed
+        /// teleporters are linked to nothing.
+        /// </summary>
+        private static List<GridPosition> ReadLinkCoordinates(LevelObject source)
+        {
+            List<GridPosition> links = [];
+            if (source.SavedState is not IReadOnlyList<LevelSavedState> states)
+            {
+                return links;
+            }
+
+            foreach (LevelSavedState state in states)
+            {
+                if (state.Class != LinkCoordinateStateClass
+                    || state.Value.ValueKind != JsonValueKind.Array
+                    || state.Value.GetArrayLength() == 0)
+                {
+                    continue;
+                }
+
+                JsonElement pairs = state.Value[0];
+                if (pairs.ValueKind != JsonValueKind.Array)
+                {
+                    continue;
+                }
+
+                foreach (JsonElement pair in pairs.EnumerateArray())
+                {
+                    if (pair.ValueKind == JsonValueKind.Array
+                        && pair.GetArrayLength() == 2
+                        && pair[0].TryGetInt32(out int x)
+                        && pair[1].TryGetInt32(out int y))
+                    {
+                        links.Add(new GridPosition(x, y));
+                    }
+                }
+            }
+
+            return links;
         }
 
         private static EntityId CreateDeterministicId(int objectId)
