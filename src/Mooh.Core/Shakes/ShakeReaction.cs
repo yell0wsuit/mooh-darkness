@@ -30,6 +30,11 @@ namespace Mooh.Core.Shakes
         CrossBlast,
 
         /// <summary>
+        /// The entity is a placed big bomb and runs the recovered <c>BBombWork</c> flood at once.
+        /// </summary>
+        BigBomb,
+
+        /// <summary>
         /// The entity is a magic gem and runs the recovered <c>_DoMagic</c>: it dies and turns the
         /// emptied cells around it into diamonds.
         /// </summary>

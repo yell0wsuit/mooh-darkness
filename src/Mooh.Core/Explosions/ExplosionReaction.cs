@@ -21,5 +21,10 @@ namespace Mooh.Core.Explosions
         /// at once, then four straight arms. The barrel is the only placed carrier.
         /// </summary>
         CrossBlast,
+
+        /// <summary>
+        /// The entity is a placed big bomb and runs the recovered <c>BBombWork</c> flood at once.
+        /// </summary>
+        BigBomb,
     }
 }

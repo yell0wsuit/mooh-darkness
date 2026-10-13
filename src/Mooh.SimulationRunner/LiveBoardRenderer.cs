@@ -110,13 +110,16 @@ namespace Mooh.SimulationRunner
         }
 
         /// <summary>
-        /// Classifies one live entity. A beetle is spawned at runtime rather than placed, so it
-        /// carries no archival identity and is recognized by its behavior component instead.
+        /// Classifies one live entity. A beetle and a placed big bomb are spawned at runtime rather
+        /// than placed, so they carry no archival identity and are recognized by their behavior
+        /// components instead.
         /// </summary>
         private static LevelBoardRenderer.BoardGlyph Classify(Entity entity)
         {
             return entity.SmallBeetleBody is not null
                 ? LevelBoardRenderer.BeetleGlyph
+                : entity.BigBombBody is not null
+                ? LevelBoardRenderer.BigBombGlyph
                 : LevelBoardRenderer.ClassifyType(
                     entity.ArchivalIdentity?.ArchivalType ?? string.Empty,
                     null);

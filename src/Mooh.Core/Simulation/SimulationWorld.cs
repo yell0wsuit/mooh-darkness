@@ -40,6 +40,15 @@ namespace Mooh.Core.Simulation
         /// </summary>
         private const double MagicRingDelaySeconds = 0.2;
 
+        /// <summary>The recovered <c>CNT_BBombEn</c>, the energy a big bomb's flood starts with.</summary>
+        private const int BigBombEnergy = 15;
+
+        /// <summary>The recovered <c>CNT_BBombEnKill</c>, the energy a cell with an explodable costs.</summary>
+        private const int BigBombHitCost = 14;
+
+        /// <summary>The recovered <c>CNT_BBombChDelay</c> between one flood ring and the next.</summary>
+        private const double BigBombStepSeconds = 0.2;
+
         /// <summary>The recovered <c>CNT_MagicKillLockTime</c> a spawned diamond cannot be killed for.</summary>
         private const double MagicKillLockSeconds = 0.5;
 
@@ -345,9 +354,11 @@ namespace Mooh.Core.Simulation
         public IReadOnlyList<SimulationEvent> Detonate(EntityId sourceEntityId)
         {
             Entity source = _world.GetEntity(sourceEntityId);
-            if (source.ExplosionBody?.Reaction is not (ExplosionReaction.Detonate3x3 or ExplosionReaction.CrossBlast))
+            if (source.ExplosionBody?.Reaction is not (ExplosionReaction.Detonate3x3
+                or ExplosionReaction.CrossBlast
+                or ExplosionReaction.BigBomb))
             {
-                throw new InvalidOperationException("Detonation requires a 3x3 or cross-blast explosive entity.");
+                throw new InvalidOperationException("Detonation requires an entity with its own blast.");
             }
 
             List<SimulationEvent> events = [];
@@ -535,6 +546,7 @@ namespace Mooh.Core.Simulation
                 double? balloonSeconds = SecondsUntilNextBalloonDetonation();
                 double? drainSeconds = SecondsUntilDrainEmpties();
                 double? clockSeconds = SecondsUntilClockRunsOut();
+                double? bigBombSeconds = SecondsUntilNextBigBomb();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -624,6 +636,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingPlayTime);
                 }
 
+                if (bigBombSeconds is double remainingBigBomb)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingBigBomb);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && actionSeconds is null
@@ -639,7 +656,8 @@ namespace Mooh.Core.Simulation
                     && rotatorSeconds is null
                     && balloonSeconds is null
                     && drainSeconds is null
-                    && clockSeconds is null)
+                    && clockSeconds is null
+                    && bigBombSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -654,6 +672,11 @@ namespace Mooh.Core.Simulation
                 AdvanceHealthImmunity(substepSeconds);
                 AdvancePlayerProgress(substepSeconds);
                 DrainPlayerHealth(substepSeconds);
+
+                // Fuses burn before anything this substep can light or place a new one, so a fuse
+                // started part way through is never charged for time that passed before it.
+                AdvanceBalloonFuses(substepSeconds, events);
+                AdvanceBigBombFuses(substepSeconds, events);
                 _world.Player?.HealthBody?.Clock?.Advance(TimeSpan.FromSeconds(substepSeconds));
                 SynchronizeMonsterIce(events);
                 bool playerControlReady = _playerController?.AdvanceRotation(
@@ -668,7 +691,6 @@ namespace Mooh.Core.Simulation
                 AdvanceMonsterTimers(substepSeconds, events);
                 AdvanceArrowWindups(substepSeconds, events);
                 AdvanceRotatorWindups(substepSeconds, events);
-                AdvanceBalloonFuses(substepSeconds, events);
                 bool resolvedExplosion = ResolvePendingExplosionCells(events);
 
                 remainingSeconds -= substepSeconds;
@@ -808,23 +830,37 @@ namespace Mooh.Core.Simulation
             foreach (ScheduledExplosionCell scheduled in ready)
             {
                 _ = _pendingExplosionCells.Remove(scheduled);
-                if (scheduled.IsMagic)
+                switch (scheduled.Kind)
                 {
-                    WorkMagicCell(scheduled.SourceEntityId, scheduled.Position, events);
-                    continue;
-                }
+                    case ScheduledCellKind.Magic:
+                        WorkMagicCell(scheduled.SourceEntityId, scheduled.Position, events);
+                        break;
+                    case ScheduledCellKind.BigBomb:
+                        WorkBigBombCell(
+                            scheduled.SourceEntityId,
+                            scheduled.Position,
+                            scheduled.Remaining,
+                            scheduled.Flood!,
+                            events);
+                        break;
+                    case ScheduledCellKind.CrossArm:
+                        ResolveExplosionCell(scheduled.SourceEntityId, scheduled.Position, events);
+                        if (scheduled.Remaining > 1
+                            && !CellQuery.HoldsBlastSurvivor(_world, scheduled.Position))
+                        {
+                            ScheduleCrossArm(
+                                scheduled.SourceEntityId,
+                                scheduled.Position,
+                                scheduled.ArmDirection!.Value,
+                                scheduled.Remaining - 1,
+                                ExplosionDelaySeconds);
+                        }
 
-                ResolveExplosionCell(scheduled.SourceEntityId, scheduled.Position, events);
-                if (scheduled.ArmDirection is Direction direction
-                    && scheduled.ArmRemaining > 1
-                    && !CellQuery.HoldsBlastSurvivor(_world, scheduled.Position))
-                {
-                    ScheduleCrossArm(
-                        scheduled.SourceEntityId,
-                        scheduled.Position,
-                        direction,
-                        scheduled.ArmRemaining - 1,
-                        ExplosionDelaySeconds);
+                        break;
+                    case ScheduledCellKind.Blast:
+                    default:
+                        ResolveExplosionCell(scheduled.SourceEntityId, scheduled.Position, events);
+                        break;
                 }
             }
 
@@ -929,6 +965,7 @@ namespace Mooh.Core.Simulation
                 next,
                 _world.CurrentTimeSeconds + delaySeconds,
                 _nextExplosionOrder++,
+                ScheduledCellKind.CrossArm,
                 direction,
                 remaining));
         }
@@ -962,7 +999,7 @@ namespace Mooh.Core.Simulation
                         cell,
                         now + MagicRingDelaySeconds,
                         _nextExplosionOrder++,
-                        IsMagic: true));
+                        ScheduledCellKind.Magic));
                 }
             }
 
@@ -1008,9 +1045,127 @@ namespace Mooh.Core.Simulation
             {
                 StartCrossExplosion(source, events);
             }
+            else if (source.ExplosionBody?.Reaction == ExplosionReaction.BigBomb)
+            {
+                StartBigBomb(source, events);
+            }
             else
             {
                 StartExplosion(source, events);
+            }
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>BBombWork</c>: the bomb dies and its flood starts in its own
+        /// cell with <c>CNT_BBombEn</c>. The bomb's own cell is not marked in the visited field, so
+        /// the first ring sends the flood back into it once more.
+        /// </summary>
+        private void StartBigBomb(Entity bomb, List<SimulationEvent> events)
+        {
+            GridPosition center = bomb.Position;
+            if (!_world.Remove(bomb.Id))
+            {
+                return;
+            }
+
+            events.Add(new ExplosionStarted(bomb.Id, center));
+            events.Add(new EntityDestroyed(bomb.Id, bomb.Id));
+            WorkBigBombCell(bomb.Id, center, BigBombEnergy, [], events);
+        }
+
+        /// <summary>
+        /// Applies one recovered <c>BBombWork</c> step. The cell is blasted by <c>_ObjExplWrd</c>,
+        /// which costs <c>CNT_BBombEnKill</c> when the cell held an explodable and
+        /// <c>CNT_BBombEnEmpty</c> otherwise; with energy left, each unvisited neighbor, left, up,
+        /// right and down, is marked visited and, unless it holds a visible occupant that cannot
+        /// explode, worked <c>CNT_BBombChDelay</c> later.
+        /// </summary>
+        private void WorkBigBombCell(
+            EntityId bombId,
+            GridPosition cell,
+            int energy,
+            HashSet<GridPosition> flood,
+            List<SimulationEvent> events)
+        {
+            bool held = _world.GetOccupants(cell).Any(occupant => occupant.IsExplodable);
+            ResolveExplosionCell(bombId, cell, events);
+            int remaining = energy - (held ? BigBombHitCost : 1);
+            if (remaining <= 0)
+            {
+                return;
+            }
+
+            foreach (Direction direction in (Direction[])[Direction.Left, Direction.Up, Direction.Right, Direction.Down])
+            {
+                GridPosition next = cell.Offset(direction);
+                if (!_world.Contains(next)
+                    || !flood.Add(next)
+                    || CellQuery.VisibleOccupants(_world, next).Any(occupant => !occupant.IsExplodable))
+                {
+                    continue;
+                }
+
+                _pendingExplosionCells.Add(new ScheduledExplosionCell(
+                    bombId,
+                    next,
+                    _world.CurrentTimeSeconds + BigBombStepSeconds,
+                    _nextExplosionOrder++,
+                    ScheduledCellKind.BigBomb,
+                    Remaining: remaining,
+                    Flood: flood));
+            }
+        }
+
+        void IPlayerActionEffects.PlaceBigBomb(GridPosition cell, List<SimulationEvent> events)
+        {
+            Entity player = _world.Player
+                ?? throw new InvalidOperationException("Placing a big bomb requires a player.");
+
+            // The recovered TypeBBomb: RoundCap, BlueStrike, CellLockMotion, CellCanExplode and
+            // PlCanPush, falling at the normal speed, with BBombWork for OnShake, OnShakeHard,
+            // OnLand and OnExpl alike.
+            Entity bomb = new(
+                CreateSpawnedEntityId(player.Id),
+                cell,
+                InteractionMask.BlocksMovement
+                    | InteractionMask.PlayerPushable
+                    | InteractionMask.RoundSupport
+                    | InteractionMask.BlueMonsterTarget,
+                new GravityBody(_difficultySpeeds.NormalSpeed, canSlide: true),
+                explosionBody: new ExplosionBody(ExplosionReaction.BigBomb, detonatesOnLanding: false),
+                shakeBody: new ShakeBody(ShakeReaction.BigBomb, ShakeReaction.BigBomb, reactsToLanding: true),
+                bigBombBody: new BigBombBody());
+            _world.Add(bomb);
+            events.Add(new BigBombPlaced(player.Id, bomb.Id, cell));
+        }
+
+        private double? SecondsUntilNextBigBomb()
+        {
+            double? result = null;
+            foreach (Entity entity in _world.Entities)
+            {
+                if (entity.BigBombBody?.FuseRemainingSeconds is double remaining
+                    && (result is null || remaining < result))
+                {
+                    result = remaining;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>Burns every placed big bomb's fuse and works each one that runs out.</summary>
+        private void AdvanceBigBombFuses(double elapsedSeconds, List<SimulationEvent> events)
+        {
+            Entity[] bombs = [.. _world.Entities.Where(entity => entity.BigBombBody is not null)];
+            foreach (Entity bomb in bombs)
+            {
+                BigBombBody body = bomb.BigBombBody!;
+                body.FuseRemainingSeconds -= elapsedSeconds;
+                if (body.FuseRemainingSeconds <= TimeTolerance)
+                {
+                    StartBigBomb(bomb, events);
+                }
             }
         }
 
@@ -1091,6 +1246,10 @@ namespace Mooh.Core.Simulation
                 else if (occupant.ExplosionBody?.Reaction == ExplosionReaction.CrossBlast)
                 {
                     StartCrossExplosion(occupant, events);
+                }
+                else if (occupant.ExplosionBody?.Reaction == ExplosionReaction.BigBomb)
+                {
+                    StartBigBomb(occupant, events);
                 }
                 else if (occupant.ExplosionBody?.Reaction == ExplosionReaction.LaunchArrow)
                 {
@@ -2053,6 +2212,9 @@ namespace Mooh.Core.Simulation
                 case ShakeReaction.Magic:
                     StartMagic(occupant, events);
                     break;
+                case ShakeReaction.BigBomb:
+                    StartBigBomb(occupant, events);
+                    break;
                 case ShakeReaction.None:
                     break;
                 default:
@@ -2082,18 +2244,36 @@ namespace Mooh.Core.Simulation
             };
         }
 
+        /// <summary>Identifies which recovered timer handler a scheduled cell runs.</summary>
+        private enum ScheduledCellKind
+        {
+            /// <summary>A delayed <c>_ObjExplWrd</c> cell of a 3x3 blast.</summary>
+            Blast,
+
+            /// <summary>One step of a <c>_ObjExplCross</c> arm.</summary>
+            CrossArm,
+
+            /// <summary>A <c>MagicWork</c> cell.</summary>
+            Magic,
+
+            /// <summary>One step of a <c>BBombWork</c> flood.</summary>
+            BigBomb,
+        }
+
         /// <summary>
-        /// A blast cell waiting for its recovered delay. A cross-blast arm also carries its
-        /// direction and how many cells it may still reach, counting this one.
+        /// A cell waiting for its recovered delay. A cross-blast arm carries its direction and the
+        /// cells it may still reach, counting this one; a big-bomb step carries its energy and the
+        /// flood's shared visited field.
         /// </summary>
         private sealed record ScheduledExplosionCell(
             EntityId SourceEntityId,
             GridPosition Position,
             double DueTimeSeconds,
             long Order,
+            ScheduledCellKind Kind = ScheduledCellKind.Blast,
             Direction? ArmDirection = null,
-            int ArmRemaining = 0,
-            bool IsMagic = false);
+            int Remaining = 0,
+            HashSet<GridPosition>? Flood = null);
 
         private void ResolvePushedBoundary(
             Entity entity,

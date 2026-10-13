@@ -58,5 +58,11 @@ namespace Mooh.Core.Player
         /// abandons the drink before <c>_AEnd_BonCola</c> can turn the protection on.
         /// </summary>
         ColaDrink,
+
+        /// <summary>
+        /// The player is placing a big bomb in its own cell, the recovered <c>ST_BBombPlace</c>:
+        /// fifteen frames at 50 ms, facing down.
+        /// </summary>
+        BigBombPlace,
     }
 }

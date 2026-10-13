@@ -88,6 +88,11 @@ namespace Mooh.Core.Player
         /// <param name="events">The ordered event sink.</param>
         void ExplodeCell(GridPosition cell, EntityId sourceEntityId, List<SimulationEvent> events);
 
+        /// <summary>Registers a placed big bomb in the player's own cell, the recovered <c>_AEnd_BBomb</c>.</summary>
+        /// <param name="cell">The player's cell.</param>
+        /// <param name="events">The ordered event sink.</param>
+        void PlaceBigBomb(GridPosition cell, List<SimulationEvent> events);
+
         /// <summary>Registers a thrown grenade in a cleared cell.</summary>
         /// <param name="cell">The cell that receives the grenade.</param>
         /// <param name="events">The ordered event sink.</param>

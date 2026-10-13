@@ -34,6 +34,7 @@ namespace Mooh.Core.Entities
     /// <param name="worldRotationBody">The entity's optional world-rotation behavior.</param>
     /// <param name="balloonFuseBody">The entity's optional balloon fuse.</param>
     /// <param name="messageTableBody">The entity's optional message-table text.</param>
+    /// <param name="bigBombBody">The entity's optional placed-big-bomb fuse.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -53,7 +54,8 @@ namespace Mooh.Core.Entities
         TeleporterBody? teleporterBody = null,
         WorldRotationBody? worldRotationBody = null,
         BalloonFuseBody? balloonFuseBody = null,
-        MessageTableBody? messageTableBody = null)
+        MessageTableBody? messageTableBody = null,
+        BigBombBody? bigBombBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -116,6 +118,9 @@ namespace Mooh.Core.Entities
         /// <summary>Gets the entity's optional message-table text.</summary>
         public MessageTableBody? MessageTableBody { get; } = messageTableBody;
 
+        /// <summary>Gets the entity's optional placed-big-bomb fuse.</summary>
+        public BigBombBody? BigBombBody { get; } = bigBombBody;
+
         /// <summary>
         /// Gets the simulation time until which the entity cannot be killed, the recovered
         /// <c>ulKillLockTime</c> a magic gem gives the diamonds it spawns, or
@@ -157,6 +162,16 @@ namespace Mooh.Core.Entities
         /// <c>IgnoredImmune</c>.
         /// </remarks>
         public bool IsDamageablePlayer => PlayerBody is not null && HealthBody is not null;
+
+        /// <summary>
+        /// Gets whether the entity carries the recovered <c>CNT_CMaskCellCanExplode</c>, so a blast
+        /// reaching its cell runs its <c>OnExpl</c>: the player, both monsters and every entity with
+        /// an explosion reaction.
+        /// </summary>
+        public bool IsExplodable => IsDamageablePlayer
+            || GreenMonsterBody is not null
+            || BlueMonsterBody is not null
+            || ExplosionBody is not null;
 
         /// <summary>
         /// Gets whether the entity is treasure, a carrier of the recovered

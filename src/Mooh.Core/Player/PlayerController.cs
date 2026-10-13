@@ -35,6 +35,9 @@ namespace Mooh.Core.Player
         /// <summary>The recovered <c>RepTime</c> of the rocket, the mine and the big bomb.</summary>
         private const double OtherWeaponRepeatSeconds = 1.0;
 
+        /// <summary>The recovered <c>ST_BBombPlace</c> duration: fifteen frames at 50 ms.</summary>
+        private const double BigBombPlaceSeconds = 0.750;
+
         /// <summary>The recovered <c>ST_Bomb*</c> duration: ten frames at 35 ms.</summary>
         private const double GrenadeThrowSeconds = 0.350;
 
@@ -279,13 +282,37 @@ namespace Mooh.Core.Player
                 case WeaponKind.Grenade:
                     StartGrenadeThrow(body, direction, target, events);
                     break;
+                case WeaponKind.BigBomb:
+                    StartBigBombPlace(body, events);
+                    break;
                 case WeaponKind.Rocket:
                 case WeaponKind.Mine:
-                case WeaponKind.BigBomb:
                     break;
                 default:
                     throw new InvalidOperationException("Undefined weapon.");
             }
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>Weap_BBomb</c>, which places the bomb only when no other still,
+        /// visible occupant shares the player's cell. Otherwise nothing happens, although
+        /// <c>DoCtrl</c> has already spent the repeat time.
+        /// </summary>
+        private void StartBigBombPlace(PlayerBody body, List<SimulationEvent> events)
+        {
+            if (CellQuery.VisibleOccupants(_world, _player.Position).Any(
+                occupant => occupant.Id != _player.Id && occupant.Motion is null))
+            {
+                return;
+            }
+
+            body.FacingDirection = Direction.Down;
+            body.Action = new PlayerAction(PlayerActionKind.BigBombPlace, Direction.Down, BigBombPlaceSeconds);
+            events.Add(new PlayerWeaponUseStarted(
+                _player.Id,
+                WeaponKind.BigBomb,
+                Direction.Down,
+                TimeSpan.FromSeconds(BigBombPlaceSeconds)));
         }
 
         /// <summary>Applies the recovered <c>Weap_Gas</c>.</summary>
@@ -450,6 +477,13 @@ namespace Mooh.Core.Player
                     body.Action = null;
                     body.Teleport = null;
                     body.FacingDirection = Direction.Down;
+                    return true;
+                case PlayerActionKind.BigBombPlace:
+                    // The recovered _AEnd_BBomb places the bomb, enters ST_StBottom and spends it.
+                    body.Action = null;
+                    body.FacingDirection = Direction.Down;
+                    _actionEffects.PlaceBigBomb(_player.Position, events);
+                    SpendAmmo(body, WeaponKind.BigBomb, events);
                     return true;
                 case PlayerActionKind.ColaDrink:
                     // The recovered _AEnd_BonCola turns the bonus on and enters ST_StBottom.
