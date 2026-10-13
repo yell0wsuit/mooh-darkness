@@ -147,8 +147,8 @@ namespace Mooh.Core.Levels
                 PushableRound | InteractionMask.GravityAxisPushable | BlueTarget,
                 hasGravity: true,
                 explosionReaction: ExplosionReaction.CrossBlast,
-                detonatesOnLanding: true,
-                shakeReaction: ShakeReaction.CrossBlast);
+                shakeReaction: ShakeReaction.CrossBlast,
+                shakesItselfOnLanding: true);
             Add(result, "OBaloon", EntityKind.Balloon, PushableAlongGravity | BlueTarget,
                 explosionReaction: ExplosionReaction.Detonate3x3,
                 shakeReaction: ShakeReaction.Detonate3x3);
@@ -166,9 +166,12 @@ namespace Mooh.Core.Levels
                 "ODiam01", "ODiam02", "ODiam03", "ODiam04", "ODiam05");
             AddExplodableVariants(result, EntityKind.Food, Collectible, true,
                 "OEat01", "OEat02", "OEat03");
+            // GameObjMagic names _DoMagic for OnShake, OnShakeHard and OnLand, but plain ObjKill
+            // for OnExpl, so a blast destroys the gem without any magic.
             Add(result, "OMagic", EntityKind.MagicGem, PushableRound | BlueTarget, hasGravity: true,
                 explosionReaction: ExplosionReaction.Destroy,
-                shakeReaction: ShakeReaction.Deferred);
+                shakeReaction: ShakeReaction.Magic,
+                shakesItselfOnLanding: true);
             Add(result, "BCola", EntityKind.Cola, Collectible, hasGravity: true,
                 explosionReaction: ExplosionReaction.Destroy,
                 detonatesOnLanding: true,
@@ -196,7 +199,8 @@ namespace Mooh.Core.Levels
             AddDirectional(result, "OArrow", EntityKind.FlyingArrow, PushableRound | BlueTarget,
                 hasGravity: true,
                 explosionReaction: ExplosionReaction.LaunchArrow,
-                shakeReaction: ShakeReaction.LaunchArrow);
+                shakeReaction: ShakeReaction.LaunchArrow,
+                shakesItselfOnLanding: true);
             // Both rotators are struck rather than pushed: the recovered PlCtrl=GoTo_Work is
             // reached through _AEnd_Str, exactly like a flying arrow's. The variant carries the
             // turn direction, which is the only thing separating the two types.
@@ -254,16 +258,21 @@ namespace Mooh.Core.Levels
             InteractionMask interactions,
             bool hasGravity = false,
             ExplosionReaction? explosionReaction = null,
-            ShakeReaction shakeReaction = ShakeReaction.None)
+            ShakeReaction shakeReaction = ShakeReaction.None,
+            bool shakesItselfOnLanding = false)
         {
             Add(result, prefix + "L", kind, interactions, hasGravity, variant: 0,
-                explosionReaction: explosionReaction, shakeReaction: shakeReaction);
+                explosionReaction: explosionReaction, shakeReaction: shakeReaction,
+                shakesItselfOnLanding: shakesItselfOnLanding);
             Add(result, prefix + "T", kind, interactions, hasGravity, variant: 1,
-                explosionReaction: explosionReaction, shakeReaction: shakeReaction);
+                explosionReaction: explosionReaction, shakeReaction: shakeReaction,
+                shakesItselfOnLanding: shakesItselfOnLanding);
             Add(result, prefix + "R", kind, interactions, hasGravity, variant: 2,
-                explosionReaction: explosionReaction, shakeReaction: shakeReaction);
+                explosionReaction: explosionReaction, shakeReaction: shakeReaction,
+                shakesItselfOnLanding: shakesItselfOnLanding);
             Add(result, prefix + "B", kind, interactions, hasGravity, variant: 3,
-                explosionReaction: explosionReaction, shakeReaction: shakeReaction);
+                explosionReaction: explosionReaction, shakeReaction: shakeReaction,
+                shakesItselfOnLanding: shakesItselfOnLanding);
         }
 
         private static void AddVariants(
@@ -354,7 +363,8 @@ namespace Mooh.Core.Levels
             ShakeReaction? hardShakeReaction = null,
             FireContact? fireContact = null,
             bool treatsShadowAsSupport = false,
-            TunnelShape? tunnelShape = null)
+            TunnelShape? tunnelShape = null,
+            bool shakesItselfOnLanding = false)
         {
             result.Add(
                 archivalType,
@@ -372,7 +382,8 @@ namespace Mooh.Core.Levels
                     hardShakeReaction ?? shakeReaction,
                     fireContact,
                     treatsShadowAsSupport,
-                    tunnelShape));
+                    tunnelShape,
+                    shakesItselfOnLanding));
         }
     }
 }

@@ -33,6 +33,18 @@ namespace Mooh.Core.Simulation
 
         /// <summary>The recovered <c>CNT_GPrmExplCrossLen</c>, the cells each cross-blast arm can reach.</summary>
         private const int CrossBlastArmLength = 3;
+
+        /// <summary>
+        /// The recovered <c>CNT_WTime</c> of <c>_DoMagic</c>: each cell of the 3x3 is worked after
+        /// its Chebyshev distance from the gem times this delay.
+        /// </summary>
+        private const double MagicRingDelaySeconds = 0.2;
+
+        /// <summary>The recovered <c>CNT_MagicKillLockTime</c> a spawned diamond cannot be killed for.</summary>
+        private const double MagicKillLockSeconds = 0.5;
+
+        /// <summary>The recovered <c>CNT_ONameMagicSpawn</c> types a magic gem picks from.</summary>
+        private static readonly string[] MagicSpawnTypes = ["ODiam01", "ODiam02", "ODiam03", "ODiam04", "ODiam05"];
         private const int MonsterKillScore = 10;
         private const int BeetleAbsorbScore = 90;
 
@@ -114,6 +126,7 @@ namespace Mooh.Core.Simulation
         private readonly MovementSystem _movement;
         private readonly List<ScheduledExplosionCell> _pendingExplosionCells = [];
         private readonly PlayerController? _playerController;
+        private readonly Random _random;
         private readonly SmallBeetleSystem _smallBeetles;
         private readonly WorldGrid _world;
         private Direction _gravityDirection;
@@ -202,6 +215,7 @@ namespace Mooh.Core.Simulation
             _gravityDirection = gravityDirection;
             _maximumTravelPerSubstep = maximumTravelPerSubstep;
             _gravity = new GravitySystem(collisionPolicy, random);
+            _random = random;
             _movement = new MovementSystem(world, new DefaultInteractionPolicy());
             _blueMonsters = new BlueMonsterSystem(world);
             _greenMonsters = new GreenMonsterSystem(world);
@@ -767,6 +781,12 @@ namespace Mooh.Core.Simulation
             foreach (ScheduledExplosionCell scheduled in ready)
             {
                 _ = _pendingExplosionCells.Remove(scheduled);
+                if (scheduled.IsMagic)
+                {
+                    WorkMagicCell(scheduled.SourceEntityId, scheduled.Position, events);
+                    continue;
+                }
+
                 ResolveExplosionCell(scheduled.SourceEntityId, scheduled.Position, events);
                 if (scheduled.ArmDirection is Direction direction
                     && scheduled.ArmRemaining > 1
@@ -887,6 +907,71 @@ namespace Mooh.Core.Simulation
         }
 
         /// <summary>
+        /// Applies the recovered <c>_DoMagic</c>: the gem dies and each cell of its 3x3 is worked
+        /// after its Chebyshev distance times <c>CNT_WTime</c>, the gem's own cell at once.
+        /// </summary>
+        private void StartMagic(Entity gem, List<SimulationEvent> events)
+        {
+            GridPosition center = gem.Position;
+            if (!_world.Remove(gem.Id))
+            {
+                return;
+            }
+
+            events.Add(new EntityDestroyed(gem.Id, gem.Id));
+            double now = _world.CurrentTimeSeconds;
+            for (int y = center.Y - 1; y <= center.Y + 1; y++)
+            {
+                for (int x = center.X - 1; x <= center.X + 1; x++)
+                {
+                    GridPosition cell = new(x, y);
+                    if (cell == center || !_world.Contains(cell))
+                    {
+                        continue;
+                    }
+
+                    _pendingExplosionCells.Add(new ScheduledExplosionCell(
+                        gem.Id,
+                        cell,
+                        now + MagicRingDelaySeconds,
+                        _nextExplosionOrder++,
+                        IsMagic: true));
+                }
+            }
+
+            WorkMagicCell(gem.Id, center, events);
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>MagicWork</c> to one cell. A cell holding still treasure is
+        /// left alone; otherwise its explodable occupants are killed and, if nothing still and
+        /// visible remains, a random diamond is spawned there under the recovered kill lock.
+        /// </summary>
+        private void WorkMagicCell(EntityId gemId, GridPosition cell, List<SimulationEvent> events)
+        {
+            if (!_world.Contains(cell)
+                || _world.GetOccupants(cell).Any(occupant => occupant.IsTreasure && occupant.Motion is null))
+            {
+                return;
+            }
+
+            KillExplodables(gemId, cell, events);
+            if (CellQuery.IsOccupied(_world, cell))
+            {
+                return;
+            }
+
+            Entity diamond = LevelMaterializer.CreateRuntimeObject(
+                CreateSpawnedEntityId(gemId),
+                cell,
+                MagicSpawnTypes[_random.Next(MagicSpawnTypes.Length)],
+                _difficultySpeeds);
+            diamond.KillLockedUntilSeconds = _world.CurrentTimeSeconds + MagicKillLockSeconds;
+            _world.Add(diamond);
+            events.Add(new MagicDiamondSpawned(gemId, diamond.Id, cell));
+        }
+
+        /// <summary>
         /// Starts whichever blast an explosive entity owns, the recovered handler its
         /// <c>OnShake</c>, <c>OnExpl</c> and <c>OnLand</c> name.
         /// </summary>
@@ -928,6 +1013,20 @@ namespace Mooh.Core.Simulation
         {
             events.Add(new ExplosionCellReached(sourceEntityId, position));
             _world.LockCell(position, ExplosionCellLockDuration);
+            KillExplodables(sourceEntityId, position, events);
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>Game._ObjKillWrd</c>: every <c>CNT_CMaskCellCanExplode</c>
+        /// carrier in the cell runs its <c>OnExpl</c>, which hurts the player, kills monsters and
+        /// sets off other explosives. Unlike <c>_ObjExplWrd</c> it neither locks the cell nor counts
+        /// as a blast reaching it, which is how the magic gem uses it.
+        /// </summary>
+        private void KillExplodables(
+            EntityId sourceEntityId,
+            GridPosition position,
+            List<SimulationEvent> events)
+        {
             foreach (Entity occupant in _world.GetOccupants(position))
             {
                 if (occupant.IsDamageablePlayer)
@@ -979,6 +1078,11 @@ namespace Mooh.Core.Simulation
         /// </summary>
         private void DestroyEntity(Entity entity, EntityId sourceEntityId, List<SimulationEvent> events)
         {
+            if (entity.IsKillLocked(_world.CurrentTimeSeconds))
+            {
+                return;
+            }
+
             if (IsMonster(entity))
             {
                 DestroyMonster(entity, sourceEntityId, SpawnsBeetleOnDeath(entity), events);
@@ -1824,22 +1928,17 @@ namespace Mooh.Core.Simulation
                     KinematicsSystem.Stop(entity);
                     events.Add(new Landed(entity.Id, _gravityDirection));
                     ResolveFallingImpact(entity, following, events);
-                    if (entity.ExplosionBody is { DetonatesOnLanding: true, Reaction: ExplosionReaction.CrossBlast })
+                    if (entity.ExplosionBody?.DetonatesOnLanding == true)
                     {
-                        // The barrel's OnLand is ObjExplCross itself, not ExplWork, so there is
-                        // no repeated downward shake after it.
-                        StartCrossExplosion(entity, events);
-                    }
-                    else if (entity.ExplosionBody?.DetonatesOnLanding == true)
-                    {
+                        // The recovered ExplWork: the 3x3 blast, then the downward shake again.
                         StartExplosion(entity, events);
                         ResolveFallingImpact(entity, following, events);
                     }
-                    else if (entity.FlyingArrowBody is not null)
+                    else if (entity.ShakeBody?.ReactsToLanding == true)
                     {
-                        // The recovered OnLand of every OArrow type is _DoFly_<dir>, so an arrow
-                        // that has been dropped launches itself where a bomb would explode.
-                        LaunchArrow(entity, events);
+                        // The barrel, the magic gem and the arrows name their shake handler as
+                        // OnLand too, so a landing runs it with no repeated shake after it.
+                        ApplyShake(entity, entity.Id, hard: false, events);
                     }
                 }
                 else
@@ -1924,8 +2023,10 @@ namespace Mooh.Core.Simulation
                 case ShakeReaction.CrossBlast:
                     StartCrossExplosion(occupant, events);
                     break;
+                case ShakeReaction.Magic:
+                    StartMagic(occupant, events);
+                    break;
                 case ShakeReaction.None:
-                case ShakeReaction.Deferred:
                     break;
                 default:
                     throw new InvalidOperationException("Undefined shake reaction.");
@@ -1964,7 +2065,8 @@ namespace Mooh.Core.Simulation
             double DueTimeSeconds,
             long Order,
             Direction? ArmDirection = null,
-            int ArmRemaining = 0);
+            int ArmRemaining = 0,
+            bool IsMagic = false);
 
         private void ResolvePushedBoundary(
             Entity entity,

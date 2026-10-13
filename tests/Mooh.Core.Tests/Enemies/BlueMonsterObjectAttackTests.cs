@@ -101,24 +101,6 @@ namespace Mooh.Core.Tests.Enemies
             _ = Assert.IsType<EnemyTurnStarted>(Assert.Single(events));
         }
 
-        /// <summary>Verifies a struck target with a deferred handler survives instead of guessing.</summary>
-        [Fact]
-        public void StrikeOnDeferredTargetTakesNoAction()
-        {
-            WorldGrid world = new(3, 1);
-            Entity monster = NewMonster(0, 0, Direction.Right);
-            Entity barrel = NewTarget(1, 0, ShakeReaction.Deferred);
-            world.Add(monster);
-            world.Add(barrel);
-            SimulationWorld simulation = CreateSimulation(world);
-
-            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(600));
-
-            Assert.Contains(events, item => item == new EnemyStrike(monster.Id, new GridPosition(1, 0)));
-            Assert.DoesNotContain(events, item => item is EntityDestroyed or ExplosionStarted);
-            Assert.Equal(new GridPosition(1, 0), barrel.Position);
-        }
-
         private static Entity NewMonster(int x, int y, Direction facingDirection)
         {
             return new Entity(

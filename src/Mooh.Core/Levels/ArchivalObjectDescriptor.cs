@@ -24,6 +24,10 @@ namespace Mooh.Core.Levels
     /// <c>bSecondSlideMask</c> flag.
     /// </param>
     /// <param name="TunnelShape">The tunnel routing tables, for a tunnel cell.</param>
+    /// <param name="ShakesItselfOnLanding">
+    /// Whether the recovered <c>OnLand</c> names the same handler as <c>OnShake</c>, so a
+    /// completed fall runs the object's own shake reaction.
+    /// </param>
     public sealed record ArchivalObjectDescriptor(
         string ArchivalType,
         EntityKind Kind,
@@ -38,5 +42,6 @@ namespace Mooh.Core.Levels
         ShakeReaction HardShakeReaction = ShakeReaction.None,
         FireContact? FireContact = null,
         bool TreatsShadowAsSupport = false,
-        TunnelShape? TunnelShape = null);
+        TunnelShape? TunnelShape = null,
+        bool ShakesItselfOnLanding = false);
 }

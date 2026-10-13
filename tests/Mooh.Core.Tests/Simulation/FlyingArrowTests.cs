@@ -221,7 +221,7 @@ namespace Mooh.Core.Tests.Simulation
                     | InteractionMask.RoundSupport | InteractionMask.BlueMonsterTarget,
                 hasGravity ? new GravityBody(2, canSlide: true) : null,
                 explosionBody: new ExplosionBody(ExplosionReaction.LaunchArrow, false),
-                shakeBody: new ShakeBody(ShakeReaction.LaunchArrow, ShakeReaction.LaunchArrow),
+                shakeBody: new ShakeBody(ShakeReaction.LaunchArrow, ShakeReaction.LaunchArrow, reactsToLanding: true),
                 flyingArrowBody: new FlyingArrowBody(direction));
         }
 

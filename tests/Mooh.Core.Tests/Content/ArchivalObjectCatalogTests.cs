@@ -234,7 +234,7 @@ namespace Mooh.Core.Tests.Content
         [InlineData("ODiam05", ShakeReaction.None, ShakeReaction.Destroy)]
         [InlineData("OEat01", ShakeReaction.None, ShakeReaction.Destroy)]
         [InlineData("OBarel", ShakeReaction.CrossBlast, ShakeReaction.CrossBlast)]
-        [InlineData("OMagic", ShakeReaction.Deferred, ShakeReaction.Deferred)]
+        [InlineData("OMagic", ShakeReaction.Magic, ShakeReaction.Magic)]
         [InlineData("OArrowT", ShakeReaction.LaunchArrow, ShakeReaction.LaunchArrow)]
         [InlineData("ORock01", ShakeReaction.None, ShakeReaction.None)]
         [InlineData("OWeight", ShakeReaction.None, ShakeReaction.None)]
@@ -250,20 +250,6 @@ namespace Mooh.Core.Tests.Content
 
             Assert.Equal(expectedOrdinary, descriptor.ShakeReaction);
             Assert.Equal(expectedHard, descriptor.HardShakeReaction);
-        }
-
-        /// <summary>Verifies the deferred shake handlers are exactly the recovered specializations.</summary>
-        [Fact]
-        public void DeferredShakeReactionsAreTheKnownSpecializations()
-        {
-            string[] deferred = [.. ArchivalObjectCatalog.Types
-                .Where(type => ArchivalObjectCatalog.Get(type).ShakeReaction == ShakeReaction.Deferred
-                    || ArchivalObjectCatalog.Get(type).HardShakeReaction == ShakeReaction.Deferred)
-                .Order(StringComparer.Ordinal)];
-
-            Assert.Equal(
-                ["OMagic"],
-                deferred);
         }
 
         /// <summary>
@@ -403,6 +389,21 @@ namespace Mooh.Core.Tests.Content
             Assert.Equal(ShakeReaction.Destroy, bubble.HardShakeReaction);
             Assert.Equal(ExplosionReaction.Destroy, bubble.ExplosionReaction);
             Assert.Equal(FireContact.MutualDestruction, bubble.FireContact);
+        }
+
+        /// <summary>
+        /// Verifies exactly the types whose recovered <c>OnLand</c> names their own shake handler
+        /// react to a landing that way: the barrel, the magic gem and the four arrows. The bottle
+        /// and the weapon pickups use <c>ExplWork</c> instead.
+        /// </summary>
+        [Fact]
+        public void OnlyRecoveredLandingShakersShakeThemselvesOnLanding()
+        {
+            string[] carriers = [.. ArchivalObjectCatalog.Types
+                .Where(type => ArchivalObjectCatalog.Get(type).ShakesItselfOnLanding)
+                .Order(StringComparer.Ordinal)];
+
+            Assert.Equal(["OArrowB", "OArrowL", "OArrowR", "OArrowT", "OBarel", "OMagic"], carriers);
         }
 
         /// <summary>Verifies unsupported legacy names are rejected at the catalog boundary.</summary>

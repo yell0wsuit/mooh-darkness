@@ -29,7 +29,10 @@ namespace Mooh.Core.Shakes
         /// </summary>
         CrossBlast,
 
-        /// <summary>The recovered handler is specialized and is not implemented yet.</summary>
-        Deferred,
+        /// <summary>
+        /// The entity is a magic gem and runs the recovered <c>_DoMagic</c>: it dies and turns the
+        /// emptied cells around it into diamonds.
+        /// </summary>
+        Magic,
     }
 }

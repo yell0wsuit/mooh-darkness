@@ -197,7 +197,10 @@ namespace Mooh.Core.Levels
                 shakeBody: descriptor.ShakeReaction == ShakeReaction.None
                     && descriptor.HardShakeReaction == ShakeReaction.None
                     ? null
-                    : new ShakeBody(descriptor.ShakeReaction, descriptor.HardShakeReaction),
+                    : new ShakeBody(
+                        descriptor.ShakeReaction,
+                        descriptor.HardShakeReaction,
+                        descriptor.ShakesItselfOnLanding),
                 fireBody: descriptor.FireContact is FireContact fireContact
                     ? new FireBody(fireContact)
                     : null,

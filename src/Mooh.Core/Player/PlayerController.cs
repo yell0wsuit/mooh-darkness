@@ -909,7 +909,8 @@ namespace Mooh.Core.Player
             _world.LockCell(destination, CellInteractionLock);
             foreach (Entity entity in _world.GetOccupants(destination))
             {
-                if (!entity.Interactions.HasFlag(InteractionMask.PlayerEdible))
+                if (!entity.Interactions.HasFlag(InteractionMask.PlayerEdible)
+                    || entity.IsKillLocked(_world.CurrentTimeSeconds))
                 {
                     continue;
                 }

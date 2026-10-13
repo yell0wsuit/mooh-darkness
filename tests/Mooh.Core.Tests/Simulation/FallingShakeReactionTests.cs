@@ -106,24 +106,6 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(new GridPosition(1, 3), rock.Position);
         }
 
-        /// <summary>Verifies a deferred recovered handler takes no action rather than guessing one.</summary>
-        [Fact]
-        public void DeferredShakeReactionTakesNoAction()
-        {
-            WorldGrid world = new(3, 5);
-            Entity barrel = NewShakeable(
-                new GridPosition(1, 3),
-                new ShakeBody(ShakeReaction.Deferred, ShakeReaction.Deferred));
-            world.Add(barrel);
-            world.Add(NewFalling(new GridPosition(1, 1), GravityImpactStrength.Ordinary));
-            SimulationWorld simulation = CreateSimulation(world);
-
-            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(1));
-
-            Assert.DoesNotContain(events, item => item is EntityDestroyed or ExplosionStarted);
-            Assert.Equal(new GridPosition(1, 3), barrel.Position);
-        }
-
         private static Entity NewShakeable(
             GridPosition position,
             ShakeBody? shakeBody,

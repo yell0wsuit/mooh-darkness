@@ -116,6 +116,22 @@ namespace Mooh.Core.Entities
         /// <summary>Gets the entity's optional message-table text.</summary>
         public MessageTableBody? MessageTableBody { get; } = messageTableBody;
 
+        /// <summary>
+        /// Gets the simulation time until which the entity cannot be killed, the recovered
+        /// <c>ulKillLockTime</c> a magic gem gives the diamonds it spawns, or
+        /// <see langword="null"/> when the entity carries none.
+        /// </summary>
+        public double? KillLockedUntilSeconds { get; internal set; }
+
+        /// <summary>
+        /// Reports whether the recovered <c>Game.ObjKill</c> guard still refuses to kill the entity.
+        /// Eating goes through the same call, so a locked diamond cannot be eaten either.
+        /// </summary>
+        internal bool IsKillLocked(double nowSeconds)
+        {
+            return KillLockedUntilSeconds is double until && nowSeconds < until;
+        }
+
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
         public MotionState? Motion { get; internal set; }
 
