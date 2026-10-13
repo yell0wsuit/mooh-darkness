@@ -93,6 +93,14 @@ namespace Mooh.Core.Player
         /// <param name="events">The ordered event sink.</param>
         void PlaceBigBomb(GridPosition cell, List<SimulationEvent> events);
 
+        /// <summary>
+        /// Lays a mine in the faced cell, the recovered <c>_AEnd_Mine</c>, which clears the cell
+        /// again before the mine is registered.
+        /// </summary>
+        /// <param name="cell">The faced cell.</param>
+        /// <param name="events">The ordered event sink.</param>
+        void LayMine(GridPosition cell, List<SimulationEvent> events);
+
         /// <summary>Registers a thrown grenade in a cleared cell.</summary>
         /// <param name="cell">The cell that receives the grenade.</param>
         /// <param name="events">The ordered event sink.</param>

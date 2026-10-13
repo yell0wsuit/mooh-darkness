@@ -64,5 +64,11 @@ namespace Mooh.Core.Player
         /// fifteen frames at 50 ms, facing down.
         /// </summary>
         BigBombPlace,
+
+        /// <summary>
+        /// The player is laying a mine in the faced cell, the recovered <c>ST_Mine*</c>: ten frames
+        /// at 25 ms.
+        /// </summary>
+        MinePlace,
     }
 }

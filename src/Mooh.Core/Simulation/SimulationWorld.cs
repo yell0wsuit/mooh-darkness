@@ -65,6 +65,12 @@ namespace Mooh.Core.Simulation
         private const string ThrownGrenadeType = "WBomb";
 
         /// <summary>
+        /// The placed type a laid mine shares. The original's <c>GameObjMineMake</c> makes
+        /// <c>CNT_ONameMine</c>, the same <c>GameObjMine</c> type the editor places.
+        /// </summary>
+        private const string MineType = "WMine";
+
+        /// <summary>
         /// The recovered <c>CNT_OPrm_SpeedSmBeetle</c> factor against <c>Compl.SpeedMon</c>. The
         /// original also scales each segment by <c>Rand.FRange(0.9, 1.1)</c>; that jitter is
         /// deliberately omitted so beetle flight stays reproducible.
@@ -502,6 +508,7 @@ namespace Mooh.Core.Simulation
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
             DecideMonsters(events);
             _playerController?.TryStart(events);
+            ResolveWeaponCollisions(events);
             _levelOutcome.Observe();
 
             double remainingSeconds = elapsed.TotalSeconds;
@@ -724,6 +731,8 @@ namespace Mooh.Core.Simulation
                 {
                     _playerController?.ResumeOrTryStart(events, fromCellArrival);
                 }
+
+                ResolveWeaponCollisions(events);
 
                 _levelOutcome.Advance(substepSeconds, events);
                 ObserveLossDeath(events);
@@ -1113,6 +1122,41 @@ namespace Mooh.Core.Simulation
                     ScheduledCellKind.BigBomb,
                     Remaining: remaining,
                     Flood: flood));
+            }
+        }
+
+        void IPlayerActionEffects.LayMine(GridPosition cell, List<SimulationEvent> events)
+        {
+            Entity player = _world.Player
+                ?? throw new InvalidOperationException("Laying a mine requires a player.");
+            ClearWeaponCell(cell, events);
+            Entity mine = LevelMaterializer.CreateRuntimeObject(
+                CreateSpawnedEntityId(player.Id),
+                cell,
+                MineType,
+                _difficultySpeeds);
+            _world.Add(mine);
+            events.Add(new MineLaid(player.Id, mine.Id, cell));
+        }
+
+        /// <summary>
+        /// Applies the recovered collision pass, <c>sub_4A2F30</c>: every object cycle, an object with
+        /// a collision mask runs its handler for each live co-occupant of its committed cell whose
+        /// mask intersects it. A deployed mine's mask is <c>CNT_CMaskCellLockMotion</c> and its
+        /// handler is its own 3x3 blast.
+        /// </summary>
+        private void ResolveWeaponCollisions(List<SimulationEvent> events)
+        {
+            Entity[] mines = [.. _world.Entities.Where(entity => entity.ArchivalIdentity?.Kind == EntityKind.Mine)];
+            foreach (Entity mine in mines)
+            {
+                if (_world.Entities.Contains(mine)
+                    && _world.GetOccupants(mine.Position).Any(
+                        occupant => occupant.Id != mine.Id
+                            && occupant.Interactions.HasFlag(InteractionMask.BlocksMovement)))
+                {
+                    StartExplosion(mine, events);
+                }
             }
         }
 

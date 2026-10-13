@@ -35,6 +35,9 @@ namespace Mooh.Core.Player
         /// <summary>The recovered <c>RepTime</c> of the rocket, the mine and the big bomb.</summary>
         private const double OtherWeaponRepeatSeconds = 1.0;
 
+        /// <summary>The recovered <c>ST_Mine*</c> duration: ten frames at 25 ms.</summary>
+        private const double MinePlaceSeconds = 0.250;
+
         /// <summary>The recovered <c>ST_BBombPlace</c> duration: fifteen frames at 50 ms.</summary>
         private const double BigBombPlaceSeconds = 0.750;
 
@@ -285,8 +288,11 @@ namespace Mooh.Core.Player
                 case WeaponKind.BigBomb:
                     StartBigBombPlace(body, events);
                     break;
-                case WeaponKind.Rocket:
                 case WeaponKind.Mine:
+                    _actionEffects.ClearWeaponCell(target, events);
+                    StartWeaponUse(body, WeaponKind.Mine, PlayerActionKind.MinePlace, direction, MinePlaceSeconds, events);
+                    break;
+                case WeaponKind.Rocket:
                     break;
                 default:
                     throw new InvalidOperationException("Undefined weapon.");
@@ -313,6 +319,18 @@ namespace Mooh.Core.Player
                 WeaponKind.BigBomb,
                 Direction.Down,
                 TimeSpan.FromSeconds(BigBombPlaceSeconds)));
+        }
+
+        private void StartWeaponUse(
+            PlayerBody body,
+            WeaponKind weapon,
+            PlayerActionKind kind,
+            Direction direction,
+            double seconds,
+            List<SimulationEvent> events)
+        {
+            body.Action = new PlayerAction(kind, direction, seconds);
+            events.Add(new PlayerWeaponUseStarted(_player.Id, weapon, direction, TimeSpan.FromSeconds(seconds)));
         }
 
         /// <summary>Applies the recovered <c>Weap_Gas</c>.</summary>
@@ -477,6 +495,15 @@ namespace Mooh.Core.Player
                     body.Action = null;
                     body.Teleport = null;
                     body.FacingDirection = Direction.Down;
+                    return true;
+                case PlayerActionKind.MinePlace:
+                    body.Action = null;
+                    if (_world.Contains(target))
+                    {
+                        _actionEffects.LayMine(target, events);
+                        SpendAmmo(body, WeaponKind.Mine, events);
+                    }
+
                     return true;
                 case PlayerActionKind.BigBombPlace:
                     // The recovered _AEnd_BBomb places the bomb, enters ST_StBottom and spends it.
