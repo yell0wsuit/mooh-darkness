@@ -114,5 +114,12 @@ namespace Mooh.Core.Player
         /// compares it against its own repeat time.
         /// </summary>
         public double? LastActionSeconds { get; internal set; }
+
+        /// <summary>
+        /// Gets whether a collected cola is waiting to be drunk. The recovered
+        /// <c>ColaDrinkDo</c> only records <c>ST_BonCola</c> through <c>OnCellStateSet</c>, and
+        /// <c>_OnCell</c> applies it at the next cell arrival in place of the state's own handler.
+        /// </summary>
+        public bool HasPendingColaDrink { get; internal set; }
     }
 }

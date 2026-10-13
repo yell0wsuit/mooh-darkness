@@ -27,7 +27,7 @@ namespace Mooh.Core.Tests.Levels
         [InlineData("WRBox", 100, 0, 5, 5, 0, 0, false, false, 50)]
         [InlineData("WMinesBox", 100, 0, 5, 0, 5, 0, false, false, 50)]
         [InlineData("WBBomb", 250, 0, 5, 0, 0, 1, false, false, 50)]
-        [InlineData("BCola", 250, 0, 5, 0, 0, 0, false, true, 50)]
+        [InlineData("BCola", 250, 0, 5, 0, 0, 0, false, false, 50)]
         [InlineData("BIce", 250, 0, 5, 0, 0, 0, false, false, 50)]
         public void AppliesRecoveredPickupEffects(
             string archivalType,
@@ -95,7 +95,9 @@ namespace Mooh.Core.Tests.Levels
             MaterializedLevel level = MaterializePickup("BCola");
             EntityPair pair = GetPlayerAndPickup(level);
             level.Simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
-            _ = level.Simulation.Advance(TimeSpan.FromMilliseconds(400));
+
+            // The protection starts when the drink that follows the next cell arrival ends.
+            _ = level.Simulation.Advance(TimeSpan.FromMilliseconds(2000));
             level.Simulation.SetPlayerInput(default);
 
             IReadOnlyList<SimulationEvent> protectedEvents = level.Simulation.ApplyDamage(

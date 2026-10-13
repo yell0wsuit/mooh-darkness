@@ -40,6 +40,10 @@ namespace Mooh.Core.Levels
                     ?? throw new InvalidOperationException("Pickup collection requires player health."),
                 difficultySpeeds.FoodHeal);
             events.Add(new PickupCollected(player.Id, pickup.Id, archival.Kind, score));
+            if (archival.Kind == EntityKind.Cola)
+            {
+                playerBody.HasPendingColaDrink = true;
+            }
         }
     }
 }

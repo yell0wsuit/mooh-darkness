@@ -1777,6 +1777,7 @@ namespace Mooh.Core.Simulation
 
             events.Add(new CellEntered(player.Id, player.Position));
             _ = ResolveFireContact(player, events);
+            _ = _playerController.TryStartPendingDrink(events);
         }
 
         /// <summary>

@@ -97,9 +97,6 @@ namespace Mooh.Core.Player
                 case EntityKind.BigBomb:
                     BigBombs += descriptor.Variant;
                     break;
-                case EntityKind.Cola:
-                    ColaRemaining = BonusDuration;
-                    break;
                 case EntityKind.Ice:
                     IceRemaining = BonusDuration;
                     break;
@@ -143,6 +140,15 @@ namespace Mooh.Core.Player
         {
             ArgumentOutOfRangeException.ThrowIfNegative(amount);
             Score += amount;
+        }
+
+        /// <summary>
+        /// Turns the cola protection on, applying the recovered <c>_AEnd_BonCola</c>. Collection
+        /// itself never does: the drink that follows it has to finish first.
+        /// </summary>
+        internal void StartCola()
+        {
+            ColaRemaining = BonusDuration;
         }
 
         internal void ClearIce()

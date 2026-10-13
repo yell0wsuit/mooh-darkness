@@ -49,5 +49,14 @@ namespace Mooh.Core.Player
         /// not <c>bShadow</c>, so entering it makes the player solid again.
         /// </summary>
         TeleportExit,
+
+        /// <summary>
+        /// The player is drinking a collected cola. This collapses the recovered
+        /// <c>ST_BonCola</c> (6 frames), <c>ST_BonCola01</c> (4), <c>ST_BonCola02</c> (5) and
+        /// <c>ST_BonCola03</c> (8), all at 50 ms, into one 1150 ms action, because the four differ
+        /// only in their frames and sounds. None is <c>bImmort</c>, so a hit lands and its shock
+        /// abandons the drink before <c>_AEnd_BonCola</c> can turn the protection on.
+        /// </summary>
+        ColaDrink,
     }
 }

@@ -68,6 +68,12 @@ namespace Mooh.Core.Player
         /// </summary>
         private const double TeleportFlightSpeed = 3.75;
 
+        /// <summary>
+        /// The recovered drink: <c>ST_BonCola</c> through <c>ST_BonCola03</c> run 6, 4, 5 and 8
+        /// frames at 50 ms.
+        /// </summary>
+        private const double ColaDrinkSeconds = 1.150;
+
         private static readonly TimeSpan CellInteractionLock = TimeSpan.FromMilliseconds(150);
 
         private readonly IPlayerActionEffects _actionEffects = actionEffects
@@ -246,6 +252,36 @@ namespace Mooh.Core.Player
                 TimeSpan.FromSeconds(windup)));
         }
 
+        /// <summary>
+        /// Applies the recovered <c>_OnCell</c> priority for a recorded <c>StOnCell</c>: a cola
+        /// collected earlier is drunk at this arrival instead of the walking handler running.
+        /// </summary>
+        /// <param name="events">The ordered event sink.</param>
+        /// <returns><see langword="true"/> when the drink replaced the arrival handler.</returns>
+        public bool TryStartPendingDrink(List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(events);
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            if (!body.HasPendingColaDrink)
+            {
+                return false;
+            }
+
+            body.HasPendingColaDrink = false;
+
+            // A hit on this same arrival has already entered the shock, and a shock abandons the
+            // drink just as it does one already under way.
+            if (body.Reaction.Kind != PlayerReactionKind.Normal)
+            {
+                return false;
+            }
+
+            body.Action = new PlayerAction(PlayerActionKind.ColaDrink, body.FacingDirection, ColaDrinkSeconds);
+            events.Add(new PlayerColaDrinkStarted(_player.Id, TimeSpan.FromSeconds(ColaDrinkSeconds)));
+            return true;
+        }
+
         /// <summary>Gets the remaining duration of the active action, if any.</summary>
         public double? ActionSecondsRemaining => _player.PlayerBody?.Action?.RemainingSeconds;
 
@@ -350,6 +386,12 @@ namespace Mooh.Core.Player
                     body.Action = null;
                     body.Teleport = null;
                     body.FacingDirection = Direction.Down;
+                    return true;
+                case PlayerActionKind.ColaDrink:
+                    // The recovered _AEnd_BonCola turns the bonus on and enters ST_StBottom.
+                    body.Action = null;
+                    body.FacingDirection = Direction.Down;
+                    body.Progress.StartCola();
                     return true;
                 default:
                     throw new InvalidOperationException("Unknown player action.");
