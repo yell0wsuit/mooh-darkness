@@ -89,9 +89,8 @@ namespace Mooh.Core.Simulation
         private const string BioMassType = "MMBio";
 
         /// <summary>
-        /// The recovered <c>CNT_OPrm_SpeedSmBeetle</c> factor against <c>Compl.SpeedMon</c>. The
-        /// original also scales each segment by <c>Rand.FRange(0.9, 1.1)</c>; that jitter is
-        /// deliberately omitted so beetle flight stays reproducible.
+        /// The recovered <c>CNT_OPrm_SpeedSmBeetle</c> factor against <c>Compl.SpeedMon</c>. Each
+        /// segment is further scaled by <c>Rand.FRange(0.9, 1.1)</c> from the seeded source.
         /// </summary>
         private const double BeetleSpeedMultiplier = 0.5;
         private const double TimeTolerance = 1e-12;
@@ -255,7 +254,7 @@ namespace Mooh.Core.Simulation
             _movement = new MovementSystem(world, new DefaultInteractionPolicy());
             _blueMonsters = new BlueMonsterSystem(world);
             _greenMonsters = new GreenMonsterSystem(world);
-            _smallBeetles = new SmallBeetleSystem(world);
+            _smallBeetles = new SmallBeetleSystem(world, random);
             _levelOutcome = new LevelOutcomeSystem(world, _difficultySpeeds);
 
             // The recovered GameInit counts the treasure the player can reach.

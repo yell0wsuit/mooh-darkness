@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Mooh.Core.Combat;
 using Mooh.Core.Enemies;
@@ -28,7 +29,7 @@ namespace Mooh.Core.Tests.Enemies
         [Fact]
         public void ABeetleFliesThroughATunnelThatAcceptsIt()
         {
-            (SimulationWorld simulation, Entity player) = Create("TonnelHor");
+            (SimulationWorld simulation, Entity player, _) = Create("TonnelHor");
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(12));
 
@@ -39,7 +40,7 @@ namespace Mooh.Core.Tests.Enemies
         [Fact]
         public void ABeetleCannotFlySidewaysIntoAVerticalTunnel()
         {
-            (SimulationWorld simulation, Entity player) = Create("TonnelVert");
+            (SimulationWorld simulation, Entity player, _) = Create("TonnelVert");
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(12));
 
@@ -47,10 +48,28 @@ namespace Mooh.Core.Tests.Enemies
         }
 
         /// <summary>
+        /// Verifies each flight segment draws the recovered <c>Rand.FRange(0.9, 1.1)</c> speed
+        /// jitter: a source pinned low flies at exactly nine tenths of the beetle's speed.
+        /// </summary>
+        [Fact]
+        public void EachFlightSegmentDrawsTheRecoveredJitter()
+        {
+            (SimulationWorld simulation, _, WorldGrid world) = Create("TonnelHor", BioMassTests.ScriptedRandom.Lowest);
+            Entity beetle = world.Entities.Single(entity => entity.SmallBeetleBody is not null);
+
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(
+                DifficultySpeeds.Standard.MonsterSpeed * 0.5 * 0.9,
+                beetle.Motion!.Speed,
+                9);
+        }
+
+        /// <summary>
         /// Builds a corridor on row 1 walled above and below, with a beetle spawned at x = 6 and the
         /// player at x = 1, and two tunnels of the given type at x = 3 and x = 4 in its path.
         /// </summary>
-        private static (SimulationWorld Simulation, Entity Player) Create(string tunnelType)
+        private static (SimulationWorld Simulation, Entity Player, WorldGrid World) Create(string tunnelType, Random? random = null)
         {
             WorldGrid world = new(9, 3);
             Entity player = new(
@@ -86,12 +105,12 @@ namespace Mooh.Core.Tests.Enemies
                 world,
                 Direction.Down,
                 new DefaultGravityCollisionPolicy(),
-                new Random(0),
+                random ?? new Random(0),
                 0.5,
                 Undrained.Standard);
             _ = simulation.Detonate(explosive.Id);
             _ = Assert.Single(world.Entities, entity => entity.SmallBeetleBody is not null);
-            return (simulation, player);
+            return (simulation, player, world);
         }
 
         private static Entity Wall(int x, int y)

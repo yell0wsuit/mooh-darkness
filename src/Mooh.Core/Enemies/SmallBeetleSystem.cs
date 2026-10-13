@@ -30,11 +30,13 @@ namespace Mooh.Core.Enemies
 
         private static readonly TimeSpan TimerTolerance = TimeSpan.FromTicks(1);
 
+        private readonly Random _random;
         private readonly WorldGrid _world;
 
-        internal SmallBeetleSystem(WorldGrid world)
+        internal SmallBeetleSystem(WorldGrid world, Random random)
         {
             _world = world ?? throw new ArgumentNullException(nameof(world));
+            _random = random ?? throw new ArgumentNullException(nameof(random));
         }
 
         /// <summary>Gets the seconds until the earliest beetle timer expires, if any.</summary>
@@ -113,13 +115,15 @@ namespace Mooh.Core.Enemies
 
                 GridPosition source = beetle.Position;
                 _world.CommitMoves([new PlannedMove(beetle.Id, source, destination)]);
+                // The recovered segment speed carries Rand.FRange(0.9, 1.1), drawn per segment.
+                double jitter = 0.9 + (0.2 * _random.NextDouble());
                 KinematicsSystem.Start(
                     beetle,
                     MotionCause.MonsterWalking,
                     direction,
-                    CellQuery.HasCounterMotion(_world, destination, direction)
+                    (CellQuery.HasCounterMotion(_world, destination, direction)
                         ? body.MoveSpeed * CounterMotionMultiplier
-                        : body.MoveSpeed,
+                        : body.MoveSpeed) * jitter,
                     resolutionOrder);
                 body.State = SmallBeetleState.Flying;
                 events.Add(new EnemyMoveStarted(beetle.Id, source, destination));
