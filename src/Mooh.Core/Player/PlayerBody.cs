@@ -158,5 +158,21 @@ namespace Mooh.Core.Player
         {
             get; internal set;
         }
+
+        /// <summary>
+        /// Gets or sets how long the player has stood in a <c>bDoAmb</c> state, the time since the
+        /// recovered <c>ulGamePCtrlAmbTime</c>. A standing push sets it below zero, because
+        /// <c>ST_StPush</c> is not <c>bDoAmb</c> and keeps resetting the timer while it plays.
+        /// </summary>
+        internal double IdleSeconds
+        {
+            get; set;
+        }
+
+        /// <summary>Gets or sets the time left in the playing ambient, zero when none plays.</summary>
+        internal double AmbientRemainingSeconds
+        {
+            get; set;
+        }
     }
 }

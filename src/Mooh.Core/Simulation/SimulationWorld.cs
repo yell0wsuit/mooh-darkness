@@ -70,6 +70,15 @@ namespace Mooh.Core.Simulation
         /// <summary>The recovered <c>CNT_ONameMagicSpawn</c> types a magic gem picks from.</summary>
         private static readonly string[] MagicSpawnTypes = ["ODiam01", "ODiam02", "ODiam03", "ODiam04", "ODiam05"];
         private const int MonsterKillScore = 10;
+
+        /// <summary>The recovered <c>CNT_GPrm_PAmbTime</c>: 15 s of standing before an ambient.</summary>
+        private const double AmbientDelaySeconds = 15;
+
+        /// <summary><c>ST_AmbScr</c> (15 x 75 ms), four <c>ST_AmbScrDo</c> (4 x 100 ms) and <c>ST_AmbScrOut</c> (15 x 75 ms).</summary>
+        private const double ScratchAmbientSeconds = 3.85;
+
+        /// <summary><c>ST_AmbWhatsIn</c> (10 x 50 ms), four <c>ST_AmbWhatsDo</c> (4 x 75 ms) and <c>ST_AmbWhatsOut</c> (10 x 75 ms).</summary>
+        private const double WhatsAmbientSeconds = 2.45;
         private const int BeetleAbsorbScore = 90;
 
         /// <summary>
@@ -671,6 +680,7 @@ namespace Mooh.Core.Simulation
                 double? bigBombSeconds = SecondsUntilNextBigBomb();
                 double? bioSeconds = SecondsUntilNextBioMass();
                 double? doorSeconds = SecondsUntilNextDoorLeaves();
+                double? ambientSeconds = SecondsUntilPlayerAmbient();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -775,6 +785,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingDoor);
                 }
 
+                if (ambientSeconds is double remainingAmbient)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingAmbient);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && actionSeconds is null
@@ -793,7 +808,8 @@ namespace Mooh.Core.Simulation
                     && clockSeconds is null
                     && bigBombSeconds is null
                     && bioSeconds is null
-                    && doorSeconds is null)
+                    && doorSeconds is null
+                    && ambientSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -863,6 +879,7 @@ namespace Mooh.Core.Simulation
                     _playerController?.ResumeOrTryStart(events, fromCellArrival);
                 }
 
+                AdvancePlayerAmbient(substepSeconds, wasStandingStill: ambientSeconds is not null, events);
                 ResolveWeaponCollisions(events);
 
                 _levelOutcome.Advance(substepSeconds, events);
@@ -870,6 +887,89 @@ namespace Mooh.Core.Simulation
             }
 
             return events;
+        }
+
+        /// <summary>
+        /// Counts the player's idle time and starts an ambient, the recovered
+        /// <c>GamePCtrlCycle</c>: once the player has stood in a <c>bDoAmb</c> state for longer
+        /// than <c>CNT_GPrm_PAmbTime</c>, <c>AmbDo</c> plays one of <c>ST_AmbAll</c>. Every
+        /// ambient state faces down, and none is <c>bDoAmb</c>, so the timer only restarts once the
+        /// ambient has played out.
+        /// </summary>
+        /// <param name="elapsedSeconds">The substep's length.</param>
+        /// <param name="wasStandingStill">
+        /// Whether the player already stood still when the substep began. A substep in which the
+        /// player came to rest only starts the count.
+        /// </param>
+        /// <param name="events">The ordered event sink.</param>
+        private void AdvancePlayerAmbient(double elapsedSeconds, bool wasStandingStill, List<SimulationEvent> events)
+        {
+            if (_world.Player is not { PlayerBody: PlayerBody body } player)
+            {
+                return;
+            }
+
+            if (!IsStandingStill(player, body))
+            {
+                body.IdleSeconds = 0;
+                body.AmbientRemainingSeconds = 0;
+                return;
+            }
+
+            if (!wasStandingStill)
+            {
+                // A standing push polled this substep has already set its own head start.
+                body.IdleSeconds = Math.Min(body.IdleSeconds, 0);
+                return;
+            }
+
+            if (body.AmbientRemainingSeconds > 0)
+            {
+                body.AmbientRemainingSeconds = Math.Max(0, body.AmbientRemainingSeconds - elapsedSeconds);
+                if (body.AmbientRemainingSeconds < TimeTolerance)
+                {
+                    body.AmbientRemainingSeconds = 0;
+                }
+
+                return;
+            }
+
+            body.IdleSeconds += elapsedSeconds;
+            if (body.IdleSeconds < AmbientDelaySeconds - TimeTolerance)
+            {
+                return;
+            }
+
+            PlayerAmbientKind kind = _random.Next(2) == 0 ? PlayerAmbientKind.Scratch : PlayerAmbientKind.Whats;
+            double duration = kind == PlayerAmbientKind.Scratch ? ScratchAmbientSeconds : WhatsAmbientSeconds;
+            body.IdleSeconds = 0;
+            body.AmbientRemainingSeconds = duration;
+            body.FacingDirection = Direction.Down;
+            events.Add(new PlayerAmbientStarted(player.Id, kind, TimeSpan.FromSeconds(duration)));
+        }
+
+        private double? SecondsUntilPlayerAmbient()
+        {
+            if (_world.Player is not { PlayerBody: PlayerBody body } player || !IsStandingStill(player, body))
+            {
+                return null;
+            }
+
+            double remaining = body.AmbientRemainingSeconds > 0
+                ? body.AmbientRemainingSeconds
+                : AmbientDelaySeconds - body.IdleSeconds;
+            return Math.Max(remaining, TimeTolerance);
+        }
+
+        /// <summary>Reports whether the player stands in one of the <c>bDoAmb</c> states.</summary>
+        private static bool IsStandingStill(Entity player, PlayerBody body)
+        {
+            return player.Motion is null
+                && body.Action is null
+                && body.Rotation is null
+                && body.TunnelTransit is null
+                && body.Teleport is null
+                && body.Reaction.Kind == PlayerReactionKind.Normal;
         }
 
         private double? SecondsUntilNextBonusExpiry()

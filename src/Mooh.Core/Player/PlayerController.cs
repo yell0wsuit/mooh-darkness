@@ -732,6 +732,10 @@ namespace Mooh.Core.Player
 
             if (plan.Result == MoveResult.Blocked)
             {
+                // ST_StPush plays 16 frames sideways and 10 vertically, at 35 ms, and is not
+                // bDoAmb: the idle ambient waits until it has played out.
+                body.IdleSeconds = -(direction is Direction.Left or Direction.Right ? 0.56 : 0.35);
+                body.AmbientRemainingSeconds = 0;
                 events.Add(new PlayerBlocked(_player.Id, direction));
                 return;
             }
