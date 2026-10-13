@@ -1,5 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
+
 using Mooh.Core.Content;
 using Mooh.Core.Player;
+using Mooh.Core.Simulation;
 
 using Xunit;
 
@@ -114,6 +118,34 @@ namespace Mooh.Presentation.Tests
             harness.Step(0.016);
 
             Assert.Equal("st_dead", harness.Animator(harness.Player).Animation.State);
+        }
+
+        /// <summary>
+        /// Verifies an idle player plays the ambient the simulation started, repeating its middle
+        /// state four times, and stands facing down when it ends.
+        /// </summary>
+        [Fact]
+        public void AnIdlePlayerPlaysItsAmbient()
+        {
+            SceneHarness harness = new(Level());
+            PlayerAmbientStarted? ambient = null;
+
+            harness.StepUntil(() => (ambient = harness.LastEvents.OfType<PlayerAmbientStarted>().FirstOrDefault()) is not null, limitSeconds: 20);
+
+            string intro = ambient!.Kind == PlayerAmbientKind.Scratch ? "st_ambscr" : "st_ambwhatsin";
+            string repeated = ambient.Kind == PlayerAmbientKind.Scratch ? "st_ambscrdo" : "st_ambwhatsdo";
+            Assert.Equal(intro, harness.Animator(harness.Player).Animation.State);
+            HashSet<string> seen = [];
+            for (double elapsed = 0; elapsed < ambient.Duration.TotalSeconds - 0.05; elapsed += 0.01)
+            {
+                harness.Step(0.01);
+                _ = seen.Add(harness.Animator(harness.Player).Animation.State!);
+            }
+
+            Assert.Contains(repeated, seen);
+            Assert.DoesNotContain("st_stbottom", seen);
+            harness.Step(0.1);
+            Assert.Equal("st_stbottom", harness.Animator(harness.Player).Animation.State);
         }
 
         private static LevelDocument Level(int playerY = 1, (string Type, int X, int Y)[]? extra = null)

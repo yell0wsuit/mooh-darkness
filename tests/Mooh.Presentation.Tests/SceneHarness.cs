@@ -27,7 +27,13 @@ namespace Mooh.Presentation.Tests
 
         public SceneHarness(LevelDocument document)
         {
-            Level = LevelMaterializer.Materialize(document);
+            Level = LevelMaterializer.Materialize(
+                document,
+                Core.Grid.Direction.Down,
+                DifficultySpeeds.Standard with
+                {
+                    HealthDrainPerSecond = 0
+                });
             Player = Level.GetEntity(1);
             Presenter = new ScenePresenter(Library, new Random(1));
         }
@@ -98,10 +104,14 @@ namespace Mooh.Presentation.Tests
             _pending.AddRange(Level.Simulation.ApplyDamage(new DamageRequest(Player.Id, Player.Id, DamageKind.Fire, amount)));
         }
 
+        /// <summary>Gets the events the last step reported.</summary>
+        public IReadOnlyList<SimulationEvent> LastEvents { get; private set; } = [];
+
         public void Step(double seconds)
         {
             _pending.AddRange(Level.Simulation.Advance(TimeSpan.FromSeconds(seconds)));
             Presenter.Update(Level.World, _pending, seconds);
+            LastEvents = _pending;
             _pending = [];
         }
 

@@ -27,6 +27,11 @@ namespace Mooh.Presentation.Scene
     {
         private const string FlyCheckHandler = "_OnCell05_Fly";
 
+        /// <summary><c>AmbDo</c>'s <c>ulAmbNum</c>: the middle state plays once, then three more times.</summary>
+        private const int AmbientRepeats = 3;
+
+        private int _ambientRepeats;
+
         /// <summary>Gets the pass: <c>ST_TPortMove</c> carries <c>RPass=2</c>, over everything else.</summary>
         public override int Pass => Animation.State == "st_portmove" ? 2 : 0;
 
@@ -47,7 +52,13 @@ namespace Mooh.Presentation.Scene
         /// <inheritdoc/>
         public override string? ResolveHandler(string handler)
         {
-            return handler == FlyCheckHandler ? Animation.State : null;
+            return handler switch
+            {
+                FlyCheckHandler => Animation.State,
+                "_AEnd_AmbScr" => NextAmbient("st_ambscrdo", "st_ambscrout"),
+                "_AEnd_AmbWhats" => NextAmbient("st_ambwhatsdo", "st_ambwhatsout"),
+                _ => null,
+            };
         }
 
         /// <inheritdoc/>
@@ -112,19 +123,40 @@ namespace Mooh.Presentation.Scene
         }
 
         /// <summary>
-        /// Starts <c>ST_StPush</c>: held input into a cell the player cannot enter, from a
-        /// standing state, plays the standing push before the player stands again.
+        /// Starts the transient standing states. <c>ST_StPush</c>: held input into a cell the
+        /// player cannot enter, from a standing state, plays the standing push before the player
+        /// stands again. <c>AmbDo</c>: the ambient the simulation started plays its chain, which
+        /// ends standing facing down.
         /// </summary>
         /// <inheritdoc/>
         protected override void React(IReadOnlyList<SimulationEvent> events)
         {
             ArgumentNullException.ThrowIfNull(events);
+            if (events.OfType<PlayerAmbientStarted>().LastOrDefault(item => item.EntityId == Entity!.Id) is PlayerAmbientStarted ambient)
+            {
+                _ambientRepeats = AmbientRepeats;
+                Animation.Play(ambient.Kind == PlayerAmbientKind.Scratch ? "st_ambscr" : "st_ambwhatsin");
+                return;
+            }
+
             Direction facing = PlayerBody(Entity!).FacingDirection;
             if (Animation.State == Stand(facing)
                 && events.Any(item => item is PlayerBlocked blocked && blocked.Direction == facing))
             {
                 Animation.Play("st_stpush" + StateNames.Name(facing));
             }
+        }
+
+        /// <summary>Models <c>_AEnd_AmbScr</c> and <c>_AEnd_AmbWhats</c>: repeat while <c>ulAmbNum</c> lasts.</summary>
+        private string NextAmbient(string repeated, string closing)
+        {
+            if (_ambientRepeats == 0)
+            {
+                return closing;
+            }
+
+            _ambientRepeats--;
+            return repeated;
         }
 
         private static PlayerBody PlayerBody(Entity entity)
