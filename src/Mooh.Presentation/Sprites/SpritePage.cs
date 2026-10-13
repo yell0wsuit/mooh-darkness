@@ -12,9 +12,10 @@ namespace Mooh.Presentation.Sprites
     /// </summary>
     /// <remarks>
     /// The format is <c>anm2</c>, a version and the frame count, then one 20-byte record per frame:
-    /// the name's offset and length, the signed pivot offsets, the size and the atlas position, each
-    /// a little-endian 16-bit value after the two 32-bit name fields. A <c>cst1</c> chunk and the
-    /// name table follow.
+    /// the name's offset and length, then the frame's left, top, right and bottom edges relative to
+    /// its anchor and its atlas position, each a little-endian 16-bit value after the two 32-bit
+    /// name fields. A <c>cst1</c> chunk and the name table follow. A frame whose four edges are all
+    /// zero is empty and draws nothing.
     /// </remarks>
     public sealed class SpritePage
     {
@@ -37,6 +38,9 @@ namespace Mooh.Presentation.Sprites
 
         /// <summary>Gets the number of frames.</summary>
         public int Count => _frames.Count;
+
+        /// <summary>Gets every frame.</summary>
+        public IEnumerable<SpriteFrame> Frames => _frames.Values;
 
         /// <summary>Gets a frame by name.</summary>
         /// <param name="frameName">The frame name.</param>
@@ -88,14 +92,18 @@ namespace Mooh.Presentation.Sprites
                 }
 
                 string frameName = Encoding.Latin1.GetString(data.Slice(nameOffset, nameLength));
+                int left = BinaryPrimitives.ReadInt16LittleEndian(record[8..]);
+                int top = BinaryPrimitives.ReadInt16LittleEndian(record[10..]);
+                int right = BinaryPrimitives.ReadInt16LittleEndian(record[12..]);
+                int bottom = BinaryPrimitives.ReadInt16LittleEndian(record[14..]);
                 frames[frameName] = new SpriteFrame(
                     frameName,
                     BinaryPrimitives.ReadInt16LittleEndian(record[16..]),
                     BinaryPrimitives.ReadInt16LittleEndian(record[18..]),
-                    BinaryPrimitives.ReadInt16LittleEndian(record[12..]),
-                    BinaryPrimitives.ReadInt16LittleEndian(record[14..]),
-                    BinaryPrimitives.ReadInt16LittleEndian(record[8..]),
-                    BinaryPrimitives.ReadInt16LittleEndian(record[10..]));
+                    right - left,
+                    bottom - top,
+                    left,
+                    top);
             }
 
             return new SpritePage(name, frames);

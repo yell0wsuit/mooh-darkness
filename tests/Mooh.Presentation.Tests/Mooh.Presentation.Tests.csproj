@@ -11,6 +11,9 @@
     <ProjectReference Include="../../src/Mooh.Presentation/Mooh.Presentation.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="../../assets/sprites/*.png"
+             Link="assets/sprites/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/sprites/*.seq"
              Link="assets/sprites/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
