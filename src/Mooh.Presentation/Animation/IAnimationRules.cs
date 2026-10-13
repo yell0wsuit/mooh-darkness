@@ -30,6 +30,15 @@ namespace Mooh.Presentation.Animation
         double FrameMilliseconds(AnimationClip clip);
 
         /// <summary>
+        /// Gets the frame position a newly entered state starts at. The monsters and beetles start
+        /// their loops at a random phase, <c>App.Rand.FLim</c>; everything else starts at zero.
+        /// </summary>
+        /// <param name="clip">The state's clip.</param>
+        /// <param name="frames">The variant <see cref="PickVariant"/> chose.</param>
+        /// <returns>The starting <c>fAInd</c>.</returns>
+        double StartPosition(AnimationClip clip, IReadOnlyList<string> frames);
+
+        /// <summary>
         /// Resolves an end handler the presentation can run on its own, such as the player's
         /// ambient counters. Gameplay handlers stay with the simulation.
         /// </summary>

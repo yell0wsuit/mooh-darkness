@@ -167,6 +167,11 @@ namespace Mooh.Presentation.Tests
                 return clip.FrameMilliseconds[0];
             }
 
+            public double StartPosition(AnimationClip clip, IReadOnlyList<string> frames)
+            {
+                return 0;
+            }
+
             public string? ResolveHandler(string handler)
             {
                 return handlers?.Invoke(handler);

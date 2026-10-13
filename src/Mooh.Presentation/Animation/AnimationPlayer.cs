@@ -93,6 +93,13 @@ namespace Mooh.Presentation.Animation
             _candidates = candidates;
             Frames = _rules.PickVariant(candidates);
             _frameMilliseconds = _rules.FrameMilliseconds(clip);
+            Position = _rules.StartPosition(clip, Frames);
+            IsHeld = false;
+        }
+
+        /// <summary>Restarts the playing state at its first frame, as a monster's <c>IceOff</c> does.</summary>
+        public void Restart()
+        {
             Position = 0;
             IsHeld = false;
         }
