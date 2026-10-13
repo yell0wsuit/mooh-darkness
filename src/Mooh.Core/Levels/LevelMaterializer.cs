@@ -32,6 +32,9 @@ namespace Mooh.Core.Levels
         /// </summary>
         private const string LinkCoordinateStateClass = "GameLinkBase.CLinkCoordBase";
 
+        /// <summary>The archival editor property holding a message table's help-text id.</summary>
+        private const string HelpTextProperty = "_TableTxt";
+
         private static readonly TimeSpan BlueMonsterTurnDuration = TimeSpan.FromMilliseconds(300);
         private static readonly TimeSpan GreenMonsterTurnDuration = TimeSpan.FromMilliseconds(250);
         private static readonly TimeSpan PlayerImmunityDuration = TimeSpan.FromMilliseconds(650);
@@ -230,6 +233,9 @@ namespace Mooh.Core.Levels
                     : null,
                 balloonFuseBody: descriptor.Kind == EntityKind.Balloon
                     ? new BalloonFuseBody()
+                    : null,
+                messageTableBody: descriptor.Kind == EntityKind.MessageTable
+                    ? new MessageTableBody(ReadHelpTextId(source))
                     : null);
         }
 
@@ -241,6 +247,19 @@ namespace Mooh.Core.Levels
         /// links, which is a state the corpus already contains: fourteen of the forty-six placed
         /// teleporters are linked to nothing.
         /// </summary>
+        /// <summary>
+        /// Reads a message table's recovered <c>_TableTxt</c> editor property. Every placed table
+        /// in the committed corpus carries one, but the property is optional in the archival
+        /// format, so an absent or non-string value yields no id rather than failing the load.
+        /// </summary>
+        private static string? ReadHelpTextId(LevelObject source)
+        {
+            return source.Properties?.TryGetValue(HelpTextProperty, out JsonElement value) == true
+                && value.ValueKind == JsonValueKind.String
+                ? value.GetString()
+                : null;
+        }
+
         private static List<GridPosition> ReadLinkCoordinates(LevelObject source)
         {
             List<GridPosition> links = [];

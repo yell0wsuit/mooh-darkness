@@ -25,6 +25,7 @@ namespace Mooh.SimulationRunner
   #hud b { color: #9cf; font-weight: 600; }
   canvas { image-rendering: auto; }
   #banner { min-height: 20px; font-size: 15px; color: #fd6; }
+  #message { min-height: 16px; color: #8d8; }
   #help { color: #777; font-size: 11px; }
 </style>
 </head>
@@ -32,6 +33,7 @@ namespace Mooh.SimulationRunner
 <div id="hud"></div>
 <canvas id="view"></canvas>
 <div id="banner"></div>
+<div id="message"></div>
 <div id="help">WASD or arrows to walk · space to strike or throw a grenade · R restart level · N next level</div>
 <script>
 const held = { l: 0, u: 0, r: 0, d: 0, f: 0 };
@@ -59,6 +61,7 @@ const canvas = document.getElementById('view');
 const ctx = canvas.getContext('2d');
 const hud = document.getElementById('hud');
 const banner = document.getElementById('banner');
+const message = document.getElementById('message');
 const banners = {
   LevelCompleted: 'Level complete — press N for the next level',
   CampaignCompleted: 'Pack complete',
@@ -101,6 +104,7 @@ function draw(f) {
     `<b>${f.reaction}</b>`,
   ].map(t => `<span>${t}</span>`).join('');
   banner.textContent = banners[f.state] || '';
+  message.textContent = f.helpText ? `📜 ${f.helpText}` : '';
 }
 
 async function frame() {

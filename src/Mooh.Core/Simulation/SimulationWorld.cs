@@ -1777,7 +1777,32 @@ namespace Mooh.Core.Simulation
 
             events.Add(new CellEntered(player.Id, player.Position));
             _ = ResolveFireContact(player, events);
-            _ = _playerController.TryStartPendingDrink(events);
+            if (!_playerController.TryStartPendingDrink(events))
+            {
+                DispatchPlayerHere(player, events);
+            }
+        }
+
+        /// <summary>
+        /// Applies the <c>PlHere</c> dispatch of the recovered <c>_OnCell_Wlk</c>, which offers it
+        /// to every occupant of the player's own cell with the positive mask that bypasses the
+        /// shadow filter. The message table is the only placed type that answers.
+        /// </summary>
+        private void DispatchPlayerHere(Entity player, List<SimulationEvent> events)
+        {
+            foreach (Entity occupant in _world.GetOccupants(player.Position))
+            {
+                if (occupant.MessageTableBody is not MessageTableBody table)
+                {
+                    continue;
+                }
+
+                table.HasBeenRead = true;
+                if (table.HelpTextId is string helpTextId)
+                {
+                    events.Add(new HelpTextRequested(occupant.Id, helpTextId));
+                }
+            }
         }
 
         /// <summary>

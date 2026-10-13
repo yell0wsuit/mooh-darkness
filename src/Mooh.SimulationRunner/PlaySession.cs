@@ -23,8 +23,17 @@ namespace Mooh.SimulationRunner
     {
         private static readonly TimeSpan MaximumFrameStep = TimeSpan.FromMilliseconds(100);
 
+        /// <summary>
+        /// The recovered <c>CNT_HlpShTime</c>, how long <c>HlpAdd</c> holds the help panel open.
+        /// Reading the same table again re-arms it, which is what the original does when the
+        /// requested text is already showing.
+        /// </summary>
+        private static readonly TimeSpan HelpTextHold = TimeSpan.FromMilliseconds(5000);
+
         private readonly Dictionary<GridPosition, TimeSpan> _blastCells = [];
         private readonly TimeProvider _timeProvider;
+        private string? _helpText;
+        private TimeSpan _helpTextExpiry;
         private long _lastTimestamp;
         private TimeSpan _simulationTime;
 
@@ -65,6 +74,7 @@ namespace Mooh.SimulationRunner
                 IReadOnlyList<SimulationEvent> events = Session.Advance(step);
                 _simulationTime += step;
                 RecordBlastCells(events);
+                RecordHelpText(events);
             }
 
             return Render();
@@ -100,6 +110,23 @@ namespace Mooh.SimulationRunner
                 .ToList())
             {
                 _ = _blastCells.Remove(cell);
+            }
+        }
+
+        private void RecordHelpText(IReadOnlyList<SimulationEvent> events)
+        {
+            foreach (SimulationEvent value in events)
+            {
+                if (value is HelpTextRequested requested)
+                {
+                    _helpText = requested.HelpTextId;
+                    _helpTextExpiry = _simulationTime + HelpTextHold;
+                }
+            }
+
+            if (_helpText is not null && _helpTextExpiry <= _simulationTime)
+            {
+                _helpText = null;
             }
         }
 
@@ -143,7 +170,8 @@ namespace Mooh.SimulationRunner
                 Session.Level.World.Entities.Count(
                     entity => entity.Interactions.HasFlag(InteractionMask.LevelEndLock)),
                 Session.State.ToString(),
-                (body?.Reaction.Kind ?? PlayerReactionKind.Normal).ToString());
+                (body?.Reaction.Kind ?? PlayerReactionKind.Normal).ToString(),
+                _helpText);
         }
 
         /// <summary>
@@ -176,6 +204,7 @@ namespace Mooh.SimulationRunner
         {
             _lastTimestamp = _timeProvider.GetTimestamp();
             _blastCells.Clear();
+            _helpText = null;
         }
     }
 }

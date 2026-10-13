@@ -14,6 +14,10 @@ namespace Mooh.SimulationRunner
     /// <param name="MonstersLeft">The number of level-end lock carriers still alive.</param>
     /// <param name="State">The session state name.</param>
     /// <param name="Reaction">The player's damage reaction name.</param>
+    /// <param name="HelpText">
+    /// The recovered help-text id of the message table read most recently, while the help panel
+    /// would still be showing it, or <see langword="null"/>.
+    /// </param>
     public sealed record PlayFrame(
         IReadOnlyList<PlaySprite> Sprites,
         int Width,
@@ -25,5 +29,6 @@ namespace Mooh.SimulationRunner
         int Grenades,
         int MonstersLeft,
         string State,
-        string Reaction);
+        string Reaction,
+        string? HelpText = null);
 }

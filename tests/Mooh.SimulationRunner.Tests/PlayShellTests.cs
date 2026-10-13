@@ -331,6 +331,63 @@ namespace Mooh.SimulationRunner.Tests
             Assert.InRange(player.Y, 0, 5);
         }
 
+        /// <summary>
+        /// Verifies a read message table shows its recovered help-text id, and that the shell keeps
+        /// it up for the recovered <c>CNT_HlpShTime</c> hold before clearing it.
+        /// </summary>
+        [Fact]
+        public void AReadTableShowsItsHelpTextForTheRecoveredHold()
+        {
+            FakeTimeProvider time = new();
+            PlaySession session = new(CreateTablePack(), 0, time);
+            PlayerInputState down = new(Left: false, Up: false, Right: false, Down: true);
+
+            PlayFrame frame = session.Render();
+            Assert.Null(frame.HelpText);
+            for (int step = 0; step < 5; step++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(100));
+                frame = session.Advance(step < 3 ? down : default);
+            }
+
+            Assert.Equal("HlpTutAllObjsFire", frame.HelpText);
+            for (int step = 0; step < 48; step++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(100));
+                frame = session.Advance(default);
+            }
+
+            Assert.Equal("HlpTutAllObjsFire", frame.HelpText);
+            for (int step = 0; step < 3; step++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(100));
+                frame = session.Advance(default);
+            }
+
+            Assert.Null(frame.HelpText);
+        }
+
+        private static LoadedLevelPack CreateTablePack()
+        {
+            Dictionary<string, JsonElement> properties = new()
+            {
+                ["_TableTxt"] = JsonSerializer.SerializeToElement("HlpTutAllObjsFire"),
+            };
+            LevelDocument level = new(
+                1,
+                null,
+                new LevelSize(3, 4),
+                new EditorPreview(0, 0, 3, 4),
+                [
+                    Object(1, "OPlayer", 1, 1),
+                    new LevelObject(2, "OTable", 0, new LevelPosition(1, 2), [], properties),
+                    Object(3, "CellsMetal01", 1, 3),
+                ]);
+            return new LoadedLevelPack(
+                new LevelPackManifest(1, null, [new LevelManifestEntry(0, "table", "table.json")]),
+                [level]);
+        }
+
         private static LoadedLevelPack CreateRotatorPack()
         {
             LevelDocument level = new(
