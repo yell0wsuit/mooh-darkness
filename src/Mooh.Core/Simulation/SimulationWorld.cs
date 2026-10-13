@@ -49,6 +49,21 @@ namespace Mooh.Core.Simulation
         /// <summary>The recovered <c>CNT_BBombChDelay</c> between one flood ring and the next.</summary>
         private const double BigBombStepSeconds = 0.2;
 
+        /// <summary>The recovered <c>CNT_BioSpawnProb</c>, compared with a 15-bit draw by <c>Rand.Prob</c>.</summary>
+        private const int BioSpawnProbability = 2048 * 3 / 2;
+
+        /// <summary>The recovered <c>CNT_BioSpawnSp</c> against the normal speed.</summary>
+        private const double BioSpreadSpeedMultiplier = 4.0;
+
+        /// <summary>The recovered <c>ST_SpawnVert</c>/<c>ST_SpawnHor</c> length: 10 frames at 50 ms.</summary>
+        private const double BioSpawnSeconds = 0.5;
+
+        /// <summary>The recovered <c>ST_Grow</c> length: 20 frames at 50 ms.</summary>
+        private const double BioGrowSeconds = 1.0;
+
+        /// <summary>The number of frames in the recovered bio-mass <c>ST_Stay</c> loop.</summary>
+        private const int BioStayFrames = 20;
+
         /// <summary>The recovered <c>CNT_MagicKillLockTime</c> a spawned diamond cannot be killed for.</summary>
         private const double MagicKillLockSeconds = 0.5;
 
@@ -69,6 +84,9 @@ namespace Mooh.Core.Simulation
         /// <c>CNT_ONameMine</c>, the same <c>GameObjMine</c> type the editor places.
         /// </summary>
         private const string MineType = "WMine";
+
+        /// <summary>The placed type a spread bio mass shares, the recovered <c>CNT_ONameBio</c>.</summary>
+        private const string BioMassType = "MMBio";
 
         /// <summary>
         /// The recovered <c>CNT_OPrm_SpeedSmBeetle</c> factor against <c>Compl.SpeedMon</c>. The
@@ -246,6 +264,8 @@ namespace Mooh.Core.Simulation
                 startingBody.Progress.StartTreasureTrace(
                     TreasureTrace.CountReachable(world, startingPlayer.Position));
             }
+
+            StartBioMasses();
 
             // The recovered GameInit starts PlayTime on the timed profile only.
             if (_difficultySpeeds.IsTimed && world.Player?.HealthBody is HealthBody playerHealth)
@@ -506,6 +526,7 @@ namespace Mooh.Core.Simulation
             }
 
             ValidateMotionState();
+            StartBioMasses();
             List<SimulationEvent> events = [];
             SynchronizeMonsterIce(events);
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
@@ -557,6 +578,7 @@ namespace Mooh.Core.Simulation
                 double? drainSeconds = SecondsUntilDrainEmpties();
                 double? clockSeconds = SecondsUntilClockRunsOut();
                 double? bigBombSeconds = SecondsUntilNextBigBomb();
+                double? bioSeconds = SecondsUntilNextBioMass();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -651,6 +673,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingBigBomb);
                 }
 
+                if (bioSeconds is double remainingBio)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingBio);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && actionSeconds is null
@@ -667,7 +694,8 @@ namespace Mooh.Core.Simulation
                     && balloonSeconds is null
                     && drainSeconds is null
                     && clockSeconds is null
-                    && bigBombSeconds is null)
+                    && bigBombSeconds is null
+                    && bioSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -687,6 +715,7 @@ namespace Mooh.Core.Simulation
                 // started part way through is never charged for time that passed before it.
                 AdvanceBalloonFuses(substepSeconds, events);
                 AdvanceBigBombFuses(substepSeconds, events);
+                AdvanceBioMasses(substepSeconds, events);
                 _world.Player?.HealthBody?.Clock?.Advance(TimeSpan.FromSeconds(substepSeconds));
                 SynchronizeMonsterIce(events);
                 bool playerControlReady = _playerController?.AdvanceRotation(
@@ -1128,6 +1157,195 @@ namespace Mooh.Core.Simulation
             }
         }
 
+        /// <summary>
+        /// Gives every bio mass its opening <c>ST_Stay</c>: a random frame time and, from the
+        /// constructor's <c>Rand.FLim</c>, a random point part way through the loop.
+        /// </summary>
+        private void StartBioMasses()
+        {
+            foreach (Entity entity in _world.Entities)
+            {
+                if (entity.BioMassBody is { IsStarted: false } body)
+                {
+                    EnterBioStay(body);
+                    body.RemainingSeconds *= 1 - _random.NextDouble();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Enters <c>ST_Stay</c> from another state, which picks a new frame time and restarts the
+        /// loop.
+        /// </summary>
+        private void EnterBioStay(BioMassBody body)
+        {
+            body.IsStarted = true;
+            body.State = BioMassState.Stay;
+            body.StayFrameSeconds = _random.Next(2) == 0 ? 0.045 : 0.055;
+            body.RemainingSeconds = BioStayFrames * body.StayFrameSeconds;
+        }
+
+        private double? SecondsUntilNextBioMass()
+        {
+            double? result = null;
+            foreach (Entity entity in _world.Entities)
+            {
+                if (entity.BioMassBody is { IsStarted: true } body
+                    && entity.Motion is null
+                    && (result is null || body.RemainingSeconds < result))
+                {
+                    result = body.RemainingSeconds;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>Plays every bio mass's animation and applies each state end it reaches.</summary>
+        private void AdvanceBioMasses(double elapsedSeconds, List<SimulationEvent> events)
+        {
+            Entity[] bios = [.. _world.Entities.Where(entity => entity.BioMassBody is { IsStarted: true })];
+            foreach (Entity bio in bios)
+            {
+                BioMassBody body = bio.BioMassBody!;
+                if (!_world.Entities.Contains(bio) || bio.Motion is not null)
+                {
+                    continue;
+                }
+
+                body.RemainingSeconds -= elapsedSeconds;
+                if (body.RemainingSeconds > TimeTolerance)
+                {
+                    continue;
+                }
+
+                switch (body.State)
+                {
+                    case BioMassState.Stay:
+                        // _AEnd_SLook: Rand.Prob then a spawn state when any side is open or holds
+                        // a target. Otherwise the loop simply plays again at the same speed.
+                        if (_random.Next(32768) <= BioSpawnProbability && BioSpawnSides(bio).Count != 0)
+                        {
+                            body.State = BioMassState.Spawn;
+                            body.RemainingSeconds = BioSpawnSeconds;
+                        }
+                        else
+                        {
+                            body.RemainingSeconds = BioStayFrames * body.StayFrameSeconds;
+                        }
+
+                        break;
+                    case BioMassState.Spawn:
+                        SpreadBioMass(bio, events);
+                        EnterBioStay(body);
+                        break;
+                    case BioMassState.Grow:
+                    default:
+                        EnterBioStay(body);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Lists the sides <c>_AEnd_SLook</c> and <c>_AEnd_SWork</c> accept, left, up, right and
+        /// down: a cell with no still, visible occupant, or one holding a bio-strike target.
+        /// </summary>
+        private List<Direction> BioSpawnSides(Entity bio)
+        {
+            List<Direction> sides = [];
+            foreach (Direction direction in (Direction[])[Direction.Left, Direction.Up, Direction.Right, Direction.Down])
+            {
+                GridPosition cell = bio.Position.Offset(direction);
+                if (!_world.Contains(cell))
+                {
+                    continue;
+                }
+
+                IReadOnlyList<Entity> occupants = _world.GetOccupants(cell);
+                bool open = !occupants.Any(
+                    occupant => occupant.Motion is null
+                        && (occupant.Interactions
+                            & (InteractionMask.OccupancyTransparent | InteractionMask.MonsterTransparent)) == 0);
+                if (open || occupants.Any(occupant => occupant.IsBioMassTarget))
+                {
+                    sides.Add(direction);
+                }
+            }
+
+            return sides;
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>_AEnd_SWork</c>: one accepted side is chosen at random, and every
+        /// bio-strike target in it runs its <c>OnShake</c> or dies; only a side with no target
+        /// receives a new bio mass, which starts in the parent's cell and slides in.
+        /// </summary>
+        private void SpreadBioMass(Entity bio, List<SimulationEvent> events)
+        {
+            List<Direction> sides = BioSpawnSides(bio);
+            if (sides.Count == 0)
+            {
+                return;
+            }
+
+            Direction direction = sides[_random.Next(sides.Count)];
+            GridPosition cell = bio.Position.Offset(direction);
+            Entity[] targets = [.. _world.GetOccupants(cell).Where(occupant => occupant.IsBioMassTarget)];
+            if (targets.Length != 0)
+            {
+                foreach (Entity target in targets)
+                {
+                    if (_world.Entities.Contains(target))
+                    {
+                        ShakeOrKill(target, bio.Id, events);
+                    }
+                }
+
+                return;
+            }
+
+            Entity child = LevelMaterializer.CreateRuntimeObject(
+                CreateSpawnedEntityId(bio.Id),
+                bio.Position,
+                BioMassType,
+                _difficultySpeeds);
+            BioMassBody childBody = child.BioMassBody!;
+            childBody.IsStarted = true;
+            childBody.State = BioMassState.Grow;
+            childBody.RemainingSeconds = BioGrowSeconds;
+            _world.Add(child);
+            _world.CommitMoves([new PlannedMove(child.Id, bio.Position, cell)]);
+            KinematicsSystem.Start(
+                child,
+                MotionCause.BioSpread,
+                direction,
+                _difficultySpeeds.NormalSpeed * BioSpreadSpeedMultiplier);
+            events.Add(new BioMassSpread(bio.Id, child.Id, bio.Position, cell));
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>if not ObjDoSome(x, 'OnShake'): ObjKill(x)</c> that the rocket's
+        /// collision and the bio mass's strike share. The player's <c>OnShake</c> is shake damage.
+        /// </summary>
+        private void ShakeOrKill(Entity target, EntityId sourceEntityId, List<SimulationEvent> events)
+        {
+            if (target.IsDamageablePlayer)
+            {
+                ApplyDamage(
+                    new DamageRequest(sourceEntityId, target.Id, DamageKind.Shake, _difficultySpeeds.ShakeDamage),
+                    events);
+            }
+            else if (target.ShakeBody is { OrdinaryReaction: not ShakeReaction.None } || IsMonster(target))
+            {
+                ApplyShake(target, sourceEntityId, hard: false, events);
+            }
+            else
+            {
+                DestroyEntity(target, sourceEntityId, events);
+            }
+        }
+
         void IPlayerActionEffects.FireRocket(GridPosition cell, Direction direction, List<SimulationEvent> events)
         {
             Entity player = _world.Player
@@ -1240,24 +1458,9 @@ namespace Mooh.Core.Simulation
         private void CollideRocket(Entity rocket, Entity other, List<SimulationEvent> events)
         {
             StartExplosion(rocket, events);
-            if (!_world.Entities.Contains(other) || !other.IsExplodable)
+            if (_world.Entities.Contains(other) && other.IsExplodable)
             {
-                return;
-            }
-
-            if (other.IsDamageablePlayer)
-            {
-                ApplyDamage(
-                    new DamageRequest(rocket.Id, other.Id, DamageKind.Shake, _difficultySpeeds.ShakeDamage),
-                    events);
-            }
-            else if (other.ShakeBody is { OrdinaryReaction: not ShakeReaction.None } || IsMonster(other))
-            {
-                ApplyShake(other, rocket.Id, hard: false, events);
-            }
-            else
-            {
-                DestroyEntity(other, rocket.Id, events);
+                ShakeOrKill(other, rocket.Id, events);
             }
         }
 
@@ -2185,6 +2388,13 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
+                if (motion.Cause == MotionCause.BioSpread)
+                {
+                    events.Add(new CellEntered(entity.Id, entity.Position));
+                    KinematicsSystem.Stop(entity);
+                    continue;
+                }
+
                 if (motion.Cause == MotionCause.RocketFlight)
                 {
                     events.Add(new CellEntered(entity.Id, entity.Position));
@@ -2381,7 +2591,7 @@ namespace Mooh.Core.Simulation
             {
                 MotionCause.PlayerPushed or MotionCause.StrikePushed => 0,
                 MotionCause.Falling or MotionCause.Sliding or MotionCause.ArrowFlight
-                    or MotionCause.RocketFlight => 1,
+                    or MotionCause.RocketFlight or MotionCause.BioSpread => 1,
                 MotionCause.MonsterWalking => 2,
                 MotionCause.PlayerWalking or MotionCause.TunnelTransit => 3,
                 _ => throw new InvalidOperationException("Unknown motion cause."),

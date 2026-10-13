@@ -38,6 +38,12 @@ namespace Mooh.Core.Motion
         RocketFlight,
 
         /// <summary>
+        /// A newly spread bio mass is sliding into the neighbor its parent chose, at
+        /// <c>CNT_BioSpawnSp</c> times the normal speed.
+        /// </summary>
+        BioSpread,
+
+        /// <summary>
         /// The player is being carried along a tunnel.
         /// </summary>
         TunnelTransit,

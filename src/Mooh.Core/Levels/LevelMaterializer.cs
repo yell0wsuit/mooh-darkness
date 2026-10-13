@@ -225,6 +225,9 @@ namespace Mooh.Core.Levels
                     : null,
                 messageTableBody: descriptor.Kind == EntityKind.MessageTable
                     ? new MessageTableBody(ReadHelpTextId(source))
+                    : null,
+                bioMassBody: descriptor.Kind == EntityKind.BioMass
+                    ? new BioMassBody()
                     : null);
         }
 

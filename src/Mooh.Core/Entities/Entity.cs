@@ -36,6 +36,7 @@ namespace Mooh.Core.Entities
     /// <param name="messageTableBody">The entity's optional message-table text.</param>
     /// <param name="bigBombBody">The entity's optional placed-big-bomb fuse.</param>
     /// <param name="rocketBody">The entity's optional fired-rocket behavior.</param>
+    /// <param name="bioMassBody">The entity's optional bio-mass behavior.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -57,7 +58,8 @@ namespace Mooh.Core.Entities
         BalloonFuseBody? balloonFuseBody = null,
         MessageTableBody? messageTableBody = null,
         BigBombBody? bigBombBody = null,
-        RocketBody? rocketBody = null)
+        RocketBody? rocketBody = null,
+        BioMassBody? bioMassBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -126,6 +128,9 @@ namespace Mooh.Core.Entities
         /// <summary>Gets the entity's optional fired-rocket behavior.</summary>
         public RocketBody? RocketBody { get; } = rocketBody;
 
+        /// <summary>Gets the entity's optional bio-mass behavior.</summary>
+        public BioMassBody? BioMassBody { get; } = bioMassBody;
+
         /// <summary>
         /// Gets the simulation time until which the entity cannot be killed, the recovered
         /// <c>ulKillLockTime</c> a magic gem gives the diamonds it spawns, or
@@ -177,6 +182,18 @@ namespace Mooh.Core.Entities
             || GreenMonsterBody is not null
             || BlueMonsterBody is not null
             || ExplosionBody is not null;
+
+        /// <summary>
+        /// Gets whether a bio mass strikes the entity, a carrier of the recovered
+        /// <c>CNT_CMaskMonBioStrike</c>: the player, both monsters, a placed big bomb, and every
+        /// placed object a Blue Monster strikes except the bio mass itself. The player keeps the bit
+        /// in every state, because <c>bImmort</c> clears only the two monster-strike bits.
+        /// </summary>
+        public bool IsBioMassTarget => IsDamageablePlayer
+            || GreenMonsterBody is not null
+            || BlueMonsterBody is not null
+            || BigBombBody is not null
+            || (Interactions.HasFlag(InteractionMask.BlueMonsterTarget) && BioMassBody is null);
 
         /// <summary>
         /// Gets whether the entity is treasure, a carrier of the recovered
