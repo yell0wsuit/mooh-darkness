@@ -366,7 +366,9 @@ namespace Mooh.Core.Player
         /// The recovered loop offers each occupant <c>PlCtrl</c> before it offers <c>OnPlPush</c>
         /// and takes only the first that answers, so an occupant with a <c>PlCtrl</c> handler is
         /// never pushed. Among placed types the arrow is the only one that is both pushable and
-        /// defines the handler: striking an arrow launches it instead of shoving it. This is also
+        /// defines the handler: striking an arrow launches it instead of shoving it. A rotator
+        /// answers with its windup, and a frozen monster with the <c>_Ice_Ctrl</c> shatter that
+        /// <c>IceOn</c> installs. This is also
         /// the only path that reaches an arrow's <c>PlCtrl</c> at all, because <c>DoCtrl</c>
         /// dispatches only to occupants of the player's own cell with a negative <c>RPass</c>,
         /// and the arrow locks its cell and passes at zero.
@@ -402,6 +404,12 @@ namespace Mooh.Core.Player
                 if (occupant.WorldRotationBody is not null)
                 {
                     _actionEffects.TriggerWorldRotation(occupant, events);
+                    continue;
+                }
+
+                if (occupant.IsFrozenMonster)
+                {
+                    _actionEffects.ShatterFrozenMonster(occupant, events);
                     continue;
                 }
 

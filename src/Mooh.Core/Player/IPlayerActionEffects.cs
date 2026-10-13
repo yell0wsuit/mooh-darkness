@@ -62,6 +62,15 @@ namespace Mooh.Core.Player
         void TriggerWorldRotation(Entity rotator, List<SimulationEvent> events);
 
         /// <summary>
+        /// Shatters a frozen monster, applying the recovered <c>_Ice_Ctrl</c> that <c>IceOn</c>
+        /// installs as the monster's <c>PlCtrl</c>. A hand strike reaches it through the same
+        /// <c>PlCtrl</c> dispatch that launches an arrow.
+        /// </summary>
+        /// <param name="monster">The struck frozen monster.</param>
+        /// <param name="events">The ordered event sink.</param>
+        void ShatterFrozenMonster(Entity monster, List<SimulationEvent> events);
+
+        /// <summary>
         /// Applies the recovered <c>Game._ObjExplWrd</c> to one cell: its explodable occupants
         /// are destroyed, the player in it is hurt and the cell is locked. A teleport arrival
         /// runs it when the destination cell is still occupied.

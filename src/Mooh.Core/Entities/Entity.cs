@@ -131,5 +131,16 @@ namespace Mooh.Core.Entities
         /// <c>IgnoredImmune</c>.
         /// </remarks>
         public bool IsDamageablePlayer => PlayerBody is not null && HealthBody is not null;
+
+        /// <summary>
+        /// Gets whether the entity is a monster the ice bonus has frozen.
+        /// </summary>
+        /// <remarks>
+        /// The recovered <c>IceOn</c> is one implementation for both monster families, and it
+        /// routes <c>OnShake</c>, <c>OnShakeHard</c>, <c>OnExpl</c> and <c>PlCtrl</c> alike to
+        /// <c>_Ice_Ctrl</c>, which shatters the monster without its blast or its child.
+        /// </remarks>
+        public bool IsFrozenMonster => GreenMonsterBody is { IsFrozen: true }
+            || BlueMonsterBody is { IsFrozen: true };
     }
 }

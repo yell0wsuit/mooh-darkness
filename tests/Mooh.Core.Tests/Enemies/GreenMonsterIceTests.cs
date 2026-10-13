@@ -87,6 +87,27 @@ namespace Mooh.Core.Tests.Enemies
             _ = Assert.Throws<KeyNotFoundException>(() => level.World.GetEntity(monster.Id));
         }
 
+        /// <summary>Verifies a hand strike reaches the frozen monster's recovered PlCtrl and shatters it.</summary>
+        [Fact]
+        public void HandStrikeShattersFrozenMonster()
+        {
+            MaterializedLevel level = BlueMonsterIceTests.MaterializeStrikeLevel("MGrR");
+            Entity player = level.GetEntity(1);
+            Entity monster = level.GetEntity(4);
+            level.Simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
+            _ = level.Simulation.Advance(TimeSpan.FromMilliseconds(700));
+            Assert.True(monster.GreenMonsterBody!.IsFrozen);
+            Assert.Equal(new GridPosition(2, 0), player.Position);
+
+            level.Simulation.SetPlayerInput(new PlayerInputState(false, false, false, false, Fire: true));
+            IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(
+                TimeSpan.FromMilliseconds(300));
+
+            Assert.Contains(events, item => item == new EntityDestroyed(monster.Id, player.Id));
+            Assert.DoesNotContain(events, item => item is ExplosionStarted);
+            Assert.DoesNotContain(events, item => item is SmallBeetleSpawned);
+        }
+
         private static MaterializedLevel MaterializeIceLevel()
         {
             LevelDocument source = new(

@@ -29,7 +29,8 @@ namespace Mooh.Core.Enemies
         {
             TimeSpan? remaining = _world.Entities
                 .Where(
-                    entity => entity.BlueMonsterBody?.State is BlueMonsterState.TurningLeft
+                    entity => entity.BlueMonsterBody is { IsFrozen: false }
+                        && entity.BlueMonsterBody.State is BlueMonsterState.TurningLeft
                         or BlueMonsterState.TurningRight
                         or BlueMonsterState.AttackWindup
                         or BlueMonsterState.AttackRecovery
@@ -80,7 +81,9 @@ namespace Mooh.Core.Enemies
             ArgumentNullException.ThrowIfNull(applyDamage);
             ArgumentNullException.ThrowIfNull(applyShake);
             BlueMonsterBody? body = monster.BlueMonsterBody;
-            if (body?.State is not (BlueMonsterState.TurningLeft
+            if (body is null
+                || body.IsFrozen
+                || body.State is not (BlueMonsterState.TurningLeft
                 or BlueMonsterState.TurningRight
                 or BlueMonsterState.AttackWindup
                 or BlueMonsterState.AttackRecovery
@@ -105,6 +108,58 @@ namespace Mooh.Core.Enemies
             BlueMonsterBody body = monster.BlueMonsterBody
                 ?? throw new InvalidOperationException("Blue-monster walking requires a blue-monster body.");
             body.State = BlueMonsterState.Deciding;
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>IceOn</c>: motion stops, the monster snaps to the physically
+        /// nearest cell and its timed state is suspended with whatever remains of it.
+        /// </summary>
+        internal void Freeze(Entity monster, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(monster);
+            ArgumentNullException.ThrowIfNull(events);
+            BlueMonsterBody body = monster.BlueMonsterBody
+                ?? throw new InvalidOperationException("Freezing requires a blue-monster body.");
+            if (body.IsFrozen)
+            {
+                return;
+            }
+
+            MotionState? motion = monster.Motion;
+            if (motion is { Cause: MotionCause.MonsterWalking, Progress: < 0.5 })
+            {
+                _world.Relocate(
+                    monster.Id,
+                    monster.Position.Offset(motion.SegmentDirection.Opposite()));
+            }
+
+            body.IsFrozen = true;
+            KinematicsSystem.Stop(monster);
+            events.Add(new EnemyFrozen(monster.Id));
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>IceOff</c>, whose <c>StateMove</c> resumes the interrupted
+        /// state. A walk was stopped by the freeze, so it resumes as a fresh decision.
+        /// </summary>
+        internal static void Thaw(Entity monster, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(monster);
+            ArgumentNullException.ThrowIfNull(events);
+            BlueMonsterBody body = monster.BlueMonsterBody
+                ?? throw new InvalidOperationException("Thawing requires a blue-monster body.");
+            if (!body.IsFrozen)
+            {
+                return;
+            }
+
+            body.IsFrozen = false;
+            if (body.State == BlueMonsterState.Walking)
+            {
+                body.State = BlueMonsterState.Deciding;
+            }
+
+            events.Add(new EnemyThawed(monster.Id));
         }
 
         internal void DecideAfterLeftTurn(

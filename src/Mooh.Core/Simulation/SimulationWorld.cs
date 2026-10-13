@@ -262,7 +262,7 @@ namespace Mooh.Core.Simulation
             if (active && _world.Player?.PlayerBody?.Progress is PlayerProgress progress)
             {
                 progress.ClearIce();
-                SynchronizeGreenMonsterIce(events);
+                SynchronizeMonsterIce(events);
             }
 
             foreach (Entity monster in _world.Entities.Where(entity => entity.GreenMonsterBody is not null))
@@ -355,7 +355,7 @@ namespace Mooh.Core.Simulation
 
             ValidateMotionState();
             List<SimulationEvent> events = [];
-            SynchronizeGreenMonsterIce(events);
+            SynchronizeMonsterIce(events);
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
             DecideMonsters(events);
             _playerController?.TryStart(events);
@@ -500,7 +500,7 @@ namespace Mooh.Core.Simulation
                 _world.AdvanceTime(substepSeconds);
                 AdvanceHealthImmunity(substepSeconds);
                 AdvancePlayerProgress(substepSeconds);
-                SynchronizeGreenMonsterIce(events);
+                SynchronizeMonsterIce(events);
                 bool playerControlReady = _playerController?.AdvanceRotation(
                     substepSeconds,
                     events) == true;
@@ -573,23 +573,37 @@ namespace Mooh.Core.Simulation
             _world.Player?.PlayerBody?.Progress.Advance(TimeSpan.FromSeconds(elapsedSeconds));
         }
 
-        private void SynchronizeGreenMonsterIce(List<SimulationEvent> events)
+        /// <summary>
+        /// Applies the recovered <c>Game.BonIceWork</c>, which walks both monster families with one
+        /// implementation and turns each one's ice on or off with the bonus.
+        /// </summary>
+        private void SynchronizeMonsterIce(List<SimulationEvent> events)
         {
             bool iceActive = _world.Player?.PlayerBody?.Progress.IceRemaining > TimeSpan.Zero;
-            foreach (Entity monster in _world.Entities.Where(entity => entity.GreenMonsterBody is not null))
+            foreach (Entity monster in _world.Entities.Where(IsMonster))
             {
-                if (iceActive)
+                if (monster.GreenMonsterBody is GreenMonsterBody green)
                 {
-                    if (monster.GreenMonsterBody!.IsSmall)
+                    if (!iceActive)
+                    {
+                        GreenMonsterSystem.Thaw(monster, events);
+                        continue;
+                    }
+
+                    if (green.IsSmall)
                     {
                         _greenMonsters.SetSmall(monster, isSmall: false, events);
                     }
 
                     _greenMonsters.Freeze(monster, events);
                 }
+                else if (iceActive)
+                {
+                    _blueMonsters.Freeze(monster, events);
+                }
                 else
                 {
-                    GreenMonsterSystem.Thaw(monster, events);
+                    BlueMonsterSystem.Thaw(monster, events);
                 }
             }
         }
@@ -1009,14 +1023,14 @@ namespace Mooh.Core.Simulation
 
         /// <summary>
         /// Applies the recovered <c>_OnKillInt</c> suppression. The original skips the child while
-        /// the monster is edible under the glasses bonus or while the ice bonus is active. Neither
-        /// bonus is wired to Blue Monsters yet, so a Blue Monster always spawns its beetle.
+        /// the monster is edible under the glasses bonus or while the ice bonus is active. The
+        /// glasses bonus is not wired to Blue Monsters yet, so only ice suppresses a blue child.
         /// </summary>
         private static bool SpawnsBeetleOnDeath(Entity monster)
         {
             return monster.GreenMonsterBody is GreenMonsterBody green
                 ? !green.IsFrozen && !green.IsSmall
-                : monster.BlueMonsterBody is not null;
+                : monster.BlueMonsterBody is { IsFrozen: false };
         }
 
         /// <summary>
@@ -1120,11 +1134,11 @@ namespace Mooh.Core.Simulation
                 {
                     _greenMonsters.Decide(entity, index, events);
                 }
-                else if (entity.BlueMonsterBody?.State == BlueMonsterState.Deciding)
+                else if (entity.BlueMonsterBody is { IsFrozen: false, State: BlueMonsterState.Deciding })
                 {
                     _blueMonsters.Decide(entity, index, events);
                 }
-                else if (entity.BlueMonsterBody?.State == BlueMonsterState.DecidingAfterLeftTurn)
+                else if (entity.BlueMonsterBody is { IsFrozen: false, State: BlueMonsterState.DecidingAfterLeftTurn })
                 {
                     _blueMonsters.DecideAfterLeftTurn(entity, index, events);
                 }
@@ -1181,6 +1195,13 @@ namespace Mooh.Core.Simulation
                 health.Heal(_difficultySpeeds.BeetleHeal);
                 events.Add(new PlayerAte(player.Id, beetle.Id));
             }
+        }
+
+        void IPlayerActionEffects.ShatterFrozenMonster(Entity monster, List<SimulationEvent> events)
+        {
+            Entity player = _world.Player
+                ?? throw new InvalidOperationException("A hand strike requires a player.");
+            DestroyMonster(monster, player.Id, spawnBeetle: false, events);
         }
 
         void IPlayerActionEffects.PushStruck(
@@ -1592,7 +1613,7 @@ namespace Mooh.Core.Simulation
         {
             // An iced monster is killed outright by the same shake that would otherwise make
             // it detonate, and it spawns no child.
-            if (occupant.GreenMonsterBody is { IsFrozen: true })
+            if (occupant.IsFrozenMonster)
             {
                 DestroyMonster(occupant, sourceEntityId, spawnBeetle: false, events);
                 return;
