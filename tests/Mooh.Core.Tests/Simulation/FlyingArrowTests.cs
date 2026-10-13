@@ -116,6 +116,31 @@ namespace Mooh.Core.Tests.Simulation
         }
 
         /// <summary>
+        /// Verifies an arrow that stops against the player shakes the player's cell, and the
+        /// player's recovered <c>OnShake</c> is shake damage, landing at once rather than when the
+        /// arrow's own blast reaches the cell 200 ms later.
+        /// </summary>
+        [Fact]
+        public void AnArrowStoppingAgainstThePlayerShakesItAtOnce()
+        {
+            WorldGrid world = new(8, 5);
+            Entity arrow = NewArrow(new GridPosition(1, 3), Direction.Right, hasGravity: false);
+            Entity player = NewPlayer(new GridPosition(3, 3));
+            world.Add(arrow);
+            world.Add(player);
+            world.Add(NewDroppedWeight(new GridPosition(1, 1)));
+            SimulationWorld simulation = CreateSimulation(world);
+
+            List<SimulationEvent> events = [.. simulation.Advance(TimeSpan.FromSeconds(3))];
+
+            int started = events.FindIndex(item => item is ExplosionStarted { EntityId: var id } && id == arrow.Id);
+            int shaken = events.FindIndex(item => item is DamageApplied { Kind: DamageKind.Shake } damage
+                && damage.EntityId == player.Id
+                && damage.SourceEntityId == arrow.Id);
+            Assert.InRange(shaken, started + 1, started + 4);
+        }
+
+        /// <summary>
         /// Verifies a blast launches an arrow rather than destroying it, which is the recovered
         /// <c>OnExpl</c> the four types share with every other trigger.
         /// </summary>

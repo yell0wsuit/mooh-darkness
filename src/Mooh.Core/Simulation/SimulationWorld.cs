@@ -1546,11 +1546,7 @@ namespace Mooh.Core.Simulation
             if (CellQuery.IsOccupied(_world, ahead))
             {
                 StartExplosion(arrow, events);
-                foreach (Entity occupant in _world.GetOccupants(ahead))
-                {
-                    ApplyShake(occupant, arrow.Id, hard: false, events);
-                }
-
+                ShakeCell(ahead, arrow.Id, hard: false, events);
                 return;
             }
 
@@ -1936,27 +1932,7 @@ namespace Mooh.Core.Simulation
             List<SimulationEvent> events)
         {
             ApplyShake(entity, entity.Id, hard: false, events);
-            if (!_world.Contains(ahead))
-            {
-                return;
-            }
-
-            foreach (Entity occupant in _world.GetOccupants(ahead))
-            {
-                if (occupant.IsDamageablePlayer)
-                {
-                    ApplyDamage(
-                        new DamageRequest(
-                            entity.Id,
-                            occupant.Id,
-                            DamageKind.Shake,
-                            _difficultySpeeds.ShakeDamage),
-                        events);
-                    continue;
-                }
-
-                ApplyShake(occupant, entity.Id, hard: false, events);
-            }
+            ShakeCell(ahead, entity.Id, hard: false, events);
         }
 
         private double? SecondsUntilPlayerReactionEnds()
@@ -2187,31 +2163,45 @@ namespace Mooh.Core.Simulation
             GridPosition impactedPosition,
             List<SimulationEvent> events)
         {
-            if (!_world.Contains(impactedPosition))
+            ShakeCell(
+                impactedPosition,
+                source.Id,
+                source.GravityBody!.ImpactStrength == GravityImpactStrength.Hard,
+                events);
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>Game.CellShakeDir</c>: every occupant of the cell, in cell order,
+        /// runs its <c>OnShake</c> or <c>OnShakeHard</c>. The player's handlers are shake damage, so a
+        /// player in the cell is hurt in its place in that order.
+        /// </summary>
+        private void ShakeCell(
+            GridPosition cell,
+            EntityId sourceEntityId,
+            bool hard,
+            List<SimulationEvent> events)
+        {
+            if (!_world.Contains(cell))
             {
                 return;
             }
 
-            GravityImpactStrength strength = source.GravityBody!.ImpactStrength;
-            bool hard = strength == GravityImpactStrength.Hard;
-            IReadOnlyList<Entity> impacted = _world.GetOccupants(impactedPosition);
-            foreach (Entity occupant in impacted)
+            foreach (Entity occupant in _world.GetOccupants(cell))
             {
-                ApplyShake(occupant, source.Id, hard, events);
-            }
+                if (occupant.IsDamageablePlayer)
+                {
+                    ApplyDamage(
+                        new DamageRequest(
+                            sourceEntityId,
+                            occupant.Id,
+                            hard ? DamageKind.HardShake : DamageKind.Shake,
+                            hard ? _difficultySpeeds.HardShakeDamage : _difficultySpeeds.ShakeDamage),
+                        events);
+                    continue;
+                }
 
-            Entity? player = impacted.FirstOrDefault(
-                occupant => occupant.IsDamageablePlayer);
-            if (player is null)
-            {
-                return;
+                ApplyShake(occupant, sourceEntityId, hard, events);
             }
-
-            DamageKind kind = hard ? DamageKind.HardShake : DamageKind.Shake;
-            double amount = hard
-                ? _difficultySpeeds.HardShakeDamage
-                : _difficultySpeeds.ShakeDamage;
-            ApplyDamage(new DamageRequest(source.Id, player.Id, kind, amount), events);
         }
 
         /// <summary>
