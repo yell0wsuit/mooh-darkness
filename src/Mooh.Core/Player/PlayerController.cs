@@ -35,6 +35,9 @@ namespace Mooh.Core.Player
         /// <summary>The recovered <c>RepTime</c> of the rocket, the mine and the big bomb.</summary>
         private const double OtherWeaponRepeatSeconds = 1.0;
 
+        /// <summary>The recovered <c>ST_Rock*</c> duration: sixteen frames at 35 ms.</summary>
+        private const double RocketLaunchSeconds = 0.560;
+
         /// <summary>The recovered <c>ST_Mine*</c> duration: ten frames at 25 ms.</summary>
         private const double MinePlaceSeconds = 0.250;
 
@@ -293,6 +296,14 @@ namespace Mooh.Core.Player
                     StartWeaponUse(body, WeaponKind.Mine, PlayerActionKind.MinePlace, direction, MinePlaceSeconds, events);
                     break;
                 case WeaponKind.Rocket:
+                    // ST_RockStart has entries for left and right only, so Weap_Rocket does
+                    // nothing facing up or down, although DoCtrl has spent the repeat time.
+                    if (direction is Direction.Left or Direction.Right)
+                    {
+                        _actionEffects.ClearWeaponCell(target, events);
+                        StartWeaponUse(body, WeaponKind.Rocket, PlayerActionKind.RocketLaunch, direction, RocketLaunchSeconds, events);
+                    }
+
                     break;
                 default:
                     throw new InvalidOperationException("Undefined weapon.");
@@ -495,6 +506,15 @@ namespace Mooh.Core.Player
                     body.Action = null;
                     body.Teleport = null;
                     body.FacingDirection = Direction.Down;
+                    return true;
+                case PlayerActionKind.RocketLaunch:
+                    body.Action = null;
+                    if (_world.Contains(target))
+                    {
+                        _actionEffects.FireRocket(target, action.Direction, events);
+                        SpendAmmo(body, WeaponKind.Rocket, events);
+                    }
+
                     return true;
                 case PlayerActionKind.MinePlace:
                     body.Action = null;

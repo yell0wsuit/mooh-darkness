@@ -70,5 +70,11 @@ namespace Mooh.Core.Player
         /// at 25 ms.
         /// </summary>
         MinePlace,
+
+        /// <summary>
+        /// The player is launching a rocket, the recovered <c>ST_RockLeft</c> or
+        /// <c>ST_RockRight</c>: sixteen frames at 35 ms. There is no up or down launch state.
+        /// </summary>
+        RocketLaunch,
     }
 }

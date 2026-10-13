@@ -32,6 +32,12 @@ namespace Mooh.Core.Motion
         ArrowFlight,
 
         /// <summary>
+        /// A fired rocket is flying. The recovered <c>DoFly</c> re-decides at every cell whether
+        /// the cell ahead stops it.
+        /// </summary>
+        RocketFlight,
+
+        /// <summary>
         /// The player is being carried along a tunnel.
         /// </summary>
         TunnelTransit,

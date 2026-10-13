@@ -35,6 +35,7 @@ namespace Mooh.Core.Entities
     /// <param name="balloonFuseBody">The entity's optional balloon fuse.</param>
     /// <param name="messageTableBody">The entity's optional message-table text.</param>
     /// <param name="bigBombBody">The entity's optional placed-big-bomb fuse.</param>
+    /// <param name="rocketBody">The entity's optional fired-rocket behavior.</param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -55,7 +56,8 @@ namespace Mooh.Core.Entities
         WorldRotationBody? worldRotationBody = null,
         BalloonFuseBody? balloonFuseBody = null,
         MessageTableBody? messageTableBody = null,
-        BigBombBody? bigBombBody = null)
+        BigBombBody? bigBombBody = null,
+        RocketBody? rocketBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -120,6 +122,9 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's optional placed-big-bomb fuse.</summary>
         public BigBombBody? BigBombBody { get; } = bigBombBody;
+
+        /// <summary>Gets the entity's optional fired-rocket behavior.</summary>
+        public RocketBody? RocketBody { get; } = rocketBody;
 
         /// <summary>
         /// Gets the simulation time until which the entity cannot be killed, the recovered

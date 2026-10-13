@@ -87,7 +87,10 @@ namespace Mooh.Core.Simulation
         /// </summary>
         private const double ArrowWindupSeconds = 0.245;
 
-        /// <summary>The recovered <c>CNT_OPrmRocketSpeed</c> against <c>Compl.SpeedNrm</c>.</summary>
+        /// <summary>
+        /// The recovered <c>CNT_OPrmRocketSpeed</c> against <c>Compl.SpeedNrm</c>, shared by the
+        /// flying arrow and the fired rocket.
+        /// </summary>
         private const double ArrowFlightSpeedMultiplier = 2.0;
 
         /// <summary>
@@ -1125,6 +1128,59 @@ namespace Mooh.Core.Simulation
             }
         }
 
+        void IPlayerActionEffects.FireRocket(GridPosition cell, Direction direction, List<SimulationEvent> events)
+        {
+            Entity player = _world.Player
+                ?? throw new InvalidOperationException("Firing a rocket requires a player.");
+            ClearWeaponCell(cell, events);
+
+            // The recovered rocket mask is CellCanExplode | ShadowWeap | MonShadow: a shadow that
+            // ordinary queries and monsters ignore, and whose OnExpl is its own 3x3 blast.
+            Entity rocket = new(
+                CreateSpawnedEntityId(player.Id),
+                cell,
+                InteractionMask.MonsterTransparent | InteractionMask.OccupancyTransparent,
+                explosionBody: new ExplosionBody(ExplosionReaction.Detonate3x3, detonatesOnLanding: false),
+                rocketBody: new RocketBody(direction));
+            _world.Add(rocket);
+            events.Add(new RocketFired(player.Id, rocket.Id, cell, direction));
+            AdvanceRocketFlight(rocket, events);
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>CGameWeapRocket.DoFly</c>, the decision a rocket takes when it
+        /// is fired and on every cell it reaches. A visible occupant ahead stops it: it runs its own
+        /// 3x3 blast and shakes the cell ahead. Otherwise it flies on at
+        /// <c>CNT_OPrmRocketSpeed</c> times the normal speed. Unlike the arrow it never bores
+        /// through terrain.
+        /// </summary>
+        private void AdvanceRocketFlight(Entity rocket, List<SimulationEvent> events)
+        {
+            Direction direction = rocket.RocketBody!.Direction;
+            GridPosition ahead = rocket.Position.Offset(direction);
+            if (!_world.Contains(ahead))
+            {
+                StartExplosion(rocket, events);
+                return;
+            }
+
+            if (CellQuery.IsOccupied(_world, ahead))
+            {
+                StartExplosion(rocket, events);
+                ShakeCell(ahead, rocket.Id, hard: false, events);
+                return;
+            }
+
+            double speed = _difficultySpeeds.NormalSpeed * ArrowFlightSpeedMultiplier;
+            if (CellQuery.HasCounterMotion(_world, ahead, direction))
+            {
+                speed *= CounterMotionMultiplier;
+            }
+
+            _world.CommitMoves([new PlannedMove(rocket.Id, rocket.Position, ahead)]);
+            KinematicsSystem.Start(rocket, MotionCause.RocketFlight, direction, speed);
+        }
+
         void IPlayerActionEffects.LayMine(GridPosition cell, List<SimulationEvent> events)
         {
             Entity player = _world.Player
@@ -1147,6 +1203,22 @@ namespace Mooh.Core.Simulation
         /// </summary>
         private void ResolveWeaponCollisions(List<SimulationEvent> events)
         {
+            Entity[] rockets = [.. _world.Entities.Where(entity => entity.RocketBody is not null)];
+            foreach (Entity rocket in rockets)
+            {
+                Entity? other = _world.Entities.Contains(rocket)
+                    ? _world.GetOccupants(rocket.Position).FirstOrDefault(
+                        occupant => occupant.Id != rocket.Id
+                            && (occupant.Interactions.HasFlag(InteractionMask.BlocksMovement)
+                                || occupant.RocketBody is not null
+                                || occupant.ArchivalIdentity?.Kind == EntityKind.Mine))
+                    : null;
+                if (other is not null)
+                {
+                    CollideRocket(rocket, other, events);
+                }
+            }
+
             Entity[] mines = [.. _world.Entities.Where(entity => entity.ArchivalIdentity?.Kind == EntityKind.Mine)];
             foreach (Entity mine in mines)
             {
@@ -1157,6 +1229,35 @@ namespace Mooh.Core.Simulation
                 {
                     StartExplosion(mine, events);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>CGameWeapRocket.OnColl</c>: the rocket runs its 3x3 blast, and
+        /// the other object, if that left it alive and it can explode, runs its <c>OnShake</c> or,
+        /// lacking one, dies.
+        /// </summary>
+        private void CollideRocket(Entity rocket, Entity other, List<SimulationEvent> events)
+        {
+            StartExplosion(rocket, events);
+            if (!_world.Entities.Contains(other) || !other.IsExplodable)
+            {
+                return;
+            }
+
+            if (other.IsDamageablePlayer)
+            {
+                ApplyDamage(
+                    new DamageRequest(rocket.Id, other.Id, DamageKind.Shake, _difficultySpeeds.ShakeDamage),
+                    events);
+            }
+            else if (other.ShakeBody is { OrdinaryReaction: not ShakeReaction.None } || IsMonster(other))
+            {
+                ApplyShake(other, rocket.Id, hard: false, events);
+            }
+            else
+            {
+                DestroyEntity(other, rocket.Id, events);
             }
         }
 
@@ -2084,6 +2185,14 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
+                if (motion.Cause == MotionCause.RocketFlight)
+                {
+                    events.Add(new CellEntered(entity.Id, entity.Position));
+                    KinematicsSystem.Stop(entity);
+                    AdvanceRocketFlight(entity, events);
+                    continue;
+                }
+
                 if (motion.Cause == MotionCause.TunnelTransit)
                 {
                     events.Add(new CellEntered(entity.Id, entity.Position));
@@ -2271,7 +2380,8 @@ namespace Mooh.Core.Simulation
             return cause switch
             {
                 MotionCause.PlayerPushed or MotionCause.StrikePushed => 0,
-                MotionCause.Falling or MotionCause.Sliding or MotionCause.ArrowFlight => 1,
+                MotionCause.Falling or MotionCause.Sliding or MotionCause.ArrowFlight
+                    or MotionCause.RocketFlight => 1,
                 MotionCause.MonsterWalking => 2,
                 MotionCause.PlayerWalking or MotionCause.TunnelTransit => 3,
                 _ => throw new InvalidOperationException("Unknown motion cause."),

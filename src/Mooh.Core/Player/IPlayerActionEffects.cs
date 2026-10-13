@@ -101,6 +101,15 @@ namespace Mooh.Core.Player
         /// <param name="events">The ordered event sink.</param>
         void LayMine(GridPosition cell, List<SimulationEvent> events);
 
+        /// <summary>
+        /// Fires a rocket from the faced cell, the recovered <c>_AEnd_Rocket</c>, which clears the
+        /// cell again and lets the rocket take its first flight decision at once.
+        /// </summary>
+        /// <param name="cell">The faced cell.</param>
+        /// <param name="direction">The rocket's flight direction.</param>
+        /// <param name="events">The ordered event sink.</param>
+        void FireRocket(GridPosition cell, Direction direction, List<SimulationEvent> events);
+
         /// <summary>Registers a thrown grenade in a cleared cell.</summary>
         /// <param name="cell">The cell that receives the grenade.</param>
         /// <param name="events">The ordered event sink.</param>
