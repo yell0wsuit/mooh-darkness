@@ -51,17 +51,32 @@ namespace Mooh.Presentation.Tests
             Assert.Equal("e1", player.Frame);
         }
 
-        /// <summary>Verifies a state ending into another restarts that one at its first frame.</summary>
+        /// <summary>
+        /// Verifies a state ending into another starts that one from its first frame, carrying the
+        /// overshoot so the chain keeps the simulation's exact timing.
+        /// </summary>
         [Fact]
-        public void AStateChangeRestartsAtTheFirstFrame()
+        public void AStateChangeCarriesTheOvershoot()
         {
             AnimationPlayer player = Start("intro");
 
             player.Advance(0.120);
 
             Assert.Equal("loop", player.State);
-            Assert.Equal(0, player.Position);
+            Assert.Equal(0.8, player.Position, 6);
             Assert.Equal("a0", player.Frame);
+        }
+
+        /// <summary>Verifies one long step can cross several states of a chain.</summary>
+        [Fact]
+        public void OneLongStepCrossesSeveralStates()
+        {
+            AnimationPlayer player = Start("hidden");
+
+            player.Advance(0.430);
+
+            Assert.Equal("loop", player.State);
+            Assert.Equal("a1", player.Frame);
         }
 
         /// <summary>Verifies an unresolved gameplay handler holds the last frame.</summary>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using Mooh.Core.Combat;
 using Mooh.Core.Content;
@@ -55,6 +56,12 @@ namespace Mooh.Presentation.Tests
         /// </summary>
         public static LevelDocument BuildLevel(int playerY, params (string Type, int X, int Y)[] extra)
         {
+            return BuildLevel(playerY, [.. extra.Select(item => (item.Type, item.X, item.Y, 0))]);
+        }
+
+        /// <summary>Builds the same level with an editor index for each extra object.</summary>
+        public static LevelDocument BuildLevel(int playerY, (string Type, int X, int Y, int EditorIndex)[] extra)
+        {
             List<LevelObject> objects = [Object(1, "OPlayer", 1, playerY)];
             for (int x = 0; x <= 7; x++)
             {
@@ -62,9 +69,9 @@ namespace Mooh.Presentation.Tests
             }
 
             int id = 200;
-            foreach ((string type, int x, int y) in extra)
+            foreach ((string type, int x, int y, int editorIndex) in extra)
             {
-                objects.Add(Object(id++, type, x, y));
+                objects.Add(Object(id++, type, x, y, editorIndex));
             }
 
             return new LevelDocument(1, null, new LevelSize(8, 4), new EditorPreview(0, 0, 8, 4), objects);
@@ -98,9 +105,23 @@ namespace Mooh.Presentation.Tests
             _pending = [];
         }
 
-        private static LevelObject Object(int id, string type, int x, int y)
+        /// <summary>Advances in small steps until a condition holds.</summary>
+        public void StepUntil(Func<bool> condition, double limitSeconds = 5)
         {
-            return new LevelObject(id, type, 0, new LevelPosition(x, y), [], new Dictionary<string, System.Text.Json.JsonElement>());
+            for (double elapsed = 0; !condition(); elapsed += 0.016)
+            {
+                if (elapsed > limitSeconds)
+                {
+                    throw new InvalidOperationException("The condition never held.");
+                }
+
+                Step(0.016);
+            }
+        }
+
+        private static LevelObject Object(int id, string type, int x, int y, int editorIndex = 0)
+        {
+            return new LevelObject(id, type, editorIndex, new LevelPosition(x, y), [], new Dictionary<string, System.Text.Json.JsonElement>());
         }
     }
 }

@@ -10,9 +10,14 @@ namespace Mooh.Presentation.Animation
     /// The native list advances <c>fAInd</c> by <c>fASpeed</c> (frames per millisecond) and fires
     /// <c>OnAnimEnd</c> when it passes the last frame. A state that ends into itself, or has no end
     /// at all, wraps and keeps its overshoot. <c>StateSet</c> into a different state, or into the
-    /// same state with a different variant list (the player's flying frames), resets
-    /// <c>fAInd</c> to zero and so drops the overshoot. A state with no frames still lasts one
-    /// frame time: that is how the player waits, hidden, in the start door and the shelter.
+    /// same state with a different variant list (the player's flying frames), restarts at the new
+    /// state's first frame. A state with no frames still lasts one frame time: that is how the
+    /// player waits, hidden, in the start door and the shelter.
+    /// <para>
+    /// The native list drops the overshoot at a state change, losing up to one display frame per
+    /// transition. The simulation times the same chains exactly, so the overshoot is carried into
+    /// the next state instead; a clip then stays in step with the simulation at any frame rate.
+    /// </para>
     /// </remarks>
     public sealed class AnimationPlayer
     {
@@ -127,13 +132,20 @@ namespace Mooh.Presentation.Animation
 
                 string? before = State;
                 IReadOnlyList<IReadOnlyList<string>>? candidates = _candidates;
+                double overshootMilliseconds = (Position - Length) * _frameMilliseconds;
                 Play(next);
-                if (State != before || !ReferenceEquals(candidates, _candidates))
+                if (State == before && ReferenceEquals(candidates, _candidates))
+                {
+                    Position -= Length;
+                    continue;
+                }
+
+                if (_frameMilliseconds <= 0)
                 {
                     return;
                 }
 
-                Position -= Length;
+                Position += overshootMilliseconds / _frameMilliseconds;
             }
         }
     }

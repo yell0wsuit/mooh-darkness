@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Mooh.Core.Entities;
+using Mooh.Core.Explosions;
 using Mooh.Core.Grid;
+using Mooh.Core.Levels;
 using Mooh.Core.Simulation;
 using Mooh.Presentation.Animation;
 
@@ -19,6 +21,21 @@ namespace Mooh.Presentation.Scene
     /// </remarks>
     public sealed class ScenePresenter
     {
+        /// <summary>The start door's registration, <c>CNT_ONameDoor</c>.</summary>
+        private const string StartDoorType = "ODoor";
+
+        /// <summary>
+        /// The registration the simulation's thrown grenade shares. The original's own
+        /// <c>CNT_ONameGrenade</c>, <c>WBombInt</c>, has the same <c>GameTypeBomb</c> states.
+        /// </summary>
+        private const string ThrownGrenadeType = "WBomb";
+
+        /// <summary>The laid mine's registration, <c>CNT_ONameMine</c>, which draws on pass 1.</summary>
+        private const string MineType = "WMine";
+
+        /// <summary>The message table's registration, which draws on pass 1.</summary>
+        private const string MessageTableType = "OTable";
+
         private readonly Dictionary<EntityId, EntityAnimator> _animators = [];
         private readonly AnimationLibrary _library;
         private readonly Random _random;
@@ -91,11 +108,62 @@ namespace Mooh.Presentation.Scene
 
         private EntityAnimator? Create(Entity entity)
         {
-            return entity.PlayerBody is not null
-                ? new PlayerAnimator(_library, _random)
-                : entity.GreenMonsterBody is not null
-                ? new GreenMonsterAnimator(_library, _random)
-                : entity.BlueMonsterBody is not null ? new BlueMonsterAnimator(_library, _random) : null;
+            if (entity.PlayerBody is not null)
+            {
+                return new PlayerAnimator(_library, _random);
+            }
+
+            if (entity.GreenMonsterBody is not null)
+            {
+                return new GreenMonsterAnimator(_library, _random);
+            }
+
+            if (entity.BlueMonsterBody is not null)
+            {
+                return new BlueMonsterAnimator(_library, _random);
+            }
+
+            if (entity.DoorBody is not null)
+            {
+                return new ObjectAnimator(_library.Table(StartDoorType), _random, 0, "st_doorin", pass: -1);
+            }
+
+            if (entity.RocketBody is RocketBody rocket)
+            {
+                string table = rocket.Direction == Direction.Left ? AnimationLibrary.RocketLeftTable : AnimationLibrary.RocketRightTable;
+                return new ObjectAnimator(_library.Table(table), _random, 0, AnimationLibrary.FlyState, pass: 0);
+            }
+
+            return entity.BigBombBody is not null
+                ? new ObjectAnimator(_library.Table(AnimationLibrary.BigBombTable), _random, 0, AnimationLibrary.StillState, pass: 1)
+                : entity.TeleporterBody is not null
+                ? new ObjectAnimator(_library.Table(AnimationLibrary.TeleporterTable), _random, 0, AnimationLibrary.StillState, pass: -1)
+                : entity.ArchivalIdentity is ArchivalObjectIdentity identity
+                && _library.TryGetTable(identity.ArchivalType, out AnimationTable placed)
+                ? Placed(identity, placed)
+                : null;
+        }
+
+        /// <summary>
+        /// Animates an archival object. A thrown grenade and a laid mine are created straight into
+        /// <c>ST_Work</c>, by <c>GameObjGrenade</c> and <c>GameObjMineMake</c>; a pickup of the same
+        /// type rests in <c>ST_Stay</c>.
+        /// </summary>
+        private ObjectAnimator Placed(ArchivalObjectIdentity identity, AnimationTable table)
+        {
+            bool spawnedWeapon = identity.ObjectId == LevelMaterializer.RuntimeObjectId
+                && identity.ArchivalType is ThrownGrenadeType or MineType;
+            int pass = identity.Kind is EntityKind.Pipe or EntityKind.Tunnel
+                || identity.ArchivalType is MessageTableType or MineType
+                ? 1
+                : 0;
+            return new ObjectAnimator(
+                table,
+                _random,
+                identity.Source.EditorIndex,
+                spawnedWeapon ? "st_work" : AnimationLibrary.StillState,
+                pass,
+                randomPhase: identity.Kind is EntityKind.Pipe or EntityKind.Tunnel);
         }
     }
 }
