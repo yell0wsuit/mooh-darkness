@@ -88,13 +88,6 @@
                     "type": "EnemyStrike",
                     "entity": "second-monster",
                     "position": { "x": 1, "y": 0 }
-                },
-                {
-                    "type": "DamageIgnored",
-                    "entity": "player",
-                    "sourceEntity": "second-monster",
-                    "damageKind": "Strike",
-                    "damageResult": "IgnoredImmune"
                 }
             ]
         }

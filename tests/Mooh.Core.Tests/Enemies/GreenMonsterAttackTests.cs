@@ -73,6 +73,25 @@ namespace Mooh.Core.Tests.Enemies
                 Assert.Single(events));
         }
 
+        /// <summary>
+        /// Verifies a shocked player is not a target. Every recovered shock state is
+        /// <c>bImmort</c>, and <c>StateSet</c> clears <c>CNT_OrMaskMonStrike</c> for such a state,
+        /// so the monster facing it turns away instead of winding up.
+        /// </summary>
+        [Fact]
+        public void ShockedPlayerAheadIsNotATarget()
+        {
+            (SimulationWorld simulation, Entity monster, Entity player) = CreateFacingPair();
+            _ = simulation.ApplyDamage(new DamageRequest(player.Id, player.Id, DamageKind.Fire, 10));
+            Assert.Equal(PlayerReactionKind.Shocked, player.PlayerBody!.Reaction.Kind);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(10));
+
+            Assert.DoesNotContain(events, item => item is EnemyAttackStarted);
+            Assert.Equal(GreenMonsterState.Turning, monster.GreenMonsterBody!.State);
+            Assert.True(player.PlayerBody.IsImmortal);
+        }
+
         /// <summary>Verifies monsters decide before held input reserves an escape cell.</summary>
         [Fact]
         public void InitialMonsterDecisionPrecedesPlayerInput()
@@ -186,22 +205,26 @@ namespace Mooh.Core.Tests.Enemies
             world.Add(monster);
             world.Add(player);
             SimulationWorld simulation = CreateSimulation(world);
+
+            // The windup has to start before the shock, because a shocked player is bImmort and
+            // carries no CNT_OrMaskMonStrike for the monster to select.
+            IReadOnlyList<SimulationEvent> decision = simulation.Advance(TimeSpan.FromTicks(1));
             EntityId source = EntityId.New();
             _ = simulation.ApplyDamage(
                 new DamageRequest(source, player.Id, DamageKind.Shake, 20));
             simulation.SetPlayerInput(new PlayerInputState(false, true, false, false));
 
-            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(700));
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(
+                TimeSpan.FromMilliseconds(700) - TimeSpan.FromTicks(1));
 
+            Assert.Equal(
+                new EnemyAttackStarted(monster.Id, player.Position, TimeSpan.FromMilliseconds(700)),
+                Assert.Single(decision));
             Assert.Equal(new GridPosition(1, 1), player.Position);
             Assert.Equal(60, player.HealthBody!.Current);
             Assert.Equal(PlayerReactionKind.Shocked, player.PlayerBody!.Reaction.Kind);
             Assert.Equal(
                 [
-                    new EnemyAttackStarted(
-                        monster.Id,
-                        player.Position,
-                        TimeSpan.FromMilliseconds(700)),
                     new PlayerShockEnded(player.Id),
                     new EnemyStrike(monster.Id, player.Position),
                     new DamageApplied(player.Id, monster.Id, DamageKind.Strike, 20, 60),
@@ -248,7 +271,11 @@ namespace Mooh.Core.Tests.Enemies
                 events);
         }
 
-        /// <summary>Verifies simultaneous attackers resolve in registration order through immunity.</summary>
+        /// <summary>
+        /// Verifies simultaneous attackers resolve in registration order. The first strike shocks
+        /// the player, and a shocked player carries no <c>CNT_CMaskMonGrStrike</c>, so the second
+        /// monster's <c>_AEnd_StrAll</c> finds no target and asks for no damage at all.
+        /// </summary>
         [Fact]
         public void SimultaneousStrikesFollowRegistrationOrder()
         {
@@ -278,11 +305,6 @@ namespace Mooh.Core.Tests.Enemies
                     new DamageApplied(player.Id, first.Id, DamageKind.Strike, 20, 80),
                     new PlayerShockStarted(player.Id, TimeSpan.FromMilliseconds(700)),
                     new EnemyStrike(second.Id, player.Position),
-                    new DamageIgnored(
-                        player.Id,
-                        second.Id,
-                        DamageKind.Strike,
-                        DamageResult.IgnoredImmune),
                 ],
                 events);
         }

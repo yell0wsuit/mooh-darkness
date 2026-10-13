@@ -177,7 +177,11 @@ namespace Mooh.Core.Tests.Enemies
             Assert.DoesNotContain(events, simulationEvent => simulationEvent is EnemyTurnStarted);
         }
 
-        /// <summary>Verifies simultaneous green and blue strikes resolve in registration order.</summary>
+        /// <summary>
+        /// Verifies simultaneous green and blue strikes resolve in registration order. The green
+        /// strike shocks the player first, which clears its strike bits, so the blue strike that
+        /// lands in the same instant finds no target.
+        /// </summary>
         [Fact]
         public void SimultaneousMixedStrikesRespectImmunityInRegistrationOrder()
         {
@@ -209,11 +213,6 @@ namespace Mooh.Core.Tests.Enemies
             Assert.Equal(
                 [
                     new DamageApplied(player.Id, green.Id, DamageKind.Strike, 20, 80),
-                    new DamageIgnored(
-                        player.Id,
-                        blue.Id,
-                        DamageKind.Strike,
-                        DamageResult.IgnoredImmune),
                 ],
                 damageEvents);
         }

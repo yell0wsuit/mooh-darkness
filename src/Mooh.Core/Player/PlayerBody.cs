@@ -89,10 +89,13 @@ namespace Mooh.Core.Player
 
         /// <summary>
         /// Gets whether the player is in a recovered <c>bImmort</c> state. Such a state takes no
-        /// damage at all and clears the player's <c>CNT_OrMaskMonStrike</c> bits, so a monster
-        /// does not select it as a target either. Every tunnel state carries the flag.
+        /// damage at all, suspends the passive health drain and clears the player's
+        /// <c>CNT_OrMaskMonStrike</c> bits, so a monster does not select it as a target either.
+        /// The three shock states and every tunnel and teleport state carry the flag; the death
+        /// states do not.
         /// </summary>
-        public bool IsImmortal => TunnelTransit is not null
+        public bool IsImmortal => Reaction.Kind == PlayerReactionKind.Shocked
+            || TunnelTransit is not null
             || Action?.Kind is PlayerActionKind.TunnelEntry
                 or PlayerActionKind.TunnelExit
                 or PlayerActionKind.TeleportEntry
@@ -101,11 +104,11 @@ namespace Mooh.Core.Player
 
         /// <summary>
         /// Gets whether the player is in a recovered <c>bLockLvlEnd</c> state, which holds the
-        /// win settle open. Among implemented states the shock reaction and every tunnel and
-        /// teleport state carry the flag; the death state does not.
+        /// win settle open. Among implemented states it is exactly the <c>bImmort</c> set: the
+        /// shock reaction and every tunnel and teleport state carry both flags, and the death
+        /// state carries neither.
         /// </summary>
-        public bool HoldsLevelEndOpen => IsImmortal
-            || Reaction.Kind == PlayerReactionKind.Shocked;
+        public bool HoldsLevelEndOpen => IsImmortal;
 
         /// <summary>
         /// Gets the simulation time at which the player last used the fire control, or
