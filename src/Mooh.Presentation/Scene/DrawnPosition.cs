@@ -1,6 +1,7 @@
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Motion;
+using Mooh.Core.Player;
 
 namespace Mooh.Presentation.Scene
 {
@@ -11,6 +12,10 @@ namespace Mooh.Presentation.Scene
     /// <see cref="MotionState.Progress"/> runs from zero to one. The drawn position trails that
     /// cell by the unfinished fraction; a reversal drives progress back toward zero and the same
     /// expression carries the entity back.
+    /// <para>
+    /// A teleporting player ignores the grid: <c>_TPortCFunc</c> flies it along the straight line
+    /// between the two teleporters at a constant speed.
+    /// </para>
     /// </remarks>
     public static class DrawnPosition
     {
@@ -20,6 +25,13 @@ namespace Mooh.Presentation.Scene
         public static (double X, double Y) Of(Entity entity)
         {
             System.ArgumentNullException.ThrowIfNull(entity);
+            if (entity.PlayerBody is { Action.Kind: PlayerActionKind.TeleportFlight, Teleport: PlayerTeleport flight })
+            {
+                return (
+                    flight.Origin.X + ((flight.Destination.X - flight.Origin.X) * flight.Progress),
+                    flight.Origin.Y + ((flight.Destination.Y - flight.Origin.Y) * flight.Progress));
+            }
+
             if (entity.Motion is not MotionState motion)
             {
                 return (entity.Position.X, entity.Position.Y);
