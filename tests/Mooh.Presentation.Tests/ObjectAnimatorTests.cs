@@ -73,6 +73,19 @@ namespace Mooh.Presentation.Tests
             Assert.Equal("st_arrowfly", harness.Animator(arrow).Animation.State);
         }
 
+        /// <summary>Verifies an opening key door plays its opening.</summary>
+        [Fact]
+        public void AnOpeningKeyDoorPlaysItsOpening()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("OKDKey1", 2, 1), ("OKDDoor1", 3, 1)));
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+            Entity door = harness.Level.GetEntity(201);
+
+            harness.StepUntil(() => door.KeyDoorBody!.OpeningRemainingSeconds is not null);
+
+            Assert.Equal("st_work", harness.Animator(door).Animation.State);
+        }
+
         /// <summary>Verifies a read message table shows its still read frame, over the objects.</summary>
         [Fact]
         public void AReadMessageTableShowsItsReadFrame()

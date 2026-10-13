@@ -86,6 +86,7 @@ namespace Mooh.Presentation.Scene
                 { FlyingArrowBody.IsLaunched: true } => "st_work",
                 { WorldRotationBody.WindupRemainingSeconds: not null } => "st_work",
                 { MessageTableBody.HasBeenRead: true } => "st_work",
+                { KeyDoorBody.OpeningRemainingSeconds: not null } => "st_work",
                 { DoorBody: DoorBody door } => DoorState(world, door),
                 _ => initialState,
             };
