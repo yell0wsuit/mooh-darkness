@@ -27,6 +27,12 @@ namespace Mooh.Core.Simulation
     {
         private const double BoundaryTolerance = 1e-6;
         private const double ExplosionDelaySeconds = 0.2;
+
+        /// <summary>The recovered <c>CNT_GPrmExplCrossDelay</c> before a cross blast's arms start.</summary>
+        private const double CrossBlastDelaySeconds = 0.15;
+
+        /// <summary>The recovered <c>CNT_GPrmExplCrossLen</c>, the cells each cross-blast arm can reach.</summary>
+        private const int CrossBlastArmLength = 3;
         private const int MonsterKillScore = 10;
         private const int BeetleAbsorbScore = 90;
 
@@ -280,21 +286,25 @@ namespace Mooh.Core.Simulation
             return events;
         }
 
-        /// <summary>Starts a recovered delayed 3x3 explosion from a registered explosive entity.</summary>
+        /// <summary>
+        /// Starts a registered explosive's own recovered blast: the delayed 3x3 explosion, or the
+        /// barrel's cross blast.
+        /// </summary>
         /// <param name="sourceEntityId">The entity that becomes the explosion center.</param>
-        /// <returns>The immediate ordered events; neighboring cells remain scheduled.</returns>
+        /// <returns>The immediate ordered events; later cells remain scheduled.</returns>
         /// <exception cref="KeyNotFoundException">The source is not registered.</exception>
-        /// <exception cref="InvalidOperationException">The source is not a 3x3 explosive.</exception>
+        /// <exception cref="InvalidOperationException">The source does not explode on its own.</exception>
         public IReadOnlyList<SimulationEvent> Detonate(EntityId sourceEntityId)
         {
             Entity source = _world.GetEntity(sourceEntityId);
-            if (source.ExplosionBody?.Reaction != ExplosionReaction.Detonate3x3)
+            if (source.ExplosionBody?.Reaction is not (ExplosionReaction.Detonate3x3 or ExplosionReaction.CrossBlast))
             {
-                throw new InvalidOperationException("Detonation requires a 3x3 explosive entity.");
+                throw new InvalidOperationException("Detonation requires a 3x3 or cross-blast explosive entity.");
             }
 
             List<SimulationEvent> events = [];
-            StartExplosion(source, events);
+            StartOwnBlast(source, events);
+
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
             return events;
         }
@@ -751,6 +761,17 @@ namespace Mooh.Core.Simulation
             {
                 _ = _pendingExplosionCells.Remove(scheduled);
                 ResolveExplosionCell(scheduled.SourceEntityId, scheduled.Position, events);
+                if (scheduled.ArmDirection is Direction direction
+                    && scheduled.ArmRemaining > 1
+                    && !CellQuery.HoldsBlastSurvivor(_world, scheduled.Position))
+                {
+                    ScheduleCrossArm(
+                        scheduled.SourceEntityId,
+                        scheduled.Position,
+                        direction,
+                        scheduled.ArmRemaining - 1,
+                        ExplosionDelaySeconds);
+                }
             }
 
             return true;
@@ -794,6 +815,83 @@ namespace Mooh.Core.Simulation
                         dueTime,
                         _nextExplosionOrder++));
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets whether a reached blast cell shows the blast graphic. The recovered
+        /// <c>_ObjExplWrd</c> draws <c>SfxExplAdd1x1</c> only where no still, visible occupant
+        /// survived, the same test that stops a cross-blast arm, so a presentation layer asks here
+        /// rather than restating it.
+        /// </summary>
+        /// <param name="world">The authoritative world.</param>
+        /// <param name="cell">The reached cell, tested after the step that reached it.</param>
+        /// <returns><see langword="true"/> when the blast graphic is drawn.</returns>
+        public static bool ShowsBlast(WorldGrid world, GridPosition cell)
+        {
+            ArgumentNullException.ThrowIfNull(world);
+            return world.Contains(cell) && !CellQuery.HoldsBlastSurvivor(world, cell);
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>Game.ObjExplCross</c>, the barrel's blast. The barrel dies and
+        /// its own cell is reached at once; after <c>CNT_GPrmExplCrossDelay</c> an arm leaves in
+        /// each direction, left, up, right and down, and each step reaches the next cell
+        /// <c>CNT_GPrmExplDelay</c> later until <c>CNT_GPrmExplCrossLen</c> cells are reached or
+        /// a still, visible occupant survives in the cell just reached.
+        /// </summary>
+        private void StartCrossExplosion(Entity source, List<SimulationEvent> events)
+        {
+            GridPosition center = source.Position;
+            if (!_world.Remove(source.Id))
+            {
+                return;
+            }
+
+            events.Add(new ExplosionStarted(source.Id, center));
+            events.Add(new EntityDestroyed(source.Id, source.Id));
+            ResolveExplosionCell(source.Id, center, events);
+            foreach (Direction direction in (Direction[])[Direction.Left, Direction.Up, Direction.Right, Direction.Down])
+            {
+                ScheduleCrossArm(source.Id, center, direction, CrossBlastArmLength, CrossBlastDelaySeconds);
+            }
+        }
+
+        private void ScheduleCrossArm(
+            EntityId sourceEntityId,
+            GridPosition from,
+            Direction direction,
+            int remaining,
+            double delaySeconds)
+        {
+            GridPosition next = from.Offset(direction);
+            if (!_world.Contains(next))
+            {
+                return;
+            }
+
+            _pendingExplosionCells.Add(new ScheduledExplosionCell(
+                sourceEntityId,
+                next,
+                _world.CurrentTimeSeconds + delaySeconds,
+                _nextExplosionOrder++,
+                direction,
+                remaining));
+        }
+
+        /// <summary>
+        /// Starts whichever blast an explosive entity owns, the recovered handler its
+        /// <c>OnShake</c>, <c>OnExpl</c> and <c>OnLand</c> name.
+        /// </summary>
+        private void StartOwnBlast(Entity source, List<SimulationEvent> events)
+        {
+            if (source.ExplosionBody?.Reaction == ExplosionReaction.CrossBlast)
+            {
+                StartCrossExplosion(source, events);
+            }
+            else
+            {
+                StartExplosion(source, events);
             }
         }
 
@@ -849,9 +947,6 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
-                // ExplosionReaction.Deferred is deliberately inert. Those entities carry
-                // CNT_CMaskCellCanExplode, so a blast does reach them, but their recovered
-                // handlers — the barrel's cross blast and the magic gem — are not implemented yet.
                 if (occupant.ExplosionBody?.Reaction == ExplosionReaction.Destroy)
                 {
                     DestroyEntity(occupant, sourceEntityId, events);
@@ -859,6 +954,10 @@ namespace Mooh.Core.Simulation
                 else if (occupant.ExplosionBody?.Reaction == ExplosionReaction.Detonate3x3)
                 {
                     StartExplosion(occupant, events);
+                }
+                else if (occupant.ExplosionBody?.Reaction == ExplosionReaction.CrossBlast)
+                {
+                    StartCrossExplosion(occupant, events);
                 }
                 else if (occupant.ExplosionBody?.Reaction == ExplosionReaction.LaunchArrow)
                 {
@@ -1714,7 +1813,13 @@ namespace Mooh.Core.Simulation
                     KinematicsSystem.Stop(entity);
                     events.Add(new Landed(entity.Id, _gravityDirection));
                     ResolveFallingImpact(entity, following, events);
-                    if (entity.ExplosionBody?.DetonatesOnLanding == true)
+                    if (entity.ExplosionBody is { DetonatesOnLanding: true, Reaction: ExplosionReaction.CrossBlast })
+                    {
+                        // The barrel's OnLand is ObjExplCross itself, not ExplWork, so there is
+                        // no repeated downward shake after it.
+                        StartCrossExplosion(entity, events);
+                    }
+                    else if (entity.ExplosionBody?.DetonatesOnLanding == true)
                     {
                         StartExplosion(entity, events);
                         ResolveFallingImpact(entity, following, events);
@@ -1805,6 +1910,9 @@ namespace Mooh.Core.Simulation
                 case ShakeReaction.LaunchArrow:
                     LaunchArrow(occupant, events);
                     break;
+                case ShakeReaction.CrossBlast:
+                    StartCrossExplosion(occupant, events);
+                    break;
                 case ShakeReaction.None:
                 case ShakeReaction.Deferred:
                     break;
@@ -1835,11 +1943,17 @@ namespace Mooh.Core.Simulation
             };
         }
 
+        /// <summary>
+        /// A blast cell waiting for its recovered delay. A cross-blast arm also carries its
+        /// direction and how many cells it may still reach, counting this one.
+        /// </summary>
         private sealed record ScheduledExplosionCell(
             EntityId SourceEntityId,
             GridPosition Position,
             double DueTimeSeconds,
-            long Order);
+            long Order,
+            Direction? ArmDirection = null,
+            int ArmRemaining = 0);
 
         private void ResolvePushedBoundary(
             Entity entity,

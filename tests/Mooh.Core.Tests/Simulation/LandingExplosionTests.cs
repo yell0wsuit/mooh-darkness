@@ -126,10 +126,9 @@ namespace Mooh.Core.Tests.Simulation
 
             Assert.Equal(ExplosionReaction.Detonate3x3, level.GetEntity(8).ExplosionBody!.Reaction);
             Assert.Equal(ExplosionReaction.Detonate3x3, level.GetEntity(9).ExplosionBody!.Reaction);
-            // The barrel carries CNT_CMaskCellCanExplode, so a blast reaches it, but its
-            // recovered OnExpl cross blast is a specialization that is not implemented yet. The
-            // arrow shares the bit and answers with its launch instead.
-            Assert.Equal(ExplosionReaction.Deferred, level.GetEntity(12).ExplosionBody!.Reaction);
+            // The barrel answers a blast with its own cross blast, and the arrow, which shares
+            // CNT_CMaskCellCanExplode, with its launch.
+            Assert.Equal(ExplosionReaction.CrossBlast, level.GetEntity(12).ExplosionBody!.Reaction);
             Assert.Equal(ExplosionReaction.LaunchArrow, level.GetEntity(13).ExplosionBody!.Reaction);
 
             foreach (int id in new[] { 10, 11 })

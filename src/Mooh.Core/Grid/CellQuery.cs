@@ -94,6 +94,23 @@ namespace Mooh.Core.Grid
         }
 
         /// <summary>
+        /// Reports whether a still, visible occupant survives in a cell a blast has just reached,
+        /// modelling <c>CellObjCheck(c, 0, CNT_OrMaskShadow, True)</c>. The recovered
+        /// <c>_ObjExplCross</c> stops an arm there, and <c>_ObjExplWrd</c> skips its blast graphic.
+        /// </summary>
+        /// <param name="world">The authoritative world.</param>
+        /// <param name="cell">The reached cell.</param>
+        /// <returns><see langword="true"/> when something still and non-shadow remains.</returns>
+        internal static bool HoldsBlastSurvivor(WorldGrid world, GridPosition cell)
+        {
+            return world.Contains(cell)
+                && world.GetOccupants(cell).Any(
+                    occupant => occupant.Motion is null
+                        && (occupant.Interactions
+                            & (InteractionMask.OccupancyTransparent | InteractionMask.MonsterTransparent)) == 0);
+        }
+
+        /// <summary>
         /// Reports whether a cell holds an entity moving against a direction, modelling the
         /// recovered <c>CellDirLocked</c> test that selects the <c>CNT_OPrm_AirSlow</c> multiplier.
         /// </summary>

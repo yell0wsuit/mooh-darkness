@@ -17,10 +17,9 @@ namespace Mooh.Core.Explosions
         LaunchArrow,
 
         /// <summary>
-        /// The entity carries the recovered <c>CNT_CMaskCellCanExplode</c> bit but reacts through a
-        /// specialization that is not implemented yet, so a blast reaching it does nothing. The
-        /// remaining recovered handlers are the barrel's cross blast and the magic gem.
+        /// The entity is destroyed and starts the recovered <c>Game.ObjExplCross</c>: its own cell
+        /// at once, then four straight arms. The barrel is the only placed carrier.
         /// </summary>
-        Deferred,
+        CrossBlast,
     }
 }

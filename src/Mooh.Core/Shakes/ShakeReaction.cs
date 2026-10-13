@@ -23,6 +23,12 @@ namespace Mooh.Core.Shakes
         /// </summary>
         LaunchArrow,
 
+        /// <summary>
+        /// The entity is destroyed and starts the recovered <c>Game.ObjExplCross</c>: its own cell
+        /// at once, then four straight arms. The barrel is the only placed carrier.
+        /// </summary>
+        CrossBlast,
+
         /// <summary>The recovered handler is specialized and is not implemented yet.</summary>
         Deferred,
     }

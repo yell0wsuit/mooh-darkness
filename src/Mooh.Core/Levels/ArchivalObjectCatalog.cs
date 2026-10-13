@@ -141,11 +141,14 @@ namespace Mooh.Core.Levels
                 explosionReaction: ExplosionReaction.Detonate3x3,
                 detonatesOnLanding: true,
                 shakeReaction: ShakeReaction.Detonate3x3);
+            // GameObjBarrel names Game.ObjExplCross for OnShake, OnShakeHard, OnExpl and OnLand
+            // alike, so every trigger, a landing included, starts the same cross blast.
             Add(result, "OBarel", EntityKind.Barrel,
                 PushableRound | InteractionMask.GravityAxisPushable | BlueTarget,
                 hasGravity: true,
-                explosionReaction: ExplosionReaction.Deferred,
-                shakeReaction: ShakeReaction.Deferred);
+                explosionReaction: ExplosionReaction.CrossBlast,
+                detonatesOnLanding: true,
+                shakeReaction: ShakeReaction.CrossBlast);
             Add(result, "OBaloon", EntityKind.Balloon, PushableAlongGravity | BlueTarget,
                 explosionReaction: ExplosionReaction.Detonate3x3,
                 shakeReaction: ShakeReaction.Detonate3x3);

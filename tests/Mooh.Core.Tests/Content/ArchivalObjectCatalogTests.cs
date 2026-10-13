@@ -233,7 +233,7 @@ namespace Mooh.Core.Tests.Content
         [InlineData("OCoin02", ShakeReaction.None, ShakeReaction.Destroy)]
         [InlineData("ODiam05", ShakeReaction.None, ShakeReaction.Destroy)]
         [InlineData("OEat01", ShakeReaction.None, ShakeReaction.Destroy)]
-        [InlineData("OBarel", ShakeReaction.Deferred, ShakeReaction.Deferred)]
+        [InlineData("OBarel", ShakeReaction.CrossBlast, ShakeReaction.CrossBlast)]
         [InlineData("OMagic", ShakeReaction.Deferred, ShakeReaction.Deferred)]
         [InlineData("OArrowT", ShakeReaction.LaunchArrow, ShakeReaction.LaunchArrow)]
         [InlineData("ORock01", ShakeReaction.None, ShakeReaction.None)]
@@ -262,7 +262,7 @@ namespace Mooh.Core.Tests.Content
                 .Order(StringComparer.Ordinal)];
 
             Assert.Equal(
-                ["OBarel", "OMagic"],
+                ["OMagic"],
                 deferred);
         }
 
@@ -335,7 +335,7 @@ namespace Mooh.Core.Tests.Content
         [InlineData("OBottle", ExplosionReaction.Detonate3x3)]
         [InlineData("OBaloon", ExplosionReaction.Detonate3x3)]
         [InlineData("WBomb", ExplosionReaction.Detonate3x3)]
-        [InlineData("OBarel", ExplosionReaction.Deferred)]
+        [InlineData("OBarel", ExplosionReaction.CrossBlast)]
         [InlineData("OArrowL", ExplosionReaction.LaunchArrow)]
         [InlineData("CellsMetal01", null)]
         [InlineData("TonnelHor", null)]
@@ -350,23 +350,6 @@ namespace Mooh.Core.Tests.Content
             ExplosionReaction? expected)
         {
             Assert.Equal(expected, ArchivalObjectCatalog.Get(archivalType).ExplosionReaction);
-        }
-
-        /// <summary>
-        /// Verifies the deferred explosion handlers are exactly the recovered specializations
-        /// that remain: the barrel's cross blast.
-        /// </summary>
-        [Fact]
-        public void DeferredExplosionReactionsAreTheKnownSpecializations()
-        {
-            string[] deferred = [.. ArchivalObjectCatalog.Types
-                .Where(type => ArchivalObjectCatalog.Get(type).ExplosionReaction
-                    == ExplosionReaction.Deferred)
-                .Order(StringComparer.Ordinal)];
-
-            Assert.Equal(
-                ["OBarel"],
-                deferred);
         }
 
         /// <summary>Gets every placed type carrying a capability, in ordinal order.</summary>

@@ -99,7 +99,7 @@ namespace Mooh.SimulationRunner
             WorldGrid world = Session.Level.World;
             foreach (SimulationEvent value in events)
             {
-                if (value is ExplosionCellReached reached && ShowsBlast(world, reached.Position))
+                if (value is ExplosionCellReached reached && SimulationWorld.ShowsBlast(world, reached.Position))
                 {
                     _blastCells[reached.Position] =
                         _simulationTime + SimulationWorld.ExplosionCellLockDuration;
@@ -175,28 +175,6 @@ namespace Mooh.SimulationRunner
                 (body?.Reaction.Kind ?? PlayerReactionKind.Normal).ToString(),
                 _helpText,
                 Session.Level.World.Player?.HealthBody?.Clock?.Remaining.TotalSeconds);
-        }
-
-        /// <summary>
-        /// Applies the recovered gate on the blast graphic. <c>Game._ObjExplWrd</c> destroys the
-        /// cell's <c>CNT_CMaskCellCanExplode</c> carriers and locks the cell unconditionally, but
-        /// reaches <c>SfxExplAdd1x1</c> only when
-        /// <c>not CellObjCheck(c, 0, CNT_OrMaskShadow, True)</c> — that is, only when nothing
-        /// still and non-shadow survived. A cell an immortal wall or a tunnel occupies is
-        /// therefore reached, locked and dangerous, but never drawn as a blast.
-        /// </summary>
-        /// <remarks>
-        /// The test runs at the end of the step that reported the reach, which is after that
-        /// step's destruction pass and so matches the recovered order. The same gate also governs
-        /// <c>_ObjExplJerk</c>, the surrounding shake, which the simulation does not implement
-        /// yet; when it lands, the decision belongs in the core rather than here.
-        /// </remarks>
-        private static bool ShowsBlast(WorldGrid world, GridPosition cell)
-        {
-            return world.Contains(cell)
-                && !world.GetOccupants(cell).Any(
-                    occupant => occupant.Motion is null
-                        && !occupant.Interactions.HasFlag(InteractionMask.OccupancyTransparent));
         }
 
         /// <summary>
