@@ -90,7 +90,7 @@ namespace Mooh.Core.Simulation
         /// <param name="events">The ordered event sink.</param>
         internal void Advance(double elapsedSeconds, List<SimulationEvent> events)
         {
-            AdvanceSettle(TimeSpan.FromSeconds(elapsedSeconds), events);
+            AdvanceSettle(SimulationTime.Elapsed(elapsedSeconds), events);
             Observe();
         }
 

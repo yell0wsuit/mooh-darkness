@@ -63,7 +63,7 @@ namespace Mooh.Core.Enemies
             SmallBeetleBody body = beetle.SmallBeetleBody
                 ?? throw new InvalidOperationException("Advancing requires a small-beetle body.");
 
-            TimeSpan elapsed = TimeSpan.FromSeconds(elapsedSeconds);
+            TimeSpan elapsed = SimulationTime.Elapsed(elapsedSeconds);
             body.RemainingImmunity = Reduce(body.RemainingImmunity, elapsed);
             if (body.State == SmallBeetleState.Waiting)
             {

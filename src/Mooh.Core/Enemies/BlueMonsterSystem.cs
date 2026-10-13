@@ -92,7 +92,7 @@ namespace Mooh.Core.Enemies
                 return;
             }
 
-            TimeSpan elapsed = TimeSpan.FromSeconds(elapsedSeconds);
+            TimeSpan elapsed = SimulationTime.Elapsed(elapsedSeconds);
             if (body.Remaining - elapsed > TimerTolerance)
             {
                 body.Remaining -= elapsed;

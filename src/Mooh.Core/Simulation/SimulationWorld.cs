@@ -815,7 +815,7 @@ namespace Mooh.Core.Simulation
                 AdvanceBigBombFuses(substepSeconds, events);
                 AdvanceBioMasses(substepSeconds, events);
                 AdvanceDoors(substepSeconds, events);
-                _world.Player?.HealthBody?.Clock?.Advance(TimeSpan.FromSeconds(substepSeconds));
+                _world.Player?.HealthBody?.Clock?.Advance(SimulationTime.Elapsed(substepSeconds));
                 SynchronizeMonsterIce(events);
                 bool playerControlReady = _playerController?.AdvanceRotation(
                     substepSeconds,
@@ -889,7 +889,7 @@ namespace Mooh.Core.Simulation
 
         private void AdvancePlayerProgress(double elapsedSeconds)
         {
-            _world.Player?.PlayerBody?.Progress.Advance(TimeSpan.FromSeconds(elapsedSeconds));
+            _world.Player?.PlayerBody?.Progress.Advance(SimulationTime.Elapsed(elapsedSeconds));
         }
 
         /// <summary>
@@ -2354,7 +2354,7 @@ namespace Mooh.Core.Simulation
 
         private void AdvanceHealthImmunity(double elapsedSeconds)
         {
-            TimeSpan elapsed = TimeSpan.FromSeconds(elapsedSeconds);
+            TimeSpan elapsed = SimulationTime.Elapsed(elapsedSeconds);
             foreach (Entity entity in _world.Entities)
             {
                 entity.HealthBody?.AdvanceImmunity(elapsed);
@@ -2374,7 +2374,7 @@ namespace Mooh.Core.Simulation
                 return false;
             }
 
-            TimeSpan elapsed = TimeSpan.FromSeconds(elapsedSeconds);
+            TimeSpan elapsed = SimulationTime.Elapsed(elapsedSeconds);
             if (reaction.Remaining - elapsed > TimerTolerance)
             {
                 reaction.Remaining -= elapsed;
