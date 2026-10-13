@@ -8,7 +8,10 @@ using Mooh.Core.Simulation;
 
 namespace Mooh.Core.Levels
 {
-    /// <summary>Resolves colored doors before ordinary movement collision planning.</summary>
+    /// <summary>
+    /// Resolves colored doors before ordinary movement collision planning. A matching key only
+    /// starts the door's opening; the door stays solid, so the move itself is still blocked.
+    /// </summary>
     internal static class KeyDoorSystem
     {
         public static void TryOpen(
@@ -25,15 +28,17 @@ namespace Mooh.Core.Levels
             foreach (Entity occupant in world.GetOccupants(destination))
             {
                 ArchivalObjectIdentity? archival = occupant.ArchivalIdentity;
-                if (archival?.Kind != EntityKind.KeyDoor || !progress.HasKey(archival.Variant))
+                if (archival?.Kind != EntityKind.KeyDoor
+                    || occupant.KeyDoorBody is not { OpeningRemainingSeconds: null } door
+                    || !progress.HasKey(archival.Variant))
                 {
                     continue;
                 }
 
-                _ = world.Remove(occupant.Id);
-                int score = progress.OpenDoor();
-                events.Add(new KeyDoorOpened(player.Id, occupant.Id, archival.Variant, score));
+                door.OpeningRemainingSeconds = KeyDoorBody.OpeningSeconds;
+                events.Add(new KeyDoorOpeningStarted(player.Id, occupant.Id, archival.Variant));
             }
         }
     }
 }
+

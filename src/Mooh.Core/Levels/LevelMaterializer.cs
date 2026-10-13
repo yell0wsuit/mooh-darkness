@@ -228,6 +228,9 @@ namespace Mooh.Core.Levels
                     : null,
                 bioMassBody: descriptor.Kind == EntityKind.BioMass
                     ? new BioMassBody()
+                    : null,
+                keyDoorBody: descriptor.Kind == EntityKind.KeyDoor
+                    ? new KeyDoorBody()
                     : null);
         }
 

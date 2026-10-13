@@ -342,7 +342,7 @@ namespace Mooh.Core.Simulation
             double? result = null;
             foreach (Entity entity in _world.Entities)
             {
-                if (entity.DoorBody?.RemovalRemainingSeconds is double remaining
+                if ((entity.DoorBody?.RemovalRemainingSeconds ?? entity.KeyDoorBody?.OpeningRemainingSeconds) is double remaining
                     && (result is null || remaining < result))
                 {
                     result = remaining;
@@ -352,7 +352,10 @@ namespace Mooh.Core.Simulation
             return result;
         }
 
-        /// <summary>Plays out every leaving start door and kills each one that has gone.</summary>
+        /// <summary>
+        /// Plays out every leaving start door and kills each one that has gone, then every opening
+        /// key door.
+        /// </summary>
         private void AdvanceDoors(double elapsedSeconds, List<SimulationEvent> events)
         {
             Entity[] leaving = [.. _world.Entities.Where(entity => entity.DoorBody?.RemovalRemainingSeconds is not null)];
@@ -368,6 +371,35 @@ namespace Mooh.Core.Simulation
 
                 body.RemovalRemainingSeconds = null;
                 DestroyEntity(door, door.Id, events);
+            }
+
+            AdvanceKeyDoors(elapsedSeconds, events);
+        }
+
+        /// <summary>
+        /// Plays out every opening key door. <c>KeyDoorKill</c> kills the door at the end of its
+        /// animation, and the kill is what scores it.
+        /// </summary>
+        private void AdvanceKeyDoors(double elapsedSeconds, List<SimulationEvent> events)
+        {
+            Entity[] opening = [.. _world.Entities.Where(entity => entity.KeyDoorBody?.OpeningRemainingSeconds is not null)];
+            foreach (Entity door in opening)
+            {
+                KeyDoorBody body = door.KeyDoorBody!;
+                double remaining = body.OpeningRemainingSeconds!.Value - elapsedSeconds;
+                if (remaining > TimeTolerance)
+                {
+                    body.OpeningRemainingSeconds = remaining;
+                    continue;
+                }
+
+                body.OpeningRemainingSeconds = null;
+                _ = _world.Remove(door.Id);
+                if (_world.Player is Entity player && player.PlayerBody is PlayerBody playerBody)
+                {
+                    int score = playerBody.Progress.OpenDoor();
+                    events.Add(new KeyDoorOpened(player.Id, door.Id, door.ArchivalIdentity?.Variant ?? 0, score));
+                }
             }
         }
 

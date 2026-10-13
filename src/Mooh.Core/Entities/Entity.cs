@@ -38,6 +38,7 @@ namespace Mooh.Core.Entities
     /// <param name="rocketBody">The entity's optional fired-rocket behavior.</param>
     /// <param name="bioMassBody">The entity's optional bio-mass behavior.</param>
     /// <param name="doorBody">The entity's optional start-door behavior.</param>
+    /// <param name="keyDoorBody"></param>
     public sealed class Entity(
         EntityId id,
         GridPosition position,
@@ -61,7 +62,8 @@ namespace Mooh.Core.Entities
         BigBombBody? bigBombBody = null,
         RocketBody? rocketBody = null,
         BioMassBody? bioMassBody = null,
-        DoorBody? doorBody = null)
+        DoorBody? doorBody = null,
+        KeyDoorBody? keyDoorBody = null)
     {
         /// <summary>Gets the entity's stable identity.</summary>
         public EntityId Id { get; } = id;
@@ -135,6 +137,9 @@ namespace Mooh.Core.Entities
 
         /// <summary>Gets the entity's optional start-door behavior.</summary>
         public DoorBody? DoorBody { get; } = doorBody;
+
+        /// <summary>Gets the entity's optional colored-key-door opening.</summary>
+        public KeyDoorBody? KeyDoorBody { get; } = keyDoorBody;
 
         /// <summary>
         /// Gets the simulation time until which the entity cannot be killed, the recovered

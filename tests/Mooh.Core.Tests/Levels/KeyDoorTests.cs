@@ -13,6 +13,9 @@ namespace Mooh.Core.Tests.Levels
     /// <summary>Verifies recovered colored key-door behavior.</summary>
     public sealed class KeyDoorTests
     {
+        /// <summary>The recovered <c>ST_Work</c> of a key door: 13 frames at 35 ms.</summary>
+        private const double OpeningSeconds = 0.455;
+
         /// <summary>Verifies a matching collected key removes its door and awards 100 points.</summary>
         [Fact]
         public void MatchingKeyOpensDoorOnApproach()
@@ -20,11 +23,43 @@ namespace Mooh.Core.Tests.Levels
             MaterializedLevel level = Materialize(includeKey: true);
             level.Simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
 
-            IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(TimeSpan.FromSeconds(1));
+            IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(TimeSpan.FromSeconds(2));
 
             Assert.Contains(events, item => item is KeyDoorOpened opened && opened.DoorEntityId == level.EntityIdsByObjectId[3]);
             Assert.Equal(200, level.World.Player!.PlayerBody!.Progress.Score);
             Assert.DoesNotContain(level.World.Entities, entity => entity.ArchivalIdentity?.Kind == EntityKind.KeyDoor);
+        }
+
+        /// <summary>
+        /// Verifies the door plays its opening first: <c>KeyDoorDoor1</c> only enters
+        /// <c>ST_Work</c>, the door stays solid and the player pushes against it, and
+        /// <c>KeyDoorKill</c> removes it and scores it when the animation ends.
+        /// </summary>
+        [Fact]
+        public void TheDoorStaysSolidUntilItsOpeningEnds()
+        {
+            MaterializedLevel level = Materialize(includeKey: true);
+            Entities.Entity door = level.GetEntity(3);
+            level.Simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
+            List<SimulationEvent> events = [];
+            while (!events.Exists(item => item is KeyDoorOpeningStarted))
+            {
+                events.AddRange(level.Simulation.Advance(TimeSpan.FromMilliseconds(5)));
+            }
+
+            Assert.Equal(OpeningSeconds, door.KeyDoorBody!.OpeningRemainingSeconds!.Value, 3);
+            int scoreAtStart = level.World.Player!.PlayerBody!.Progress.Score;
+
+            IReadOnlyList<SimulationEvent> opening = level.Simulation.Advance(TimeSpan.FromSeconds(OpeningSeconds - 0.01));
+            Assert.Contains(level.World.Entities, entity => entity.Id == door.Id);
+            Assert.Contains(opening, item => item is PlayerBlocked);
+            Assert.DoesNotContain(opening, item => item is KeyDoorOpeningStarted or KeyDoorOpened);
+            Assert.Equal(scoreAtStart, level.World.Player.PlayerBody.Progress.Score);
+
+            IReadOnlyList<SimulationEvent> opened = level.Simulation.Advance(TimeSpan.FromSeconds(0.02));
+            Assert.Contains(opened, item => item is KeyDoorOpened { DoorEntityId: var id } && id == door.Id);
+            Assert.DoesNotContain(level.World.Entities, entity => entity.Id == door.Id);
+            Assert.Equal(scoreAtStart + 100, level.World.Player.PlayerBody.Progress.Score);
         }
 
         /// <summary>Verifies a door remains solid when its matching key is absent.</summary>
