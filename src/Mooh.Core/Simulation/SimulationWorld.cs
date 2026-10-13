@@ -208,6 +208,13 @@ namespace Mooh.Core.Simulation
             _smallBeetles = new SmallBeetleSystem(world);
             _levelOutcome = new LevelOutcomeSystem(world, _difficultySpeeds);
 
+            // The recovered GameInit counts the treasure the player can reach.
+            if (world.Player is { PlayerBody: PlayerBody startingBody } startingPlayer)
+            {
+                startingBody.Progress.StartTreasureTrace(
+                    TreasureTrace.CountReachable(world, startingPlayer.Position));
+            }
+
             // The recovered GameInit starts PlayTime on the timed profile only.
             if (_difficultySpeeds.IsTimed && world.Player?.HealthBody is HealthBody playerHealth)
             {
@@ -981,6 +988,10 @@ namespace Mooh.Core.Simulation
             if (_world.Remove(entity.Id))
             {
                 events.Add(new EntityDestroyed(entity.Id, sourceEntityId));
+                if (entity.IsTreasure)
+                {
+                    _world.Player?.PlayerBody?.Progress.ForfeitTreasureBonus();
+                }
             }
         }
 

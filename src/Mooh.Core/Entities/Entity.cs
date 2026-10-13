@@ -143,6 +143,12 @@ namespace Mooh.Core.Entities
         public bool IsDamageablePlayer => PlayerBody is not null && HealthBody is not null;
 
         /// <summary>
+        /// Gets whether the entity is treasure, a carrier of the recovered
+        /// <c>CNT_CMaskTraceTreas</c>: every coin and diamond, the magic gem's spawn included.
+        /// </summary>
+        public bool IsTreasure => ArchivalIdentity?.Kind is EntityKind.Coin or EntityKind.Diamond;
+
+        /// <summary>
         /// Gets whether the entity is a monster the ice bonus has frozen.
         /// </summary>
         /// <remarks>

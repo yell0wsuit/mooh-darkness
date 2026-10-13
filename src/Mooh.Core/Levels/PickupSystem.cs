@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using Mooh.Core.Entities;
+using Mooh.Core.Grid;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
@@ -13,9 +14,11 @@ namespace Mooh.Core.Levels
         public static void Collect(
             Entity player,
             Entity pickup,
+            WorldGrid world,
             DifficultySpeeds difficultySpeeds,
             ICollection<SimulationEvent> events)
         {
+            ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(player);
             ArgumentNullException.ThrowIfNull(pickup);
             ArgumentNullException.ThrowIfNull(difficultySpeeds);
@@ -39,6 +42,12 @@ namespace Mooh.Core.Levels
                 player.HealthBody
                     ?? throw new InvalidOperationException("Pickup collection requires player health."),
                 difficultySpeeds.FoodHeal);
+            if (pickup.IsTreasure)
+            {
+                score += playerBody.Progress.EatTreasure(
+                    noneLeft: !TreasureTrace.AnyReachable(world, player.Position, pickup.Id));
+            }
+
             events.Add(new PickupCollected(player.Id, pickup.Id, archival.Kind, score));
             if (archival.Kind == EntityKind.Cola)
             {

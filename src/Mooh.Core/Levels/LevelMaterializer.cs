@@ -101,20 +101,6 @@ namespace Mooh.Core.Levels
                 }
             }
 
-            if (world.Player?.PlayerBody is PlayerBody playerBody)
-            {
-                int totalTreasure = 0;
-                foreach (Entity entity in world.Entities)
-                {
-                    if (entity.ArchivalIdentity?.Kind is EntityKind.Coin or EntityKind.Diamond)
-                    {
-                        totalTreasure++;
-                    }
-                }
-
-                playerBody.Progress.InitializeTreasure(totalTreasure);
-            }
-
             SimulationWorld simulation = new(
                 world,
                 gravityDirection,

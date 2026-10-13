@@ -86,7 +86,7 @@ namespace Mooh.Core.Tests.Levels
             PickupCollected collected = Assert.Single(events, item => item is PickupCollected)
                 as PickupCollected ?? throw new InvalidOperationException();
             Assert.Equal(5050, collected.ScoreAwarded);
-            Assert.True(pair.Player.PlayerBody.Progress.HasAllTreasure);
+            Assert.True(pair.Player.PlayerBody.Progress.HasEarnedTreasureBonus);
         }
 
         /// <summary>Verifies active cola rejects damage and bonus timers advance with simulation time.</summary>

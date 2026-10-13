@@ -10,19 +10,31 @@ namespace Mooh.Core.Player
     {
         private static readonly TimeSpan BonusDuration = TimeSpan.FromSeconds(45);
         private int _keyMask;
-        private bool _treasureBonusAwarded;
 
         /// <summary>Gets the level score earned by collection and progression.</summary>
         public int Score { get; private set; }
 
-        /// <summary>Gets the number of collected coins and diamonds.</summary>
+        /// <summary>
+        /// Gets the treasure eaten while the bonus was still available, the recovered
+        /// <c>ulGameTreasGet</c>.
+        /// </summary>
         public int TreasureCollected { get; private set; }
 
-        /// <summary>Gets the number of coins and diamonds initially present in the level.</summary>
+        /// <summary>
+        /// Gets the treasure the bonus asks for, the recovered <c>ulGameTreasAll</c>: what the
+        /// player could reach at level start, raised if more is eaten than that.
+        /// </summary>
         public int TotalTreasure { get; private set; }
 
-        /// <summary>Gets whether every initially placed treasure has been collected.</summary>
-        public bool HasAllTreasure => TotalTreasure > 0 && TreasureCollected >= TotalTreasure;
+        /// <summary>
+        /// Gets whether the all-treasure bonus can still be earned, the recovered
+        /// <c>bGameHaveTreas</c>. It is lost for good once any treasure is killed other than by
+        /// eating, and once the bonus is paid.
+        /// </summary>
+        public bool IsTreasureBonusAvailable { get; private set; }
+
+        /// <summary>Gets whether the all-treasure bonus has been paid.</summary>
+        public bool HasEarnedTreasureBonus { get; private set; }
 
         /// <summary>Gets the available grenade count, including the recovered five starting grenades.</summary>
         public int Grenades { get; private set; } = 5;
@@ -53,10 +65,48 @@ namespace Mooh.Core.Player
             return (_keyMask & (1 << (keyNumber - 1))) != 0;
         }
 
-        internal void InitializeTreasure(int totalTreasure)
+        /// <summary>Starts the bonus from the recovered <c>GameInit</c> trace count.</summary>
+        internal void StartTreasureTrace(int reachableTreasure)
         {
-            ArgumentOutOfRangeException.ThrowIfNegative(totalTreasure);
-            TotalTreasure = totalTreasure;
+            ArgumentOutOfRangeException.ThrowIfNegative(reachableTreasure);
+            TotalTreasure = reachableTreasure;
+            IsTreasureBonusAvailable = reachableTreasure > 0;
+        }
+
+        /// <summary>
+        /// Records an eaten treasure, the recovered <c>CtrlCellEat</c> branch, and pays the
+        /// 5000-point bonus when the trace finds none left.
+        /// </summary>
+        /// <param name="noneLeft">Whether no other treasure remains reachable.</param>
+        /// <returns>The bonus score awarded, or zero.</returns>
+        internal int EatTreasure(bool noneLeft)
+        {
+            if (!IsTreasureBonusAvailable)
+            {
+                return 0;
+            }
+
+            TreasureCollected++;
+            TotalTreasure = Math.Max(TotalTreasure, TreasureCollected);
+            if (!noneLeft)
+            {
+                return 0;
+            }
+
+            const int TreasureBonus = 5000;
+            IsTreasureBonusAvailable = false;
+            HasEarnedTreasureBonus = true;
+            Score += TreasureBonus;
+            return TreasureBonus;
+        }
+
+        /// <summary>
+        /// Forfeits the bonus, the recovered <c>Game.ObjKill</c> branch for a treasure that dies
+        /// other than by being eaten.
+        /// </summary>
+        internal void ForfeitTreasureBonus()
+        {
+            IsTreasureBonusAvailable = false;
         }
 
         internal int Collect(ArchivalObjectDescriptor descriptor, HealthBody health, double foodHeal)
@@ -67,16 +117,6 @@ namespace Mooh.Core.Player
 #pragma warning disable IDE0010 // Most runtime entity kinds intentionally have no collection side effect.
             switch (descriptor.Kind)
             {
-                case EntityKind.Coin:
-                case EntityKind.Diamond:
-                    TreasureCollected++;
-                    if (HasAllTreasure && !_treasureBonusAwarded)
-                    {
-                        score += 5000;
-                        _treasureBonusAwarded = true;
-                    }
-
-                    break;
                 case EntityKind.Food:
                     health.Heal(foodHeal);
                     break;

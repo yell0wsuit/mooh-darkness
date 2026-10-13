@@ -914,7 +914,7 @@ namespace Mooh.Core.Player
                     continue;
                 }
 
-                PickupSystem.Collect(_player, entity, _difficultySpeeds, events);
+                PickupSystem.Collect(_player, entity, _world, _difficultySpeeds, events);
                 _ = _world.Remove(entity.Id);
                 events.Add(new PlayerAte(_player.Id, entity.Id));
             }
