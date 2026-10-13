@@ -274,6 +274,33 @@ namespace Mooh.Core.Simulation
             controller.SetInput(input);
         }
 
+        /// <summary>Selects a weapon, the recovered <c>WeapCurrSet</c> the <c>1</c>-<c>4</c> keys call.</summary>
+        /// <param name="weapon">The weapon to make current.</param>
+        /// <returns>The selection event, or nothing when the weapon is current or empty.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="weapon"/> is undefined.</exception>
+        public IReadOnlyList<SimulationEvent> SelectWeapon(WeaponKind weapon)
+        {
+            return !Enum.IsDefined(weapon)
+                ? throw new ArgumentOutOfRangeException(nameof(weapon), weapon, null)
+                : _world.Player is { PlayerBody.Progress: PlayerProgress progress } player
+                && progress.SelectWeapon(weapon)
+                ? [new PlayerWeaponSelected(player.Id, weapon)]
+                : [];
+        }
+
+        /// <summary>
+        /// Selects the next stocked weapon, the recovered <c>WeapNext</c> the second fire control
+        /// runs when it is released.
+        /// </summary>
+        /// <returns>The selection event, or nothing when no other weapon is stocked.</returns>
+        public IReadOnlyList<SimulationEvent> SelectNextWeapon()
+        {
+            return _world.Player is { PlayerBody.Progress: PlayerProgress progress } player
+                && progress.SelectNextWeapon()
+                ? [new PlayerWeaponSelected(player.Id, progress.CurrentWeapon)]
+                : [];
+        }
+
         /// <summary>Applies health damage and starts any corresponding player reaction.</summary>
         /// <param name="request">The requested damage.</param>
         /// <returns>The complete ordered event sequence produced by the request.</returns>

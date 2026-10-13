@@ -9,6 +9,8 @@ namespace Mooh.Core.Player
     public sealed class PlayerProgress
     {
         private static readonly TimeSpan BonusDuration = TimeSpan.FromSeconds(45);
+        /// <summary>The recovered <c>WeapValReset</c> stock: five grenades and nothing else.</summary>
+        private readonly int[] _ammo = [5, 0, 0, 0];
         private int _keyMask;
 
         /// <summary>Gets the level score earned by collection and progression.</summary>
@@ -36,17 +38,34 @@ namespace Mooh.Core.Player
         /// <summary>Gets whether the all-treasure bonus has been paid.</summary>
         public bool HasEarnedTreasureBonus { get; private set; }
 
+        /// <summary>
+        /// Gets the weapon the fire control uses, the recovered <c>WeapCurr</c>. The recovered
+        /// <c>WeapValReset</c> starts every level on the grenade.
+        /// </summary>
+        public WeaponKind CurrentWeapon { get; private set; }
+
+        /// <summary>Gets the ammunition held for a weapon.</summary>
+        /// <param name="weapon">The weapon.</param>
+        /// <returns>The rounds held.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="weapon"/> is undefined.</exception>
+        public int AmmoOf(WeaponKind weapon)
+        {
+            return Enum.IsDefined(weapon)
+                ? _ammo[(int)weapon]
+                : throw new ArgumentOutOfRangeException(nameof(weapon), weapon, null);
+        }
+
         /// <summary>Gets the available grenade count, including the recovered five starting grenades.</summary>
-        public int Grenades { get; private set; } = 5;
+        public int Grenades => AmmoOf(WeaponKind.Grenade);
 
         /// <summary>Gets the available rocket count.</summary>
-        public int Rockets { get; private set; }
+        public int Rockets => AmmoOf(WeaponKind.Rocket);
 
         /// <summary>Gets the available mine count.</summary>
-        public int Mines { get; private set; }
+        public int Mines => AmmoOf(WeaponKind.Mine);
 
         /// <summary>Gets the available big-bomb count.</summary>
-        public int BigBombs { get; private set; }
+        public int BigBombs => AmmoOf(WeaponKind.BigBomb);
 
         /// <summary>Gets the remaining cola protection duration.</summary>
         public TimeSpan ColaRemaining { get; private set; }
@@ -125,17 +144,17 @@ namespace Mooh.Core.Player
                     break;
                 case EntityKind.Grenade:
                 case EntityKind.GrenadeBox:
-                    Grenades += descriptor.Variant;
+                    _ = AddAmmo(WeaponKind.Grenade, descriptor.Variant);
                     break;
                 case EntityKind.Rocket:
                 case EntityKind.RocketBox:
-                    Rockets += descriptor.Variant;
+                    _ = AddAmmo(WeaponKind.Rocket, descriptor.Variant);
                     break;
                 case EntityKind.MineBox:
-                    Mines += descriptor.Variant;
+                    _ = AddAmmo(WeaponKind.Mine, descriptor.Variant);
                     break;
                 case EntityKind.BigBomb:
-                    BigBombs += descriptor.Variant;
+                    _ = AddAmmo(WeaponKind.BigBomb, descriptor.Variant);
                     break;
                 case EntityKind.Ice:
                     IceRemaining = BonusDuration;
@@ -164,16 +183,66 @@ namespace Mooh.Core.Player
         }
 
         /// <summary>
-        /// Spends one grenade, applying the recovered <c>WeapDec</c>. The original also switches to
-        /// the next stocked weapon once the count reaches zero; the rewrite implements only the
-        /// grenade, so there is nothing to switch to.
+        /// Makes a weapon current, the recovered <c>WeapCurrSet</c>, which refuses the weapon that
+        /// is already current and any weapon without ammunition.
         /// </summary>
-        internal void SpendGrenade()
+        /// <returns><see langword="true"/> when the current weapon changed.</returns>
+        internal bool SelectWeapon(WeaponKind weapon)
         {
-            if (Grenades > 0)
+            if (weapon == CurrentWeapon || AmmoOf(weapon) <= 0)
             {
-                Grenades--;
+                return false;
             }
+
+            CurrentWeapon = weapon;
+            return true;
+        }
+
+        /// <summary>
+        /// Selects the next stocked weapon after the current one, wrapping around, the recovered
+        /// <c>WeapNext</c>. The current weapon is tried last, which selects nothing.
+        /// </summary>
+        /// <returns><see langword="true"/> when the current weapon changed.</returns>
+        internal bool SelectNextWeapon()
+        {
+            int count = _ammo.Length;
+            for (int step = 1; step <= count; step++)
+            {
+                WeaponKind candidate = (WeaponKind)(((int)CurrentWeapon + step) % count);
+                if (AmmoOf(candidate) > 0)
+                {
+                    return SelectWeapon(candidate);
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Spends one round, the recovered <c>WeapDec</c>, which moves on to the next stocked
+        /// weapon when the count reaches zero.
+        /// </summary>
+        /// <returns><see langword="true"/> when the current weapon changed.</returns>
+        internal bool SpendAmmo(WeaponKind weapon)
+        {
+            int remaining = --_ammo[(int)weapon];
+            return remaining == 0 && SelectNextWeapon();
+        }
+
+        /// <summary>
+        /// Adds rounds, the recovered <c>WeapInc</c>, which selects the replenished weapon when the
+        /// current one has none.
+        /// </summary>
+        /// <returns><see langword="true"/> when the current weapon changed.</returns>
+        internal bool AddAmmo(WeaponKind weapon, int rounds)
+        {
+            if (rounds <= 0)
+            {
+                return false;
+            }
+
+            _ammo[(int)weapon] += rounds;
+            return AmmoOf(CurrentWeapon) <= 0 && SelectWeapon(weapon);
         }
 
         internal void AddScore(int amount)

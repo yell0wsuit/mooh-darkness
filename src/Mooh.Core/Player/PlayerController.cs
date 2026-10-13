@@ -32,6 +32,9 @@ namespace Mooh.Core.Player
         /// <summary>The recovered <c>RepTime</c> of <c>WeapGr</c>, the grenade.</summary>
         private const double GrenadeRepeatSeconds = 1.5;
 
+        /// <summary>The recovered <c>RepTime</c> of the rocket, the mine and the big bomb.</summary>
+        private const double OtherWeaponRepeatSeconds = 1.0;
+
         /// <summary>The recovered <c>ST_Bomb*</c> duration: ten frames at 35 ms.</summary>
         private const double GrenadeThrowSeconds = 0.350;
 
@@ -198,9 +201,9 @@ namespace Mooh.Core.Player
         /// </summary>
         /// <remarks>
         /// One earlier step of the original branch is still unreachable: the healing shelter needs
-        /// the door the player leaves at level start. Weapon selection is likewise absent: the
-        /// original cycles through four weapons and <c>WeapValReset</c> makes the grenade current,
-        /// which is the only weapon the rewrite implements.
+        /// the door the player leaves at level start. The weapon branch is taken for the current
+        /// weapon when the faced cell can hold it, and always for the big bomb, whose
+        /// <c>bPlaceOnEmptyCell</c> is false; that weapon therefore never falls back to a strike.
         /// </remarks>
         private void TryStartAction(PlayerBody body, List<SimulationEvent> events)
         {
@@ -212,29 +215,22 @@ namespace Mooh.Core.Player
             Direction direction = body.FacingDirection;
             GridPosition target = _player.Position.Offset(direction);
             double now = _world.CurrentTimeSeconds;
-            if (CanPlaceWeapon(target))
+            WeaponKind weapon = body.Progress.CurrentWeapon;
+            if (TakesWeaponBranch(weapon, target))
             {
-                if (IsRepeating(body, now, GrenadeRepeatSeconds))
+                if (IsRepeating(body, now, WeaponRepeatSeconds(weapon)))
                 {
                     return;
                 }
 
                 body.LastActionSeconds = now;
-                if (body.Progress.Grenades <= 0)
+                if (body.Progress.AmmoOf(weapon) <= 0)
                 {
                     events.Add(new PlayerWeaponEmpty(_player.Id));
                     return;
                 }
 
-                _actionEffects.ClearWeaponCell(target, events);
-                body.Action = new PlayerAction(
-                    PlayerActionKind.GrenadeThrow,
-                    direction,
-                    GrenadeThrowSeconds);
-                events.Add(new PlayerGrenadeThrowStarted(
-                    _player.Id,
-                    direction,
-                    TimeSpan.FromSeconds(GrenadeThrowSeconds)));
+                StartWeapon(weapon, body, direction, target, events);
                 return;
             }
 
@@ -250,6 +246,64 @@ namespace Mooh.Core.Player
                 _player.Id,
                 direction,
                 TimeSpan.FromSeconds(windup)));
+        }
+
+        /// <summary>
+        /// Decides the recovered weapon-branch gate,
+        /// <c>not x.bPlaceOnEmptyCell or not CellObjCheck(n, -1, CNT_OrMaskPlBombHere, True)</c>.
+        /// </summary>
+        private bool TakesWeaponBranch(WeaponKind weapon, GridPosition target)
+        {
+            return weapon == WeaponKind.BigBomb || CanPlaceWeapon(target);
+        }
+
+        /// <summary>
+        /// Gets the recovered <c>RepTime</c> of a weapon: 1500 ms for the grenade and 1000 ms for
+        /// the other three.
+        /// </summary>
+        private static double WeaponRepeatSeconds(WeaponKind weapon)
+        {
+            return weapon == WeaponKind.Grenade ? GrenadeRepeatSeconds : OtherWeaponRepeatSeconds;
+        }
+
+        /// <summary>Runs the current weapon's recovered <c>PlStart</c>.</summary>
+        private void StartWeapon(
+            WeaponKind weapon,
+            PlayerBody body,
+            Direction direction,
+            GridPosition target,
+            List<SimulationEvent> events)
+        {
+            switch (weapon)
+            {
+                case WeaponKind.Grenade:
+                    StartGrenadeThrow(body, direction, target, events);
+                    break;
+                case WeaponKind.Rocket:
+                case WeaponKind.Mine:
+                case WeaponKind.BigBomb:
+                    break;
+                default:
+                    throw new InvalidOperationException("Undefined weapon.");
+            }
+        }
+
+        /// <summary>Applies the recovered <c>Weap_Gas</c>.</summary>
+        private void StartGrenadeThrow(
+            PlayerBody body,
+            Direction direction,
+            GridPosition target,
+            List<SimulationEvent> events)
+        {
+            _actionEffects.ClearWeaponCell(target, events);
+            body.Action = new PlayerAction(
+                PlayerActionKind.GrenadeThrow,
+                direction,
+                GrenadeThrowSeconds);
+            events.Add(new PlayerGrenadeThrowStarted(
+                _player.Id,
+                direction,
+                TimeSpan.FromSeconds(GrenadeThrowSeconds)));
         }
 
         /// <summary>
@@ -282,6 +336,15 @@ namespace Mooh.Core.Player
             return true;
         }
 
+        /// <summary>Spends one round and reports a resulting <c>WeapNext</c>.</summary>
+        private void SpendAmmo(PlayerBody body, WeaponKind weapon, List<SimulationEvent> events)
+        {
+            if (body.Progress.SpendAmmo(weapon))
+            {
+                events.Add(new PlayerWeaponSelected(_player.Id, body.Progress.CurrentWeapon));
+            }
+        }
+
         /// <summary>Gets the remaining duration of the active action, if any.</summary>
         public double? ActionSecondsRemaining => _player.PlayerBody?.Action?.RemainingSeconds;
 
@@ -309,8 +372,9 @@ namespace Mooh.Core.Player
                     return null;
                 }
 
-                double repeat = CanPlaceWeapon(_player.Position.Offset(body.FacingDirection))
-                    ? GrenadeRepeatSeconds
+                WeaponKind weapon = body.Progress.CurrentWeapon;
+                double repeat = TakesWeaponBranch(weapon, _player.Position.Offset(body.FacingDirection))
+                    ? WeaponRepeatSeconds(weapon)
                     : StrikeRepeatSeconds;
                 double remaining = last + repeat - _world.CurrentTimeSeconds;
                 return remaining > TimeTolerance ? remaining : null;
@@ -362,7 +426,7 @@ namespace Mooh.Core.Player
                     if (_world.Contains(target))
                     {
                         _actionEffects.PlaceGrenade(target, events);
-                        body.Progress.SpendGrenade();
+                        SpendAmmo(body, WeaponKind.Grenade, events);
                     }
                     return true;
                 case PlayerActionKind.StrikeRecovery:

@@ -37,6 +37,7 @@ namespace Mooh.Core.Levels
                 return;
             }
 
+            WeaponKind weaponBefore = playerBody.Progress.CurrentWeapon;
             int score = playerBody.Progress.Collect(
                 archival.Descriptor,
                 player.HealthBody
@@ -49,6 +50,10 @@ namespace Mooh.Core.Levels
             }
 
             events.Add(new PickupCollected(player.Id, pickup.Id, archival.Kind, score));
+            if (playerBody.Progress.CurrentWeapon != weaponBefore)
+            {
+                events.Add(new PlayerWeaponSelected(player.Id, playerBody.Progress.CurrentWeapon));
+            }
             if (archival.Kind == EntityKind.Cola)
             {
                 playerBody.HasPendingColaDrink = true;
