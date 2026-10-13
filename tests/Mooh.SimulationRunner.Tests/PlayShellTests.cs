@@ -477,6 +477,27 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Contains("--difficulty", error.ToString(), StringComparison.Ordinal);
         }
 
+        /// <summary>Verifies a loaded string table turns the help-text id into its recovered text.</summary>
+        [Fact]
+        public void AReadTableShowsTheRecoveredTextWhenTheStringTableIsLoaded()
+        {
+            FakeTimeProvider time = new();
+            using System.IO.FileStream strings = System.IO.File.OpenRead(
+                System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
+            PlaySession session = new(CreateTablePack(), 0, time, strings: StringTable.Load(strings));
+            Emerge(session, time);
+            PlayerInputState down = new(Left: false, Up: false, Right: false, Down: true);
+
+            PlayFrame frame = session.Render();
+            for (int step = 0; step < 5; step++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(100));
+                frame = session.Advance(step < 3 ? down : default);
+            }
+
+            Assert.Equal("Fire will burn objects.", frame.HelpText);
+        }
+
         private static LoadedLevelPack CreateTablePack()
         {
             Dictionary<string, JsonElement> properties = new()

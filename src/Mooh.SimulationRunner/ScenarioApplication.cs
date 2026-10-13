@@ -199,6 +199,22 @@ namespace Mooh.SimulationRunner
         }
 
         /// <summary>
+        /// Loads the recovered string table that sits beside the level pack, at
+        /// <c>assets/text/strings.bin</c>, or nothing when it is absent.
+        /// </summary>
+        private static StringTable? LoadStrings(string manifestPath)
+        {
+            string path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(manifestPath)) ?? ".", "..", "text", "strings.bin");
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            using FileStream stream = File.OpenRead(path);
+            return StringTable.Load(stream);
+        }
+
+        /// <summary>
         /// Plays every level of a pack with the seeded sweep bot and reports each level, failing
         /// when any level throws.
         /// </summary>
@@ -356,7 +372,7 @@ namespace Mooh.SimulationRunner
             Console.CancelKeyPress += Handler;
             try
             {
-                new PlayServer(new PlaySession(pack, level - 1, difficulty: difficulty))
+                new PlayServer(new PlaySession(pack, level - 1, difficulty: difficulty, strings: LoadStrings(manifestPath)))
                     .Listen(port, output, cancellation.Token);
                 return 0;
             }

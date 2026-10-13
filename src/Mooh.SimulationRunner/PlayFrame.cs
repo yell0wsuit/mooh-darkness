@@ -15,8 +15,9 @@ namespace Mooh.SimulationRunner
     /// <param name="State">The session state name.</param>
     /// <param name="Reaction">The player's damage reaction name.</param>
     /// <param name="HelpText">
-    /// The recovered help-text id of the message table read most recently, while the help panel
-    /// would still be showing it, or <see langword="null"/>.
+    /// The help text of the message table read most recently, while the help panel would still be
+    /// showing it, or <see langword="null"/>. It is the recovered text when the string table is
+    /// loaded, and the text id otherwise.
     /// </param>
     /// <param name="Weapon">The current weapon's name.</param>
     /// <param name="Rockets">The player's remaining rockets.</param>

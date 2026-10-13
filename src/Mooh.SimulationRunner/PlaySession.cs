@@ -32,6 +32,7 @@ namespace Mooh.SimulationRunner
 
         private readonly Dictionary<GridPosition, TimeSpan> _blastCells = [];
         private readonly TimeProvider _timeProvider;
+        private readonly StringTable? _strings;
         private string? _helpText;
         private TimeSpan _helpTextExpiry;
         private long _lastTimestamp;
@@ -42,13 +43,19 @@ namespace Mooh.SimulationRunner
         /// <param name="startingLevelIndex">The zero-based index of the first level to play.</param>
         /// <param name="timeProvider">The clock used to measure frame intervals.</param>
         /// <param name="difficulty">The recovered difficulty profile, standard when omitted.</param>
+        /// <param name="strings">
+        /// The recovered string table, which turns a table's help-text id into its text. Without it
+        /// the frame carries the id.
+        /// </param>
         /// <exception cref="ArgumentNullException">A required argument is <see langword="null"/>.</exception>
         public PlaySession(
             LoadedLevelPack pack,
             int startingLevelIndex = 0,
             TimeProvider? timeProvider = null,
-            DifficultySpeeds? difficulty = null)
+            DifficultySpeeds? difficulty = null,
+            StringTable? strings = null)
         {
+            _strings = strings;
             _timeProvider = timeProvider ?? TimeProvider.System;
             Session = new GameSession(pack, difficulty ?? DifficultySpeeds.Standard, startingLevelIndex);
             _lastTimestamp = _timeProvider.GetTimestamp();
@@ -124,7 +131,9 @@ namespace Mooh.SimulationRunner
             {
                 if (value is HelpTextRequested requested)
                 {
-                    _helpText = requested.HelpTextId;
+                    _helpText = _strings is not null && _strings.TryGetText(requested.HelpTextId, out string text)
+                        ? text
+                        : requested.HelpTextId;
                     _helpTextExpiry = _simulationTime + HelpTextHold;
                 }
             }
