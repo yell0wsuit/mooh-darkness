@@ -30,7 +30,10 @@ namespace Mooh.Core.Hazards
         /// it to the arrow's own direction; a walking push after the launch overwrites it, because
         /// <c>ObjMoveDir</c> sets the move direction and <c>_DoFlyInt</c> flies along it.
         /// </summary>
-        public Direction Direction { get; internal set; } = Enum.IsDefined(direction)
+        public Direction Direction
+        {
+            get; internal set;
+        } = Enum.IsDefined(direction)
             ? direction
             : throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
 
@@ -38,10 +41,16 @@ namespace Mooh.Core.Hazards
         /// Gets the remaining <c>ST_Work</c> windup, or <see langword="null"/> when the arrow is
         /// not winding up. The recovered state runs seven frames at 35 ms.
         /// </summary>
-        public double? WindupRemainingSeconds { get; internal set; }
+        public double? WindupRemainingSeconds
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets whether the arrow has been triggered, whether or not it is flying yet.</summary>
-        public bool IsLaunched { get; internal set; }
+        public bool IsLaunched
+        {
+            get; internal set;
+        }
 
         /// <summary>
         /// Gets whether the windup has ended, after which every cell arrival runs the flight
@@ -49,6 +58,9 @@ namespace Mooh.Core.Hazards
         /// the push's arrival, the recovered <c>_DlFlyBeg</c> registering <c>_DoFlyInt</c> as the
         /// arrival handler.
         /// </summary>
-        public bool IsFlying { get; internal set; }
+        public bool IsFlying
+        {
+            get; internal set;
+        }
     }
 }

@@ -16,7 +16,10 @@ namespace Mooh.Core.Tests
         /// <returns>The undrained profile.</returns>
         public static DifficultySpeeds Of(DifficultySpeeds profile)
         {
-            return profile with { HealthDrainPerSecond = 0 };
+            return profile with
+            {
+                HealthDrainPerSecond = 0
+            };
         }
     }
 }

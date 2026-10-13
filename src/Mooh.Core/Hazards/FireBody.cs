@@ -21,7 +21,10 @@ namespace Mooh.Core.Hazards
     public sealed class FireBody(FireContact contact)
     {
         /// <summary>Gets the entity's role in the recovered fire-contact rule.</summary>
-        public FireContact Contact { get; } = Enum.IsDefined(contact)
+        public FireContact Contact
+        {
+            get;
+        } = Enum.IsDefined(contact)
             ? contact
             : throw new ArgumentOutOfRangeException(nameof(contact), contact, null);
     }

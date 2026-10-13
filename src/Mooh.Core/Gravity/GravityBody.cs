@@ -46,18 +46,30 @@ namespace Mooh.Core.Gravity
         }
 
         /// <summary>Gets the fall speed in cells per second.</summary>
-        public double FallSpeed { get; }
+        public double FallSpeed
+        {
+            get;
+        }
 
         /// <summary>Gets a value indicating whether the body may slide around support.</summary>
-        public bool CanSlide { get; }
+        public bool CanSlide
+        {
+            get;
+        }
 
         /// <summary>Gets the shake strength produced when this body lands.</summary>
-        public GravityImpactStrength ImpactStrength { get; }
+        public GravityImpactStrength ImpactStrength
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets whether a shadow occupant supports this body, the recovered
         /// <c>bSecondSlideMask</c> flag.
         /// </summary>
-        public bool TreatsShadowAsSupport { get; }
+        public bool TreatsShadowAsSupport
+        {
+            get;
+        }
     }
 }

@@ -61,7 +61,10 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(100.0 / 900, DifficultySpeeds.Standard.HealthDrainPerSecond, precision: 12);
             Assert.Equal(100.0 / 900, DifficultySpeeds.DifficultyZero.HealthDrainPerSecond, precision: 12);
             Assert.Equal(0, DifficultySpeeds.Timed.HealthDrainPerSecond);
-            Assert.Equal(0, (DifficultySpeeds.Standard with { HealthDrainPerSecond = 0 }).HealthDrainPerSecond);
+            Assert.Equal(0, (DifficultySpeeds.Standard with
+            {
+                HealthDrainPerSecond = 0
+            }).HealthDrainPerSecond);
         }
 
         /// <summary>Verifies a drain rate must be finite and non-negative.</summary>

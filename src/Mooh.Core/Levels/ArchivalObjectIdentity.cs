@@ -11,7 +11,10 @@ namespace Mooh.Core.Levels
         public LevelObject Source { get; } = source ?? throw new ArgumentNullException(nameof(source));
 
         /// <summary>Gets the explicit catalog descriptor.</summary>
-        public ArchivalObjectDescriptor Descriptor { get; } = descriptor
+        public ArchivalObjectDescriptor Descriptor
+        {
+            get;
+        } = descriptor
             ?? throw new ArgumentNullException(nameof(descriptor));
 
         /// <summary>Gets the archival object identifier.</summary>

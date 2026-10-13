@@ -20,6 +20,9 @@ namespace Mooh.Core.Player
         /// set it stays set, and routing consults <c>DirMap</c> from then on so a one-way tunnel
         /// lets the player back out the way they came.
         /// </summary>
-        public bool HasReversed { get; internal set; }
+        public bool HasReversed
+        {
+            get; internal set;
+        }
     }
 }

@@ -17,12 +17,21 @@ namespace Mooh.Core.Player
         }
 
         /// <summary>Gets which action phase is running.</summary>
-        public PlayerActionKind Kind { get; }
+        public PlayerActionKind Kind
+        {
+            get;
+        }
 
         /// <summary>Gets the direction the action is applied in.</summary>
-        public Direction Direction { get; }
+        public Direction Direction
+        {
+            get;
+        }
 
         /// <summary>Gets the remaining duration of the current phase in seconds.</summary>
-        public double RemainingSeconds { get; internal set; }
+        public double RemainingSeconds
+        {
+            get; internal set;
+        }
     }
 }

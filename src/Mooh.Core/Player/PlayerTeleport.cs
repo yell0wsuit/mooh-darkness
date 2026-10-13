@@ -29,6 +29,9 @@ namespace Mooh.Core.Player
         public double TotalSeconds { get; } = totalSeconds;
 
         /// <summary>Gets the fraction of the flight already covered, from 0 to 1.</summary>
-        public double Progress { get; internal set; }
+        public double Progress
+        {
+            get; internal set;
+        }
     }
 }

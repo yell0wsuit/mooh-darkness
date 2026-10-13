@@ -71,7 +71,10 @@ namespace Mooh.Core.Simulation
         internal bool IsSettlingLoss => _phase == LevelSettlePhase.LossSettle;
 
         /// <summary>Gets the decided outcome, or <see cref="LevelOutcome.InProgress"/>.</summary>
-        internal LevelOutcome Outcome { get; private set; }
+        internal LevelOutcome Outcome
+        {
+            get; private set;
+        }
 
         /// <summary>Gets the seconds until the pending settle can complete, when time-bound.</summary>
         /// <returns>The remaining settle seconds, or <see langword="null"/> when none is pending.</returns>

@@ -14,35 +14,53 @@ namespace Mooh.Core.Player
         private int _keyMask;
 
         /// <summary>Gets the level score earned by collection and progression.</summary>
-        public int Score { get; private set; }
+        public int Score
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Gets the treasure eaten while the bonus was still available, the recovered
         /// <c>ulGameTreasGet</c>.
         /// </summary>
-        public int TreasureCollected { get; private set; }
+        public int TreasureCollected
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Gets the treasure the bonus asks for, the recovered <c>ulGameTreasAll</c>: what the
         /// player could reach at level start, raised if more is eaten than that.
         /// </summary>
-        public int TotalTreasure { get; private set; }
+        public int TotalTreasure
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Gets whether the all-treasure bonus can still be earned, the recovered
         /// <c>bGameHaveTreas</c>. It is lost for good once any treasure is killed other than by
         /// eating, and once the bonus is paid.
         /// </summary>
-        public bool IsTreasureBonusAvailable { get; private set; }
+        public bool IsTreasureBonusAvailable
+        {
+            get; private set;
+        }
 
         /// <summary>Gets whether the all-treasure bonus has been paid.</summary>
-        public bool HasEarnedTreasureBonus { get; private set; }
+        public bool HasEarnedTreasureBonus
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Gets the weapon the fire control uses, the recovered <c>WeapCurr</c>. The recovered
         /// <c>WeapValReset</c> starts every level on the grenade.
         /// </summary>
-        public WeaponKind CurrentWeapon { get; private set; }
+        public WeaponKind CurrentWeapon
+        {
+            get; private set;
+        }
 
         /// <summary>Gets the ammunition held for a weapon.</summary>
         /// <param name="weapon">The weapon.</param>
@@ -68,10 +86,16 @@ namespace Mooh.Core.Player
         public int BigBombs => AmmoOf(WeaponKind.BigBomb);
 
         /// <summary>Gets the remaining cola protection duration.</summary>
-        public TimeSpan ColaRemaining { get; private set; }
+        public TimeSpan ColaRemaining
+        {
+            get; private set;
+        }
 
         /// <summary>Gets the remaining monster-freezing ice duration.</summary>
-        public TimeSpan IceRemaining { get; private set; }
+        public TimeSpan IceRemaining
+        {
+            get; private set;
+        }
 
         /// <summary>Determines whether a numbered colored key has been collected.</summary>
         /// <param name="keyNumber">The key number in the inclusive range 1 through 3.</param>
@@ -268,7 +292,13 @@ namespace Mooh.Core.Player
         private static int ScoreFor(EntityKind kind, int variant)
         {
             return kind == EntityKind.Coin
-                ? variant switch { 1 => 1, 2 => 5, 3 => 10, _ => 0 }
+                ? variant switch
+                {
+                    1 => 1,
+                    2 => 5,
+                    3 => 10,
+                    _ => 0
+                }
                 : kind is EntityKind.Diamond or EntityKind.Food ? 50
                 : kind == EntityKind.Key ? 100
                 : kind is EntityKind.Grenade or EntityKind.Rocket ? 5

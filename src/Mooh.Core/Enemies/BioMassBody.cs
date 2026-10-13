@@ -8,18 +8,30 @@ namespace Mooh.Core.Enemies
     public sealed class BioMassBody
     {
         /// <summary>Gets the current state.</summary>
-        public BioMassState State { get; internal set; }
+        public BioMassState State
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets the time left in the current state's animation.</summary>
-        public double RemainingSeconds { get; internal set; }
+        public double RemainingSeconds
+        {
+            get; internal set;
+        }
 
         /// <summary>
         /// Gets the <c>ST_Stay</c> frame time chosen when the state was last entered. Re-entering
         /// the state it is already in changes nothing in the original, so the loop keeps it.
         /// </summary>
-        public double StayFrameSeconds { get; internal set; }
+        public double StayFrameSeconds
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets whether the opening state has been given its random speed and phase.</summary>
-        internal bool IsStarted { get; set; }
+        internal bool IsStarted
+        {
+            get; set;
+        }
     }
 }

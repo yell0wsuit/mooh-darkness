@@ -29,22 +29,37 @@ namespace Mooh.Core.Combat
         }
 
         /// <summary>Gets the maximum health.</summary>
-        public double Maximum { get; }
+        public double Maximum
+        {
+            get;
+        }
 
         /// <summary>Gets the current health.</summary>
-        public double Current { get; private set; }
+        public double Current
+        {
+            get; private set;
+        }
 
         /// <summary>Gets the configured immunity duration started by applied damage.</summary>
-        public TimeSpan ImmunityDuration { get; }
+        public TimeSpan ImmunityDuration
+        {
+            get;
+        }
 
         /// <summary>Gets the remaining post-hit immunity duration.</summary>
-        public TimeSpan ImmunityRemaining { get; internal set; }
+        public TimeSpan ImmunityRemaining
+        {
+            get; internal set;
+        }
 
         /// <summary>
         /// Gets the timed-play clock that replaces health on the timed profile, or
         /// <see langword="null"/> when health is the live axis.
         /// </summary>
-        public PlayClock? Clock { get; internal set; }
+        public PlayClock? Clock
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets whether health has reached zero.</summary>
         public bool IsDead => Current <= 0;

@@ -36,15 +36,27 @@ namespace Mooh.Core.Combat
         }
 
         /// <summary>Gets the entity responsible for the damage.</summary>
-        public EntityId SourceEntityId { get; }
+        public EntityId SourceEntityId
+        {
+            get;
+        }
 
         /// <summary>Gets the intended damaged entity.</summary>
-        public EntityId TargetEntityId { get; }
+        public EntityId TargetEntityId
+        {
+            get;
+        }
 
         /// <summary>Gets the semantic damage category.</summary>
-        public DamageKind Kind { get; }
+        public DamageKind Kind
+        {
+            get;
+        }
 
         /// <summary>Gets the damage amount.</summary>
-        public double Amount { get; }
+        public double Amount
+        {
+            get;
+        }
     }
 }

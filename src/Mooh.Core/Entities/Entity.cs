@@ -141,7 +141,10 @@ namespace Mooh.Core.Entities
         /// <c>ulKillLockTime</c> a magic gem gives the diamonds it spawns, or
         /// <see langword="null"/> when the entity carries none.
         /// </summary>
-        public double? KillLockedUntilSeconds { get; internal set; }
+        public double? KillLockedUntilSeconds
+        {
+            get; internal set;
+        }
 
         /// <summary>
         /// Reports whether the recovered <c>Game.ObjKill</c> guard still refuses to kill the entity.
@@ -153,7 +156,10 @@ namespace Mooh.Core.Entities
         }
 
         /// <summary>Gets the entity's current continuous motion, if any.</summary>
-        public MotionState? Motion { get; internal set; }
+        public MotionState? Motion
+        {
+            get; internal set;
+        }
 
         /// <summary>
         /// Gets whether the entity is a player a monster may select as a target.

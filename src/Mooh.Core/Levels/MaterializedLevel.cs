@@ -23,14 +23,20 @@ namespace Mooh.Core.Levels
         public WorldGrid World { get; } = world ?? throw new ArgumentNullException(nameof(world));
 
         /// <summary>Gets the live deterministic simulation.</summary>
-        public SimulationWorld Simulation { get; } = simulation
+        public SimulationWorld Simulation
+        {
+            get;
+        } = simulation
             ?? throw new ArgumentNullException(nameof(simulation));
 
         /// <summary>Gets the initial gravity direction.</summary>
         public Direction GravityDirection { get; } = gravityDirection;
 
         /// <summary>Gets runtime identities keyed by archival object identifier.</summary>
-        public IReadOnlyDictionary<int, EntityId> EntityIdsByObjectId { get; } = entityIdsByObjectId
+        public IReadOnlyDictionary<int, EntityId> EntityIdsByObjectId
+        {
+            get;
+        } = entityIdsByObjectId
             ?? throw new ArgumentNullException(nameof(entityIdsByObjectId));
 
         /// <summary>Gets a runtime entity by its archival object identifier.</summary>

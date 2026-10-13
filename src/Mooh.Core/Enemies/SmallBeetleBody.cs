@@ -40,10 +40,16 @@ namespace Mooh.Core.Enemies
         }
 
         /// <summary>Gets the originating monster family.</summary>
-        public SmallBeetleColor Color { get; }
+        public SmallBeetleColor Color
+        {
+            get;
+        }
 
         /// <summary>Gets the flight speed in cells per second.</summary>
-        public double MoveSpeed { get; }
+        public double MoveSpeed
+        {
+            get;
+        }
 
         /// <summary>Gets the current flight state.</summary>
         public SmallBeetleState State { get; internal set; } = SmallBeetleState.Deciding;
@@ -55,6 +61,9 @@ namespace Mooh.Core.Enemies
         public TimeSpan RemainingImmunity { get; internal set; } = ExplosionImmunity;
 
         /// <summary>Gets the time left in a blocked-decision wait, or zero when not waiting.</summary>
-        public TimeSpan RemainingRecheck { get; internal set; }
+        public TimeSpan RemainingRecheck
+        {
+            get; internal set;
+        }
     }
 }

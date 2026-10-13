@@ -31,15 +31,24 @@ namespace Mooh.Core.Shakes
         }
 
         /// <summary>Gets the reaction to an ordinary shake.</summary>
-        public ShakeReaction OrdinaryReaction { get; }
+        public ShakeReaction OrdinaryReaction
+        {
+            get;
+        }
 
         /// <summary>Gets the reaction to a hard shake.</summary>
-        public ShakeReaction HardReaction { get; }
+        public ShakeReaction HardReaction
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets whether a completed fall runs the ordinary reaction. The barrel, the magic gem and
         /// the four arrows name their shake handler as <c>OnLand</c> too.
         /// </summary>
-        public bool ReactsToLanding { get; }
+        public bool ReactsToLanding
+        {
+            get;
+        }
     }
 }

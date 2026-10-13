@@ -55,7 +55,10 @@ namespace Mooh.SimulationRunner
         }
 
         /// <summary>Gets the underlying pack session.</summary>
-        public GameSession Session { get; }
+        public GameSession Session
+        {
+            get;
+        }
 
         /// <summary>
         /// Advances the simulation by the time elapsed since the previous frame and renders it.

@@ -20,9 +20,15 @@ namespace Mooh.Core.Explosions
         }
 
         /// <summary>Gets the reaction when an explosion reaches the entity.</summary>
-        public ExplosionReaction Reaction { get; }
+        public ExplosionReaction Reaction
+        {
+            get;
+        }
 
         /// <summary>Gets whether a completed fall starts a 3x3 explosion.</summary>
-        public bool DetonatesOnLanding { get; }
+        public bool DetonatesOnLanding
+        {
+            get;
+        }
     }
 }

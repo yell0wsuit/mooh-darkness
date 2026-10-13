@@ -77,13 +77,19 @@ namespace Mooh.Core.Session
         }
 
         /// <summary>Gets the zero-based index of the level being played.</summary>
-        public int LevelIndex { get; private set; }
+        public int LevelIndex
+        {
+            get; private set;
+        }
 
         /// <summary>Gets the number of levels in the pack.</summary>
         public int LevelCount => _levels.Count;
 
         /// <summary>Gets the live level.</summary>
-        public MaterializedLevel Level { get; private set; }
+        public MaterializedLevel Level
+        {
+            get; private set;
+        }
 
         /// <summary>Gets the live simulation for the current level.</summary>
         public SimulationWorld Simulation => Level.Simulation;

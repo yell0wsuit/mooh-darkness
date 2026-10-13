@@ -42,7 +42,10 @@ namespace Mooh.Core.Simulation
         }
 
         /// <summary>Gets the standard non-timed difficulty profile.</summary>
-        public static DifficultySpeeds Standard { get; } = new(
+        public static DifficultySpeeds Standard
+        {
+            get;
+        } = new(
             StandardPlayerSpeed,
             StandardNormalSpeed,
             StandardMonsterSpeed,
@@ -55,7 +58,10 @@ namespace Mooh.Core.Simulation
             false);
 
         /// <summary>Gets the profile for difficulty zero.</summary>
-        public static DifficultySpeeds DifficultyZero { get; } = new(
+        public static DifficultySpeeds DifficultyZero
+        {
+            get;
+        } = new(
             StandardPlayerSpeed * DifficultyZeroMultiplier,
             StandardNormalSpeed * DifficultyZeroMultiplier,
             StandardMonsterSpeed * DifficultyZeroMultiplier,
@@ -68,7 +74,10 @@ namespace Mooh.Core.Simulation
             false);
 
         /// <summary>Gets the timed difficulty profile.</summary>
-        public static DifficultySpeeds Timed { get; } = new(
+        public static DifficultySpeeds Timed
+        {
+            get;
+        } = new(
             StandardPlayerSpeed,
             StandardNormalSpeed,
             StandardMonsterSpeed,
@@ -81,46 +90,76 @@ namespace Mooh.Core.Simulation
             true);
 
         /// <summary>Gets the player walking speed in cells per second.</summary>
-        public double PlayerSpeed { get; }
+        public double PlayerSpeed
+        {
+            get;
+        }
 
         /// <summary>Gets the normal object speed in cells per second.</summary>
-        public double NormalSpeed { get; }
+        public double NormalSpeed
+        {
+            get;
+        }
 
         /// <summary>Gets the monster movement speed in cells per second.</summary>
-        public double MonsterSpeed { get; }
+        public double MonsterSpeed
+        {
+            get;
+        }
 
         /// <summary>Gets player damage caused by an ordinary falling impact.</summary>
-        public double ShakeDamage { get; }
+        public double ShakeDamage
+        {
+            get;
+        }
 
         /// <summary>Gets player damage caused by a hard falling impact.</summary>
-        public double HardShakeDamage { get; }
+        public double HardShakeDamage
+        {
+            get;
+        }
 
         /// <summary>Gets player damage caused by an explosion.</summary>
-        public double ExplosionDamage { get; }
+        public double ExplosionDamage
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets player damage caused by walking into fire. The recovered <c>Compl.HFire</c> is
         /// 30 on difficulty zero and 40 on both standard profiles, so unlike the shake and blast
         /// values it does not simply halve.
         /// </summary>
-        public double FireDamage { get; }
+        public double FireDamage
+        {
+            get;
+        }
 
         /// <summary>Gets the health restored by eating one food object.</summary>
-        public double FoodHeal { get; }
+        public double FoodHeal
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the health restored by absorbing one small beetle. The recovered
         /// <c>Compl.HSmall</c> is <c>100.0 / 50.0</c> on both untimed profiles and drops to 1 on
         /// the timed profile.
         /// </summary>
-        public double BeetleHeal { get; }
+        public double BeetleHeal
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets whether the profile replaces the health axis with a countdown clock. The original
         /// bypasses the health loss condition entirely on this profile, redirecting damage and
         /// healing to the remaining play time instead.
         /// </summary>
-        public bool IsTimed { get; }
+        public bool IsTimed
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the passive health drain in health per second. The recovered <c>Game.ModCycle</c>

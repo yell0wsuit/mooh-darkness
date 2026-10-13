@@ -37,10 +37,16 @@ namespace Mooh.Core.Grid
         }
 
         /// <summary>Gets the number of horizontal cells. A world rotation swaps it with <see cref="Height"/>.</summary>
-        public int Width { get; private set; }
+        public int Width
+        {
+            get; private set;
+        }
 
         /// <summary>Gets the number of vertical cells. A world rotation swaps it with <see cref="Width"/>.</summary>
-        public int Height { get; private set; }
+        public int Height
+        {
+            get; private set;
+        }
 
         /// <summary>Gets all entities registered in the world.</summary>
         public IReadOnlyList<Entity> Entities => [.. _entityOrder.Select(GetEntity)];
@@ -48,7 +54,10 @@ namespace Mooh.Core.Grid
         /// <summary>Gets the world's player entity, if one is registered.</summary>
         public Entity? Player => _playerId is EntityId id ? GetEntity(id) : null;
 
-        internal double CurrentTimeSeconds { get; private set; }
+        internal double CurrentTimeSeconds
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Determines whether a position lies within the world bounds.

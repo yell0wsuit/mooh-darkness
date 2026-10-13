@@ -29,7 +29,10 @@ namespace Mooh.Core.Hazards
     public sealed class WorldRotationBody(WorldRotationDirection direction)
     {
         /// <summary>Gets the direction this rotator turns the world.</summary>
-        public WorldRotationDirection Direction { get; } = Enum.IsDefined(direction)
+        public WorldRotationDirection Direction
+        {
+            get;
+        } = Enum.IsDefined(direction)
             ? direction
             : throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
 
@@ -38,6 +41,9 @@ namespace Mooh.Core.Hazards
         /// idle. The recovered state runs twenty frames at 50 ms; the world only starts turning
         /// once it ends.
         /// </summary>
-        public double? WindupRemainingSeconds { get; internal set; }
+        public double? WindupRemainingSeconds
+        {
+            get; internal set;
+        }
     }
 }

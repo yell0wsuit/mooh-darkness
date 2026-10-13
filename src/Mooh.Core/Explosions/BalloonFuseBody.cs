@@ -21,13 +21,19 @@ namespace Mooh.Core.Explosions
         public static TimeSpan Duration { get; } = TimeSpan.FromMilliseconds(225 + (3 * (250 + 2000)) + 400);
 
         /// <summary>Gets whether the fuse has ever been lit.</summary>
-        public bool HasBeenLit { get; private set; }
+        public bool HasBeenLit
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Gets the time left until the balloon detonates, or <see langword="null"/> when the fuse
         /// is not burning.
         /// </summary>
-        public double? RemainingSeconds { get; internal set; }
+        public double? RemainingSeconds
+        {
+            get; internal set;
+        }
 
         /// <summary>Lights the fuse unless it has already been lit.</summary>
         /// <returns><see langword="true"/> when this call lit the fuse.</returns>

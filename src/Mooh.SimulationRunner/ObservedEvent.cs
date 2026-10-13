@@ -69,60 +69,117 @@ namespace Mooh.SimulationRunner
         }
 
         /// <summary>Gets the concrete event type name.</summary>
-        public string Type { get; }
+        public string Type
+        {
+            get;
+        }
 
         /// <summary>Gets the primary entity alias.</summary>
-        public string Entity { get; }
+        public string Entity
+        {
+            get;
+        }
 
         /// <summary>Gets an optional eaten-entity alias.</summary>
-        public string? EatenEntity { get; }
+        public string? EatenEntity
+        {
+            get;
+        }
 
         /// <summary>Gets an optional direction.</summary>
-        public Direction? Direction { get; }
+        public Direction? Direction
+        {
+            get;
+        }
 
         /// <summary>Gets an optional pre-rotation direction.</summary>
-        public Direction? From { get; }
+        public Direction? From
+        {
+            get;
+        }
 
         /// <summary>Gets an optional post-rotation direction.</summary>
-        public Direction? To { get; }
+        public Direction? To
+        {
+            get;
+        }
 
         /// <summary>Gets an optional grid position.</summary>
-        public GridPosition? Position { get; }
+        public GridPosition? Position
+        {
+            get;
+        }
 
         /// <summary>Gets an optional movement source position.</summary>
-        public GridPosition? FromPosition { get; }
+        public GridPosition? FromPosition
+        {
+            get;
+        }
 
         /// <summary>Gets an optional movement destination position.</summary>
-        public GridPosition? ToPosition { get; }
+        public GridPosition? ToPosition
+        {
+            get;
+        }
 
         /// <summary>Gets an optional source-entity alias.</summary>
-        public string? SourceEntity { get; }
+        public string? SourceEntity
+        {
+            get;
+        }
 
         /// <summary>Gets an optional semantic damage kind.</summary>
-        public DamageKind? DamageKind { get; }
+        public DamageKind? DamageKind
+        {
+            get;
+        }
 
         /// <summary>Gets an optional damage-resolution result.</summary>
-        public DamageResult? DamageResult { get; }
+        public DamageResult? DamageResult
+        {
+            get;
+        }
 
         /// <summary>Gets an optional damage amount.</summary>
-        public double? Amount { get; }
+        public double? Amount
+        {
+            get;
+        }
 
         /// <summary>Gets optional remaining health after damage.</summary>
-        public double? RemainingHealth { get; }
+        public double? RemainingHealth
+        {
+            get;
+        }
 
         /// <summary>Gets an optional event duration in milliseconds.</summary>
-        public long? DurationMilliseconds { get; }
+        public long? DurationMilliseconds
+        {
+            get;
+        }
 
         /// <summary>Gets an optional target or resulting monster-form flag.</summary>
-        public bool? IsSmall { get; }
+        public bool? IsSmall
+        {
+            get;
+        }
 
         /// <summary>Gets an optional world-rotation direction.</summary>
-        public WorldRotationDirection? WorldRotation { get; }
+        public WorldRotationDirection? WorldRotation
+        {
+            get;
+        }
 
         /// <summary>Gets an optional world width in cells, reported after a rotation.</summary>
-        public int? Width { get; }
+        public int? Width
+        {
+            get;
+        }
 
         /// <summary>Gets an optional world height in cells, reported after a rotation.</summary>
-        public int? Height { get; }
+        public int? Height
+        {
+            get;
+        }
     }
 }

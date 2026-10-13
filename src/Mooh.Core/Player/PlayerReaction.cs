@@ -6,9 +6,15 @@ namespace Mooh.Core.Player
     public sealed class PlayerReaction
     {
         /// <summary>Gets the current reaction kind.</summary>
-        public PlayerReactionKind Kind { get; internal set; }
+        public PlayerReactionKind Kind
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets the remaining duration for a temporary reaction.</summary>
-        public TimeSpan Remaining { get; internal set; }
+        public TimeSpan Remaining
+        {
+            get; internal set;
+        }
     }
 }

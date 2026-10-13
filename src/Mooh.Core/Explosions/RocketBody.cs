@@ -13,7 +13,10 @@ namespace Mooh.Core.Explosions
     public sealed class RocketBody(Direction direction)
     {
         /// <summary>Gets the fixed flight direction, the recovered <c>Type.ulFDir</c>.</summary>
-        public Direction Direction { get; } = Enum.IsDefined(direction)
+        public Direction Direction
+        {
+            get;
+        } = Enum.IsDefined(direction)
             ? direction
             : throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
     }

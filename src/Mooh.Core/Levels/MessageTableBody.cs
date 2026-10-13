@@ -16,6 +16,9 @@ namespace Mooh.Core.Levels
         /// Gets whether the table has been read. The recovered <c>_PlHere_Table</c> enters
         /// <c>ST_Work</c>, a single static frame with no end, so a read table stays drawn as read.
         /// </summary>
-        public bool HasBeenRead { get; internal set; }
+        public bool HasBeenRead
+        {
+            get; internal set;
+        }
     }
 }

@@ -35,46 +35,76 @@ namespace Mooh.Core.Hazards
         }
 
         /// <summary>Gets the straight horizontal tunnel, <c>CellHor</c>.</summary>
-        public static TunnelShape Horizontal { get; } = Create(
+        public static TunnelShape Horizontal
+        {
+            get;
+        } = Create(
             [Direction.Left, null, Direction.Right, null]);
 
         /// <summary>Gets the straight vertical tunnel, <c>CellVert</c>.</summary>
-        public static TunnelShape Vertical { get; } = Create(
+        public static TunnelShape Vertical
+        {
+            get;
+        } = Create(
             [null, Direction.Up, null, Direction.Down]);
 
         /// <summary>Gets the corner joining the left and top sides, <c>CellLeftTop</c>.</summary>
-        public static TunnelShape LeftTop { get; } = Create(
+        public static TunnelShape LeftTop
+        {
+            get;
+        } = Create(
             [null, null, Direction.Up, Direction.Left]);
 
         /// <summary>Gets the corner joining the top and right sides, <c>CellTopRight</c>.</summary>
-        public static TunnelShape TopRight { get; } = Create(
+        public static TunnelShape TopRight
+        {
+            get;
+        } = Create(
             [Direction.Up, null, null, Direction.Right]);
 
         /// <summary>Gets the corner joining the right and bottom sides, <c>CellRightBottom</c>.</summary>
-        public static TunnelShape RightBottom { get; } = Create(
+        public static TunnelShape RightBottom
+        {
+            get;
+        } = Create(
             [Direction.Down, Direction.Right, null, null]);
 
         /// <summary>Gets the corner joining the bottom and left sides, <c>CellBottomLeft</c>.</summary>
-        public static TunnelShape BottomLeft { get; } = Create(
+        public static TunnelShape BottomLeft
+        {
+            get;
+        } = Create(
             [null, Direction.Left, Direction.Down, null]);
 
         /// <summary>Gets the one-way rightward tunnel, <c>CellLeft2Right</c>.</summary>
-        public static TunnelShape LeftToRight { get; } = Create(
+        public static TunnelShape LeftToRight
+        {
+            get;
+        } = Create(
             [null, null, Direction.Right, null],
             [Direction.Left, null, Direction.Right, null]);
 
         /// <summary>Gets the one-way leftward tunnel, <c>CellRight2Left</c>.</summary>
-        public static TunnelShape RightToLeft { get; } = Create(
+        public static TunnelShape RightToLeft
+        {
+            get;
+        } = Create(
             [Direction.Left, null, null, null],
             [Direction.Left, null, Direction.Right, null]);
 
         /// <summary>Gets the one-way downward tunnel, <c>CellTop2Bottom</c>.</summary>
-        public static TunnelShape TopToBottom { get; } = Create(
+        public static TunnelShape TopToBottom
+        {
+            get;
+        } = Create(
             [null, null, null, Direction.Down],
             [null, Direction.Up, null, Direction.Down]);
 
         /// <summary>Gets the one-way upward tunnel, <c>CellBottom2Top</c>.</summary>
-        public static TunnelShape BottomToTop { get; } = Create(
+        public static TunnelShape BottomToTop
+        {
+            get;
+        } = Create(
             [null, Direction.Up, null, null],
             [null, Direction.Up, null, Direction.Down]);
 

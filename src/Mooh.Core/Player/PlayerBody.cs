@@ -58,16 +58,28 @@ namespace Mooh.Core.Player
         }
 
         /// <summary>Gets the player's walking speed in cells per second.</summary>
-        public double MoveSpeed { get; }
+        public double MoveSpeed
+        {
+            get;
+        }
 
         /// <summary>Gets the multiplier applied to pushed-object speed.</summary>
-        public double PushSpeedMultiplier { get; }
+        public double PushSpeedMultiplier
+        {
+            get;
+        }
 
         /// <summary>Gets the direction the player currently faces.</summary>
-        public Direction FacingDirection { get; internal set; }
+        public Direction FacingDirection
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets the duration of the uncontrollable nonlethal-damage reaction.</summary>
-        public TimeSpan ShockDuration { get; }
+        public TimeSpan ShockDuration
+        {
+            get;
+        }
 
         /// <summary>Gets the player's current damage reaction.</summary>
         public PlayerReaction Reaction { get; } = new();
@@ -76,16 +88,28 @@ namespace Mooh.Core.Player
         public PlayerProgress Progress { get; } = new();
 
         /// <summary>Gets the active uncontrollable rotation, if any.</summary>
-        public PlayerRotation? Rotation { get; internal set; }
+        public PlayerRotation? Rotation
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets the active uncontrollable fire-control action, if any.</summary>
-        public PlayerAction? Action { get; internal set; }
+        public PlayerAction? Action
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets the active tunnel transit, if the player is inside a tunnel.</summary>
-        public PlayerTunnelTransit? TunnelTransit { get; internal set; }
+        public PlayerTunnelTransit? TunnelTransit
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets the active teleport, if the player is being carried between teleporters.</summary>
-        public PlayerTeleport? Teleport { get; internal set; }
+        public PlayerTeleport? Teleport
+        {
+            get; internal set;
+        }
 
         /// <summary>
         /// Gets whether the player is in a recovered <c>bImmort</c> state. Such a state takes no
@@ -120,13 +144,19 @@ namespace Mooh.Core.Player
         /// shared timestamp: a weapon use and a hand strike delay each other, and each branch
         /// compares it against its own repeat time.
         /// </summary>
-        public double? LastActionSeconds { get; internal set; }
+        public double? LastActionSeconds
+        {
+            get; internal set;
+        }
 
         /// <summary>
         /// Gets whether a collected cola is waiting to be drunk. The recovered
         /// <c>ColaDrinkDo</c> only records <c>ST_BonCola</c> through <c>OnCellStateSet</c>, and
         /// <c>_OnCell</c> applies it at the next cell arrival in place of the state's own handler.
         /// </summary>
-        public bool HasPendingColaDrink { get; internal set; }
+        public bool HasPendingColaDrink
+        {
+            get; internal set;
+        }
     }
 }

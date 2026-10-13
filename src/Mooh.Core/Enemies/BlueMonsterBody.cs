@@ -94,42 +94,81 @@ namespace Mooh.Core.Enemies
         }
 
         /// <summary>Gets the walking speed in cells per second.</summary>
-        public double MoveSpeed { get; }
+        public double MoveSpeed
+        {
+            get;
+        }
 
         /// <summary>Gets the direction the monster currently faces.</summary>
-        public Direction FacingDirection { get; internal set; }
+        public Direction FacingDirection
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets the duration of one quarter-turn.</summary>
-        public TimeSpan TurnDuration { get; }
+        public TimeSpan TurnDuration
+        {
+            get;
+        }
 
         /// <summary>Gets the delay between attack selection and its strike.</summary>
-        public TimeSpan AttackWindupDuration { get; }
+        public TimeSpan AttackWindupDuration
+        {
+            get;
+        }
 
         /// <summary>Gets the left-facing post-strike turnaround duration.</summary>
-        public TimeSpan LeftAttackRecoveryDuration { get; }
+        public TimeSpan LeftAttackRecoveryDuration
+        {
+            get;
+        }
 
         /// <summary>Gets the post-strike turnaround duration for non-left directions.</summary>
-        public TimeSpan AttackRecoveryDuration { get; }
+        public TimeSpan AttackRecoveryDuration
+        {
+            get;
+        }
 
         /// <summary>Gets the health damage dealt by a successful strike.</summary>
-        public double StrikeDamage { get; }
+        public double StrikeDamage
+        {
+            get;
+        }
 
         /// <summary>Gets the monster's current behavior phase.</summary>
-        public BlueMonsterState State { get; internal set; }
+        public BlueMonsterState State
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets whether the active ice bonus has frozen the monster.</summary>
-        public bool IsFrozen { get; internal set; }
+        public bool IsFrozen
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets whether the glasses bonus has made the monster small and player-edible.</summary>
-        public bool IsSmall { get; internal set; }
+        public bool IsSmall
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets the duration of one quarter-turn in small form.</summary>
-        public TimeSpan SmallTurnDuration { get; }
+        public TimeSpan SmallTurnDuration
+        {
+            get;
+        }
 
         /// <summary>Gets the duration of a glasses form transition.</summary>
-        public TimeSpan TransformationDuration { get; }
+        public TimeSpan TransformationDuration
+        {
+            get;
+        }
 
         /// <summary>Gets the time remaining in the current timed phase.</summary>
-        public TimeSpan Remaining { get; internal set; }
+        public TimeSpan Remaining
+        {
+            get; internal set;
+        }
     }
 }

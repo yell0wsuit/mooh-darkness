@@ -57,7 +57,10 @@ namespace Mooh.SimulationRunner
             }
 
             DifficultySpeeds difficulty = scenario.World.HealthDrainPerSecond is double drain
-                ? DifficultySpeeds.Standard with { HealthDrainPerSecond = drain }
+                ? DifficultySpeeds.Standard with
+                {
+                    HealthDrainPerSecond = drain
+                }
                 : DifficultySpeeds.Standard;
             SimulationWorld simulation = new(
                 world,

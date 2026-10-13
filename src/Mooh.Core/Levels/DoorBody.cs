@@ -11,9 +11,15 @@ namespace Mooh.Core.Levels
         /// Gets the time left until an unused door is gone, the recovered <c>ST_DoorCloseAndOut</c>
         /// and <c>ST_DoorOut</c>, or <see langword="null"/> while the door is not leaving.
         /// </summary>
-        public double? RemovalRemainingSeconds { get; internal set; }
+        public double? RemovalRemainingSeconds
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets whether the door has served as a shelter and so stays for good.</summary>
-        public bool IsShelter { get; internal set; }
+        public bool IsShelter
+        {
+            get; internal set;
+        }
     }
 }
