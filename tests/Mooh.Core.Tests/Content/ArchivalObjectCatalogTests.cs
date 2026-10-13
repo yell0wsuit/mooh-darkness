@@ -5,6 +5,7 @@ using System.Linq;
 
 using Mooh.Core.Content;
 using Mooh.Core.Explosions;
+using Mooh.Core.Hazards;
 using Mooh.Core.Interactions;
 using Mooh.Core.Levels;
 using Mooh.Core.Shakes;
@@ -395,6 +396,30 @@ namespace Mooh.Core.Tests.Content
                     "TonnelVert",
                 ],
                 CarriersOf(InteractionMask.BlocksFlight));
+        }
+
+        /// <summary>
+        /// Pins the whole recovered bubble. <c>GameObjBubble</c> is a bare
+        /// <c>CGameObjFallBase.CType</c> with no behavior class: <c>OnShake</c>,
+        /// <c>OnShakeHard</c> and <c>OnExpl</c> are all <c>Game.ObjKill</c>, <c>bFly</c> keeps it
+        /// from falling and <c>bFireKill</c> makes it destroy the fire it touches. Its descriptor
+        /// is therefore complete by construction, and this keeps any one part from being dropped.
+        /// </summary>
+        [Fact]
+        public void BubbleDescriptorIsTheWholeRecoveredType()
+        {
+            ArchivalObjectDescriptor bubble = ArchivalObjectCatalog.Get("OBubble");
+
+            Assert.Equal(
+                InteractionMask.BlocksMovement | InteractionMask.PlayerPushable
+                    | InteractionMask.RoundSupport | InteractionMask.PushesThroughOccupants
+                    | InteractionMask.GravityAxisPushable,
+                bubble.Interactions);
+            Assert.False(bubble.HasGravity);
+            Assert.Equal(ShakeReaction.Destroy, bubble.ShakeReaction);
+            Assert.Equal(ShakeReaction.Destroy, bubble.HardShakeReaction);
+            Assert.Equal(ExplosionReaction.Destroy, bubble.ExplosionReaction);
+            Assert.Equal(FireContact.MutualDestruction, bubble.FireContact);
         }
 
         /// <summary>Verifies unsupported legacy names are rejected at the catalog boundary.</summary>

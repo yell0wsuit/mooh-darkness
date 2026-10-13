@@ -151,6 +151,8 @@ namespace Mooh.Core.Levels
                 shakeReaction: ShakeReaction.Detonate3x3);
             // The bubble is the only placed carrier of the recovered bFireKill flag, so it is the
             // only object that destroys the fire it touches instead of merely being consumed.
+            // GameObjBubble has no behavior class and no state beyond its idle ST_Stay, so this
+            // entry is the whole recovered type; its SndMove and PrtKill are presentation.
             Add(result, "OBubble", EntityKind.Bubble, PushableAlongGravity,
                 explosionReaction: ExplosionReaction.Destroy,
                 shakeReaction: ShakeReaction.Destroy,
