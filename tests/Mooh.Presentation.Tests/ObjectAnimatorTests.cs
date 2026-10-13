@@ -110,6 +110,33 @@ namespace Mooh.Presentation.Tests
             Assert.Equal("st_doorcloseandout", harness.Animator(door).Animation.State);
         }
 
+        /// <summary>
+        /// Verifies a door kept as a shelter stays closed while the player does anything else.
+        /// </summary>
+        [Fact]
+        public void AShelterDoorStaysClosedWhileThePlayerActsElsewhere()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1));
+            harness.Begin();
+            Entity door = harness.Level.World.Entities.Single(entity => entity.DoorBody is not null);
+            PlayerBody player = harness.Player.PlayerBody!;
+            harness.StepUntil(() => player.Action is null);
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: false, Down: false, Fire: true));
+            harness.StepUntil(() => door.DoorBody!.IsShelter);
+            harness.Input(default);
+            harness.StepUntil(() => player.Action is null, limitSeconds: 10);
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+            harness.StepUntil(() => harness.Player.Position.X == 2);
+            harness.Input(default);
+            harness.StepUntil(() => harness.Player.Motion is null);
+
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: false, Down: false, Fire: true));
+            harness.StepUntil(() => player.Action is not null);
+            harness.Step(0.500);
+
+            Assert.Equal("st_stay", harness.Animator(door).Animation.State);
+        }
+
         private static Entity Placed(SceneHarness harness)
         {
             return harness.Level.GetEntity(200);

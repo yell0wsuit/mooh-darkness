@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Mooh.Core.Enemies;
 using Mooh.Core.Entities;
 using Mooh.Core.Explosions;
 using Mooh.Core.Grid;
@@ -121,6 +122,16 @@ namespace Mooh.Presentation.Scene
             if (entity.BlueMonsterBody is not null)
             {
                 return new BlueMonsterAnimator(_library, _random);
+            }
+
+            if (entity.SmallBeetleBody is SmallBeetleBody beetle)
+            {
+                return new BeetleAnimator(_library, beetle.Color, _random);
+            }
+
+            if (entity.BioMassBody is not null)
+            {
+                return new BioMassAnimator(_library, _random);
             }
 
             if (entity.DoorBody is not null)

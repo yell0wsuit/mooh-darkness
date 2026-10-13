@@ -106,13 +106,13 @@ namespace Mooh.Presentation.Tests
         }
 
         /// <summary>Advances in small steps until a condition holds.</summary>
-        public void StepUntil(Func<bool> condition, double limitSeconds = 5)
+        public void StepUntil(Func<bool> condition, double limitSeconds = 5, [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(condition))] string what = "")
         {
             for (double elapsed = 0; !condition(); elapsed += 0.016)
             {
                 if (elapsed > limitSeconds)
                 {
-                    throw new InvalidOperationException("The condition never held.");
+                    throw new InvalidOperationException($"{what} never held; the player is at {Player.Position} doing {Player.PlayerBody?.Action?.Kind}.");
                 }
 
                 Step(0.016);
