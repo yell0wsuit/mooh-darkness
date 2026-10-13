@@ -4,6 +4,7 @@ using System.Linq;
 
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
+using Mooh.Core.Hazards;
 using Mooh.Core.Interactions;
 using Mooh.Core.Motion;
 using Mooh.Core.Movement;
@@ -105,7 +106,7 @@ namespace Mooh.Core.Enemies
             foreach (Direction direction in Candidates(beetle.Position, player.Position))
             {
                 GridPosition destination = beetle.Position.Offset(direction);
-                if (!CanEnter(destination))
+                if (!CanFly(beetle.Position, direction))
                 {
                     continue;
                 }
@@ -150,16 +151,31 @@ namespace Mooh.Core.Enemies
         }
 
         /// <summary>
-        /// Applies the recovered flight test. <c>_OnCellCan</c> rejects a cell holding a still
-        /// occupant with <c>CNT_CMaskPartsCollide</c>, explicitly excluding the player, so the
-        /// beetle passes over every object and flies into the player to be absorbed. The recovered
-        /// tunnel routing that lets a beetle continue through a tunnel is not implemented yet.
+        /// Applies the recovered flight test, <c>_OnCellCan</c>. A beetle inside a tunnel may only
+        /// leave through a side the tunnel's <c>DirMap</c> opens. It may then enter a cell with no
+        /// still <c>CNT_CMaskPartsCollide</c> occupant — the player excluded, so the beetle flies
+        /// into the player to be absorbed — or a tunnel whose <c>DirMap</c> carries it on.
         /// </summary>
-        private bool CanEnter(GridPosition destination)
+        private bool CanFly(GridPosition from, Direction direction)
         {
-            return _world.Contains(destination)
-                && !_world.GetOccupants(destination).Any(
-                    occupant => occupant.Interactions.HasFlag(InteractionMask.BlocksFlight));
+            if (TunnelAt(from) is TunnelShape own && own.Route(direction.Opposite(), ignoreOneWay: true) is null)
+            {
+                return false;
+            }
+
+            GridPosition destination = from.Offset(direction);
+            return _world.Contains(destination) && (!_world.GetOccupants(destination).Any(
+                    occupant => occupant.Motion is null && occupant.Interactions.HasFlag(InteractionMask.BlocksFlight))
+                || TunnelAt(destination)?.Route(direction, ignoreOneWay: true) is not null);
+        }
+
+        private TunnelShape? TunnelAt(GridPosition cell)
+        {
+            return _world.Contains(cell)
+                ? _world.GetOccupants(cell)
+                    .Select(occupant => occupant.TunnelBody?.Shape)
+                    .FirstOrDefault(shape => shape is not null)
+                : null;
         }
 
         private static void StartWait(SmallBeetleBody body)
