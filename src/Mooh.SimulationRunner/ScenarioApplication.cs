@@ -41,6 +41,11 @@ namespace Mooh.SimulationRunner
                 return RunPlay(arguments, output, error);
             }
 
+            if (arguments.Count >= 1 && string.Equals(arguments[0], "sweep", StringComparison.Ordinal))
+            {
+                return RunSweep(arguments, output, error);
+            }
+
             if (arguments.Count != 1)
             {
                 WriteUsage(error);
@@ -190,6 +195,74 @@ namespace Mooh.SimulationRunner
             error.WriteLine("Usage: Mooh.SimulationRunner <scenario.json|directory>");
             error.WriteLine("       Mooh.SimulationRunner level-board <level.json>");
             error.WriteLine("       Mooh.SimulationRunner play [manifest.json] [--level N] [--port N] [--difficulty 0|1|2]");
+            error.WriteLine("       Mooh.SimulationRunner sweep [manifest.json] [--seconds N] [--seed N]");
+        }
+
+        /// <summary>
+        /// Plays every level of a pack with the seeded sweep bot and reports each level, failing
+        /// when any level throws.
+        /// </summary>
+        private static int RunSweep(
+            IReadOnlyList<string> arguments,
+            TextWriter output,
+            TextWriter error)
+        {
+            string manifestPath = Path.Combine("assets", "levels", "manifest.json");
+            int seconds = 30;
+            int seed = 1;
+            for (int index = 1; index < arguments.Count; index++)
+            {
+                string argument = arguments[index];
+                if (string.Equals(argument, "--seconds", StringComparison.Ordinal)
+                    || string.Equals(argument, "--seed", StringComparison.Ordinal))
+                {
+                    if (index + 1 >= arguments.Count || !int.TryParse(arguments[index + 1], out int value) || value < 0)
+                    {
+                        error.WriteLine($"Option '{argument}' requires a non-negative integer value.");
+                        return 2;
+                    }
+
+                    if (string.Equals(argument, "--seconds", StringComparison.Ordinal))
+                    {
+                        seconds = value;
+                    }
+                    else
+                    {
+                        seed = value;
+                    }
+
+                    index++;
+                }
+                else
+                {
+                    manifestPath = argument;
+                }
+            }
+
+            LoadedLevelPack pack;
+            try
+            {
+                pack = JsonLevelPackLoader.Load(manifestPath);
+            }
+            catch (Exception exception)
+                when (exception is IOException or UnauthorizedAccessException or LevelValidationException)
+            {
+                error.WriteLine($"Unable to load level pack '{manifestPath}': {exception.Message}");
+                return 2;
+            }
+
+            int failures = 0;
+            foreach (CorpusSweepResult result in CorpusSweep.Run(pack, TimeSpan.FromSeconds(seconds), seed))
+            {
+                string status = result.Failure is null ? "OK  " : "FAIL";
+                output.WriteLine(
+                    $"{status} {result.Name,-32} {result.Outcome,-10} score {result.Score,6} events {result.EventCount,7}"
+                    + (result.Failure is null ? string.Empty : $"  {result.Failure}"));
+                failures += result.Failure is null ? 0 : 1;
+            }
+
+            output.WriteLine($"{failures} of {pack.Levels.Count} levels failed.");
+            return failures == 0 ? 0 : 1;
         }
 
         private static int RunPlay(
