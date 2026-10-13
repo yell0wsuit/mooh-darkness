@@ -56,11 +56,16 @@ namespace Mooh.SimulationRunner
                 aliasesById.Add(id, definition.Alias);
             }
 
+            DifficultySpeeds difficulty = scenario.World.HealthDrainPerSecond is double drain
+                ? DifficultySpeeds.Standard with { HealthDrainPerSecond = drain }
+                : DifficultySpeeds.Standard;
             SimulationWorld simulation = new(
                 world,
                 gravityDirection,
                 new DefaultGravityCollisionPolicy(),
-                new Random(scenario.World.RandomSeed));
+                new Random(scenario.World.RandomSeed),
+                0.5,
+                difficulty);
             return new MaterializedScenario(
                 scenario,
                 world,

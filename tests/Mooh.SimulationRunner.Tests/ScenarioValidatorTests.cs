@@ -214,6 +214,63 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Equal(TimeSpan.Zero, materialized.World.Player!.HealthBody!.ImmunityDuration);
         }
 
+        /// <summary>Verifies a health-drain override must be finite and non-negative.</summary>
+        /// <param name="rate">The candidate drain rate.</param>
+        [Theory]
+        [InlineData(-1)]
+        [InlineData(double.NaN)]
+        [InlineData(double.PositiveInfinity)]
+        public void RejectsInvalidHealthDrain(double rate)
+        {
+            ScenarioDocument scenario = WithHealthDrain(rate);
+
+            ScenarioValidationException exception = Assert.Throws<ScenarioValidationException>(
+                () => ScenarioValidator.Validate(scenario, "drain.json"));
+
+            Assert.Contains("world.healthDrainPerSecond", exception.Message, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Verifies a scenario drains at the recovered rate by default and can switch the drain off
+        /// to isolate exact health values.
+        /// </summary>
+        [Fact]
+        public void HealthDrainDefaultsToTheRecoveredRateAndCanBeDisabled()
+        {
+            ScenarioDocument drained = WithPlayerHealth(current: 100, immunityMilliseconds: 500);
+            ScenarioDocument undrained = WithHealthDrain(0, drained);
+
+            MaterializedScenario withDrain = ScenarioMaterializer.Materialize(drained);
+            MaterializedScenario withoutDrain = ScenarioMaterializer.Materialize(undrained);
+            _ = withDrain.Simulation.Advance(TimeSpan.FromSeconds(9));
+            _ = withoutDrain.Simulation.Advance(TimeSpan.FromSeconds(9));
+
+            Assert.Equal(99, withDrain.World.Player!.HealthBody!.Current, 9);
+            Assert.Equal(100, withoutDrain.World.Player!.HealthBody!.Current);
+        }
+
+        private static ScenarioDocument WithHealthDrain(double rate, ScenarioDocument? source = null)
+        {
+            ScenarioDocument scenario = source ?? WithPlayerHealth(current: 100, immunityMilliseconds: 500);
+            ScenarioWorld world = scenario.World;
+            return new ScenarioDocument
+            {
+                FormatVersion = scenario.FormatVersion,
+                Name = scenario.Name,
+                World = new ScenarioWorld
+                {
+                    Width = world.Width,
+                    Height = world.Height,
+                    Gravity = world.Gravity,
+                    RandomSeed = world.RandomSeed,
+                    HealthDrainPerSecond = rate,
+                    Entities = world.Entities,
+                },
+                Steps = scenario.Steps,
+                ExpectFinal = scenario.ExpectFinal,
+            };
+        }
+
         private static List<ScenarioDocument> CreateInvalidScenarios()
         {
             ScenarioDocument valid = ScenarioTestData.CreateValid();

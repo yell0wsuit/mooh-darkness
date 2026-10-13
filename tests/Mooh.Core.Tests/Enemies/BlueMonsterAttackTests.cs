@@ -223,7 +223,9 @@ namespace Mooh.Core.Tests.Enemies
                 world,
                 Direction.Down,
                 new DefaultGravityCollisionPolicy(),
-                new Random(0));
+                new Random(0),
+                0.5,
+                Undrained.Standard);
         }
 
         private static (WorldGrid World, Entity Monster, Entity Player) NewFacingScenario(

@@ -1,3 +1,5 @@
+using System;
+
 namespace Mooh.Core.Simulation
 {
     /// <summary>Provides gameplay values recovered from the original difficulty table.</summary>
@@ -7,6 +9,12 @@ namespace Mooh.Core.Simulation
         private const double StandardMonsterSpeed = 1.5625;
         private const double StandardNormalSpeed = 1.875;
         private const double StandardPlayerSpeed = 2.5;
+
+        /// <summary>
+        /// The recovered <c>CNT_GPrmHealthSp</c>, <c>100 / (15 * 60 * 1000)</c> per millisecond,
+        /// restated per second.
+        /// </summary>
+        private const double RecoveredHealthDrainPerSecond = 100.0 / (15 * 60);
 
         private DifficultySpeeds(
             double playerSpeed,
@@ -21,6 +29,7 @@ namespace Mooh.Core.Simulation
             bool isTimed)
         {
             IsTimed = isTimed;
+            HealthDrainPerSecond = isTimed ? 0 : RecoveredHealthDrainPerSecond;
             PlayerSpeed = playerSpeed;
             NormalSpeed = normalSpeed;
             MonsterSpeed = monsterSpeed;
@@ -112,5 +121,20 @@ namespace Mooh.Core.Simulation
         /// healing to the remaining play time instead. The clock itself is not yet implemented.
         /// </summary>
         public bool IsTimed { get; }
+
+        /// <summary>
+        /// Gets the passive health drain in health per second. The recovered <c>Game.ModCycle</c>
+        /// drains a full bar in fifteen minutes outside timed play and not at all on the timed
+        /// profile, whose clock replaces health. A host may set it to zero to isolate other
+        /// behavior from the drain.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The value is negative or not finite.</exception>
+        public double HealthDrainPerSecond
+        {
+            get;
+            init => field = double.IsFinite(value) && value >= 0
+                ? value
+                : throw new ArgumentOutOfRangeException(nameof(value));
+        }
     }
 }

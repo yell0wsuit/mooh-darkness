@@ -115,7 +115,13 @@ namespace Mooh.Core.Tests.Simulation
                 new GravityBody(2, canSlide: false));
             world.Add(player);
             world.Add(rock);
-            SimulationWorld simulation = new(world, Direction.Down, new DefaultGravityCollisionPolicy());
+            SimulationWorld simulation = new(
+                world,
+                Direction.Down,
+                new DefaultGravityCollisionPolicy(),
+                Random.Shared,
+                0.5,
+                Undrained.Standard);
             simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
 
             IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(500));
@@ -135,7 +141,7 @@ namespace Mooh.Core.Tests.Simulation
                     Object(1, "OPlayer", 2, 3),
                     Object(2, archivalType, 2, objectY)),
                 Direction.Down,
-                profile);
+                Undrained.Of(profile));
         }
 
         private static LevelDocument CreateLevel(params LevelObject[] objects)

@@ -53,6 +53,12 @@ namespace Mooh.Core.Simulation
             LossSettle,
         }
 
+        /// <summary>
+        /// Gets whether the loss branch has fired and is settling. The recovered branch puts the
+        /// player into <c>ST_Dead</c> at that moment, whatever emptied the health.
+        /// </summary>
+        internal bool IsSettlingLoss => _phase == LevelSettlePhase.LossSettle;
+
         /// <summary>Gets the decided outcome, or <see cref="LevelOutcome.InProgress"/>.</summary>
         internal LevelOutcome Outcome { get; private set; }
 

@@ -29,10 +29,13 @@ namespace Mooh.Core.Tests.Simulation
         [InlineData("BIce")]
         public void RecoveredLandingDetonatorExplodes(string archivalType)
         {
-            MaterializedLevel level = LevelMaterializer.Materialize(CreateLevel(
+            MaterializedLevel level = LevelMaterializer.Materialize(
+                CreateLevel(
                 Object(1, "OPlayer", 4, 4),
                 Object(2, archivalType, 2, 1),
-                Object(3, "CellsMetal01", 2, 3)));
+                Object(3, "CellsMetal01", 2, 3)),
+                Direction.Down,
+                Undrained.Standard);
             Entity source = level.GetEntity(2);
 
             IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(TimeSpan.FromMilliseconds(535));
@@ -49,10 +52,13 @@ namespace Mooh.Core.Tests.Simulation
         [Fact]
         public void InitiallySupportedBottleDoesNotExplode()
         {
-            MaterializedLevel level = LevelMaterializer.Materialize(CreateLevel(
+            MaterializedLevel level = LevelMaterializer.Materialize(
+                CreateLevel(
                 Object(1, "OPlayer", 4, 4),
                 Object(2, "OBottle", 2, 2),
-                Object(3, "CellsMetal01", 2, 3)));
+                Object(3, "CellsMetal01", 2, 3)),
+                Direction.Down,
+                Undrained.Standard);
             Entity bottle = level.GetEntity(2);
 
             IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(TimeSpan.FromSeconds(1));
@@ -65,9 +71,12 @@ namespace Mooh.Core.Tests.Simulation
         [Fact]
         public void LandingExplosionRepeatsDownwardShakeAfterCenterBlast()
         {
-            MaterializedLevel level = LevelMaterializer.Materialize(CreateLevel(
+            MaterializedLevel level = LevelMaterializer.Materialize(
+                CreateLevel(
                 Object(1, "OPlayer", 2, 3),
-                Object(2, "OBottle", 2, 1)));
+                Object(2, "OBottle", 2, 1)),
+                Direction.Down,
+                Undrained.Standard);
             EntityId player = level.GetEntity(1).Id;
             EntityId bottle = level.GetEntity(2).Id;
 
@@ -92,7 +101,8 @@ namespace Mooh.Core.Tests.Simulation
         [Fact]
         public void MaterializesRecoveredExplosionReactions()
         {
-            MaterializedLevel level = LevelMaterializer.Materialize(CreateLevel(
+            MaterializedLevel level = LevelMaterializer.Materialize(
+                CreateLevel(
                 Object(1, "OPlayer", 0, 0),
                 Object(2, "ORock01", 1, 1),
                 Object(3, "OCoin01", 2, 1),
@@ -105,7 +115,9 @@ namespace Mooh.Core.Tests.Simulation
                 Object(10, "CellsMetal01", 2, 2),
                 Object(11, "OKDKey1", 3, 2),
                 Object(12, "OBarel", 4, 2),
-                Object(13, "OArrowL", 5, 2)));
+                Object(13, "OArrowL", 5, 2)),
+                Direction.Down,
+                Undrained.Standard);
 
             foreach (int id in new[] { 2, 3, 4, 5, 6, 7 })
             {

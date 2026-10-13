@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using Mooh.Core.Content;
+using Mooh.Core.Grid;
 using Mooh.Core.Levels;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
@@ -140,7 +141,7 @@ namespace Mooh.Core.Tests.Levels
                 new LevelSize(5, 4),
                 new EditorPreview(0, 0, 5, 4),
                 objects);
-            return LevelMaterializer.Materialize(level);
+            return LevelMaterializer.Materialize(level, Direction.Down, Undrained.Standard);
         }
 
         private static EntityPair GetPlayerAndPickup(MaterializedLevel level)

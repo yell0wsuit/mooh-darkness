@@ -36,6 +36,13 @@ namespace Mooh.SimulationRunner
         /// <summary>Gets the deterministic random seed.</summary>
         public required int RandomSeed { get; init; }
 
+        /// <summary>
+        /// Gets an optional passive health drain in health per second. When omitted the world
+        /// drains at the recovered standard rate; zero isolates a scenario's exact health values
+        /// from the drain.
+        /// </summary>
+        public double? HealthDrainPerSecond { get; init; }
+
         /// <summary>Gets entities in registration order.</summary>
         public required List<ScenarioEntity> Entities { get; init; }
     }

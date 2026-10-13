@@ -1,3 +1,5 @@
+using System;
+
 using Mooh.Core.Simulation;
 
 using Xunit;
@@ -46,6 +48,32 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(30, DifficultySpeeds.Timed.HardShakeDamage);
             Assert.Equal(20, DifficultySpeeds.Timed.ExplosionDamage);
             Assert.Equal(15, DifficultySpeeds.Timed.FoodHeal);
+        }
+
+        /// <summary>
+        /// Verifies the recovered <c>CNT_GPrmHealthSp</c> drains a full bar in fifteen minutes on
+        /// both untimed profiles, and that timed play, which replaces health with the clock, does
+        /// not drain at all.
+        /// </summary>
+        [Fact]
+        public void HealthDrainFollowsTheRecoveredRateOutsideTimedPlay()
+        {
+            Assert.Equal(100.0 / 900, DifficultySpeeds.Standard.HealthDrainPerSecond, precision: 12);
+            Assert.Equal(100.0 / 900, DifficultySpeeds.DifficultyZero.HealthDrainPerSecond, precision: 12);
+            Assert.Equal(0, DifficultySpeeds.Timed.HealthDrainPerSecond);
+            Assert.Equal(0, (DifficultySpeeds.Standard with { HealthDrainPerSecond = 0 }).HealthDrainPerSecond);
+        }
+
+        /// <summary>Verifies a drain rate must be finite and non-negative.</summary>
+        /// <param name="rate">The candidate rate.</param>
+        [Theory]
+        [InlineData(-0.1)]
+        [InlineData(double.NaN)]
+        [InlineData(double.PositiveInfinity)]
+        public void HealthDrainRejectsInvalidRate(double rate)
+        {
+            _ = Assert.Throws<ArgumentOutOfRangeException>(
+                () => DifficultySpeeds.Standard with { HealthDrainPerSecond = rate });
         }
     }
 }

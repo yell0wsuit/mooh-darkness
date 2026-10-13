@@ -307,15 +307,71 @@ namespace Mooh.Core.Simulation
             _playerController?.EndSegment();
             if (target.HealthBody!.IsDead)
             {
-                body.Reaction.Kind = PlayerReactionKind.Dead;
-                body.Reaction.Remaining = TimeSpan.Zero;
-                events.Add(new PlayerDied(target.Id));
+                MarkPlayerDead(target, body, events);
             }
             else
             {
                 body.Reaction.Kind = PlayerReactionKind.Shocked;
                 body.Reaction.Remaining = body.ShockDuration;
                 events.Add(new PlayerShockStarted(target.Id, body.ShockDuration));
+            }
+        }
+
+        private static void MarkPlayerDead(Entity player, PlayerBody body, List<SimulationEvent> events)
+        {
+            body.Reaction.Kind = PlayerReactionKind.Dead;
+            body.Reaction.Remaining = TimeSpan.Zero;
+            events.Add(new PlayerDied(player.Id));
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>Game.ModCycle</c> drain, which runs outside timed play while
+        /// the player is not in a <c>bImmort</c> state. The timed profile's rate is zero.
+        /// </summary>
+        private bool IsDraining => _difficultySpeeds.HealthDrainPerSecond > 0
+            && _world.Player is { PlayerBody.IsImmortal: false, HealthBody.IsDead: false };
+
+        /// <summary>
+        /// Gets how long the drain needs to empty the bar. It is a substep bound so the loss
+        /// branch observes the exact zero crossing, and so an otherwise idle advance still drains.
+        /// </summary>
+        private double? SecondsUntilDrainEmpties()
+        {
+            return IsDraining
+                ? _world.Player!.HealthBody!.Current / _difficultySpeeds.HealthDrainPerSecond
+                : null;
+        }
+
+        private void DrainPlayerHealth(double elapsedSeconds)
+        {
+            if (!IsDraining)
+            {
+                return;
+            }
+
+            // The substep that reaches the zero crossing is cut to it exactly, so a floating
+            // remainder is snapped rather than left to schedule vanishing substeps.
+            HealthBody health = _world.Player!.HealthBody!;
+            double amount = elapsedSeconds * _difficultySpeeds.HealthDrainPerSecond;
+            health.Drain(health.Current - amount < TimeTolerance ? health.Current : amount);
+        }
+
+        /// <summary>
+        /// Applies the <c>PObj.StateSet(ST_Dead)</c> of the recovered loss branch. A lethal hit has
+        /// already put the player there; health emptied by the drain reaches it only here.
+        /// </summary>
+        private void ObserveLossDeath(List<SimulationEvent> events)
+        {
+            if (_levelOutcome.IsSettlingLoss
+                && _world.Player is Entity player
+                && player.PlayerBody is PlayerBody body
+                && body.Reaction.Kind != PlayerReactionKind.Dead)
+            {
+                KinematicsSystem.Stop(player);
+                body.Rotation = null;
+                body.Action = null;
+                _playerController?.EndSegment();
+                MarkPlayerDead(player, body, events);
             }
         }
 
@@ -401,6 +457,7 @@ namespace Mooh.Core.Simulation
                 double? arrowSeconds = SecondsUntilNextArrowWindup();
                 double? rotatorSeconds = SecondsUntilNextRotatorWindup();
                 double? balloonSeconds = SecondsUntilNextBalloonDetonation();
+                double? drainSeconds = SecondsUntilDrainEmpties();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -480,6 +537,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingFuse);
                 }
 
+                if (drainSeconds is double remainingHealth)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingHealth);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && actionSeconds is null
@@ -493,7 +555,8 @@ namespace Mooh.Core.Simulation
                     && outcomeSeconds is null
                     && arrowSeconds is null
                     && rotatorSeconds is null
-                    && balloonSeconds is null)
+                    && balloonSeconds is null
+                    && drainSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -507,6 +570,7 @@ namespace Mooh.Core.Simulation
                 _world.AdvanceTime(substepSeconds);
                 AdvanceHealthImmunity(substepSeconds);
                 AdvancePlayerProgress(substepSeconds);
+                DrainPlayerHealth(substepSeconds);
                 SynchronizeMonsterIce(events);
                 bool playerControlReady = _playerController?.AdvanceRotation(
                     substepSeconds,
@@ -556,6 +620,7 @@ namespace Mooh.Core.Simulation
                 }
 
                 _levelOutcome.Advance(substepSeconds, events);
+                ObserveLossDeath(events);
             }
 
             return events;

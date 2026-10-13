@@ -329,7 +329,9 @@ namespace Mooh.Core.Tests.Enemies
                 world,
                 Direction.Down,
                 new DefaultGravityCollisionPolicy(),
-                new Random(0));
+                new Random(0),
+                0.5,
+                Undrained.Standard);
         }
 
         private static Entity NewMonster(int x, int y, Direction direction)

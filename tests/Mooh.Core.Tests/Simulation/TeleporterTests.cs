@@ -280,7 +280,7 @@ namespace Mooh.Core.Tests.Simulation
                 new DefaultGravityCollisionPolicy(),
                 new Random(0),
                 0.5,
-                DifficultySpeeds.Standard);
+                Undrained.Standard);
         }
     }
 }

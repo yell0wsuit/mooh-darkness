@@ -170,7 +170,7 @@ namespace Mooh.Core.Tests.Simulation
                 new DefaultGravityCollisionPolicy(),
                 new Random(0),
                 0.5,
-                difficulty ?? DifficultySpeeds.Standard);
+                Undrained.Of(difficulty ?? DifficultySpeeds.Standard));
         }
 
         private static Entity Add(

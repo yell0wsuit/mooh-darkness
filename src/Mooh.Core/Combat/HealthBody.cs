@@ -49,6 +49,16 @@ namespace Mooh.Core.Combat
             ImmunityRemaining = ImmunityDuration;
         }
 
+        /// <summary>
+        /// Lowers health without touching the immunity window. The recovered passive drain writes
+        /// <c>fGamePrmHealth</c> directly instead of calling <c>OnHelthLost</c>, so unlike
+        /// <see cref="Apply"/> it never arms immunity, never shocks and is never absorbed by cola.
+        /// </summary>
+        internal void Drain(double amount)
+        {
+            Current = Math.Max(0, Current - amount);
+        }
+
         internal void Heal(double amount)
         {
             if (!double.IsFinite(amount) || amount <= 0)

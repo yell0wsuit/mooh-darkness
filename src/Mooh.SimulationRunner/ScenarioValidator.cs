@@ -86,6 +86,11 @@ namespace Mooh.SimulationRunner
             }
 
             _ = ParseEnum<Direction>(world.Gravity, source, "world.gravity");
+            if (world.HealthDrainPerSecond is double drain && (!double.IsFinite(drain) || drain < 0))
+            {
+                throw Invalid(source, "world.healthDrainPerSecond", "must be finite and non-negative.");
+            }
+
             if (world.Entities is null || world.Entities.Count == 0)
             {
                 throw Invalid(source, "world.entities", "must contain at least one entity.");

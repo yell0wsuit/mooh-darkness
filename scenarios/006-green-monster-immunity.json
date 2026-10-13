@@ -6,6 +6,7 @@
         "height": 1,
         "gravity": "Down",
         "randomSeed": 0,
+        "healthDrainPerSecond": 0,
         "entities": [
             {
                 "alias": "first-monster",

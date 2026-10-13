@@ -225,7 +225,7 @@ namespace Mooh.Core.Tests.Enemies
                 new DefaultGravityCollisionPolicy(),
                 new Random(0),
                 0.5,
-                DifficultySpeeds.Standard);
+                Undrained.Standard);
 
             IReadOnlyList<SimulationEvent> events = simulation.Detonate(explosive.Id);
             _ = monster;
