@@ -98,7 +98,9 @@ function draw(f) {
   hud.innerHTML = [
     `level <b>${f.level}/${f.levelCount}</b>`,
     `score <b>${f.score}</b>`,
-    `health <b>${Math.round(f.health)}</b>`,
+    f.timeRemaining == null
+      ? `health <b>${Math.round(f.health)}</b>`
+      : `time <b>${Math.max(0, Math.ceil(f.timeRemaining))}</b>`,
     `grenades <b>${f.grenades}</b>`,
     `monsters left <b>${f.monstersLeft}</b>`,
     `<b>${f.reaction}</b>`,

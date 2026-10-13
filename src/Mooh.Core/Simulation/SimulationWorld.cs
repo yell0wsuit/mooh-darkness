@@ -201,6 +201,13 @@ namespace Mooh.Core.Simulation
             _greenMonsters = new GreenMonsterSystem(world);
             _smallBeetles = new SmallBeetleSystem(world);
             _levelOutcome = new LevelOutcomeSystem(world, _difficultySpeeds);
+
+            // The recovered GameInit starts PlayTime on the timed profile only.
+            if (_difficultySpeeds.IsTimed && world.Player?.HealthBody is HealthBody playerHealth)
+            {
+                playerHealth.Clock = new PlayClock();
+            }
+
             _playerController = world.Player is Entity player
                 ? new PlayerController(player, world, _movement, gravityDirection, _difficultySpeeds, this)
                 : null;
@@ -342,6 +349,17 @@ namespace Mooh.Core.Simulation
                 : null;
         }
 
+        /// <summary>
+        /// Gets how long the timed clock has left. It is a substep bound so the timeout branch
+        /// observes the exact moment the clock runs out.
+        /// </summary>
+        private double? SecondsUntilClockRunsOut()
+        {
+            return _world.Player?.HealthBody?.Clock is { HasRunOut: false } clock
+                ? clock.Remaining.TotalSeconds
+                : null;
+        }
+
         private void DrainPlayerHealth(double elapsedSeconds)
         {
             if (!IsDraining)
@@ -458,6 +476,7 @@ namespace Mooh.Core.Simulation
                 double? rotatorSeconds = SecondsUntilNextRotatorWindup();
                 double? balloonSeconds = SecondsUntilNextBalloonDetonation();
                 double? drainSeconds = SecondsUntilDrainEmpties();
+                double? clockSeconds = SecondsUntilClockRunsOut();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -542,6 +561,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingHealth);
                 }
 
+                if (clockSeconds is double remainingPlayTime)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingPlayTime);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && actionSeconds is null
@@ -556,7 +580,8 @@ namespace Mooh.Core.Simulation
                     && arrowSeconds is null
                     && rotatorSeconds is null
                     && balloonSeconds is null
-                    && drainSeconds is null)
+                    && drainSeconds is null
+                    && clockSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -571,6 +596,7 @@ namespace Mooh.Core.Simulation
                 AdvanceHealthImmunity(substepSeconds);
                 AdvancePlayerProgress(substepSeconds);
                 DrainPlayerHealth(substepSeconds);
+                _world.Player?.HealthBody?.Clock?.Advance(TimeSpan.FromSeconds(substepSeconds));
                 SynchronizeMonsterIce(events);
                 bool playerControlReady = _playerController?.AdvanceRotation(
                     substepSeconds,

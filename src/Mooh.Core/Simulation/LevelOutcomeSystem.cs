@@ -26,6 +26,15 @@ namespace Mooh.Core.Simulation
         /// <summary>Matches the recovered <c>CNT_WTime_Los</c> pause before the loss is reported.</summary>
         private static readonly TimeSpan LossSettleDelay = TimeSpan.FromMilliseconds(1500);
 
+        /// <summary>
+        /// Matches the recovered <c>CNT_WTime_Win1</c> pause the timeout branch takes after
+        /// <c>SndClockEnd</c>, which reuses the win constants rather than the loss one.
+        /// </summary>
+        private static readonly TimeSpan TimeoutAnnounceDelay = TimeSpan.FromMilliseconds(500);
+
+        /// <summary>Matches the recovered <c>CNT_WTime_Win2</c> pause after the timeout is announced.</summary>
+        private static readonly TimeSpan TimeoutSettleDelay = TimeSpan.FromMilliseconds(1500);
+
         /// <summary>Absorbs the sub-tick residue left by repeated substep subtraction.</summary>
         private static readonly TimeSpan TimerTolerance = TimeSpan.FromTicks(1);
 
@@ -51,6 +60,8 @@ namespace Mooh.Core.Simulation
             WinAnnounce,
             WinSettle,
             LossSettle,
+            TimeoutAnnounce,
+            TimeoutSettle,
         }
 
         /// <summary>
@@ -94,6 +105,15 @@ namespace Mooh.Core.Simulation
 
             if (_world.Player is not Entity player || player.PlayerBody is null)
             {
+                return;
+            }
+
+            // The recovered timed branch is `if bTimed: ... elif health <= 0`, so on the timed
+            // profile the clock is the only loss condition and it is tested before the win.
+            if (player.HealthBody?.Clock?.HasRunOut == true)
+            {
+                _phase = LevelSettlePhase.TimeoutAnnounce;
+                _remaining = TimeoutAnnounceDelay;
                 return;
             }
 
@@ -151,6 +171,18 @@ namespace Mooh.Core.Simulation
                     Complete(LevelOutcome.Won, events);
                     return;
                 case LevelSettlePhase.LossSettle:
+                    Complete(LevelOutcome.Lost, events);
+                    return;
+                case LevelSettlePhase.TimeoutAnnounce:
+                    _phase = LevelSettlePhase.TimeoutSettle;
+                    _remaining = TimeoutSettleDelay;
+                    return;
+                case LevelSettlePhase.TimeoutSettle:
+                    if (IsPlayerHoldingLevelEnd())
+                    {
+                        return;
+                    }
+
                     Complete(LevelOutcome.Lost, events);
                     return;
                 case LevelSettlePhase.None:

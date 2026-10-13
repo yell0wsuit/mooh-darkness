@@ -40,12 +40,31 @@ namespace Mooh.Core.Combat
         /// <summary>Gets the remaining post-hit immunity duration.</summary>
         public TimeSpan ImmunityRemaining { get; internal set; }
 
+        /// <summary>
+        /// Gets the timed-play clock that replaces health on the timed profile, or
+        /// <see langword="null"/> when health is the live axis.
+        /// </summary>
+        public PlayClock? Clock { get; internal set; }
+
         /// <summary>Gets whether health has reached zero.</summary>
         public bool IsDead => Current <= 0;
 
+        /// <summary>
+        /// Applies a hit, the recovered <c>GameHealthDec</c>. On the timed profile the hit spends
+        /// clock time and health is untouched; immunity is armed either way, because
+        /// <c>OnHelthLost</c> sets <c>ulImmTime</c> above the redirect.
+        /// </summary>
         internal void Apply(double amount)
         {
-            Current = Math.Max(0, Current - amount);
+            if (Clock is PlayClock clock)
+            {
+                clock.Subtract(amount);
+            }
+            else
+            {
+                Current = Math.Max(0, Current - amount);
+            }
+
             ImmunityRemaining = ImmunityDuration;
         }
 
@@ -59,11 +78,21 @@ namespace Mooh.Core.Combat
             Current = Math.Max(0, Current - amount);
         }
 
+        /// <summary>
+        /// Applies a heal, the recovered <c>GameHealthAdd</c>, which buys unclamped clock time on
+        /// the timed profile and is clamped to the maximum otherwise.
+        /// </summary>
         internal void Heal(double amount)
         {
             if (!double.IsFinite(amount) || amount <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(amount));
+            }
+
+            if (Clock is PlayClock clock)
+            {
+                clock.Add(amount);
+                return;
             }
 
             Current = Math.Min(Maximum, Current + amount);

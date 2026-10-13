@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading;
 
 using Mooh.Core.Content;
+using Mooh.Core.Simulation;
 
 namespace Mooh.SimulationRunner
 {
@@ -188,7 +189,7 @@ namespace Mooh.SimulationRunner
         {
             error.WriteLine("Usage: Mooh.SimulationRunner <scenario.json|directory>");
             error.WriteLine("       Mooh.SimulationRunner level-board <level.json>");
-            error.WriteLine("       Mooh.SimulationRunner play [manifest.json] [--level N] [--port N]");
+            error.WriteLine("       Mooh.SimulationRunner play [manifest.json] [--level N] [--port N] [--difficulty 0|1|2]");
         }
 
         private static int RunPlay(
@@ -199,10 +200,33 @@ namespace Mooh.SimulationRunner
             string manifestPath = Path.Combine("assets", "levels", "manifest.json");
             int level = 1;
             int port = 8080;
+            DifficultySpeeds difficulty = DifficultySpeeds.Standard;
             for (int index = 1; index < arguments.Count; index++)
             {
                 string argument = arguments[index];
-                if (string.Equals(argument, "--level", StringComparison.Ordinal)
+                if (string.Equals(argument, "--difficulty", StringComparison.Ordinal))
+                {
+                    // The recovered difficulty table is indexed 0 (reduced speeds and damage),
+                    // 1 (standard) and 2 (timed).
+                    DifficultySpeeds? selected = index + 1 < arguments.Count
+                        ? arguments[index + 1] switch
+                        {
+                            "0" => DifficultySpeeds.DifficultyZero,
+                            "1" => DifficultySpeeds.Standard,
+                            "2" => DifficultySpeeds.Timed,
+                            _ => null,
+                        }
+                        : null;
+                    if (selected is null)
+                    {
+                        error.WriteLine("Option '--difficulty' requires 0, 1 or 2.");
+                        return 2;
+                    }
+
+                    difficulty = selected;
+                    index++;
+                }
+                else if (string.Equals(argument, "--level", StringComparison.Ordinal)
                     || string.Equals(argument, "--port", StringComparison.Ordinal))
                 {
                     if (index + 1 >= arguments.Count
@@ -259,7 +283,8 @@ namespace Mooh.SimulationRunner
             Console.CancelKeyPress += Handler;
             try
             {
-                new PlayServer(new PlaySession(pack, level - 1)).Listen(port, output, cancellation.Token);
+                new PlayServer(new PlaySession(pack, level - 1, difficulty: difficulty))
+                    .Listen(port, output, cancellation.Token);
                 return 0;
             }
             catch (HttpListenerException exception)

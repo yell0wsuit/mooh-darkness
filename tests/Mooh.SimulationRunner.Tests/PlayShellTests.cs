@@ -367,6 +367,38 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Null(frame.HelpText);
         }
 
+        /// <summary>
+        /// Verifies timed play reports the recovered clock, which replaces health, and that an
+        /// untimed session reports none.
+        /// </summary>
+        [Fact]
+        public void TimedPlayReportsTheClock()
+        {
+            FakeTimeProvider time = new();
+            PlaySession timed = new(CreatePack(), 0, time, Core.Simulation.DifficultySpeeds.Timed);
+            PlaySession standard = new(CreatePack(), 0, time);
+
+            time.Advance(TimeSpan.FromMilliseconds(100));
+            PlayFrame frame = timed.Advance(default);
+
+            Assert.Equal(399.9, frame.TimeRemaining!.Value, 3);
+            Assert.Equal(100, frame.Health);
+            Assert.Null(standard.Render().TimeRemaining);
+        }
+
+        /// <summary>Verifies the play command rejects a difficulty outside the recovered table.</summary>
+        [Fact]
+        public void PlayRejectsAnUnknownDifficulty()
+        {
+            using System.IO.StringWriter output = new();
+            using System.IO.StringWriter error = new();
+
+            int exitCode = ScenarioApplication.Run(["play", "--difficulty", "3"], output, error);
+
+            Assert.Equal(2, exitCode);
+            Assert.Contains("--difficulty", error.ToString(), StringComparison.Ordinal);
+        }
+
         private static LoadedLevelPack CreateTablePack()
         {
             Dictionary<string, JsonElement> properties = new()

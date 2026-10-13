@@ -118,7 +118,7 @@ namespace Mooh.Core.Simulation
         /// <summary>
         /// Gets whether the profile replaces the health axis with a countdown clock. The original
         /// bypasses the health loss condition entirely on this profile, redirecting damage and
-        /// healing to the remaining play time instead. The clock itself is not yet implemented.
+        /// healing to the remaining play time instead.
         /// </summary>
         public bool IsTimed { get; }
 

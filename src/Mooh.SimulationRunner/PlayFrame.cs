@@ -18,6 +18,10 @@ namespace Mooh.SimulationRunner
     /// The recovered help-text id of the message table read most recently, while the help panel
     /// would still be showing it, or <see langword="null"/>.
     /// </param>
+    /// <param name="TimeRemaining">
+    /// The timed-play clock in seconds, which replaces health on the timed difficulty, or
+    /// <see langword="null"/> when health is the live axis.
+    /// </param>
     public sealed record PlayFrame(
         IReadOnlyList<PlaySprite> Sprites,
         int Width,
@@ -30,5 +34,6 @@ namespace Mooh.SimulationRunner
         int MonstersLeft,
         string State,
         string Reaction,
-        string? HelpText = null);
+        string? HelpText = null,
+        double? TimeRemaining = null);
 }

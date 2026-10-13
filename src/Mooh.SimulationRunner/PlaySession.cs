@@ -41,14 +41,16 @@ namespace Mooh.SimulationRunner
         /// <param name="pack">The loaded archival pack.</param>
         /// <param name="startingLevelIndex">The zero-based index of the first level to play.</param>
         /// <param name="timeProvider">The clock used to measure frame intervals.</param>
+        /// <param name="difficulty">The recovered difficulty profile, standard when omitted.</param>
         /// <exception cref="ArgumentNullException">A required argument is <see langword="null"/>.</exception>
         public PlaySession(
             LoadedLevelPack pack,
             int startingLevelIndex = 0,
-            TimeProvider? timeProvider = null)
+            TimeProvider? timeProvider = null,
+            DifficultySpeeds? difficulty = null)
         {
             _timeProvider = timeProvider ?? TimeProvider.System;
-            Session = new GameSession(pack, DifficultySpeeds.Standard, startingLevelIndex);
+            Session = new GameSession(pack, difficulty ?? DifficultySpeeds.Standard, startingLevelIndex);
             _lastTimestamp = _timeProvider.GetTimestamp();
         }
 
@@ -171,7 +173,8 @@ namespace Mooh.SimulationRunner
                     entity => entity.Interactions.HasFlag(InteractionMask.LevelEndLock)),
                 Session.State.ToString(),
                 (body?.Reaction.Kind ?? PlayerReactionKind.Normal).ToString(),
-                _helpText);
+                _helpText,
+                Session.Level.World.Player?.HealthBody?.Clock?.Remaining.TotalSeconds);
         }
 
         /// <summary>
