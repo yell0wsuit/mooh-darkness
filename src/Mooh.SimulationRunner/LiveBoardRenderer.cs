@@ -110,8 +110,8 @@ namespace Mooh.SimulationRunner
         }
 
         /// <summary>
-        /// Classifies one live entity. A beetle, a placed big bomb and a fired rocket are spawned at
-        /// runtime rather than placed, so they carry no archival identity and are recognized by their behavior
+        /// Classifies one live entity. A beetle, a placed big bomb, a fired rocket and the start door
+        /// are spawned at runtime rather than placed, so they carry no archival identity and are recognized by their behavior
         /// components instead.
         /// </summary>
         private static LevelBoardRenderer.BoardGlyph Classify(Entity entity)
@@ -122,6 +122,8 @@ namespace Mooh.SimulationRunner
                 ? LevelBoardRenderer.BigBombGlyph
                 : entity.RocketBody is not null
                 ? LevelBoardRenderer.RocketGlyph
+                : entity.DoorBody is not null
+                ? LevelBoardRenderer.DoorGlyph
                 : LevelBoardRenderer.ClassifyType(
                     entity.ArchivalIdentity?.ArchivalType ?? string.Empty,
                     null);

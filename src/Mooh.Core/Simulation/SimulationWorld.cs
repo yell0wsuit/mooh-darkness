@@ -312,6 +312,66 @@ namespace Mooh.Core.Simulation
             controller.SetInput(input);
         }
 
+        /// <summary>
+        /// Starts the level the way the recovered <c>GamePlayer.GameInit</c> does: a door appears in
+        /// the player's cell and the player emerges from it.
+        /// </summary>
+        /// <returns>The ordered events of the level start.</returns>
+        public IReadOnlyList<SimulationEvent> BeginLevel()
+        {
+            if (_world.Player is not Entity player || _playerController is null)
+            {
+                return [];
+            }
+
+            // The recovered door mask is ShadowObj | MonShadow, and GameInit adds CellLockMotion
+            // until the player is out.
+            Entity door = new(
+                CreateSpawnedEntityId(player.Id),
+                player.Position,
+                InteractionMask.BlocksMovement
+                    | InteractionMask.OccupancyTransparent
+                    | InteractionMask.MonsterTransparent,
+                doorBody: new DoorBody());
+            _world.Add(door);
+            _playerController.BeginLevel();
+            return [];
+        }
+
+        private double? SecondsUntilNextDoorLeaves()
+        {
+            double? result = null;
+            foreach (Entity entity in _world.Entities)
+            {
+                if (entity.DoorBody?.RemovalRemainingSeconds is double remaining
+                    && (result is null || remaining < result))
+                {
+                    result = remaining;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>Plays out every leaving start door and kills each one that has gone.</summary>
+        private void AdvanceDoors(double elapsedSeconds, List<SimulationEvent> events)
+        {
+            Entity[] leaving = [.. _world.Entities.Where(entity => entity.DoorBody?.RemovalRemainingSeconds is not null)];
+            foreach (Entity door in leaving)
+            {
+                DoorBody body = door.DoorBody!;
+                double remaining = body.RemovalRemainingSeconds!.Value - elapsedSeconds;
+                if (remaining > TimeTolerance)
+                {
+                    body.RemovalRemainingSeconds = remaining;
+                    continue;
+                }
+
+                body.RemovalRemainingSeconds = null;
+                DestroyEntity(door, door.Id, events);
+            }
+        }
+
         /// <summary>Selects a weapon, the recovered <c>WeapCurrSet</c> the <c>1</c>-<c>4</c> keys call.</summary>
         /// <param name="weapon">The weapon to make current.</param>
         /// <returns>The selection event, or nothing when the weapon is current or empty.</returns>
@@ -579,6 +639,7 @@ namespace Mooh.Core.Simulation
                 double? clockSeconds = SecondsUntilClockRunsOut();
                 double? bigBombSeconds = SecondsUntilNextBigBomb();
                 double? bioSeconds = SecondsUntilNextBioMass();
+                double? doorSeconds = SecondsUntilNextDoorLeaves();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -678,6 +739,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingBio);
                 }
 
+                if (doorSeconds is double remainingDoor)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingDoor);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && actionSeconds is null
@@ -695,7 +761,8 @@ namespace Mooh.Core.Simulation
                     && drainSeconds is null
                     && clockSeconds is null
                     && bigBombSeconds is null
-                    && bioSeconds is null)
+                    && bioSeconds is null
+                    && doorSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -716,6 +783,7 @@ namespace Mooh.Core.Simulation
                 AdvanceBalloonFuses(substepSeconds, events);
                 AdvanceBigBombFuses(substepSeconds, events);
                 AdvanceBioMasses(substepSeconds, events);
+                AdvanceDoors(substepSeconds, events);
                 _world.Player?.HealthBody?.Clock?.Advance(TimeSpan.FromSeconds(substepSeconds));
                 SynchronizeMonsterIce(events);
                 bool playerControlReady = _playerController?.AdvanceRotation(

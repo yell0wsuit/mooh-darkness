@@ -173,10 +173,15 @@ namespace Mooh.Core.Session
 
         private MaterializedLevel MaterializeCurrentLevel()
         {
-            return LevelMaterializer.Materialize(
+            MaterializedLevel level = LevelMaterializer.Materialize(
                 _levels[LevelIndex],
                 _gravityDirection,
                 _difficultySpeeds);
+
+            // Every level is entered through the recovered GameInit ritual: the player emerges
+            // from a door in its start cell.
+            _ = level.Simulation.BeginLevel();
+            return level;
         }
     }
 }

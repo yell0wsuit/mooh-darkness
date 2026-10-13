@@ -55,6 +55,7 @@ namespace Mooh.SimulationRunner.Tests
         {
             FakeTimeProvider time = new();
             PlaySession session = new(CreatePack(), 0, time);
+            Emerge(session, time);
 
             // The player materializes facing down, so holding down starts walking with no
             // rotation first. 100 ms at the recovered 2.5 cells per second is a quarter cell.
@@ -104,6 +105,7 @@ namespace Mooh.SimulationRunner.Tests
         {
             FakeTimeProvider time = new();
             PlaySession session = new(CreatePack(), 0, time);
+            Emerge(session, time);
             PlayerInputState right = new(Left: false, Up: false, Right: true, Down: false);
 
             for (int frameIndex = 0; frameIndex < 10; frameIndex++)
@@ -174,6 +176,7 @@ namespace Mooh.SimulationRunner.Tests
         {
             FakeTimeProvider time = new();
             PlaySession session = new(CreateRocketPack(), 0, time);
+            Emerge(session, time);
             PlayServer server = new(session);
             PlayerInputState right = new(Left: false, Up: false, Right: true, Down: false);
             for (int step = 0; step < 6; step++)
@@ -341,6 +344,19 @@ namespace Mooh.SimulationRunner.Tests
                 [level]);
         }
 
+        /// <summary>
+        /// Plays out the recovered level entry in the shell's clamped frames: the player emerges
+        /// from the start door for 1875 ms before it can act.
+        /// </summary>
+        private static void Emerge(PlaySession session, FakeTimeProvider time)
+        {
+            for (int step = 0; step < 19; step++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(100));
+                _ = session.Advance(default);
+            }
+        }
+
         private static int CountGlyphs(string row)
         {
             return new System.Globalization.StringInfo(row).LengthInTextElements;
@@ -361,6 +377,15 @@ namespace Mooh.SimulationRunner.Tests
         {
             FakeTimeProvider time = new();
             PlaySession session = new(CreateRotatorPack(), 0, time);
+            Emerge(session, time);
+
+            // Firing while the start door is still in the player's cell would enter the shelter,
+            // so wait out the recovered 900 ms the door takes to go.
+            for (int step = 0; step < 10; step++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(100));
+                _ = session.Advance(default);
+            }
             PlayFrame before = session.Render();
 
             Assert.Equal(6, before.Width);
@@ -392,6 +417,7 @@ namespace Mooh.SimulationRunner.Tests
         {
             FakeTimeProvider time = new();
             PlaySession session = new(CreateTablePack(), 0, time);
+            Emerge(session, time);
             PlayerInputState down = new(Left: false, Up: false, Right: false, Down: true);
 
             PlayFrame frame = session.Render();

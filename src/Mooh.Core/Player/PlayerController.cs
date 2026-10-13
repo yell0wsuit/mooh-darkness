@@ -35,6 +35,24 @@ namespace Mooh.Core.Player
         /// <summary>The recovered <c>RepTime</c> of the rocket, the mine and the big bomb.</summary>
         private const double OtherWeaponRepeatSeconds = 1.0;
 
+        /// <summary>The recovered <c>ST_GStartInStart</c> plus <c>ST_GStartInInWalk</c>.</summary>
+        private const double LevelEntrySeconds = 1.500 + 0.375;
+
+        /// <summary>The recovered <c>ST_DoorOutStart</c> plus <c>ST_DoorOutOutWalk</c>.</summary>
+        private const double ShelterInSeconds = 0.500 + 0.375;
+
+        /// <summary>The recovered <c>ST_DoorOutHide</c>.</summary>
+        private const double ShelterHiddenSeconds = 3.0;
+
+        /// <summary>The recovered <c>ST_DoorInStart</c> plus <c>ST_DoorInInWalk</c>.</summary>
+        private const double ShelterOutSeconds = 0.750 + 0.375;
+
+        /// <summary>
+        /// The recovered <c>ST_DoorCloseAndOut</c> plus <c>ST_DoorOut</c>, six frames at 75 ms each,
+        /// after which an unused start door is killed.
+        /// </summary>
+        private const double StartDoorLeaveSeconds = 0.450 + 0.450;
+
         /// <summary>The recovered <c>ST_Rock*</c> duration: sixteen frames at 35 ms.</summary>
         private const double RocketLaunchSeconds = 0.560;
 
@@ -216,7 +234,7 @@ namespace Mooh.Core.Player
         /// </remarks>
         private void TryStartAction(PlayerBody body, List<SimulationEvent> events)
         {
-            if (TryUseTeleporter(body, events))
+            if (TryEnterShelter(body, events) || TryUseTeleporter(body, events))
             {
                 return;
             }
@@ -401,6 +419,38 @@ namespace Mooh.Core.Player
             }
         }
 
+        /// <summary>
+        /// Starts the recovered <c>ST_GStartInStart</c> emergence from the start door.
+        /// </summary>
+        public void BeginLevel()
+        {
+            PlayerBody body = _player.PlayerBody
+                ?? throw new InvalidOperationException("The player entity has no player body.");
+            body.FacingDirection = Direction.Down;
+            body.Action = new PlayerAction(PlayerActionKind.LevelEntry, Direction.Down, LevelEntrySeconds);
+        }
+
+        /// <summary>
+        /// Applies the first branch of the recovered <c>DoCtrl</c> fire control, <c>DoorGet</c>:
+        /// with the start door in the player's own cell, the door opens and the player goes in.
+        /// </summary>
+        private bool TryEnterShelter(PlayerBody body, List<SimulationEvent> events)
+        {
+            Entity? door = _world.GetOccupants(_player.Position).FirstOrDefault(occupant => occupant.DoorBody is not null);
+            if (door?.DoorBody is not DoorBody shelter)
+            {
+                return false;
+            }
+
+            shelter.IsShelter = true;
+            shelter.RemovalRemainingSeconds = null;
+            body.Action = new PlayerAction(PlayerActionKind.ShelterIn, body.FacingDirection, ShelterInSeconds);
+            events.Add(new PlayerShelterEntered(
+                _player.Id,
+                TimeSpan.FromSeconds(ShelterInSeconds + ShelterHiddenSeconds + ShelterOutSeconds)));
+            return true;
+        }
+
         /// <summary>Gets the remaining duration of the active action, if any.</summary>
         public double? ActionSecondsRemaining => _player.PlayerBody?.Action?.RemainingSeconds;
 
@@ -505,6 +555,29 @@ namespace Mooh.Core.Player
                 case PlayerActionKind.TeleportExit:
                     body.Action = null;
                     body.Teleport = null;
+                    body.FacingDirection = Direction.Down;
+                    return true;
+                case PlayerActionKind.LevelEntry:
+                    // The recovered _AEnd_GStartCloseAndStay starts the door's close-and-out,
+                    // clears its mask and leaves the player standing, facing down.
+                    body.Action = null;
+                    body.FacingDirection = Direction.Down;
+                    foreach (Entity door in _world.GetOccupants(_player.Position).Where(occupant => occupant.DoorBody is not null))
+                    {
+                        door.Interactions = InteractionMask.None;
+                        door.DoorBody!.RemovalRemainingSeconds = StartDoorLeaveSeconds;
+                    }
+
+                    return true;
+                case PlayerActionKind.ShelterIn:
+                    body.Action = new PlayerAction(PlayerActionKind.ShelterHidden, action.Direction, ShelterHiddenSeconds);
+                    return false;
+                case PlayerActionKind.ShelterHidden:
+                    _player.HealthBody?.RestoreFull();
+                    body.Action = new PlayerAction(PlayerActionKind.ShelterOut, action.Direction, ShelterOutSeconds);
+                    return false;
+                case PlayerActionKind.ShelterOut:
+                    body.Action = null;
                     body.FacingDirection = Direction.Down;
                     return true;
                 case PlayerActionKind.RocketLaunch:

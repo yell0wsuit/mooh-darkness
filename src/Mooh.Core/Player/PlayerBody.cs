@@ -91,8 +91,8 @@ namespace Mooh.Core.Player
         /// Gets whether the player is in a recovered <c>bImmort</c> state. Such a state takes no
         /// damage at all, suspends the passive health drain and clears the player's
         /// <c>CNT_OrMaskMonStrike</c> bits, so a monster does not select it as a target either.
-        /// The three shock states and every tunnel and teleport state carry the flag; the death
-        /// states do not.
+        /// The three shock states and every tunnel, teleport, level-entry and shelter state carry
+        /// the flag; the death states do not.
         /// </summary>
         public bool IsImmortal => Reaction.Kind == PlayerReactionKind.Shocked
             || TunnelTransit is not null
@@ -100,7 +100,11 @@ namespace Mooh.Core.Player
                 or PlayerActionKind.TunnelExit
                 or PlayerActionKind.TeleportEntry
                 or PlayerActionKind.TeleportFlight
-                or PlayerActionKind.TeleportExit;
+                or PlayerActionKind.TeleportExit
+                or PlayerActionKind.LevelEntry
+                or PlayerActionKind.ShelterIn
+                or PlayerActionKind.ShelterHidden
+                or PlayerActionKind.ShelterOut;
 
         /// <summary>
         /// Gets whether the player is in a recovered <c>bLockLvlEnd</c> state, which holds the

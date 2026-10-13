@@ -98,6 +98,15 @@ namespace Mooh.Core.Combat
             Current = Math.Min(Maximum, Current + amount);
         }
 
+        /// <summary>
+        /// Restores full health, the recovered <c>GameHealthFull</c>. Unlike a heal it writes health
+        /// directly, so on the timed profile it leaves the clock alone.
+        /// </summary>
+        internal void RestoreFull()
+        {
+            Current = Maximum;
+        }
+
         internal void AdvanceImmunity(TimeSpan elapsed)
         {
             if (ImmunityRemaining <= TimeSpan.Zero)

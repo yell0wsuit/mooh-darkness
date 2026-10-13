@@ -76,5 +76,29 @@ namespace Mooh.Core.Player
         /// <c>ST_RockRight</c>: sixteen frames at 35 ms. There is no up or down launch state.
         /// </summary>
         RocketLaunch,
+
+        /// <summary>
+        /// The player is emerging from the start door, the recovered <c>ST_GStartInStart</c>
+        /// (1500 ms) and <c>ST_GStartInInWalk</c> (five frames at 75 ms). Both are <c>bImmort</c>.
+        /// </summary>
+        LevelEntry,
+
+        /// <summary>
+        /// The player is going into the start door to shelter, the recovered
+        /// <c>ST_DoorOutStart</c> (500 ms) and <c>ST_DoorOutOutWalk</c> (five frames at 75 ms).
+        /// </summary>
+        ShelterIn,
+
+        /// <summary>
+        /// The player is hidden in the shelter, the recovered <c>ST_DoorOutHide</c>, 3000 ms, whose
+        /// end runs <c>GameHealthFull</c>.
+        /// </summary>
+        ShelterHidden,
+
+        /// <summary>
+        /// The player is coming back out of the shelter, the recovered <c>ST_DoorInStart</c>
+        /// (750 ms) and <c>ST_DoorInInWalk</c> (five frames at 75 ms).
+        /// </summary>
+        ShelterOut,
     }
 }

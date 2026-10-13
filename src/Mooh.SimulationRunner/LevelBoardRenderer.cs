@@ -57,6 +57,9 @@ namespace Mooh.SimulationRunner
         /// <summary>Gets the glyph used for a beetle spawned at runtime rather than placed.</summary>
         internal static BoardGlyph BeetleGlyph { get; } = Beetle;
 
+        /// <summary>Gets the glyph used for the start door the player emerges from.</summary>
+        internal static BoardGlyph DoorGlyph { get; } = Door;
+
         /// <summary>Gets the glyph used for a rocket the player has fired.</summary>
         internal static BoardGlyph RocketGlyph { get; } = Rocket;
 

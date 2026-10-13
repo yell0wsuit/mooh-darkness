@@ -90,6 +90,7 @@ namespace Mooh.Core.Tests.Session
         public void FatalDamageFailsTheLevel()
         {
             GameSession session = CreateSession();
+            Emerge(session);
             Entity player = session.Level.World.Player!;
 
             _ = session.Simulation.ApplyDamage(new DamageRequest(
@@ -132,6 +133,7 @@ namespace Mooh.Core.Tests.Session
         public void CumulativeScoreSurvivesARestart()
         {
             GameSession session = CreateSession();
+            Emerge(session);
             session.SetPlayerInput(new PlayerInputState(false, false, true, false));
             _ = session.Advance(TimeSpan.FromMilliseconds(500));
 
@@ -149,6 +151,7 @@ namespace Mooh.Core.Tests.Session
         public void CumulativeScoreCarriesToTheNextLevel()
         {
             GameSession session = CreateSession();
+            Emerge(session);
             session.SetPlayerInput(new PlayerInputState(false, false, true, false));
             _ = session.Advance(TimeSpan.FromMilliseconds(500));
             session.SetPlayerInput(default);
@@ -193,6 +196,15 @@ namespace Mooh.Core.Tests.Session
             _ = session.Advance(TimeSpan.FromSeconds(3));
 
             _ = Assert.Throws<InvalidOperationException>(session.AdvanceToNextLevel);
+        }
+
+        /// <summary>
+        /// Plays out the recovered level entry, during which the player emerges from the start door
+        /// immortal and uncontrollable.
+        /// </summary>
+        private static void Emerge(GameSession session)
+        {
+            _ = session.Advance(TimeSpan.FromMilliseconds(1875));
         }
 
         private static void RemoveMonster(GameSession session)
