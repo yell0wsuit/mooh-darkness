@@ -850,6 +850,112 @@
    "ulWNumMine": 0,
    "ulWNumRock": 0
   },
+  "CGameObjFallBase.TypeBBomb": {
+   "CollEv": null,
+   "EvObjHere": null,
+   "GlowAnm": null,
+   "OnExpl": {
+    "ref": "CGameObjFallBase.BBombWork"
+   },
+   "OnFall": null,
+   "OnLand": {
+    "ref": "CGameObjFallBase.BBombWork"
+   },
+   "OnPlEat": null,
+   "OnShake": {
+    "ref": "CGameObjFallBase.BBombWork"
+   },
+   "OnShakeHard": {
+    "ref": "CGameObjFallBase.BBombWork"
+   },
+   "OverAnm": null,
+   "PFunc": null,
+   "Page": {
+    "page": "SpriteObjBBomb"
+   },
+   "PlComeHere": null,
+   "PlCtrl": null,
+   "PlPush": null,
+   "RPass": 1,
+   "SMap": {
+    "st_stay": {
+     "AEnd": "st_work",
+     "AList": [
+      "OTick00",
+      "OTick01",
+      "OTick02",
+      "OTick03",
+      "OTick04",
+      "OTick05",
+      "OTick06",
+      "OTick07",
+      "OTick08",
+      "OTick09",
+      "OTick10",
+      "OTick11",
+      "OTick12",
+      "OTick13"
+     ],
+     "DInds": null,
+     "Page": {
+      "page": "SpriteObjBBomb"
+     },
+     "Snd": null,
+     "new": "CGameObjFallBase.CState",
+     "ulATime": 50
+    },
+    "st_work": {
+     "AEnd": {
+      "ref": "CGameObjFallBase.BBombTick"
+     },
+     "AList": [
+      "OTick14",
+      "OTick15",
+      "OTick16"
+     ],
+     "DInds": null,
+     "Page": {
+      "page": "SpriteObjBBomb"
+     },
+     "Snd": null,
+     "new": "CGameObjFallBase.CState",
+     "ulATime": 75
+    }
+   },
+   "SyncAnim": null,
+   "bFireKill": false,
+   "bFly": false,
+   "bHardMove": false,
+   "bSecondSlideMask": false,
+   "fFSpeed": 1.0,
+   "new": "CGameObjFallBase.CType",
+   "ulCMask": {
+    "left": {
+     "left": {
+      "left": {
+       "left": {
+        "left": 4,
+        "op": "OR",
+        "right": 256
+       },
+       "op": "OR",
+       "right": 2048
+      },
+      "op": "OR",
+      "right": 8
+     },
+     "op": "OR",
+     "right": 1
+    },
+    "op": "OR",
+    "right": 32
+   },
+   "ulCMask2": 0,
+   "ulWNumBBomb": 0,
+   "ulWNumGr": 0,
+   "ulWNumMine": 0,
+   "ulWNumRock": 0
+  },
   "CGameObjGrMon.SMap": {
    "st_boneyebottom": {
     "AEnd": {

@@ -125,7 +125,7 @@ class Normalizer:
         for module in self.modules:
             for function in self.raw[module]["functions"].values():
                 for target, value in function.get("stores", {}).items():
-                    if target.endswith(".SMap") or target.endswith("Type") and isinstance(value, dict) and "call" in value:
+                    if target.endswith(".SMap") or (isinstance(value, dict) and str(value.get("call", "")).endswith(".CType")):
                         owner = self.strip_module(target.rsplit(".", 1)[0])
                         tables[owner + "." + target.rsplit(".", 1)[1]] = self.resolve(value)
         return tables

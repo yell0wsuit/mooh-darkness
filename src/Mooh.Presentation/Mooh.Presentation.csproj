@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Renderer-independent presentation: sprite pages, recovered animation tables and the presenter
+       that turns simulation state into draw lists. It never mutates gameplay. -->
+  <ItemGroup>
+    <ProjectReference Include="../Mooh.Core/Mooh.Core.csproj" />
+  </ItemGroup>
+</Project>
