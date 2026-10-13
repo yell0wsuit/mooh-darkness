@@ -21,6 +21,10 @@ import sys
 DIRECTIONS = {"DIR_Left": "Left", "DIR_Top": "Up", "DIR_Right": "Right", "DIR_Bottom": "Down",
               "DIR_Last": None}
 
+# Classes whose nested constructors are inherited rather than defined: `class
+# CGameObjTable(CGameObjFSABase)` declares no `CType` or `CState` of its own.
+INHERITED = {"CGameObjTable": "CGameObjFSABase"}
+
 
 class Normalizer:
     def __init__(self, raw):
@@ -90,6 +94,9 @@ class Normalizer:
             callee = self.strip_module(node["call"])
             if callee.startswith("self.") and "CGameType." + callee[5:] in self.signatures:
                 callee = "CGameType." + callee[5:]
+            owner, _, nested = callee.rpartition(".")
+            if callee not in self.signatures and owner in INHERITED:
+                callee = INHERITED[owner] + "." + nested
             args = node.get("args", [])
             kwargs = node.get("kwargs", {})
             if callee in self.signatures:

@@ -259,20 +259,17 @@ namespace Mooh.Presentation.Animation
 
         private static int[] FrameTimes(JsonElement state)
         {
-            return !state.TryGetProperty("ulATime", out JsonElement time)
-                ? [0]
-                : time.ValueKind switch
-                {
-                    JsonValueKind.Number => [(int)time.GetDouble()],
-                    JsonValueKind.Array => [.. time.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.Number).Select(value => (int)value.GetDouble())],
-                    JsonValueKind.Undefined => throw new NotImplementedException(),
-                    JsonValueKind.Object => throw new NotImplementedException(),
-                    JsonValueKind.String => throw new NotImplementedException(),
-                    JsonValueKind.True => throw new NotImplementedException(),
-                    JsonValueKind.False => throw new NotImplementedException(),
-                    JsonValueKind.Null => throw new NotImplementedException(),
-                    _ => [0],
-                };
+            if (!state.TryGetProperty("ulATime", out JsonElement time))
+            {
+                return [0];
+            }
+
+            // A pair is the original's per-entry choice of frame time, such as a diamond's 45 or 55 ms.
+            return time.ValueKind == JsonValueKind.Array
+                ? [.. time.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.Number).Select(value => (int)value.GetDouble())]
+                : time.ValueKind == JsonValueKind.Number
+                ? [(int)time.GetDouble()]
+                : throw new InvalidDataException("A recovered frame time is neither a number nor a list.");
         }
 
         private static string? PageOf(JsonElement element)

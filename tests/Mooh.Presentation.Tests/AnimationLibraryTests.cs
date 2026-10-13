@@ -59,6 +59,22 @@ namespace Mooh.Presentation.Tests
             Assert.Equal([50], bubble.States["st_stay"].FrameMilliseconds);
         }
 
+        /// <summary>
+        /// Verifies the message table, whose <c>CGameObjTable</c> inherits its constructors from
+        /// <c>CGameObjFSABase</c>, still carries its idle loop and its still read frame.
+        /// </summary>
+        [Fact]
+        public void TheMessageTableKeepsItsInheritedStates()
+        {
+            AnimationTable table = Library.Value.Table("OTable");
+
+            Assert.Equal("SpriteObjTable", table.Page);
+            Assert.Equal(10, table.States["st_stay"].Variants.Single().Count);
+            Assert.Equal([75], table.States["st_stay"].FrameMilliseconds);
+            Assert.Equal(["OSt00"], table.States["st_work"].Variants.Single());
+            Assert.True(table.States["st_work"].IsStill);
+        }
+
         /// <summary>Verifies terrain is one still state whose variants the editor index picks.</summary>
         [Fact]
         public void TerrainIsOneStillStateWithVariants()

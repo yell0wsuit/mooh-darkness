@@ -22805,55 +22805,53 @@
    "KillTxt": null,
    "PlStepSnd": null,
    "Prm": {
-    "args": [
-     {
-      "page": "SpriteObjTable"
-     },
-     {
-      "left": 4096,
-      "op": "OR",
-      "right": 4194304
-     },
-     {
-      "st_stay": {
-       "args": [
-        {
-         "page": "SpriteObjTable"
-        },
-        [
-         "OSt00",
-         "OSt01",
-         "OSt02",
-         "OSt03",
-         "OSt04",
-         "OSt05",
-         "OSt06",
-         "OSt07",
-         "OSt08",
-         "OSt09"
-        ],
-        75
-       ],
-       "call": "CGameObjTable.CState"
+    "Page": {
+     "page": "SpriteObjTable"
+    },
+    "PlCtrl": null,
+    "PlHere": {
+     "ref": "CGameObjTable._PlHere_Table"
+    },
+    "RPass": 1,
+    "SMap": {
+     "st_stay": {
+      "AEnd": null,
+      "AList": [
+       "OSt00",
+       "OSt01",
+       "OSt02",
+       "OSt03",
+       "OSt04",
+       "OSt05",
+       "OSt06",
+       "OSt07",
+       "OSt08",
+       "OSt09"
+      ],
+      "Page": {
+       "page": "SpriteObjTable"
       },
-      "st_work": {
-       "args": [
-        {
-         "page": "SpriteObjTable"
-        },
-        "OSt00",
-        0
-       ],
-       "call": "CGameObjTable.CState"
-      }
-     }
-    ],
-    "call": "CGameObjTable.CType",
-    "kwargs": {
-     "PlHere": {
-      "ref": "CGameObjTable._PlHere_Table"
+      "Snd": null,
+      "new": "CGameObjFSABase.CState",
+      "ulATime": 75
      },
-     "RPass": 1
+     "st_work": {
+      "AEnd": null,
+      "AList": "OSt00",
+      "Page": {
+       "page": "SpriteObjTable"
+      },
+      "Snd": null,
+      "new": "CGameObjFSABase.CState",
+      "ulATime": 0
+     }
+    },
+    "bThisIsDoor": false,
+    "new": "CGameObjFSABase.CType",
+    "ulCMask": {
+     "left": 4096,
+     "op": "OR",
+     "right": 4194304
     }
    },
    "PrtKill": null,
@@ -34480,55 +34478,53 @@
    "ulWNumRock": 0
   },
   "GameObjs.GameTypeTable": {
-   "args": [
-    {
-     "page": "SpriteObjTable"
-    },
-    {
-     "left": 4096,
-     "op": "OR",
-     "right": 4194304
-    },
-    {
-     "st_stay": {
-      "args": [
-       {
-        "page": "SpriteObjTable"
-       },
-       [
-        "OSt00",
-        "OSt01",
-        "OSt02",
-        "OSt03",
-        "OSt04",
-        "OSt05",
-        "OSt06",
-        "OSt07",
-        "OSt08",
-        "OSt09"
-       ],
-       75
-      ],
-      "call": "CGameObjTable.CState"
+   "Page": {
+    "page": "SpriteObjTable"
+   },
+   "PlCtrl": null,
+   "PlHere": {
+    "ref": "CGameObjTable._PlHere_Table"
+   },
+   "RPass": 1,
+   "SMap": {
+    "st_stay": {
+     "AEnd": null,
+     "AList": [
+      "OSt00",
+      "OSt01",
+      "OSt02",
+      "OSt03",
+      "OSt04",
+      "OSt05",
+      "OSt06",
+      "OSt07",
+      "OSt08",
+      "OSt09"
+     ],
+     "Page": {
+      "page": "SpriteObjTable"
      },
-     "st_work": {
-      "args": [
-       {
-        "page": "SpriteObjTable"
-       },
-       "OSt00",
-       0
-      ],
-      "call": "CGameObjTable.CState"
-     }
-    }
-   ],
-   "call": "CGameObjTable.CType",
-   "kwargs": {
-    "PlHere": {
-     "ref": "CGameObjTable._PlHere_Table"
+     "Snd": null,
+     "new": "CGameObjFSABase.CState",
+     "ulATime": 75
     },
-    "RPass": 1
+    "st_work": {
+     "AEnd": null,
+     "AList": "OSt00",
+     "Page": {
+      "page": "SpriteObjTable"
+     },
+     "Snd": null,
+     "new": "CGameObjFSABase.CState",
+     "ulATime": 0
+    }
+   },
+   "bThisIsDoor": false,
+   "new": "CGameObjFSABase.CType",
+   "ulCMask": {
+    "left": 4096,
+    "op": "OR",
+    "right": 4194304
    }
   },
   "GameObjs.GameTypeWeight": {
