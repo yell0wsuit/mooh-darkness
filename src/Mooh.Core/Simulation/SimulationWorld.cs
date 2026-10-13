@@ -1883,8 +1883,14 @@ namespace Mooh.Core.Simulation
                     continue;
                 }
 
+                // The recovered _DlFlyBeg decides at once only for a still arrow; a moving one
+                // decides when its current move arrives.
                 body.WindupRemainingSeconds = null;
-                AdvanceArrowFlight(arrow, events);
+                body.IsFlying = true;
+                if (arrow.Motion is null)
+                {
+                    AdvanceArrowFlight(arrow, events);
+                }
             }
         }
 
@@ -2701,6 +2707,18 @@ namespace Mooh.Core.Simulation
             Entity entity,
             List<SimulationEvent> events)
         {
+            if (entity.FlyingArrowBody is { IsLaunched: true } arrow)
+            {
+                arrow.Direction = entity.Motion!.SegmentDirection;
+                if (arrow.IsFlying)
+                {
+                    events.Add(new CellEntered(entity.Id, entity.Position));
+                    KinematicsSystem.Stop(entity);
+                    AdvanceArrowFlight(entity, events);
+                    return;
+                }
+            }
+
             GridPosition destination = entity.Position;
             events.Add(new CellEntered(entity.Id, destination));
             KinematicsSystem.Stop(entity);

@@ -116,6 +116,43 @@ namespace Mooh.Core.Tests.Simulation
         }
 
         /// <summary>
+        /// Verifies an arrow pushed while it winds up takes its first flight decision when the push
+        /// arrives, and flies the way it was pushed. The recovered <c>_DlFlyBeg</c> decides at once
+        /// only for a still arrow and otherwise leaves <c>_DoFlyInt</c> as the arrival handler,
+        /// which flies along <c>MoveDirGet()</c> — the push direction <c>ObjMoveDir</c> last set.
+        /// </summary>
+        [Fact]
+        public void AnArrowPushedDuringItsWindupFliesWhenThePushArrives()
+        {
+            WorldGrid world = new(8, 3);
+            for (int x = 0; x < 8; x++)
+            {
+                world.Add(NewMetal(new GridPosition(x, 0)));
+                world.Add(NewMetal(new GridPosition(x, 2)));
+            }
+
+            Entity arrow = NewArrow(new GridPosition(2, 1), Direction.Up, hasGravity: false);
+            Entity player = NewPlayer(new GridPosition(1, 1));
+            world.Add(arrow);
+            world.Add(player);
+            SimulationWorld simulation = CreateSimulation(world);
+
+            simulation.SetPlayerInput(new PlayerInputState(false, false, false, false, Fire: true));
+            List<SimulationEvent> events = [.. simulation.Advance(TimeSpan.FromMilliseconds(100))];
+            simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
+            events.AddRange(simulation.Advance(TimeSpan.FromMilliseconds(300)));
+            simulation.SetPlayerInput(default);
+            events.AddRange(simulation.Advance(TimeSpan.FromSeconds(3)));
+
+            Assert.Contains(events, item => item is ArrowLaunched launched && launched.EntityId == arrow.Id);
+            Assert.Contains(events, item => item is PushStarted pushed && pushed.EntityId == arrow.Id);
+            ExplosionStarted blast = Assert.Single(
+                events.OfType<ExplosionStarted>(),
+                item => item.EntityId == arrow.Id);
+            Assert.Equal(new GridPosition(7, 1), blast.Position);
+        }
+
+        /// <summary>
         /// Verifies an arrow that stops against the player shakes the player's cell, and the
         /// player's recovered <c>OnShake</c> is shake damage, landing at once rather than when the
         /// arrow's own blast reaches the cell 200 ms later.

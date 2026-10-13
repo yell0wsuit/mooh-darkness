@@ -25,8 +25,12 @@ namespace Mooh.Core.Hazards
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="direction"/> is undefined.</exception>
     public sealed class FlyingArrowBody(Direction direction)
     {
-        /// <summary>Gets the fixed direction the arrow flies in.</summary>
-        public Direction Direction { get; } = Enum.IsDefined(direction)
+        /// <summary>
+        /// Gets the direction the arrow flies in, the recovered <c>MoveDirGet()</c>. Launching sets
+        /// it to the arrow's own direction; a walking push after the launch overwrites it, because
+        /// <c>ObjMoveDir</c> sets the move direction and <c>_DoFlyInt</c> flies along it.
+        /// </summary>
+        public Direction Direction { get; internal set; } = Enum.IsDefined(direction)
             ? direction
             : throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
 
@@ -38,5 +42,13 @@ namespace Mooh.Core.Hazards
 
         /// <summary>Gets whether the arrow has been triggered, whether or not it is flying yet.</summary>
         public bool IsLaunched { get; internal set; }
+
+        /// <summary>
+        /// Gets whether the windup has ended, after which every cell arrival runs the flight
+        /// decision. A windup ending while the arrow is being pushed defers the first decision to
+        /// the push's arrival, the recovered <c>_DlFlyBeg</c> registering <c>_DoFlyInt</c> as the
+        /// arrival handler.
+        /// </summary>
+        public bool IsFlying { get; internal set; }
     }
 }
