@@ -22,6 +22,14 @@ namespace Mooh.Core.Player
         void PushStruck(Entity target, Direction direction, List<SimulationEvent> events);
 
         /// <summary>
+        /// Offers an occupant the recovered <c>PlPush</c> handler a walking push dispatches before
+        /// it moves anything. The balloon is the only placed type that defines one.
+        /// </summary>
+        /// <param name="target">The occupant being pushed.</param>
+        /// <param name="events">The ordered event sink.</param>
+        void OfferPush(Entity target, List<SimulationEvent> events);
+
+        /// <summary>
         /// Applies the recovered <c>Game._CellPlKill</c> to a cell a weapon is being placed in:
         /// every crushable occupant is destroyed and the cell is locked.
         /// </summary>

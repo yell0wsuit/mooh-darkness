@@ -90,6 +90,15 @@ namespace Mooh.Core.Movement
                 return new MovementPlan(MoveResult.Blocked, []);
             }
 
+            // CellObjStillOrDir(c, d) is the last gate before the PlPush dispatch. Everything
+            // after it decides only whether the push moves.
+            if (pushed.Exists(entity => entity.Motion is not null))
+            {
+                return new MovementPlan(MoveResult.Blocked, []);
+            }
+
+            EntityId[] offered = [.. pushed.Select(entity => entity.Id)];
+
             // Both recovered gates on the cell beyond — CellObjCheck(n, 0, CNT_CMaskCallCanPushTh,
             // True) and CellObjCheck(n, 0, 0, True) — are ordinary queries.
             GridPosition pushedDestination = destination.Offset(request.Direction);
@@ -103,10 +112,9 @@ namespace Mooh.Core.Movement
                 || pushedDestinationOccupants.Exists(
                     entity => !entity.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
                 || pushed.Exists(
-                    entity => entity.Motion is not null
-                        || entity.Interactions.HasFlag(InteractionMask.MovementLocked)))
+                    entity => entity.Interactions.HasFlag(InteractionMask.MovementLocked)))
             {
-                return new MovementPlan(MoveResult.Blocked, []);
+                return new MovementPlan(MoveResult.Blocked, [], offered);
             }
 
             List<MovementStep> steps = [];
@@ -114,7 +122,7 @@ namespace Mooh.Core.Movement
                 pushed.Select(
                     entity => new MovementStep(entity.Id, entity.Position, pushedDestination)));
             steps.Add(new MovementStep(mover.Id, mover.Position, destination));
-            return new MovementPlan(MoveResult.Pushed, steps);
+            return new MovementPlan(MoveResult.Pushed, steps, offered);
         }
 
         private static bool IsOnSameAxis(Direction first, Direction second)

@@ -400,6 +400,7 @@ namespace Mooh.Core.Simulation
                 double? outcomeSeconds = _levelOutcome.SecondsUntilSettle();
                 double? arrowSeconds = SecondsUntilNextArrowWindup();
                 double? rotatorSeconds = SecondsUntilNextRotatorWindup();
+                double? balloonSeconds = SecondsUntilNextBalloonDetonation();
 
                 double substepSeconds = remainingSeconds;
                 if (moving.Length != 0)
@@ -474,6 +475,11 @@ namespace Mooh.Core.Simulation
                     substepSeconds = Math.Min(substepSeconds, remainingRotatorWindup);
                 }
 
+                if (balloonSeconds is double remainingFuse)
+                {
+                    substepSeconds = Math.Min(substepSeconds, remainingFuse);
+                }
+
                 if (moving.Length == 0
                     && rotationSeconds is null
                     && actionSeconds is null
@@ -486,7 +492,8 @@ namespace Mooh.Core.Simulation
                     && beetleSeconds is null
                     && outcomeSeconds is null
                     && arrowSeconds is null
-                    && rotatorSeconds is null)
+                    && rotatorSeconds is null
+                    && balloonSeconds is null)
                 {
                     _world.AdvanceTime(remainingSeconds);
                     break;
@@ -513,6 +520,7 @@ namespace Mooh.Core.Simulation
                 AdvanceMonsterTimers(substepSeconds, events);
                 AdvanceArrowWindups(substepSeconds, events);
                 AdvanceRotatorWindups(substepSeconds, events);
+                AdvanceBalloonFuses(substepSeconds, events);
                 bool resolvedExplosion = ResolvePendingExplosionCells(events);
 
                 remainingSeconds -= substepSeconds;
@@ -1204,12 +1212,77 @@ namespace Mooh.Core.Simulation
             DestroyMonster(monster, player.Id, spawnBeetle: false, events);
         }
 
+        /// <summary>
+        /// Applies the recovered <c>CPlPushBase.OnPlPush</c>, which runs one step of the chain and
+        /// offers <c>PlPush</c> only when that step did not stop the object against something.
+        /// </summary>
         void IPlayerActionEffects.PushStruck(
             Entity target,
             Direction direction,
             List<SimulationEvent> events)
         {
-            AdvanceStrikePush(target, direction, events);
+            if (AdvanceStrikePush(target, direction, events))
+            {
+                LightBalloonFuse(target, events);
+            }
+        }
+
+        void IPlayerActionEffects.OfferPush(Entity target, List<SimulationEvent> events)
+        {
+            LightBalloonFuse(target, events);
+        }
+
+        /// <summary>
+        /// Applies the recovered <c>PlPush_Ballon</c>, the one <c>PlPush</c> handler among placed
+        /// types. Both push paths reach it through here, so the one-shot rule is stated once.
+        /// </summary>
+        private static void LightBalloonFuse(Entity target, List<SimulationEvent> events)
+        {
+            if (target.BalloonFuseBody?.TryLight() == true)
+            {
+                events.Add(new BalloonFuseLit(target.Id, BalloonFuseBody.Duration));
+            }
+        }
+
+        private double? SecondsUntilNextBalloonDetonation()
+        {
+            double? result = null;
+            foreach (Entity entity in _world.Entities)
+            {
+                if (entity.BalloonFuseBody?.RemainingSeconds is double remaining
+                    && (result is null || remaining < result))
+                {
+                    result = remaining;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Burns every lit fuse and detonates each balloon whose <c>ST_Expl</c> has ended. Only the
+        /// end of the chain is a substep boundary, because the intermediate tick states differ in
+        /// their frames and sounds alone.
+        /// </summary>
+        private void AdvanceBalloonFuses(double elapsedSeconds, List<SimulationEvent> events)
+        {
+            Entity[] burning =
+            [
+                .. _world.Entities.Where(entity => entity.BalloonFuseBody?.RemainingSeconds is not null),
+            ];
+            foreach (Entity balloon in burning)
+            {
+                BalloonFuseBody body = balloon.BalloonFuseBody!;
+                double remaining = body.RemainingSeconds!.Value - elapsedSeconds;
+                if (remaining > TimeTolerance)
+                {
+                    body.RemainingSeconds = remaining;
+                    continue;
+                }
+
+                body.RemainingSeconds = null;
+                StartExplosion(balloon, events);
+            }
         }
 
         /// <summary>
@@ -1271,7 +1344,11 @@ namespace Mooh.Core.Simulation
         /// stops against it. The chain therefore continues cell after cell, unlike the single-cell
         /// push a walking player applies.
         /// </summary>
-        private void AdvanceStrikePush(
+        /// <returns>
+        /// <see langword="false"/> when the object stopped against the cell ahead, which is the
+        /// recovered <c>PlPush_OnCell</c> returning <see langword="true"/>.
+        /// </returns>
+        private bool AdvanceStrikePush(
             Entity entity,
             Direction direction,
             List<SimulationEvent> events)
@@ -1280,7 +1357,7 @@ namespace Mooh.Core.Simulation
             // it, so a struck object that becomes unsupported stops being pushed.
             if (_gravity.EvaluateStationary(_world, entity, _gravityDirection, events))
             {
-                return;
+                return true;
             }
 
             GridPosition ahead = entity.Position.Offset(direction);
@@ -1300,7 +1377,7 @@ namespace Mooh.Core.Simulation
                 || CellQuery.IsOccupied(_world, ahead))
             {
                 ResolveStrikePushImpact(entity, ahead, events);
-                return;
+                return false;
             }
 
             _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, ahead)]);
@@ -1310,6 +1387,7 @@ namespace Mooh.Core.Simulation
                 direction,
                 _difficultySpeeds.PlayerSpeed * PushSpeedMultiplier);
             events.Add(new PushStarted(entity.Id, direction));
+            return true;
         }
 
         /// <summary>
@@ -1475,7 +1553,7 @@ namespace Mooh.Core.Simulation
                         continue;
                     }
 
-                    AdvanceStrikePush(entity, pushDirection, events);
+                    _ = AdvanceStrikePush(entity, pushDirection, events);
                     continue;
                 }
 

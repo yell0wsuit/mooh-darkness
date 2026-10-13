@@ -227,6 +227,9 @@ namespace Mooh.Core.Levels
                     ? new WorldRotationBody(descriptor.Variant < 0
                         ? WorldRotationDirection.Left
                         : WorldRotationDirection.Right)
+                    : null,
+                balloonFuseBody: descriptor.Kind == EntityKind.Balloon
+                    ? new BalloonFuseBody()
                     : null);
         }
 

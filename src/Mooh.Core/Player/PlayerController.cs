@@ -465,6 +465,11 @@ namespace Mooh.Core.Player
             MovementPlan plan = _movement.Plan(
                 new MoveRequest(_player.Id, direction),
                 _gravityDirection);
+            foreach (EntityId offered in plan.PushOffered)
+            {
+                _actionEffects.OfferPush(_world.GetEntity(offered), events);
+            }
+
             if (plan.Result == MoveResult.Blocked)
             {
                 events.Add(new PlayerBlocked(_player.Id, direction));
