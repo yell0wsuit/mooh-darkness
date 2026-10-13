@@ -84,6 +84,21 @@ namespace Mooh.SimulationRunner
                     case "next":
                         _session.AdvanceToNextLevel();
                         break;
+                    case "weapon1":
+                        _session.SelectWeapon(WeaponKind.Grenade);
+                        break;
+                    case "weapon2":
+                        _session.SelectWeapon(WeaponKind.Rocket);
+                        break;
+                    case "weapon3":
+                        _session.SelectWeapon(WeaponKind.Mine);
+                        break;
+                    case "weapon4":
+                        _session.SelectWeapon(WeaponKind.BigBomb);
+                        break;
+                    case "nextweapon":
+                        _session.SelectNextWeapon();
+                        break;
                     default:
                         break;
                 }

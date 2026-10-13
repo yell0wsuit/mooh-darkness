@@ -18,6 +18,10 @@ namespace Mooh.SimulationRunner
     /// The recovered help-text id of the message table read most recently, while the help panel
     /// would still be showing it, or <see langword="null"/>.
     /// </param>
+    /// <param name="Weapon">The current weapon's name.</param>
+    /// <param name="Rockets">The player's remaining rockets.</param>
+    /// <param name="Mines">The player's remaining mines.</param>
+    /// <param name="BigBombs">The player's remaining big bombs.</param>
     /// <param name="TimeRemaining">
     /// The timed-play clock in seconds, which replaces health on the timed difficulty, or
     /// <see langword="null"/> when health is the live axis.
@@ -35,5 +39,9 @@ namespace Mooh.SimulationRunner
         string State,
         string Reaction,
         string? HelpText = null,
-        double? TimeRemaining = null);
+        double? TimeRemaining = null,
+        string Weapon = "Grenade",
+        int Rockets = 0,
+        int Mines = 0,
+        int BigBombs = 0);
 }

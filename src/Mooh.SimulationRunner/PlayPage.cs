@@ -34,7 +34,7 @@ namespace Mooh.SimulationRunner
 <canvas id="view"></canvas>
 <div id="banner"></div>
 <div id="message"></div>
-<div id="help">WASD or arrows to walk · space to strike or throw a grenade · R restart level · N next level</div>
+<div id="help">WASD or arrows to walk · space to use the weapon or strike · 1-4 or Q to change weapon · R restart level · N next level</div>
 <script>
 const held = { l: 0, u: 0, r: 0, d: 0, f: 0 };
 const codes = {
@@ -49,10 +49,14 @@ addEventListener('keydown', e => {
   if (k) { held[k] = 1; e.preventDefault(); return; }
   if (e.code === 'KeyR') { pending = 'restart'; e.preventDefault(); }
   if (e.code === 'KeyN') { pending = 'next'; e.preventDefault(); }
+  const digit = /^Digit([1-4])$/.exec(e.code);
+  if (digit) { pending = `weapon${digit[1]}`; e.preventDefault(); }
 });
 addEventListener('keyup', e => {
   const k = codes[e.code];
   if (k) { held[k] = 0; e.preventDefault(); }
+  // The original cycles on the switch control's release.
+  if (e.code === 'KeyQ') { pending = 'nextweapon'; e.preventDefault(); }
 });
 // A hidden tab never delivers the keyup, so clear the state on blur.
 addEventListener('blur', () => { held.l = held.u = held.r = held.d = held.f = 0; });
@@ -101,7 +105,8 @@ function draw(f) {
     f.timeRemaining == null
       ? `health <b>${Math.round(f.health)}</b>`
       : `time <b>${Math.max(0, Math.ceil(f.timeRemaining))}</b>`,
-    `grenades <b>${f.grenades}</b>`,
+    `weapon <b>${f.weapon}</b>`,
+    `💣 <b>${f.grenades}</b> 🚀 <b>${f.rockets}</b> 🧨 <b>${f.mines}</b> ☢️ <b>${f.bigBombs}</b>`,
     `monsters left <b>${f.monstersLeft}</b>`,
     `<b>${f.reaction}</b>`,
   ].map(t => `<span>${t}</span>`).join('');

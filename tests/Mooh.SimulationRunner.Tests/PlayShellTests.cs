@@ -166,6 +166,58 @@ namespace Mooh.SimulationRunner.Tests
         }
 
         /// <summary>
+        /// Verifies the weapon commands reach the recovered weapon list: a number selects a stocked
+        /// weapon, and the switch command cycles to the next stocked one.
+        /// </summary>
+        [Fact]
+        public void WeaponCommandsSelectStockedWeapons()
+        {
+            FakeTimeProvider time = new();
+            PlaySession session = new(CreateRocketPack(), 0, time);
+            PlayServer server = new(session);
+            PlayerInputState right = new(Left: false, Up: false, Right: true, Down: false);
+            for (int step = 0; step < 6; step++)
+            {
+                time.Advance(TimeSpan.FromMilliseconds(100));
+                _ = session.Advance(step < 3 ? right : default);
+            }
+
+            PlayFrame selected = Frame(server, "weapon2");
+            PlayFrame cycled = Frame(server, "nextweapon");
+            PlayFrame empty = Frame(server, "weapon3");
+
+            Assert.Equal(5, selected.Rockets);
+            Assert.Equal("Rocket", selected.Weapon);
+            Assert.Equal(5, selected.Rockets);
+            Assert.Equal("Grenade", cycled.Weapon);
+            Assert.Equal("Grenade", empty.Weapon);
+        }
+
+        private static PlayFrame Frame(PlayServer server, string command)
+        {
+            (_, string json) = server.Route("/frame", new NameValueCollection { { "command", command } });
+            return JsonSerializer.Deserialize(json, PlayJsonSerializerContext.Default.PlayFrame)!;
+        }
+
+        private static LoadedLevelPack CreateRocketPack()
+        {
+            LevelDocument level = new(
+                1,
+                null,
+                new LevelSize(6, 4),
+                new EditorPreview(0, 0, 6, 4),
+                [
+                    Object(1, "OPlayer", 1, 1),
+                    Object(2, "WRBox", 2, 1),
+                    Object(3, "CellsSolid01", 1, 2),
+                    Object(4, "CellsSolid01", 2, 2),
+                ]);
+            return new LoadedLevelPack(
+                new LevelPackManifest(1, null, [new LevelManifestEntry(0, "rockets", "rockets.json")]),
+                [level]);
+        }
+
+        /// <summary>
         /// Verifies a blast draws over every entity for the recovered cell lock and then clears.
         /// An explosion is a timed cell effect rather than an entity, so the shell has to keep it
         /// from the reach events instead of reading it back out of the world.

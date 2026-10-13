@@ -132,6 +132,25 @@ namespace Mooh.SimulationRunner
             }
         }
 
+        /// <summary>Selects a weapon with the recovered <c>WeapCurrSet</c>, as a number key does.</summary>
+        /// <param name="weapon">The weapon to select.</param>
+        public void SelectWeapon(WeaponKind weapon)
+        {
+            if (Session.State == GameSessionState.Playing)
+            {
+                _ = Session.Level.Simulation.SelectWeapon(weapon);
+            }
+        }
+
+        /// <summary>Selects the next stocked weapon, as releasing the switch control does.</summary>
+        public void SelectNextWeapon()
+        {
+            if (Session.State == GameSessionState.Playing)
+            {
+                _ = Session.Level.Simulation.SelectNextWeapon();
+            }
+        }
+
         /// <summary>Replays the current level, discarding the current attempt.</summary>
         public void RestartLevel()
         {
@@ -174,7 +193,11 @@ namespace Mooh.SimulationRunner
                 Session.State.ToString(),
                 (body?.Reaction.Kind ?? PlayerReactionKind.Normal).ToString(),
                 _helpText,
-                Session.Level.World.Player?.HealthBody?.Clock?.Remaining.TotalSeconds);
+                Session.Level.World.Player?.HealthBody?.Clock?.Remaining.TotalSeconds,
+                (body?.Progress.CurrentWeapon ?? WeaponKind.Grenade).ToString(),
+                body?.Progress.Rockets ?? 0,
+                body?.Progress.Mines ?? 0,
+                body?.Progress.BigBombs ?? 0);
         }
 
         /// <summary>
