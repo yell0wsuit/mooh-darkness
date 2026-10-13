@@ -99,29 +99,19 @@ namespace Mooh.Presentation.Scene
         /// </summary>
         private string? DoorState(WorldGrid world, DoorBody door)
         {
-            return door.RemovalRemainingSeconds is not null
-                ? "st_doorcloseandout"
-                : world.Player?.PlayerBody?.Action?.Kind switch
-                {
-                    PlayerActionKind.LevelEntry => "st_doorin",
-                    PlayerActionKind.ShelterIn or PlayerActionKind.ShelterOut => "st_dooropen",
-                    PlayerActionKind.ShelterHidden => "st_doorclose",
-                    _ when door.IsShelter => "st_doorclose",
-                    PlayerActionKind.StrikeWindup => throw new NotImplementedException(),
-                    PlayerActionKind.StrikeRecovery => throw new NotImplementedException(),
-                    PlayerActionKind.GrenadeThrow => throw new NotImplementedException(),
-                    PlayerActionKind.TunnelEntry => throw new NotImplementedException(),
-                    PlayerActionKind.TunnelExit => throw new NotImplementedException(),
-                    PlayerActionKind.TeleportEntry => throw new NotImplementedException(),
-                    PlayerActionKind.TeleportFlight => throw new NotImplementedException(),
-                    PlayerActionKind.TeleportExit => throw new NotImplementedException(),
-                    PlayerActionKind.ColaDrink => throw new NotImplementedException(),
-                    PlayerActionKind.BigBombPlace => throw new NotImplementedException(),
-                    PlayerActionKind.MinePlace => throw new NotImplementedException(),
-                    PlayerActionKind.RocketLaunch => throw new NotImplementedException(),
-                    null => throw new NotImplementedException(),
-                    _ => Animation.State is null ? initialState : null,
-                };
+            if (door.RemovalRemainingSeconds is not null)
+            {
+                return "st_doorcloseandout";
+            }
+
+            PlayerActionKind? action = world.Player?.PlayerBody?.Action?.Kind;
+            return action == PlayerActionKind.LevelEntry
+                ? "st_doorin"
+                : action is PlayerActionKind.ShelterIn or PlayerActionKind.ShelterOut
+                ? "st_dooropen"
+                : action == PlayerActionKind.ShelterHidden || door.IsShelter
+                ? "st_doorclose"
+                : Animation.State is null ? initialState : null;
         }
     }
 }

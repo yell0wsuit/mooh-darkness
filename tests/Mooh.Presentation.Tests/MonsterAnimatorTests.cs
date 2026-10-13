@@ -83,8 +83,8 @@ namespace Mooh.Presentation.Tests
             {
                 Direction.Left => "OIceLeft",
                 Direction.Right => "OIceRight",
-                Direction.Up => throw new System.NotImplementedException(),
-                Direction.Down => throw new System.NotImplementedException(),
+                Direction.Up => "OIceVert",
+                Direction.Down => "OIceVert",
                 _ => "OIceVert",
             };
             EntityAnimator animator = harness.Animator(monster);
