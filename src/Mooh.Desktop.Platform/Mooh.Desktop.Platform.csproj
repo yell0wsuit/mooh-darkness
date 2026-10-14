@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- SDL3 platform services for the desktop host: the window, the Skia graphics devices and
-       keyboard input. Adapted from contre-jour-dx's ContreJourDX.Desktop.Platform. -->
+  <!-- SDL3 platform services for the desktop host: the window, the Skia graphics devices,
+       SDL_mixer audio and keyboard input. Adapted from contre-jour-dx's ContreJourDX.Desktop.Platform. -->
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -9,6 +9,9 @@
     <PackageReference Include="SDL3-CS.Windows" />
     <PackageReference Include="SDL3-CS.Linux" />
     <PackageReference Include="SDL3-CS.MacOS" />
+    <PackageReference Include="SDL3-CS.Windows.Mixer" />
+    <PackageReference Include="SDL3-CS.Linux.Mixer" />
+    <PackageReference Include="SDL3-CS.MacOS.Mixer" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="SkiaSharp.NativeAssets.macOS" />
     <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
