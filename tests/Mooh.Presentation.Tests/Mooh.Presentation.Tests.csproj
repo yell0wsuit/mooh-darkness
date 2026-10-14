@@ -17,6 +17,9 @@
     <Content Include="../../assets/sprites/*.seq"
              Link="assets/sprites/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/sounds/Sound.ini"
+             Link="assets/sounds/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/animations/*.json"
              Link="assets/animations/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
