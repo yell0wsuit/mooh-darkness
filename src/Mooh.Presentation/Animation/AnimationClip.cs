@@ -27,6 +27,11 @@ namespace Mooh.Presentation.Animation
     /// <c>_AEnd_Rot</c>, or <see langword="null"/>.
     /// </param>
     /// <param name="Direction">The direction the state faces, the recovered <c>ulDDir</c>.</param>
+    /// <param name="Shadow">
+    /// The shadow frames, the recovered <c>DInds</c>, such as the game module's <c>SfxShMed</c>, or
+    /// <see langword="null"/> for a state that casts none.
+    /// </param>
+    /// <param name="ShadowPage">The page the shadow frames are on.</param>
     public sealed record AnimationClip(
         string? Page,
         IReadOnlyList<IReadOnlyList<string>> Variants,
@@ -34,7 +39,9 @@ namespace Mooh.Presentation.Animation
         IReadOnlyList<int> FrameMilliseconds,
         string? Next,
         string? EndHandler,
-        Direction? Direction)
+        Direction? Direction,
+        IReadOnlyList<string>? Shadow = null,
+        string? ShadowPage = null)
     {
         /// <summary>Gets whether the state never advances past its first frame.</summary>
         public bool IsStill => FrameMilliseconds.All(milliseconds => milliseconds <= 0);

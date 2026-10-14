@@ -46,6 +46,15 @@ namespace Mooh.Presentation.Scene
         /// <summary>Gets the frame to draw, or <see langword="null"/> while the entity is hidden.</summary>
         public virtual string? Frame => Animation.Frame;
 
+        /// <summary>
+        /// Gets the shadow frame the state casts, its <c>DInds</c> at the animation's own index
+        /// (<c>DInds[(int)fAInd % len]</c>), or <see langword="null"/> when it casts none.
+        /// </summary>
+        public virtual (string Page, string Frame)? Shadow => Animation.Clip is { Shadow: { Count: > 0 } frames, ShadowPage: string page }
+            && Frame is not null
+                ? (page, frames[(int)Animation.Position % frames.Count])
+                : null;
+
         /// <summary>Gets how far from its cell coordinate the entity draws, in cells.</summary>
         public virtual (double X, double Y) Offset => (0, 0);
 

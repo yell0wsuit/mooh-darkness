@@ -137,9 +137,10 @@ namespace Mooh.Presentation.Scene
                 int frame = (int)lamp.Position;
                 sprites.Add(new BackdropSprite(LampPage, LampFrames[frame], tileX + lamp.X, tileY + lamp.Y, false));
 
-                // The glow, AnmBackLampFx, is drawn additively over the lamp; how the native list
-                // steps a DInds glow is not recovered, so it follows the lamp's own phase.
-                sprites.Add(new BackdropSprite(LampPage, GlowFrames[frame * GlowFrames.Length / LampFrames.Length], tileX + lamp.X, tileY + lamp.Y, true));
+                // The glow, AnmBackLampFx, is drawn additively over the lamp at the lamp's phase
+                // scaled to its length: the native plain render's DInds[(int)(fAInd * len(D) / len(A)) % len(D)].
+                int glow = (int)(lamp.Position * GlowFrames.Length / LampFrames.Length) % GlowFrames.Length;
+                sprites.Add(new BackdropSprite(LampPage, GlowFrames[glow], tileX + lamp.X, tileY + lamp.Y, true));
             }
 
             return new BackdropLayout((int)(offsetX * _imageFactorX), (int)(offsetY * _imageFactorY), sprites);

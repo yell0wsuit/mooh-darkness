@@ -6,5 +6,9 @@ namespace Mooh.Presentation.Animation
     /// The range of the random depth shift, <c>fShZ</c>, each object draws with; terrain's is
     /// <c>CellSh</c>, -0.05 to 0.05.
     /// </param>
-    public sealed record ObjectLook(BackdropStyle? Backdrop, (double Min, double Max)? DepthRange);
+    /// <param name="ReceivesShadow">
+    /// Whether the type's mask carries <c>CNT_CMaskResRShadow</c>, so objects above it cast their
+    /// shadows onto it: terrain, rocks and key doors.
+    /// </param>
+    public sealed record ObjectLook(BackdropStyle? Backdrop, (double Min, double Max)? DepthRange, bool ReceivesShadow = false);
 }

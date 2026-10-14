@@ -29,6 +29,7 @@ namespace Mooh.Presentation.Tests
             EntityAnimator animator = harness.Animator(beetle);
             Assert.StartsWith("st_fly", animator.Animation.State);
             Assert.Equal("SpriteObjSmBeetle", animator.Page);
+            Assert.StartsWith("ShSm", animator.Shadow!.Value.Frame, System.StringComparison.Ordinal);
             Assert.NotNull(animator.Frame);
         }
 

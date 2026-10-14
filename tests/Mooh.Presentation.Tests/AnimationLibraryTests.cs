@@ -95,6 +95,35 @@ namespace Mooh.Presentation.Tests
             Assert.Null(bubble.DepthRange);
         }
 
+        /// <summary>
+        /// Verifies a state's shadow, its <c>DInds</c>: the player's and a pickup's name the
+        /// game module's <c>SfxShMed</c> and <c>SfxShBig</c> on <c>SpriteParts</c>; the tunnel
+        /// states carry none.
+        /// </summary>
+        [Fact]
+        public void AStateCarriesItsShadow()
+        {
+            AnimationClip stand = Library.Value.Table(AnimationLibrary.PlayerTable).States["st_stbottom"];
+            AnimationClip tunnel = Library.Value.Table(AnimationLibrary.PlayerTable).States["st_tonmoveleft"];
+            AnimationClip bubble = Library.Value.Table("OBubble").States["st_stay"];
+
+            Assert.Equal("SpriteParts", stand.ShadowPage);
+            Assert.Equal([.. Enumerable.Range(1, 11).Select(index => $"ShMed{index:00}")], stand.Shadow);
+            Assert.Null(tunnel.Shadow);
+            Assert.Equal("ShBig01", bubble.Shadow![0]);
+        }
+
+        /// <summary>Verifies the types that receive shadows carry <c>CNT_CMaskResRShadow</c>.</summary>
+        [Fact]
+        public void TerrainRocksAndKeyDoorsReceiveShadows()
+        {
+            Assert.All(
+                (string[])["CellsEat01", "JCellsSolid01", "CellsMetal01", "CellsWdTop", "ORock01", "OKDDoor2"],
+                type => Assert.True(Library.Value.TryGetLook(type, out ObjectLook look) && look.ReceivesShadow, type));
+            Assert.True(Library.Value.TryGetLook("OBubble", out ObjectLook bubble));
+            Assert.False(bubble.ReceivesShadow);
+        }
+
         /// <summary>Verifies terrain is one still state whose variants the editor index picks.</summary>
         [Fact]
         public void TerrainIsOneStillStateWithVariants()
@@ -128,11 +157,28 @@ namespace Mooh.Presentation.Tests
                     IEnumerable<string> frames = clip.Variants.SelectMany(variant => variant)
                         .Concat(clip.FlyVariants?.SelectMany(variant => variant) ?? []);
                     missing.AddRange(frames.Where(frame => !page.Contains(frame)).Select(frame => $"{id}/{state}/{frame}"));
+                    if (clip.Shadow is IReadOnlyList<string> shadow)
+                    {
+                        SpritePage parts = Page(pages, clip.ShadowPage!);
+                        missing.AddRange(shadow.Where(frame => !parts.Contains(frame)).Select(frame => $"{id}/{state}/shadow/{frame}"));
+                    }
                 }
             }
 
             Assert.Empty(missing);
             Assert.True(Library.Value.TableIds.Count > 60);
+        }
+
+        private static SpritePage Page(Dictionary<string, SpritePage> pages, string name)
+        {
+            if (!pages.TryGetValue(name, out SpritePage? page))
+            {
+                using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", name + ".seq"));
+                page = SpritePage.Load(name, stream);
+                pages[name] = page;
+            }
+
+            return page;
         }
     }
 }

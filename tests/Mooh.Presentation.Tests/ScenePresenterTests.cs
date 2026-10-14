@@ -27,7 +27,7 @@ namespace Mooh.Presentation.Tests
 
             harness.Step(0.300);
 
-            SceneSprite player = harness.Presenter.Sprites.Single(sprite => sprite.Entity == harness.Player.Id);
+            SceneSprite player = harness.Presenter.Sprites.Single(sprite => sprite.Entity == harness.Player.Id && sprite.Page == "SpritePlayer");
             Assert.Equal("SpritePlayer", player.Page);
             Assert.InRange(player.X, 1.01, 1.99);
             Assert.Equal(1, player.Y);
@@ -79,6 +79,33 @@ namespace Mooh.Presentation.Tests
             EntityId upperRight = harness.Level.GetEntity(200).Id;
             EntityId lowerLeft = harness.Level.GetEntity(201).Id;
             Assert.True(ordinary.FindIndex(sprite => sprite.Entity == lowerLeft) < ordinary.FindIndex(sprite => sprite.Entity == upperRight));
+        }
+
+        /// <summary>
+        /// Verifies a player standing on a shadow receiver casts its state's shadow, drawn just
+        /// before it, as the native object render does.
+        /// </summary>
+        [Fact]
+        public void AStandingPlayerCastsItsShadow()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1));
+
+            harness.Step(0.016);
+
+            List<SceneSprite> sprites = [.. harness.Presenter.Sprites];
+            int player = sprites.FindIndex(sprite => sprite.Entity == harness.Player.Id && sprite.Page == "SpritePlayer");
+            Assert.Equal(new SceneSprite(harness.Player.Id, "SpriteParts", "ShMed01", 1, 1, 0), sprites[player - 1]);
+        }
+
+        /// <summary>Verifies a player with nothing beneath it casts no shadow.</summary>
+        [Fact]
+        public void APlayerInTheAirCastsNoShadow()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(0));
+
+            harness.Step(0.016);
+
+            Assert.DoesNotContain(harness.Presenter.Sprites, sprite => sprite.Page == "SpriteParts");
         }
 
         /// <summary>Verifies a hidden player is left out of the draw list.</summary>

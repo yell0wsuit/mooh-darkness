@@ -17,6 +17,7 @@ namespace Mooh.Presentation.Scene
     /// </remarks>
     public sealed class BeetleAnimator : EntityAnimator
     {
+        private readonly (string Page, IReadOnlyList<string> Frames) _shadow;
         private readonly int _variant;
         private Direction _direction;
 
@@ -31,9 +32,14 @@ namespace Mooh.Presentation.Scene
                     color == SmallBeetleColor.Green ? AnimationLibrary.GreenBeetleTable : AnimationLibrary.BlueBeetleTable),
                 random)
         {
+            _shadow = library.ShadowNamed("SfxShSm");
             _variant = Random.Next(Table.States["st_flyleft"].Variants.Count);
             _direction = Random.Next(2) == 0 ? Direction.Left : Direction.Right;
         }
+
+        /// <summary>Gets the shadow <c>__init__</c> gives every beetle, <c>DInds = SfxShSm</c>.</summary>
+        public override (string Page, string Frame)? Shadow =>
+            (_shadow.Page, _shadow.Frames[(int)Animation.Position % _shadow.Frames.Count]);
 
         /// <inheritdoc/>
         public override IReadOnlyList<string> PickVariant(IReadOnlyList<IReadOnlyList<string>> candidates)

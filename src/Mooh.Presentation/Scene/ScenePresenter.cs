@@ -97,6 +97,11 @@ namespace Mooh.Presentation.Scene
                 {
                     (double x, double y) = DrawnPosition.Of(entity);
                     (double dx, double dy) = animator.Offset;
+                    if (animator.Shadow is (string shadowPage, string shadowFrame) && CastsShadow(world, x, y))
+                    {
+                        sprites.Add(new SceneSprite(entity.Id, shadowPage, shadowFrame, x + dx, y + dy, animator.Pass));
+                    }
+
                     sprites.Add(new SceneSprite(entity.Id, animator.Page, frame, x + dx, y + dy, animator.Pass));
                 }
             }
@@ -114,6 +119,25 @@ namespace Mooh.Presentation.Scene
             _sprites = [.. sprites
                 .OrderBy(sprite => sprite.Pass)
                 .ThenBy(sprite => Math.Round((sprite.X * SceneCamera.CellWidth) - (sprite.Y * SceneCamera.CellHeight)))];
+        }
+
+        /// <summary>
+        /// Models the native object render's shadow test: the object sits within 0.1 of a cell
+        /// row, and the cell below its rounded column holds a <c>CNT_CMaskResRShadow</c> occupant.
+        /// </summary>
+        private bool CastsShadow(WorldGrid world, double x, double y)
+        {
+            double row = Math.Round(y);
+            if (Math.Abs(y - row) >= 0.1)
+            {
+                return false;
+            }
+
+            GridPosition below = new((int)Math.Round(x), (int)row + 1);
+            return world.Contains(below)
+                && world.GetOccupants(below).Any(occupant => occupant.ArchivalIdentity is ArchivalObjectIdentity identity
+                    && _library.TryGetLook(identity.ArchivalType, out ObjectLook look)
+                    && look.ReceivesShadow);
         }
 
         private EntityAnimator? Create(Entity entity)
