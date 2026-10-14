@@ -18,7 +18,32 @@ namespace Mooh.Desktop
     {
         private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.None);
         private readonly Dictionary<string, Atlas> _atlases = [with(StringComparer.Ordinal)];
+        private readonly SKPaint _additive = new() { BlendMode = SKBlendMode.Plus };
         private readonly string _spritesDirectory = spritesDirectory;
+        private SKImage? _backdropImage;
+
+        /// <summary>Draws the backdrop: its image, then its tiles, lamps and glows.</summary>
+        /// <param name="canvas">The canvas, set up in the original's 800 by 600 screen space.</param>
+        /// <param name="backdrop">The level's backdrop.</param>
+        /// <param name="camera">The camera over the level.</param>
+        public void DrawBackdrop(SKCanvas canvas, Backdrop backdrop, SceneCamera camera)
+        {
+            ArgumentNullException.ThrowIfNull(canvas);
+            ArgumentNullException.ThrowIfNull(backdrop);
+            ArgumentNullException.ThrowIfNull(camera);
+            (double baseX, double baseY) = camera.Base;
+            BackdropLayout layout = backdrop.Layout(baseX, baseY);
+            _backdropImage ??= SKImage.FromEncodedData(Path.Combine(_spritesDirectory, "..", "screens", Backdrop.ImageName + ".jpg"));
+            if (_backdropImage is not null)
+            {
+                canvas.DrawImage(_backdropImage, layout.ImageX, layout.ImageY, Sampling);
+            }
+
+            foreach (BackdropSprite sprite in layout.Sprites)
+            {
+                DrawFrame(canvas, sprite.Page, sprite.Frame, sprite.X, sprite.Y, sprite.Additive ? _additive : null);
+            }
+        }
 
         /// <summary>Draws the sprites in their order.</summary>
         /// <param name="canvas">The canvas, set up in the original's 800 by 600 screen space.</param>
@@ -31,24 +56,8 @@ namespace Mooh.Desktop
             ArgumentNullException.ThrowIfNull(camera);
             foreach (SceneSprite sprite in sprites)
             {
-                Atlas atlas = AtlasOf(sprite.Page);
-                if (!atlas.Frames.Contains(sprite.Frame))
-                {
-                    continue;
-                }
-
-                SpriteFrame frame = atlas.Frames[sprite.Frame];
-                if (frame.Width <= 0 || frame.Height <= 0)
-                {
-                    continue;
-                }
-
                 (double x, double y) = camera.ToScreen(sprite.X, sprite.Y);
-                canvas.DrawImage(
-                    atlas.Image,
-                    SKRect.Create(frame.X, frame.Y, frame.Width, frame.Height),
-                    SKRect.Create((float)(x + frame.PivotX), (float)(y + frame.PivotY), frame.Width, frame.Height),
-                    Sampling);
+                DrawFrame(canvas, sprite.Page, sprite.Frame, x, y, null);
             }
         }
 
@@ -61,6 +70,30 @@ namespace Mooh.Desktop
             }
 
             _atlases.Clear();
+            _backdropImage?.Dispose();
+            _additive.Dispose();
+        }
+
+        private void DrawFrame(SKCanvas canvas, string page, string name, double x, double y, SKPaint? paint)
+        {
+            Atlas atlas = AtlasOf(page);
+            if (!atlas.Frames.Contains(name))
+            {
+                return;
+            }
+
+            SpriteFrame frame = atlas.Frames[name];
+            if (frame.Width <= 0 || frame.Height <= 0)
+            {
+                return;
+            }
+
+            canvas.DrawImage(
+                atlas.Image,
+                SKRect.Create(frame.X, frame.Y, frame.Width, frame.Height),
+                SKRect.Create((float)(x + frame.PivotX), (float)(y + frame.PivotY), frame.Width, frame.Height),
+                Sampling,
+                paint);
         }
 
         private Atlas AtlasOf(string page)

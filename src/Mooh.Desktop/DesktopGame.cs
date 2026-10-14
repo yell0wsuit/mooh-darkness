@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 
+using System.Linq;
+
+using Mooh.Core.Content;
 using Mooh.Core.Entities;
 using Mooh.Core.Player;
 using Mooh.Core.Session;
@@ -29,6 +32,9 @@ namespace Mooh.Desktop
         /// <summary>How long a decided level stays on screen before the next one, or a replay, starts.</summary>
         private const double OutcomeSeconds = 2;
 
+        /// <summary>The size of the <c>BackA_1_01</c> backdrop image.</summary>
+        private static readonly (int Width, int Height) BackdropImageSize = (1024, 768);
+
         private readonly AnimationLibrary _library = library;
         private readonly Random _random = random;
         private double _outcomeSeconds;
@@ -39,6 +45,9 @@ namespace Mooh.Desktop
 
         /// <summary>Gets the animated scene of the current level.</summary>
         public ScenePresenter Presenter { get; private set; } = new(library, random);
+
+        /// <summary>Gets the current level's backdrop.</summary>
+        public Backdrop Backdrop { get; private set; } = new(BackdropStyle.Normal, 1, 1, BackdropImageSize, random);
 
         /// <summary>Gets the camera over the current level.</summary>
         public SceneCamera Camera { get; private set; } = new();
@@ -95,6 +104,7 @@ namespace Mooh.Desktop
             }
 
             Presenter.Update(Session.Level.World, events, seconds);
+            Backdrop.Advance(seconds);
             if (Session.Level.World.Player is Entity player)
             {
                 (double x, double y) = DrawnPosition.Of(player);
@@ -129,6 +139,13 @@ namespace Mooh.Desktop
             _outcomeSeconds = 0;
             Presenter = new ScenePresenter(_library, _random);
             Camera = new SceneCamera();
+            LevelDocument level = Session.Level.Source;
+            Backdrop = new Backdrop(
+                Backdrop.StyleOf(level.Objects?.Select(item => item.Type ?? string.Empty) ?? [], _library),
+                level.Size.Width,
+                level.Size.Height,
+                BackdropImageSize,
+                _random);
             if (Session.Level.World.Player is Entity player)
             {
                 (double x, double y) = DrawnPosition.Of(player);

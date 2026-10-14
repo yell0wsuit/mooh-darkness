@@ -34,6 +34,9 @@ namespace Mooh.Presentation.Scene
         private double _baseX;
         private double _baseY;
 
+        /// <summary>Gets the world base, <c>fWrdBaseX</c> and <c>fWrdBaseY</c>: where cell (0, 0) is drawn.</summary>
+        public (double X, double Y) Base => (_baseX, _baseY);
+
         /// <summary>Puts the target at the screen center at once, as a level start does.</summary>
         /// <param name="x">The target's column.</param>
         /// <param name="y">The target's row.</param>

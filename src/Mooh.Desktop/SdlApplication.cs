@@ -166,6 +166,7 @@ namespace Mooh.Desktop
             canvas.Scale(scale);
             canvas.ClipRect(SKRect.Create(0, 0, SdlGraphicsDevice.LogicalWidth, SdlGraphicsDevice.LogicalHeight));
             canvas.Clear(Backdrop);
+            scene.DrawBackdrop(canvas, game.Backdrop, game.Camera);
             scene.Draw(canvas, game.Presenter.Sprites, game.Camera);
             _hud.Draw(canvas, game);
             canvas.RestoreToCount(saved);
