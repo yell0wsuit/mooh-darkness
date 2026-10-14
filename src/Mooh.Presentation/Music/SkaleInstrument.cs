@@ -58,8 +58,33 @@ namespace Mooh.Presentation.Music
             get; internal set;
         }
 
+        /// <summary>
+        /// Gets the sample's length in frames, which the payload's header declares; a decoder that
+        /// pads or trims its output is fitted to it.
+        /// </summary>
+        public int Length
+        {
+            get; internal set;
+        }
+
         /// <summary>Gets the embedded Ogg Vorbis payload.</summary>
         public byte[] Ogg { get; internal set; } = [];
+
+        /// <summary>Gives the sample decoded mono samples, fitted to its declared length.</summary>
+        /// <param name="decoded">The decoded samples.</param>
+        public void SetDecoded(float[] decoded)
+        {
+            ArgumentNullException.ThrowIfNull(decoded);
+            if (Length <= 0 || decoded.Length == Length)
+            {
+                Pcm = decoded;
+                return;
+            }
+
+            float[] fitted = new float[Length];
+            decoded.AsSpan(0, Math.Min(decoded.Length, Length)).CopyTo(fitted);
+            Pcm = fitted;
+        }
 
         /// <summary>Gets or sets the decoded mono samples.</summary>
         public float[]? Pcm
@@ -351,6 +376,7 @@ namespace Mooh.Presentation.Music
                 if (id >> 16 == 1 && (id & 0xFFFF) == 4)
                 {
                     // sub_10013A80: the frame count, a byte, the payload size, the payload.
+                    sample.Length = (int)BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(at));
                     int payload = (int)BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(at + 5));
                     sample.Ogg = data[(at + 9)..(at + 9 + payload)];
                 }

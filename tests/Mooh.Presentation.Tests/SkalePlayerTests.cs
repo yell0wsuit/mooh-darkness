@@ -37,6 +37,20 @@ namespace Mooh.Presentation.Tests
             // Two of the seventeen samples carry no payload and stay silent, as in the Python port.
             SkaleSample[] samples = [.. module.Instruments.Values.SelectMany(instrument => instrument.Samples.Values)];
             Assert.Equal((17, 15), (samples.Length, samples.Count(sample => sample.Ogg.Length > 0)));
+            Assert.Equal(15563, module.Instruments[0].Samples[0].Length);
+        }
+
+        /// <summary>Verifies decoded samples are fitted to the length their payload declares.</summary>
+        [Fact]
+        public void DecodedSamplesFitTheirDeclaredLength()
+        {
+            SkaleModule module = SkaleModule.Load(File.ReadAllBytes(MusicPath("TrackMenu.skm")));
+            SkaleSample sample = module.Instruments[0].Samples[0];
+
+            sample.SetDecoded(new float[15563 + 128]);
+            Assert.Equal(15563, sample.Pcm!.Length);
+            sample.SetDecoded(new float[100]);
+            Assert.Equal(15563, sample.Pcm!.Length);
         }
 
         /// <summary>Verifies the track list: the game's music starts at order 40.</summary>

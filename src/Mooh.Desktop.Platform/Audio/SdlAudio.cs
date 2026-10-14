@@ -108,6 +108,97 @@ namespace Mooh.Desktop.Platform.Audio
             return track;
         }
 
+        /// <inheritdoc/>
+        public (float[] Samples, int Rate)? DecodeMono(byte[] encoded)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            ArgumentNullException.ThrowIfNull(encoded);
+            if (encoded.Length == 0)
+            {
+                return null;
+            }
+
+            fixed (byte* bytes = encoded)
+            {
+                nint io = SDL.IOFromConstMem((nint)bytes, (nuint)encoded.Length);
+                if (io == 0)
+                {
+                    return null;
+                }
+
+                nint decoder = Mixer.CreateAudioDecoderIO(io, true, 0);
+                if (decoder == 0)
+                {
+                    return null;
+                }
+
+                try
+                {
+                    SDL.AudioSpec source = default;
+                    if (!Mixer.GetAudioDecoderFormat(decoder, (nint)(&source)))
+                    {
+                        return null;
+                    }
+
+                    SDL.AudioSpec mono = new()
+                    {
+                        Format = SDL.AudioFormat.AudioF32LE,
+                        Channels = 1,
+                        Freq = source.Freq,
+                    };
+                    List<float> samples = [];
+                    float[] chunk = new float[4096];
+                    fixed (float* buffer = chunk)
+                    {
+                        while (true)
+                        {
+                            int bytesRead = Mixer.DecodeAudio(decoder, (nint)buffer, chunk.Length * sizeof(float), (nint)(&mono));
+                            if (bytesRead <= 0)
+                            {
+                                break;
+                            }
+
+                            samples.AddRange(chunk.AsSpan(0, bytesRead / sizeof(float)));
+                        }
+                    }
+
+                    return ([.. samples], source.Freq);
+                }
+                finally
+                {
+                    Mixer.DestroyAudioDecoder(decoder);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public IAudioFeed? OpenFeed(int rate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            SDL.AudioSpec spec = new()
+            {
+                Format = SDL.AudioFormat.AudioF32LE,
+                Channels = MixerChannels,
+                Freq = rate,
+            };
+            nint stream = SDL.CreateAudioStream(in spec, in spec);
+            if (stream == 0)
+            {
+                return null;
+            }
+
+            nint track = Mixer.CreateTrack(_mixer);
+            if (track == 0)
+            {
+                SDL.DestroyAudioStream(stream);
+                return null;
+            }
+
+            _ = Mixer.SetTrackAudioStream(track, stream);
+            _ = Mixer.PlayTrack(track, 0);
+            return new Feed(track, stream);
+        }
+
         /// <summary>Releases the tracks, then the sounds, then the mixer that owns both.</summary>
         public void Dispose()
         {
@@ -193,6 +284,37 @@ namespace Mooh.Desktop.Platform.Audio
             Track created = new(handle);
             _tracks.Add(created);
             return created;
+        }
+
+        private sealed class Feed(nint track, nint stream) : IAudioFeed
+        {
+            private bool _disposed;
+
+            public int QueuedFrames => _disposed ? 0 : SDL.GetAudioStreamQueued(stream) / (MixerChannels * sizeof(float));
+
+            public float Volume
+            {
+                set => _ = Mixer.SetTrackGain(track, value);
+            }
+
+            public void Write(ReadOnlySpan<float> interleaved)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes(interleaved);
+                _ = SDL.PutAudioStreamData(stream, bytes, bytes.Length);
+            }
+
+            public void Dispose()
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+                Mixer.DestroyTrack(track);
+                SDL.DestroyAudioStream(stream);
+            }
         }
 
         private sealed class Sound(nint audio)

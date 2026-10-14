@@ -59,8 +59,9 @@ namespace Mooh.Desktop
                 }
 
                 SoundBoard sounds = new(catalog, audio, Path.Combine(assets, "sounds"), new Random());
+                using MusicPlayer? music = MusicPlayer.Start(audio, Path.Combine(assets, "music"), "game");
                 using SceneRenderer scene = new(Path.Combine(assets, "sprites"));
-                using SdlApplication application = new(options, game, scene, sounds);
+                using SdlApplication application = new(options, game, scene, sounds, music);
                 application.Run();
                 return 0;
             }

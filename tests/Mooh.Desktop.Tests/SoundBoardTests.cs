@@ -92,6 +92,16 @@ namespace Mooh.Desktop.Tests
             {
             }
 
+            public (float[] Samples, int Rate)? DecodeMono(byte[] encoded)
+            {
+                return null;
+            }
+
+            public IAudioFeed? OpenFeed(int rate)
+            {
+                return null;
+            }
+
             private sealed class Voice : IVoice
             {
                 public bool IsPlaying { get; set; } = true;
