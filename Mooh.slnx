@@ -1,11 +1,13 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Mooh.Core/Mooh.Core.csproj" />
+    <Project Path="src/Mooh.Desktop.Platform/Mooh.Desktop.Platform.csproj" />
     <Project Path="src/Mooh.Presentation/Mooh.Presentation.csproj" />
     <Project Path="src/Mooh.SimulationRunner/Mooh.SimulationRunner.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Mooh.Core.Tests/Mooh.Core.Tests.csproj" />
+    <Project Path="tests/Mooh.Desktop.Platform.Tests/Mooh.Desktop.Platform.Tests.csproj" />
     <Project Path="tests/Mooh.Presentation.Tests/Mooh.Presentation.Tests.csproj" />
     <Project Path="tests/Mooh.SimulationRunner.Tests/Mooh.SimulationRunner.Tests.csproj" />
   </Folder>
