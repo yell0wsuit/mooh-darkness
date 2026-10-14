@@ -3,7 +3,9 @@ using System.IO;
 
 using Mooh.Core.Content;
 using Mooh.Core.Session;
+using Mooh.Desktop.Platform.Audio;
 using Mooh.Presentation.Animation;
+using Mooh.Presentation.Audio;
 
 using SDL3;
 
@@ -40,11 +42,25 @@ namespace Mooh.Desktop
                 library = AnimationLibrary.Load(stream);
             }
 
+            SoundCatalog catalog;
+            using (FileStream stream = File.OpenRead(Path.Combine(assets, "sounds", "Sound.ini")))
+            {
+                catalog = SoundCatalog.Load(stream);
+            }
+
             DesktopGame game = new(new GameSession(pack, options.Difficulty, options.LevelIndex), library, new Random());
             try
             {
+                // A machine without a playback device still plays the game, silently.
+                using IAudioOutput audio = (IAudioOutput?)SdlAudio.TryOpen(out string? error) ?? new SilentAudio();
+                if (error is not null)
+                {
+                    Console.Error.WriteLine($"Audio is off: {error}");
+                }
+
+                SoundBoard sounds = new(catalog, audio, Path.Combine(assets, "sounds"), new Random());
                 using SceneRenderer scene = new(Path.Combine(assets, "sprites"));
-                using SdlApplication application = new(options, game, scene);
+                using SdlApplication application = new(options, game, scene, sounds);
                 application.Run();
                 return 0;
             }

@@ -20,7 +20,8 @@ namespace Mooh.Desktop
     /// <param name="options">The command line.</param>
     /// <param name="game">The game to run.</param>
     /// <param name="scene">The scene renderer.</param>
-    internal sealed class SdlApplication(DesktopOptions options, DesktopGame game, SceneRenderer scene) : IDisposable
+    /// <param name="sounds">The sound board the game's cues play on.</param>
+    internal sealed class SdlApplication(DesktopOptions options, DesktopGame game, SceneRenderer scene, SoundBoard sounds) : IDisposable
     {
         /// <summary>The level's backdrop until the original's parallax layers are drawn.</summary>
         private static readonly SKColor Backdrop = new(24, 30, 46);
@@ -66,6 +67,7 @@ namespace Mooh.Desktop
                 TimeSpan now = _clock.Elapsed;
                 PlayerInputState input = options.Script is null ? _controls.PlayerInput : options.ScriptedInput(game.ElapsedSeconds);
                 game.Update(input, _controls.TakeCommands(), (now - previous).TotalSeconds);
+                sounds.Play(game.Sounds, game.Camera);
                 previous = now;
                 DrawFrame(device);
             }

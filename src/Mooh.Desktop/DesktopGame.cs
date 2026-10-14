@@ -11,6 +11,7 @@ using Mooh.Core.Session;
 using Mooh.Core.Simulation;
 using Mooh.Desktop.Platform.Input;
 using Mooh.Presentation.Animation;
+using Mooh.Presentation.Audio;
 using Mooh.Presentation.Scene;
 
 namespace Mooh.Desktop
@@ -59,6 +60,9 @@ namespace Mooh.Desktop
             get; private set;
         }
 
+        /// <summary>Gets the sounds this frame cued; none while paused or between levels.</summary>
+        public IReadOnlyList<SoundCue> Sounds { get; private set; } = [];
+
         /// <summary>Gets a value indicating whether the game is paused.</summary>
         public bool IsPaused
         {
@@ -72,6 +76,7 @@ namespace Mooh.Desktop
         public void Update(PlayerInputState input, IReadOnlyList<ControlCommand> commands, double seconds)
         {
             ArgumentNullException.ThrowIfNull(commands);
+            Sounds = [];
             List<SimulationEvent> events = [];
             foreach (ControlCommand command in commands)
             {
@@ -119,6 +124,7 @@ namespace Mooh.Desktop
                 ? WorldSpin.Of(center, turning, simulation.WorldRotationProgress)
                 : null;
             Presenter.Update(Session.Level.World, events, seconds, spin);
+            Sounds = Presenter.Sounds;
             Backdrop.Advance(seconds);
             if (Session.Level.World.Player is Entity player)
             {
