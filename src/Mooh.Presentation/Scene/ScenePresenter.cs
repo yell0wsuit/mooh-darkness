@@ -39,6 +39,8 @@ namespace Mooh.Presentation.Scene
 
         private readonly Dictionary<EntityId, EntityAnimator> _animators = [];
         private readonly EffectSystem _effects;
+        private readonly EventSounds _eventSounds;
+        private Dictionary<EntityId, Sighting> _seen = [];
         private double _clockMilliseconds;
         private readonly AnimationLibrary _library;
         private readonly Random _random;
@@ -56,6 +58,7 @@ namespace Mooh.Presentation.Scene
             _library = library;
             _random = random;
             _effects = new EffectSystem(library, random);
+            _eventSounds = new EventSounds(library);
         }
 
         /// <summary>Gets the sounds cued this update, in order.</summary>
@@ -85,11 +88,14 @@ namespace Mooh.Presentation.Scene
 
             _clockMilliseconds += seconds * 1000;
             HashSet<EntityId> present = [];
+            Dictionary<EntityId, Sighting> seen = [];
             List<SceneSprite> sprites = [];
             List<SoundCue> sounds = [];
             foreach (Entity entity in world.Entities)
             {
                 _ = present.Add(entity.Id);
+                (double seenX, double seenY) = DrawnPosition.Of(entity);
+                seen[entity.Id] = new Sighting(entity.ArchivalIdentity?.ArchivalType, seenX, seenY, entity.PlayerBody is not null, entity.BigBombBody is not null);
                 if (!_animators.TryGetValue(entity.Id, out EntityAnimator? animator))
                 {
                     animator = Create(entity);
@@ -125,6 +131,15 @@ namespace Mooh.Presentation.Scene
                 }
             }
 
+            // An event's entity may be gone by now; it sounds where it was last drawn.
+            Dictionary<EntityId, Sighting> sighted = [with(_seen)];
+            foreach ((EntityId id, Sighting sighting) in seen)
+            {
+                sighted[id] = sighting;
+            }
+
+            sounds.AddRange(_eventSounds.For(events, sighted));
+            _seen = seen;
             _sounds = sounds;
             _effects.Update(world, events, seconds);
             sprites.AddRange(_effects.Sprites);

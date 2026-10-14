@@ -335,6 +335,15 @@ namespace Mooh.Presentation.Animation
                 {
                     sounds[field] = alias;
                 }
+                else if (field == "SndEat"
+                    && sound.ValueKind == JsonValueKind.Object
+                    && sound.TryGetProperty("ref", out JsonElement handler)
+                    && handler.GetString()?.EndsWith(".EatSndEat", StringComparison.Ordinal) == true
+                    && recovered.Sounds.TryGetValue("GMod.SndEatEat", out string? eat))
+                {
+                    // Food's EatSndEat plays SndEatEat, then SndEatEat2 a moment later.
+                    sounds[field] = eat;
+                }
             }
 
             return new ObjectLook(
