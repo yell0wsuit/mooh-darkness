@@ -1,0 +1,141 @@
+using System;
+using System.Collections.Generic;
+
+using Mooh.Core.Entities;
+using Mooh.Core.Player;
+using Mooh.Core.Session;
+using Mooh.Core.Simulation;
+using Mooh.Desktop.Platform.Input;
+using Mooh.Presentation.Animation;
+using Mooh.Presentation.Scene;
+
+namespace Mooh.Desktop
+{
+    /// <summary>
+    /// Drives a game session from the keyboard and wall-clock time, and keeps its presentation —
+    /// the animated scene and the camera — in step with it.
+    /// </summary>
+    /// <param name="session">The session to play.</param>
+    /// <param name="library">The recovered animation tables.</param>
+    /// <param name="random">The source of the presentation's random choices.</param>
+    internal sealed class DesktopGame(GameSession session, AnimationLibrary library, Random random)
+    {
+        /// <summary>
+        /// The longest frame the game accepts. A stall — a window drag, a debugger — would otherwise
+        /// leap the level forward on the next frame.
+        /// </summary>
+        private const double LongestFrameSeconds = 0.1;
+
+        /// <summary>How long a decided level stays on screen before the next one, or a replay, starts.</summary>
+        private const double OutcomeSeconds = 2;
+
+        private readonly AnimationLibrary _library = library;
+        private readonly Random _random = random;
+        private double _outcomeSeconds;
+        private bool _started;
+
+        /// <summary>Gets the session.</summary>
+        public GameSession Session { get; } = session;
+
+        /// <summary>Gets the animated scene of the current level.</summary>
+        public ScenePresenter Presenter { get; private set; } = new(library, random);
+
+        /// <summary>Gets the camera over the current level.</summary>
+        public SceneCamera Camera { get; private set; } = new();
+
+        /// <summary>Gets a value indicating whether the game is paused.</summary>
+        public bool IsPaused
+        {
+            get; private set;
+        }
+
+        /// <summary>Runs one frame.</summary>
+        /// <param name="input">The held directions and fire key.</param>
+        /// <param name="commands">The keyboard commands given since the last frame.</param>
+        /// <param name="seconds">The wall-clock time since the last frame.</param>
+        public void Update(PlayerInputState input, IReadOnlyList<ControlCommand> commands, double seconds)
+        {
+            ArgumentNullException.ThrowIfNull(commands);
+            List<SimulationEvent> events = [];
+            foreach (ControlCommand command in commands)
+            {
+                if (command.Kind == ControlCommandKind.TogglePause)
+                {
+                    IsPaused = !IsPaused;
+                }
+                else if (!IsPaused && Session.State == GameSessionState.Playing)
+                {
+                    events.AddRange(command.Kind == ControlCommandKind.NextWeapon
+                        ? Session.Simulation.SelectNextWeapon()
+                        : Session.Simulation.SelectWeapon(command.Weapon!.Value));
+                }
+            }
+
+            if (!_started)
+            {
+                _started = true;
+                StartLevelPresentation();
+            }
+
+            if (IsPaused)
+            {
+                return;
+            }
+
+            seconds = Math.Clamp(seconds, 0, LongestFrameSeconds);
+            if (Session.State == GameSessionState.Playing)
+            {
+                Session.SetPlayerInput(input);
+                events.AddRange(Session.Advance(TimeSpan.FromSeconds(seconds)));
+            }
+            else if ((_outcomeSeconds += seconds) >= OutcomeSeconds)
+            {
+                MoveOn();
+                return;
+            }
+
+            Presenter.Update(Session.Level.World, events, seconds);
+            if (Session.Level.World.Player is Entity player)
+            {
+                (double x, double y) = DrawnPosition.Of(player);
+                Camera.Follow(x, y, seconds);
+            }
+        }
+
+        /// <summary>
+        /// Starts the next level after a win and replays the level after a loss. A finished
+        /// campaign stays on its last frame.
+        /// </summary>
+        private void MoveOn()
+        {
+            if (Session.State == GameSessionState.LevelCompleted)
+            {
+                Session.AdvanceToNextLevel();
+            }
+            else if (Session.State == GameSessionState.LevelFailed)
+            {
+                Session.RestartLevel();
+            }
+            else
+            {
+                return;
+            }
+
+            StartLevelPresentation();
+        }
+
+        private void StartLevelPresentation()
+        {
+            _outcomeSeconds = 0;
+            Presenter = new ScenePresenter(_library, _random);
+            Camera = new SceneCamera();
+            if (Session.Level.World.Player is Entity player)
+            {
+                (double x, double y) = DrawnPosition.Of(player);
+                Camera.Snap(x, y);
+            }
+
+            Presenter.Update(Session.Level.World, [], 0);
+        }
+    }
+}
