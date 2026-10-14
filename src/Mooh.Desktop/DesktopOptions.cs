@@ -16,19 +16,21 @@ namespace Mooh.Desktop
     /// <param name="QuitAfterFrames">The frame count after which to quit, for scripted runs.</param>
     /// <param name="ScreenshotPath">Where to save the last frame as a PNG, for scripted runs.</param>
     /// <param name="Script">
-    /// Scripted input, for scripted runs: from each time in seconds, the keys held until the next.
+    /// Scripted input, for scripted runs: from each game time in seconds, the keys held until the next.
     /// </param>
+    /// <param name="QuitAfterSeconds">The game time after which to quit, for scripted runs.</param>
     internal sealed record DesktopOptions(
         int LevelIndex,
         DifficultySpeeds Difficulty,
         GraphicsBackendKind? Renderer,
         int? QuitAfterFrames,
         string? ScreenshotPath,
-        IReadOnlyList<(double At, PlayerInputState Input)>? Script = null)
+        IReadOnlyList<(double At, PlayerInputState Input)>? Script = null,
+        double? QuitAfterSeconds = null)
     {
         /// <summary>The usage line.</summary>
         internal const string Usage =
-            "Mooh [--level N] [--difficulty 0|1|2] [--renderer metal|opengl|software] [--frames N] [--screenshot file.png] [--input 2=r,3.5=rf,4=]";
+            "Mooh [--level N] [--difficulty 0|1|2] [--renderer metal|opengl|software] [--frames N | --seconds S] [--screenshot file.png] [--input 2=r,3.5=rf,4=]";
 
         private static readonly Dictionary<string, GraphicsBackendKind> Renderers = new(StringComparer.Ordinal)
         {
@@ -61,6 +63,12 @@ namespace Mooh.Desktop
                             : throw new ArgumentException($"Unknown renderer '{value}'. Usage: {Usage}"),
                     },
                     "--frames" => options with { QuitAfterFrames = Positive(name, value) },
+                    "--seconds" => options with
+                    {
+                        QuitAfterSeconds = double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double seconds) && seconds > 0
+                            ? seconds
+                            : throw new ArgumentException($"Option '--seconds' needs a positive number. Usage: {Usage}"),
+                    },
                     "--screenshot" => options with { ScreenshotPath = value },
                     "--input" => options with { Script = ScriptOf(value) },
                     _ => throw new ArgumentException($"Unknown option '{name}'. Usage: {Usage}"),

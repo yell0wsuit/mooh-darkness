@@ -36,6 +36,7 @@ namespace Mooh.Desktop.Tests
             Assert.Equal(GraphicsBackendKind.Software, options.Renderer);
             Assert.Equal(120, options.QuitAfterFrames);
             Assert.Equal("shot.png", options.ScreenshotPath);
+            Assert.Equal(2.5, DesktopOptions.Parse(["--seconds", "2.5"]).QuitAfterSeconds);
         }
 
         /// <summary>

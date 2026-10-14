@@ -38,8 +38,9 @@ namespace Mooh.Presentation.Scene
         private static readonly string[] LampFrames = [.. Enumerable.Range(1, 18).Select(index => $"OLamp{index:00}")];
         private static readonly string[] GlowFrames = [.. Enumerable.Range(0, 12).Select(index => $"GLamp{index * 2:00}")];
 
-        private readonly double _imageFactorX;
-        private readonly double _imageFactorY;
+        private readonly (int Width, int Height) _imageSize;
+        private double _imageFactorX;
+        private double _imageFactorY;
         private readonly string _tilePage;
         private readonly List<(string Frame, int X, int Y)> _tiles = [];
         private readonly List<Lamp> _lamps = [];
@@ -54,10 +55,10 @@ namespace Mooh.Presentation.Scene
         public Backdrop(BackdropStyle style, int widthCells, int heightCells, (int Width, int Height) imageSize, Random random)
         {
             ArgumentNullException.ThrowIfNull(random);
+            _imageSize = imageSize;
+            Resize(widthCells, heightCells);
             double width = Math.Max(1, widthCells) * SceneCamera.CellWidth;
             double height = Math.Max(1, heightCells) * SceneCamera.CellHeight;
-            _imageFactorX = Math.Min(ImageParallax, (imageSize.Width - ScreenWidth) / width);
-            _imageFactorY = Math.Min(ImageParallax, (imageSize.Height - ScreenHeight) / height);
             (_tilePage, string prefix, int count) = style switch
             {
                 BackdropStyle.Tropical => ("SpriteBackTrop", "BackTropical_2_", 7),
@@ -109,6 +110,20 @@ namespace Mooh.Presentation.Scene
                 .OrderByDescending(group => group.Count())
                 .Select(group => (BackdropStyle?)group.Key)
                 .FirstOrDefault() ?? BackdropStyle.Normal;
+        }
+
+        /// <summary>
+        /// Refits the image layer's parallax to a new level size, as <c>ModChngSize</c> does after
+        /// a world rotation; the tiles and lamps stay.
+        /// </summary>
+        /// <param name="widthCells">The level's width in cells.</param>
+        /// <param name="heightCells">The level's height in cells.</param>
+        public void Resize(int widthCells, int heightCells)
+        {
+            double width = Math.Max(1, widthCells) * SceneCamera.CellWidth;
+            double height = Math.Max(1, heightCells) * SceneCamera.CellHeight;
+            _imageFactorX = Math.Min(ImageParallax, (_imageSize.Width - ScreenWidth) / width);
+            _imageFactorY = Math.Min(ImageParallax, (_imageSize.Height - ScreenHeight) / height);
         }
 
         /// <summary>Plays the lamps.</summary>

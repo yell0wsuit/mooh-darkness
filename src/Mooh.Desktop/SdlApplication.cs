@@ -64,7 +64,7 @@ namespace Mooh.Desktop
             {
                 PumpEvents();
                 TimeSpan now = _clock.Elapsed;
-                PlayerInputState input = options.Script is null ? _controls.PlayerInput : options.ScriptedInput(now.TotalSeconds);
+                PlayerInputState input = options.Script is null ? _controls.PlayerInput : options.ScriptedInput(game.ElapsedSeconds);
                 game.Update(input, _controls.TakeCommands(), (now - previous).TotalSeconds);
                 previous = now;
                 DrawFrame(device);
@@ -174,7 +174,8 @@ namespace Mooh.Desktop
             canvas.RestoreToCount(saved);
             device.Flush();
             _frames++;
-            if (options.QuitAfterFrames is int limit && _frames >= limit)
+            if ((options.QuitAfterFrames is int limit && _frames >= limit)
+                || (options.QuitAfterSeconds is double seconds && game.ElapsedSeconds >= seconds))
             {
                 SaveScreenshot(device);
                 _quit = true;

@@ -71,8 +71,9 @@ namespace Mooh.Presentation.Scene
         /// <param name="world">The simulated world.</param>
         /// <param name="events">The events the simulation reported for this frame.</param>
         /// <param name="seconds">The simulated time of this frame.</param>
+        /// <param name="spin">The world rotation in flight, which turns every drawn position.</param>
         /// <exception cref="ArgumentNullException">An argument is <see langword="null"/>.</exception>
-        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds)
+        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds, WorldSpin? spin = null)
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(events);
@@ -117,6 +118,15 @@ namespace Mooh.Presentation.Scene
             foreach (EntityId gone in _animators.Keys.Where(id => !present.Contains(id)).ToList())
             {
                 _ = _animators.Remove(gone);
+            }
+
+            if (spin is WorldSpin turning)
+            {
+                sprites = [.. sprites.Select(sprite =>
+                {
+                    (double x, double y) = turning.Transform(sprite.X, sprite.Y);
+                    return sprite with { X = x, Y = y };
+                })];
             }
 
             // The native ListRenderSort comparator: the pass, then the screen x - y, so tiles whose

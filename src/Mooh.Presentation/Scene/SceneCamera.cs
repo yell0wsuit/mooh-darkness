@@ -45,6 +45,18 @@ namespace Mooh.Presentation.Scene
             (_baseX, _baseY) = BaseFor(x, y);
         }
 
+        /// <summary>
+        /// Moves the world base, as <c>WorldRotStopCBack</c> does when the grid turns so the rotator
+        /// stays where it was drawn.
+        /// </summary>
+        /// <param name="x">The horizontal change in pixels.</param>
+        /// <param name="y">The vertical change in pixels.</param>
+        public void Shift(double x, double y)
+        {
+            _baseX += x;
+            _baseY += y;
+        }
+
         /// <summary>Eases the view toward the target.</summary>
         /// <param name="x">The target's column.</param>
         /// <param name="y">The target's row.</param>

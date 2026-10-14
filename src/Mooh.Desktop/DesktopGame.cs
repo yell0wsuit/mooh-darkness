@@ -5,6 +5,7 @@ using System.Linq;
 
 using Mooh.Core.Content;
 using Mooh.Core.Entities;
+using Mooh.Core.Grid;
 using Mooh.Core.Player;
 using Mooh.Core.Session;
 using Mooh.Core.Simulation;
@@ -52,6 +53,12 @@ namespace Mooh.Desktop
         /// <summary>Gets the camera over the current level.</summary>
         public SceneCamera Camera { get; private set; } = new();
 
+        /// <summary>Gets the game time played so far: the clamped frame times while not paused.</summary>
+        public double ElapsedSeconds
+        {
+            get; private set;
+        }
+
         /// <summary>Gets a value indicating whether the game is paused.</summary>
         public bool IsPaused
         {
@@ -92,6 +99,8 @@ namespace Mooh.Desktop
             }
 
             seconds = Math.Clamp(seconds, 0, LongestFrameSeconds);
+            ElapsedSeconds += seconds;
+            GridPosition? pivot = Session.Simulation.WorldRotationPivot;
             if (Session.State == GameSessionState.Playing)
             {
                 Session.SetPlayerInput(input);
@@ -103,12 +112,38 @@ namespace Mooh.Desktop
                 return;
             }
 
-            Presenter.Update(Session.Level.World, events, seconds);
+            FollowWorldRotation(events, pivot);
+            SimulationWorld simulation = Session.Simulation;
+            WorldSpin? spin = simulation.WorldRotationInFlight is WorldRotationDirection turning
+                && simulation.WorldRotationPivot is GridPosition center
+                ? WorldSpin.Of(center, turning, simulation.WorldRotationProgress)
+                : null;
+            Presenter.Update(Session.Level.World, events, seconds, spin);
             Backdrop.Advance(seconds);
             if (Session.Level.World.Player is Entity player)
             {
                 (double x, double y) = DrawnPosition.Of(player);
                 Camera.Follow(x, y, seconds);
+            }
+        }
+
+        /// <summary>
+        /// Keeps the view still across a turn, as <c>WorldRotStopCBack</c> does: the world base
+        /// moves by however far the turn moved the rotator, and the backdrop refits the new size.
+        /// </summary>
+        private void FollowWorldRotation(IReadOnlyList<SimulationEvent> events, GridPosition? pivot)
+        {
+            foreach (WorldRotationCompleted turned in events.OfType<WorldRotationCompleted>())
+            {
+                if (pivot is GridPosition before)
+                {
+                    GridPosition after = Session.Level.World.GetEntity(turned.EntityId).Position;
+                    Camera.Shift(
+                        -(after.X - before.X) * SceneCamera.CellWidth,
+                        -(after.Y - before.Y) * SceneCamera.CellHeight);
+                }
+
+                Backdrop.Resize(turned.Width, turned.Height);
             }
         }
 
