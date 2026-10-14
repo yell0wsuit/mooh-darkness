@@ -84,6 +84,22 @@ namespace Mooh.Core.Tests.Simulation
         }
 
         /// <summary>
+        /// Verifies the spin turns around the rotator's cell, the recovered <c>WorldRotStart</c>
+        /// pivot, and that there is no pivot outside a spin.
+        /// </summary>
+        [Fact]
+        public void TheSpinTurnsAroundTheRotator()
+        {
+            WorldGrid world = new(7, 5);
+            SimulationWorld simulation = CreateStruckWorld(world, WorldRotationDirection.Left, out Entity rotator);
+            Assert.Null(simulation.WorldRotationPivot);
+
+            _ = simulation.Advance(Windup + TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(rotator.Position, simulation.WorldRotationPivot);
+        }
+
+        /// <summary>
         /// Verifies the spin lasts the recovered duration and the world turns exactly when it ends.
         /// </summary>
         [Fact]

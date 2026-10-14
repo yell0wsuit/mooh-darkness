@@ -310,6 +310,15 @@ namespace Mooh.Core.Simulation
             ? 0
             : 1 - (_rotationRemainingSeconds / WorldRotationSpinSeconds);
 
+        /// <summary>
+        /// Gets the cell the quarter turn in flight turns around, the rotator's, as the recovered
+        /// <c>WorldRotStart</c> takes its owner's cell; <see langword="null"/> when the world is not
+        /// turning. It exists for presentation, which spins the old layout around it.
+        /// </summary>
+        public GridPosition? WorldRotationPivot => _rotationOwner is EntityId owner
+            ? _world.GetEntity(owner).Position
+            : null;
+
         /// <summary>Replaces the currently held input for the world's player.</summary>
         /// <param name="input">The latest held cardinal inputs.</param>
         /// <exception cref="InvalidOperationException">The world has no player.</exception>
