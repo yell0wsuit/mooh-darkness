@@ -46,6 +46,9 @@ namespace Mooh.Presentation.Scene
         /// <summary>Gets the frame to draw, or <see langword="null"/> while the entity is hidden.</summary>
         public virtual string? Frame => Animation.Frame;
 
+        /// <summary>Gets how far from its cell coordinate the entity draws, in cells.</summary>
+        public virtual (double X, double Y) Offset => (0, 0);
+
         /// <summary>Gets the original's render pass, <c>RPass</c>, for the current state.</summary>
         public virtual int Pass => 0;
 

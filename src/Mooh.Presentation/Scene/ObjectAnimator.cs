@@ -25,19 +25,31 @@ namespace Mooh.Presentation.Scene
     /// <param name="initialState">The state the object is created in.</param>
     /// <param name="pass">The object type's render pass, <c>RPass</c>.</param>
     /// <param name="randomPhase">Whether a loop starts at a random phase, as a pipe's does.</param>
+    /// <param name="depth">The object's depth shift, <c>fShZ</c>; zero for most types.</param>
     public sealed class ObjectAnimator(
         AnimationTable table,
         Random random,
         int editorIndex,
         string initialState,
         int pass,
-        bool randomPhase = false) : EntityAnimator(table, random)
+        bool randomPhase = false,
+        double depth = 0) : EntityAnimator(table, random)
     {
+        /// <summary>The original's <c>CNT_WrdShZX</c>: pixels across per unit of depth.</summary>
+        private const double DepthShiftX = -80;
+
+        /// <summary>The original's <c>CNT_WrdShZY</c>: pixels down per unit of depth.</summary>
+        private const double DepthShiftY = 40;
+
         /// <summary>The big bomb's tick handler, which re-enters its work loop until the fuse ends.</summary>
         private const string BigBombTickHandler = "BBombTick";
 
         /// <inheritdoc/>
         public override int Pass => pass;
+
+        /// <summary>Gets the depth shift, which the native list adds to the object's screen position.</summary>
+        public override (double X, double Y) Offset =>
+            (depth * DepthShiftX / SceneCamera.CellWidth, depth * DepthShiftY / SceneCamera.CellHeight);
 
         /// <inheritdoc/>
         public override IReadOnlyList<string> PickVariant(IReadOnlyList<IReadOnlyList<string>> candidates)

@@ -94,7 +94,8 @@ namespace Mooh.Presentation.Scene
                 if (animator.Frame is string frame)
                 {
                     (double x, double y) = DrawnPosition.Of(entity);
-                    sprites.Add(new SceneSprite(entity.Id, animator.Page, frame, x, y, animator.Pass));
+                    (double dx, double dy) = animator.Offset;
+                    sprites.Add(new SceneSprite(entity.Id, animator.Page, frame, x + dx, y + dy, animator.Pass));
                 }
             }
 
@@ -178,7 +179,10 @@ namespace Mooh.Presentation.Scene
                 identity.Source.EditorIndex,
                 spawnedWeapon ? "st_work" : AnimationLibrary.StillState,
                 pass,
-                randomPhase: identity.Kind is EntityKind.Pipe or EntityKind.Tunnel);
+                randomPhase: identity.Kind is EntityKind.Pipe or EntityKind.Tunnel,
+                depth: _library.TryGetLook(identity.ArchivalType, out ObjectLook look) && look.DepthRange is (double min, double max)
+                    ? min + (_random.NextDouble() * (max - min))
+                    : 0);
         }
     }
 }

@@ -27,6 +27,25 @@ namespace Mooh.Presentation.Tests
             Assert.Equal(earth.Variants[7 % earth.Variants.Count][0], harness.Animator(Placed(harness)).Frame);
         }
 
+        /// <summary>
+        /// Verifies terrain draws with its random depth shift: <c>ObjRepMake</c> picks
+        /// <c>fShZ</c> in <c>CellSh</c>, and the list draws it <c>CNT_WrdShZX</c> = -80 and
+        /// <c>CNT_WrdShZY</c> = 40 pixels per unit away from its cell.
+        /// </summary>
+        [Fact]
+        public void TerrainDrawsWithItsDepthShift()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("CellsEat01", 4, 1)));
+
+            harness.Step(0.016);
+
+            SceneSprite earth = harness.Presenter.Sprites.Single(sprite => sprite.Entity == Placed(harness).Id);
+            double depth = (4 - earth.X) * 80 / 80;
+            Assert.InRange(depth, -0.05, 0.05);
+            Assert.NotEqual(0, depth);
+            Assert.Equal(1 + (40 * depth / 75), earth.Y, 9);
+        }
+
         /// <summary>Verifies a pickup plays its idle loop on the ordinary pass.</summary>
         [Fact]
         public void APickupPlaysItsIdleLoop()

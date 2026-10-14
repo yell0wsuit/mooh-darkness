@@ -63,10 +63,12 @@ namespace Mooh.Presentation.Animation
         public const string FlyState = "st_fly";
 
         private readonly Dictionary<string, AnimationTable> _tables;
+        private readonly Dictionary<string, ObjectLook> _looks;
 
-        private AnimationLibrary(Dictionary<string, AnimationTable> tables)
+        private AnimationLibrary(Dictionary<string, AnimationTable> tables, Dictionary<string, ObjectLook> looks)
         {
             _tables = tables;
+            _looks = looks;
         }
 
         /// <summary>Gets every table id: the named tables above and every archival type with frames.</summary>
@@ -94,6 +96,22 @@ namespace Mooh.Presentation.Animation
             }
 
             table = null!;
+            return false;
+        }
+
+        /// <summary>Looks up what an archival registration says about drawing its objects.</summary>
+        /// <param name="type">The archival type name.</param>
+        /// <param name="look">The look, when the type is registered.</param>
+        /// <returns><see langword="true"/> when the type is registered.</returns>
+        public bool TryGetLook(string type, out ObjectLook look)
+        {
+            if (_looks.TryGetValue(type, out ObjectLook? found))
+            {
+                look = found;
+                return true;
+            }
+
+            look = null!;
             return false;
         }
 
@@ -126,6 +144,7 @@ namespace Mooh.Presentation.Animation
                 [RocketRightTable] = SingleClipTable(Required(typeFunctions, "GameObjWeap.GameWeapRockRight"), FlyState, null),
             };
 
+            Dictionary<string, ObjectLook> looks = [with(StringComparer.Ordinal)];
             foreach (JsonProperty registration in root.GetProperty("objectTypes").EnumerateObject())
             {
                 AnimationTable? table = RegisteredTable(registration.Value);
@@ -133,9 +152,32 @@ namespace Mooh.Presentation.Animation
                 {
                     tables[registration.Name] = table;
                 }
+
+                looks[registration.Name] = LookOf(registration.Value);
             }
 
-            return new AnimationLibrary(tables);
+            return new AnimationLibrary(tables, looks);
+        }
+
+        private static ObjectLook LookOf(JsonElement registration)
+        {
+            BackdropStyle? backdrop = registration.TryGetProperty("BackType", out JsonElement back)
+                && back.ValueKind == JsonValueKind.Object
+                && back.TryGetProperty("ref", out JsonElement name)
+                ? name.GetString() switch
+                {
+                    "self.BackInfo.LayerTypeNrm" => BackdropStyle.Normal,
+                    "self.BackInfo.LayerTypeTrop" => BackdropStyle.Tropical,
+                    "self.BackInfo.LayerTypeDesert" => BackdropStyle.Desert,
+                    _ => null,
+                }
+                : null;
+            (double, double)? depth = registration.TryGetProperty("fShZ", out JsonElement shift)
+                && shift.ValueKind == JsonValueKind.Array
+                && shift.GetArrayLength() == 2
+                ? (shift[0].GetDouble(), shift[1].GetDouble())
+                : null;
+            return new ObjectLook(backdrop, depth);
         }
 
         private static JsonElement Required(JsonElement container, string name)

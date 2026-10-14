@@ -75,6 +75,26 @@ namespace Mooh.Presentation.Tests
             Assert.True(table.States["st_work"].IsStill);
         }
 
+        /// <summary>
+        /// Verifies a registration's look: terrain's random depth shift, <c>fShZ=CellSh</c>, and the
+        /// backdrop it votes for, <c>BackType</c>.
+        /// </summary>
+        [Fact]
+        public void ARegistrationCarriesItsLook()
+        {
+            Assert.True(Library.Value.TryGetLook("JCellsEat01", out ObjectLook jungle));
+            Assert.Equal(BackdropStyle.Tropical, jungle.Backdrop);
+            Assert.Equal((-0.05, 0.05), jungle.DepthRange);
+
+            Assert.True(Library.Value.TryGetLook("CellsMetal01", out ObjectLook metal));
+            Assert.Null(metal.Backdrop);
+            _ = Assert.NotNull(metal.DepthRange);
+
+            Assert.True(Library.Value.TryGetLook("OBubble", out ObjectLook bubble));
+            Assert.Null(bubble.Backdrop);
+            Assert.Null(bubble.DepthRange);
+        }
+
         /// <summary>Verifies terrain is one still state whose variants the editor index picks.</summary>
         [Fact]
         public void TerrainIsOneStillStateWithVariants()

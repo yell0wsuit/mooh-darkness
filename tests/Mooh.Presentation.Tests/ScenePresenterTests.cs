@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -73,9 +74,11 @@ namespace Mooh.Presentation.Tests
             harness.Step(0.016);
 
             List<SceneSprite> ordinary = [.. harness.Presenter.Sprites.Where(sprite => sprite.Pass == 0)];
-            double[] keys = [.. ordinary.Select(sprite => (sprite.X * 80) - (sprite.Y * 75))];
+            double[] keys = [.. ordinary.Select(sprite => Math.Round((sprite.X * 80) - (sprite.Y * 75)))];
             Assert.Equal(keys.Order(), keys);
-            Assert.True(ordinary.FindIndex(sprite => sprite.X == 4 && sprite.Y == 3) < ordinary.FindIndex(sprite => sprite.X == 5 && sprite.Y == 0));
+            EntityId upperRight = harness.Level.GetEntity(200).Id;
+            EntityId lowerLeft = harness.Level.GetEntity(201).Id;
+            Assert.True(ordinary.FindIndex(sprite => sprite.Entity == lowerLeft) < ordinary.FindIndex(sprite => sprite.Entity == upperRight));
         }
 
         /// <summary>Verifies a hidden player is left out of the draw list.</summary>
