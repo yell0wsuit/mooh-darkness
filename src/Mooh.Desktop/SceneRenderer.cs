@@ -57,7 +57,7 @@ namespace Mooh.Desktop
             foreach (SceneSprite sprite in sprites)
             {
                 (double x, double y) = camera.ToScreen(sprite.X, sprite.Y);
-                DrawFrame(canvas, sprite.Page, sprite.Frame, x, y, null);
+                DrawFrame(canvas, sprite.Page, sprite.Frame, x, y, sprite.Additive ? _additive : null);
             }
         }
 

@@ -12,5 +12,6 @@ namespace Mooh.Presentation.Scene
     /// The original's render pass, <c>RPass</c>: lower passes draw first. The start door is -1,
     /// ordinary objects 0, terrain, pipes and message tables 1, and the teleporting player 2.
     /// </param>
-    public readonly record struct SceneSprite(EntityId Entity, string Page, string Frame, double X, double Y, int Pass);
+    /// <param name="Additive">Whether the frame is drawn additively, as glows are, <c>OModeAdd</c>.</param>
+    public readonly record struct SceneSprite(EntityId Entity, string Page, string Frame, double X, double Y, int Pass, bool Additive = false);
 }

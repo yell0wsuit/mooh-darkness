@@ -26,6 +26,10 @@ namespace Mooh.Presentation.Scene
     /// <param name="pass">The object type's render pass, <c>RPass</c>.</param>
     /// <param name="randomPhase">Whether a loop starts at a random phase, as a pipe's does.</param>
     /// <param name="depth">The object's depth shift, <c>fShZ</c>; zero for most types.</param>
+    /// <param name="look">
+    /// The type's look: whether its first animation starts at a random frame, and its glow and
+    /// overlay.
+    /// </param>
     public sealed class ObjectAnimator(
         AnimationTable table,
         Random random,
@@ -33,8 +37,11 @@ namespace Mooh.Presentation.Scene
         string initialState,
         int pass,
         bool randomPhase = false,
-        double depth = 0) : EntityAnimator(table, random)
+        double depth = 0,
+        ObjectLook? look = null) : EntityAnimator(table, random)
     {
+        private bool _started;
+
         /// <summary>The original's <c>CNT_WrdShZX</c>: pixels across per unit of depth.</summary>
         private const double DepthShiftX = -80;
 
@@ -50,6 +57,34 @@ namespace Mooh.Presentation.Scene
         /// <summary>Gets the depth shift, which the native list adds to the object's screen position.</summary>
         public override (double X, double Y) Offset =>
             (depth * DepthShiftX / SceneCamera.CellWidth, depth * DepthShiftY / SceneCamera.CellHeight);
+
+        /// <summary>
+        /// Gets the overlay at the frame's own phase, the native render's
+        /// <c>fAInd / len(AInds) * len(AIndsOvr)</c>, then the glow at the game's clock,
+        /// <c>fASpeedBk</c> times the time.
+        /// </summary>
+        /// <inheritdoc/>
+        public override IReadOnlyList<(string Page, string Frame)> Overlays(double clockMilliseconds)
+        {
+            if (Frame is null || look is null)
+            {
+                return [];
+            }
+
+            List<(string, string)> overlays = [];
+            if (look.Overlay is LayerAnimation overlay && overlay.Frames.Count != 0)
+            {
+                int index = (int)(Animation.Position / Math.Max(Animation.Frames.Count, 1) * overlay.Frames.Count);
+                overlays.Add((overlay.Page, overlay.Frames[index % overlay.Frames.Count]));
+            }
+
+            if (look.Glow is LayerAnimation glow && glow.Frames.Count != 0)
+            {
+                overlays.Add((glow.Page, glow.Frames[(int)(glow.FramesPerMillisecond * clockMilliseconds) % glow.Frames.Count]));
+            }
+
+            return overlays;
+        }
 
         /// <inheritdoc/>
         public override IReadOnlyList<string> PickVariant(IReadOnlyList<IReadOnlyList<string>> candidates)
@@ -77,7 +112,12 @@ namespace Mooh.Presentation.Scene
         {
             ArgumentNullException.ThrowIfNull(clip);
             ArgumentNullException.ThrowIfNull(frames);
-            return randomPhase && !clip.IsStill ? Random.NextDouble() * frames.Count : 0;
+            // CGameObjFallBase.__init__ follows its first StateSet with fAInd = FLim(len(AInds)).
+            bool first = !_started;
+            _started = true;
+            return (randomPhase || (first && look?.RandomStartPhase == true)) && !clip.IsStill
+                ? Random.NextDouble() * frames.Count
+                : 0;
         }
 
         /// <inheritdoc/>

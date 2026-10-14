@@ -38,6 +38,7 @@ namespace Mooh.Presentation.Scene
 
         private readonly Dictionary<EntityId, EntityAnimator> _animators = [];
         private readonly EffectSystem _effects;
+        private double _clockMilliseconds;
         private readonly AnimationLibrary _library;
         private readonly Random _random;
         private List<SceneSprite> _sprites = [];
@@ -76,6 +77,7 @@ namespace Mooh.Presentation.Scene
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(events);
 
+            _clockMilliseconds += seconds * 1000;
             HashSet<EntityId> present = [];
             List<SceneSprite> sprites = [];
             foreach (Entity entity in world.Entities)
@@ -103,6 +105,10 @@ namespace Mooh.Presentation.Scene
                     }
 
                     sprites.Add(new SceneSprite(entity.Id, animator.Page, frame, x + dx, y + dy, animator.Pass));
+                    foreach ((string overlayPage, string overlayFrame) in animator.Overlays(_clockMilliseconds))
+                    {
+                        sprites.Add(new SceneSprite(entity.Id, overlayPage, overlayFrame, x + dx, y + dy, animator.Pass, Additive: true));
+                    }
                 }
             }
 
@@ -195,6 +201,7 @@ namespace Mooh.Presentation.Scene
         /// </summary>
         private ObjectAnimator Placed(ArchivalObjectIdentity identity, AnimationTable table)
         {
+            ObjectLook? look = _library.TryGetLook(identity.ArchivalType, out ObjectLook found) ? found : null;
             bool spawnedWeapon = identity.ObjectId == LevelMaterializer.RuntimeObjectId
                 && identity.ArchivalType is ThrownGrenadeType or MineType;
             int pass = identity.Kind is EntityKind.Pipe or EntityKind.Tunnel
@@ -208,9 +215,10 @@ namespace Mooh.Presentation.Scene
                 spawnedWeapon ? "st_work" : AnimationLibrary.StillState,
                 pass,
                 randomPhase: identity.Kind is EntityKind.Pipe or EntityKind.Tunnel,
-                depth: _library.TryGetLook(identity.ArchivalType, out ObjectLook look) && look.DepthRange is (double min, double max)
+                depth: look?.DepthRange is (double min, double max)
                     ? min + (_random.NextDouble() * (max - min))
-                    : 0);
+                    : 0,
+                look: look);
         }
     }
 }

@@ -113,6 +113,32 @@ namespace Mooh.Presentation.Tests
             Assert.Equal("ShBig01", bubble.Shadow![0]);
         }
 
+        /// <summary>
+        /// Verifies a type's glows: a weapon's <c>GlowAnm</c> on its own page, a bonus's shared
+        /// <c>SfxGlowBon</c>, and food's <c>OverAnm</c>; and that fall objects start at a random
+        /// phase while doors and tables do not.
+        /// </summary>
+        [Fact]
+        public void ATypeCarriesItsGlows()
+        {
+            Assert.True(Library.Value.TryGetLook("WBomb", out ObjectLook bomb));
+            Assert.Equal("SpriteObjBombs", bomb.Glow!.Page);
+            Assert.Equal(14, bomb.Glow.Frames.Count);
+            Assert.Equal("GlowGr00", bomb.Glow.Frames[0]);
+            Assert.Equal(0.02, bomb.Glow.FramesPerMillisecond);
+            Assert.True(bomb.RandomStartPhase);
+
+            Assert.True(Library.Value.TryGetLook("BCola", out ObjectLook cola));
+            Assert.Equal(("SpriteGlow", "OGlowBon01"), (cola.Glow!.Page, cola.Glow.Frames[0]));
+
+            Assert.True(Library.Value.TryGetLook("OEat01", out ObjectLook food));
+            Assert.Equal(("SpriteObjEat", "P1_00"), (food.Overlay!.Page, food.Overlay.Frames[0]));
+
+            Assert.True(Library.Value.TryGetLook("OTable", out ObjectLook table));
+            Assert.False(table.RandomStartPhase);
+            Assert.Null(table.Glow);
+        }
+
         /// <summary>Verifies the types that receive shadows carry <c>CNT_CMaskResRShadow</c>.</summary>
         [Fact]
         public void TerrainRocksAndKeyDoorsReceiveShadows()

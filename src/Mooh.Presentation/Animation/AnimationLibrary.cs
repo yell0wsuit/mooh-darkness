@@ -169,6 +169,7 @@ namespace Mooh.Presentation.Animation
             };
 
             Dictionary<string, ObjectLook> looks = [with(StringComparer.Ordinal)];
+            JsonElement effects = root.TryGetProperty("effects", out JsonElement recovered) ? recovered : default;
             foreach (JsonProperty registration in root.GetProperty("objectTypes").EnumerateObject())
             {
                 AnimationTable? table = RegisteredTable(registration.Value, shadows);
@@ -177,10 +178,10 @@ namespace Mooh.Presentation.Animation
                     tables[registration.Name] = table;
                 }
 
-                looks[registration.Name] = LookOf(registration.Value);
+                looks[registration.Name] = LookOf(registration.Value, effects);
             }
 
-            List<EffectLayer> explosion = root.TryGetProperty("effects", out JsonElement effects)
+            List<EffectLayer> explosion = effects.ValueKind == JsonValueKind.Object
                 && effects.TryGetProperty("SfxExpl", out JsonElement layers)
                 ? [.. layers.EnumerateArray().Select(EffectLayerOf)]
                 : [];
@@ -260,7 +261,7 @@ namespace Mooh.Presentation.Animation
             return null;
         }
 
-        private static ObjectLook LookOf(JsonElement registration)
+        private static ObjectLook LookOf(JsonElement registration, JsonElement effects)
         {
             BackdropStyle? backdrop = registration.TryGetProperty("BackType", out JsonElement back)
                 && back.ValueKind == JsonValueKind.Object
@@ -278,8 +279,54 @@ namespace Mooh.Presentation.Animation
                 && shift.GetArrayLength() == 2
                 ? (shift[0].GetDouble(), shift[1].GetDouble())
                 : null;
-            long? mask = registration.TryGetProperty("Prm", out JsonElement parameter) ? MaskOf(parameter) : null;
-            return new ObjectLook(backdrop, depth, mask is long bits && (bits & ShadowReceiverMask) != 0);
+            JsonElement parameter = registration.TryGetProperty("Prm", out JsonElement prm) ? prm : default;
+            long? mask = MaskOf(parameter);
+            bool fallObject = registration.TryGetProperty("Type", out JsonElement type)
+                && type.ValueKind == JsonValueKind.Object
+                && type.TryGetProperty("ref", out JsonElement typeName)
+                && typeName.GetString() == "GameObjs.CGameObjFallBase";
+            return new ObjectLook(
+                backdrop,
+                depth,
+                mask is long bits && (bits & ShadowReceiverMask) != 0,
+                fallObject,
+                LayerOf(parameter, "GlowAnm", effects),
+                LayerOf(parameter, "OverAnm", effects));
+        }
+
+        /// <summary>
+        /// Reads a type's extra animation: a recovered <c>(speed, AnimMake(...), page)</c> tuple, or
+        /// a reference to one of the game module's, such as <c>GMod.SfxGlowBon</c>.
+        /// </summary>
+        private static LayerAnimation? LayerOf(JsonElement parameter, string field, JsonElement effects)
+        {
+            if (parameter.ValueKind != JsonValueKind.Object || !parameter.TryGetProperty(field, out JsonElement value))
+            {
+                return null;
+            }
+
+            if (value.ValueKind == JsonValueKind.Object
+                && value.TryGetProperty("ref", out JsonElement reference)
+                && reference.GetString() is string name
+                && name.StartsWith("GMod.", StringComparison.Ordinal)
+                && effects.ValueKind == JsonValueKind.Object
+                && effects.TryGetProperty(name["GMod.".Length..], out JsonElement shared))
+            {
+                value = shared;
+            }
+
+            if (value.ValueKind != JsonValueKind.Array || value.GetArrayLength() != 3 || value[0].ValueKind != JsonValueKind.Number)
+            {
+                return null;
+            }
+
+            JsonElement page = value[2];
+            string? pageName = page.TryGetProperty("page", out JsonElement direct)
+                ? direct.GetString()
+                : page.TryGetProperty("args", out JsonElement args) ? args[0].GetString() : null;
+            return value[1].TryGetProperty("args", out JsonElement frames) && pageName is not null
+                ? new LayerAnimation(pageName, [.. frames[0].EnumerateArray().Select(frame => frame.GetString() ?? string.Empty)], value[0].GetDouble())
+                : null;
         }
 
         /// <summary>

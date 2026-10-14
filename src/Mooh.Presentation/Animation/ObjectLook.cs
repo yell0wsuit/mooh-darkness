@@ -10,5 +10,23 @@ namespace Mooh.Presentation.Animation
     /// Whether the type's mask carries <c>CNT_CMaskResRShadow</c>, so objects above it cast their
     /// shadows onto it: terrain, rocks and key doors.
     /// </param>
-    public sealed record ObjectLook(BackdropStyle? Backdrop, (double Min, double Max)? DepthRange, bool ReceivesShadow = false);
+    /// <param name="RandomStartPhase">
+    /// Whether an object starts its first animation at a random frame, as every
+    /// <c>CGameObjFallBase</c> does in its constructor.
+    /// </param>
+    /// <param name="Glow">
+    /// The glow drawn over the object at the game's clock, <c>GlowAnm</c>, or
+    /// <see langword="null"/>.
+    /// </param>
+    /// <param name="Overlay">
+    /// The animation drawn over the object at its own frame's phase, <c>OverAnm</c>, or
+    /// <see langword="null"/>.
+    /// </param>
+    public sealed record ObjectLook(
+        BackdropStyle? Backdrop,
+        (double Min, double Max)? DepthRange,
+        bool ReceivesShadow = false,
+        bool RandomStartPhase = false,
+        LayerAnimation? Glow = null,
+        LayerAnimation? Overlay = null);
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 
 using Mooh.Core.Entities;
@@ -60,6 +61,22 @@ namespace Mooh.Presentation.Tests
             Assert.Equal("st_stay", animator.Animation.State);
             Assert.NotEqual(first, animator.Frame);
             Assert.Equal(0, animator.Pass);
+        }
+
+        /// <summary>
+        /// Verifies a weapon pickup draws its glow additively right after itself, stepping with the
+        /// game's clock at <c>GlowAnm</c>'s 0.02 frames per millisecond.
+        /// </summary>
+        [Fact]
+        public void AWeaponPickupDrawsItsGlow()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("WBomb", 5, 1)));
+
+            harness.Step(0.120);
+
+            List<SceneSprite> sprites = [.. harness.Presenter.Sprites];
+            int bomb = sprites.FindIndex(sprite => sprite.Entity == Placed(harness).Id && sprite.Page == "SpriteObjBombs" && !sprite.Additive);
+            Assert.Equal(new SceneSprite(Placed(harness).Id, "SpriteObjBombs", "GlowGr02", sprites[bomb].X, sprites[bomb].Y, 0, Additive: true), sprites[bomb + 1]);
         }
 
         /// <summary>Verifies a lit balloon plays its fuse chain through the ticks.</summary>
