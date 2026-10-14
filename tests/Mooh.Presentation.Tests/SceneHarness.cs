@@ -99,6 +99,11 @@ namespace Mooh.Presentation.Tests
             _pending.AddRange(Level.Simulation.BeginLevel());
         }
 
+        public void Detonate(Entity entity)
+        {
+            _pending.AddRange(Level.Simulation.Detonate(entity.Id));
+        }
+
         public void Damage(int amount)
         {
             _pending.AddRange(Level.Simulation.ApplyDamage(new DamageRequest(Player.Id, Player.Id, DamageKind.Fire, amount)));

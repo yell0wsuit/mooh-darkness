@@ -20,7 +20,7 @@ namespace Mooh.Presentation.Tests
         {
             SceneHarness harness = new(SceneHarness.BuildLevel(1, ("MGrL", 5, 1), ("WBomb", 4, 1)));
             harness.Step(0.016);
-            _ = harness.Level.Simulation.Detonate(harness.Level.GetEntity(201).Id);
+            harness.Detonate(harness.Level.GetEntity(201));
 
             harness.StepUntil(() => harness.Level.World.Entities.Any(entity => entity.SmallBeetleBody is not null));
             harness.Step(0.016);

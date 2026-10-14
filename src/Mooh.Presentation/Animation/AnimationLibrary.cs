@@ -65,10 +65,17 @@ namespace Mooh.Presentation.Animation
         private readonly Dictionary<string, AnimationTable> _tables;
         private readonly Dictionary<string, ObjectLook> _looks;
 
-        private AnimationLibrary(Dictionary<string, AnimationTable> tables, Dictionary<string, ObjectLook> looks)
+        private AnimationLibrary(Dictionary<string, AnimationTable> tables, Dictionary<string, ObjectLook> looks, IReadOnlyList<EffectLayer> explosion)
         {
             _tables = tables;
             _looks = looks;
+            Explosion = explosion;
+        }
+
+        /// <summary>Gets the blast's layers, <c>SfxExpl</c>, which <c>SfxExplAdd1x1</c> plays in a cell.</summary>
+        public IReadOnlyList<EffectLayer> Explosion
+        {
+            get;
         }
 
         /// <summary>Gets every table id: the named tables above and every archival type with frames.</summary>
@@ -156,7 +163,36 @@ namespace Mooh.Presentation.Animation
                 looks[registration.Name] = LookOf(registration.Value);
             }
 
-            return new AnimationLibrary(tables, looks);
+            List<EffectLayer> explosion = root.TryGetProperty("effects", out JsonElement effects)
+                && effects.TryGetProperty("SfxExpl", out JsonElement layers)
+                ? [.. layers.EnumerateArray().Select(EffectLayerOf)]
+                : [];
+            return new AnimationLibrary(tables, looks, explosion);
+        }
+
+        /// <summary>Reads a recovered <c>CSfxAnimObj.CType(Page, AList, ulATime, fSh, Num, RPass)</c>.</summary>
+        private static EffectLayer EffectLayerOf(JsonElement layer)
+        {
+            string page = layer.GetProperty("Page") is { ValueKind: JsonValueKind.Object } pageCall
+                && pageCall.TryGetProperty("args", out JsonElement pageArgs)
+                ? pageArgs[0].GetString() ?? string.Empty
+                : PageOf(layer) ?? string.Empty;
+            return new EffectLayer(
+                page,
+                Frames(layer.GetProperty("AList"), variantsPerName: false),
+                PairOf(layer.GetProperty("ulATime")),
+                PairOf(layer.GetProperty("fSh")),
+                layer.GetProperty("Num") is { ValueKind: JsonValueKind.Array } counts
+                    ? [.. counts.EnumerateArray().Select(count => count.GetInt32())]
+                    : [layer.GetProperty("Num").GetInt32()],
+                layer.TryGetProperty("RPass", out JsonElement pass) && pass.ValueKind == JsonValueKind.Number ? pass.GetInt32() : 0);
+        }
+
+        private static (double, double) PairOf(JsonElement value)
+        {
+            return value.ValueKind == JsonValueKind.Array
+                ? (value[0].GetDouble(), value[1].GetDouble())
+                : (value.GetDouble(), value.GetDouble());
         }
 
         private static ObjectLook LookOf(JsonElement registration)

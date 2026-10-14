@@ -37,6 +37,7 @@ namespace Mooh.Presentation.Scene
         private const string MessageTableType = "OTable";
 
         private readonly Dictionary<EntityId, EntityAnimator> _animators = [];
+        private readonly EffectSystem _effects;
         private readonly AnimationLibrary _library;
         private readonly Random _random;
         private List<SceneSprite> _sprites = [];
@@ -51,6 +52,7 @@ namespace Mooh.Presentation.Scene
             ArgumentNullException.ThrowIfNull(random);
             _library = library;
             _random = random;
+            _effects = new EffectSystem(library, random);
         }
 
         /// <summary>Gets the frames to draw, in draw order.</summary>
@@ -99,6 +101,8 @@ namespace Mooh.Presentation.Scene
                 }
             }
 
+            _effects.Update(world, events, seconds);
+            sprites.AddRange(_effects.Sprites);
             foreach (EntityId gone in _animators.Keys.Where(id => !present.Contains(id)).ToList())
             {
                 _ = _animators.Remove(gone);
