@@ -139,6 +139,21 @@ namespace Mooh.Presentation.Tests
             Assert.Null(table.Glow);
         }
 
+        /// <summary>
+        /// Verifies a state's entry sound: an alias from the game module's <c>Snd*</c>, or the
+        /// handler that picks one, such as a sideways walk's <c>SndStep2</c>.
+        /// </summary>
+        [Fact]
+        public void AStateCarriesItsSound()
+        {
+            AnimationTable player = Library.Value.Table(AnimationLibrary.PlayerTable);
+
+            Assert.Equal("TonIn", player.States["st_toninleft"].Sound);
+            Assert.Equal("SndStep2", player.States["st_wlkleft"].SoundHandler);
+            Assert.Null(player.States["st_wlkleft"].Sound);
+            Assert.Equal("BaloonTick1", Library.Value.Table("OBaloon").States["st_tick12"].Sound);
+        }
+
         /// <summary>Verifies the types that receive shadows carry <c>CNT_CMaskResRShadow</c>.</summary>
         [Fact]
         public void TerrainRocksAndKeyDoorsReceiveShadows()

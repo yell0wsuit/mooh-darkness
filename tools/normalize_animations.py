@@ -11,7 +11,8 @@ presentation needs and nothing more:
   recovered parameter names and defaults;
 - a type-table call such as `GameObjs.GameObjBubble(self)` is replaced by what that function
   returns;
-- the game module's effect animations are kept under `effects`.
+- the game module's effect animations are kept under `effects`, and its sound aliases under
+  `sounds`.
 
 Usage: normalize_animations.py <raw json> <output json>
 """
@@ -154,6 +155,13 @@ class Normalizer:
                 result[name] = self.resolve(value)
         return result
 
+    def sounds(self):
+        """The game module's sound aliases: every `self.Snd*` string that `CGameType.ModInit`
+        stores, such as `SndKeyDoor = 'KeyDoor'`, which `Sound.ini` resolves to files."""
+        stores = self.raw["Game"]["functions"]["CGameType.ModInit"]["stores"]
+        return {target[len("self."):]: value for target, value in stores.items()
+                if target.startswith("self.Snd") and isinstance(value, str)}
+
     def module_tables(self):
         """Every type-table function's resolved return value, by qualified name."""
         tables = {}
@@ -175,6 +183,7 @@ def main():
         "typeFunctions": normalizer.module_tables(),
         "objectTypes": normalizer.object_types(),
         "effects": normalizer.effects(),
+        "sounds": normalizer.sounds(),
     }
     with open(sys.argv[2], "w") as stream:
         json.dump(output, stream, indent=1, sort_keys=True)

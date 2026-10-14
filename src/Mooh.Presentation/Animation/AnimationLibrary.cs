@@ -68,11 +68,11 @@ namespace Mooh.Presentation.Animation
         private readonly Dictionary<string, AnimationTable> _tables;
         private readonly Dictionary<string, ObjectLook> _looks;
 
-        private readonly Shadows _shadows;
+        private readonly Recovered _recovered;
 
-        private AnimationLibrary(Dictionary<string, AnimationTable> tables, Dictionary<string, ObjectLook> looks, IReadOnlyList<EffectLayer> explosion, Shadows shadows)
+        private AnimationLibrary(Dictionary<string, AnimationTable> tables, Dictionary<string, ObjectLook> looks, IReadOnlyList<EffectLayer> explosion, Recovered recovered)
         {
-            _shadows = shadows;
+            _recovered = recovered;
             _tables = tables;
             _looks = looks;
             Explosion = explosion;
@@ -118,7 +118,7 @@ namespace Mooh.Presentation.Animation
         /// <exception cref="KeyNotFoundException">There is no such shadow.</exception>
         public (string Page, IReadOnlyList<string> Frames) ShadowNamed(string name)
         {
-            Shadow shadow = _shadows["GMod." + name];
+            Shadow shadow = _recovered.Shadows["GMod." + name];
             return (shadow.Page, shadow.Frames);
         }
 
@@ -150,29 +150,29 @@ namespace Mooh.Presentation.Animation
             JsonElement root = document.RootElement;
             JsonElement classTables = root.GetProperty("classTables");
             JsonElement typeFunctions = root.GetProperty("typeFunctions");
-            Shadows shadows = ShadowsOf(root);
+            Recovered recovered = RecoveredOf(root);
             Dictionary<string, AnimationTable> tables = new(StringComparer.Ordinal)
             {
-                [PlayerTable] = StateMap(classTables, "CGameObjPlayer.SMap", "SpritePlayer", shadows),
-                [GreenMonsterTable] = StateMap(classTables, "CGameObjGrMon.SMap", "SpriteMonGreen", shadows),
-                [BlueMonsterTable] = StateMap(classTables, "CGameObjMonBlue.SMap", "SpriteMonBlue", shadows),
-                [BioMassTable] = StateMap(classTables, "CGameObjBioMass.SMap", "SpriteObjBio", shadows),
-                [TeleporterTable] = StateMap(classTables, "CGameObjTPort.SMap", "SpriteObjTPort", shadows),
-                [WaterDropTable] = StateMap(classTables, "CGameObjWaterDrop.SMap", "SpriteObjWaterDrop", shadows),
-                [GreenBeetleTable] = StateMap(typeFunctions, "GameObjSmBeetle.GameObjSmGreen", "SpriteObjSmBeetle", shadows),
-                [BlueBeetleTable] = StateMap(typeFunctions, "GameObjSmBeetle.GameObjSmBlue", "SpriteObjSmBeetle", shadows),
-                [GrenadeTable] = TypeTable(Required(classTables, "CGameObjFallBase.GrType"), shadows),
-                [MineTable] = TypeTable(Required(classTables, "CGameObjFallBase.MineType"), shadows),
-                [BigBombTable] = TypeTable(Required(classTables, "CGameObjFallBase.TypeBBomb"), shadows),
-                [RocketLeftTable] = SingleClipTable(Required(typeFunctions, "GameObjWeap.GameWeapRockLeft"), FlyState, null, shadows),
-                [RocketRightTable] = SingleClipTable(Required(typeFunctions, "GameObjWeap.GameWeapRockRight"), FlyState, null, shadows),
+                [PlayerTable] = StateMap(classTables, "CGameObjPlayer.SMap", "SpritePlayer", recovered),
+                [GreenMonsterTable] = StateMap(classTables, "CGameObjGrMon.SMap", "SpriteMonGreen", recovered),
+                [BlueMonsterTable] = StateMap(classTables, "CGameObjMonBlue.SMap", "SpriteMonBlue", recovered),
+                [BioMassTable] = StateMap(classTables, "CGameObjBioMass.SMap", "SpriteObjBio", recovered),
+                [TeleporterTable] = StateMap(classTables, "CGameObjTPort.SMap", "SpriteObjTPort", recovered),
+                [WaterDropTable] = StateMap(classTables, "CGameObjWaterDrop.SMap", "SpriteObjWaterDrop", recovered),
+                [GreenBeetleTable] = StateMap(typeFunctions, "GameObjSmBeetle.GameObjSmGreen", "SpriteObjSmBeetle", recovered),
+                [BlueBeetleTable] = StateMap(typeFunctions, "GameObjSmBeetle.GameObjSmBlue", "SpriteObjSmBeetle", recovered),
+                [GrenadeTable] = TypeTable(Required(classTables, "CGameObjFallBase.GrType"), recovered),
+                [MineTable] = TypeTable(Required(classTables, "CGameObjFallBase.MineType"), recovered),
+                [BigBombTable] = TypeTable(Required(classTables, "CGameObjFallBase.TypeBBomb"), recovered),
+                [RocketLeftTable] = SingleClipTable(Required(typeFunctions, "GameObjWeap.GameWeapRockLeft"), FlyState, null, recovered),
+                [RocketRightTable] = SingleClipTable(Required(typeFunctions, "GameObjWeap.GameWeapRockRight"), FlyState, null, recovered),
             };
 
             Dictionary<string, ObjectLook> looks = [with(StringComparer.Ordinal)];
-            JsonElement effects = root.TryGetProperty("effects", out JsonElement recovered) ? recovered : default;
+            JsonElement effects = root.TryGetProperty("effects", out JsonElement found) ? found : default;
             foreach (JsonProperty registration in root.GetProperty("objectTypes").EnumerateObject())
             {
-                AnimationTable? table = RegisteredTable(registration.Value, shadows);
+                AnimationTable? table = RegisteredTable(registration.Value, recovered);
                 if (table is not null)
                 {
                     tables[registration.Name] = table;
@@ -185,7 +185,7 @@ namespace Mooh.Presentation.Animation
                 && effects.TryGetProperty("SfxExpl", out JsonElement layers)
                 ? [.. layers.EnumerateArray().Select(EffectLayerOf)]
                 : [];
-            return new AnimationLibrary(tables, looks, explosion, shadows);
+            return new AnimationLibrary(tables, looks, explosion, recovered);
         }
 
         /// <summary>Reads a recovered <c>CSfxAnimObj.CType(Page, AList, ulATime, fSh, Num, RPass)</c>.</summary>
@@ -214,15 +214,23 @@ namespace Mooh.Presentation.Animation
         }
 
         /// <summary>
-        /// Reads the game module's shadow animations, <c>SfxShBig</c>, <c>SfxShMed</c> and
-        /// <c>SfxShSm</c>, each an <c>AnimMake</c> on <c>SpriteParts</c>.
+        /// Reads the game module's sound aliases and its shadow animations, <c>SfxShBig</c>,
+        /// <c>SfxShMed</c> and <c>SfxShSm</c>, each an <c>AnimMake</c> on <c>SpriteParts</c>.
         /// </summary>
-        private static Shadows ShadowsOf(JsonElement root)
+        private static Recovered RecoveredOf(JsonElement root)
         {
-            Shadows shadows = new(StringComparer.Ordinal);
+            Recovered recovered = new();
+            if (root.TryGetProperty("sounds", out JsonElement sounds))
+            {
+                foreach (JsonProperty sound in sounds.EnumerateObject())
+                {
+                    recovered.Sounds["GMod." + sound.Name] = sound.Value.GetString() ?? string.Empty;
+                }
+            }
+
             if (!root.TryGetProperty("effects", out JsonElement effects))
             {
-                return shadows;
+                return recovered;
             }
 
             foreach (JsonProperty effect in effects.EnumerateObject())
@@ -235,24 +243,45 @@ namespace Mooh.Presentation.Animation
                     && call.TryGetProperty("of", out JsonElement page)
                     && page.TryGetProperty("args", out JsonElement pageArgs))
                 {
-                    shadows["GMod." + effect.Name] = new Shadow(
+                    recovered.Shadows["GMod." + effect.Name] = new Shadow(
                         pageArgs[0].GetString() ?? string.Empty,
                         [.. args[0].EnumerateArray().Select(name => name.GetString() ?? string.Empty)]);
                 }
             }
 
-            return shadows;
+            return recovered;
+        }
+
+        /// <summary>
+        /// Reads a state's entry sound, its <c>Snd</c>: an alias from the game module, such as
+        /// <c>GMod.SndTonIn</c>, or the name of a handler that picks one, such as the player's
+        /// <c>SndStep1</c>.
+        /// </summary>
+        private static (string? Alias, string? Handler) SoundOf(JsonElement state, Recovered recovered)
+        {
+            if (!state.TryGetProperty("Snd", out JsonElement value)
+                || value.ValueKind != JsonValueKind.Object
+                || !value.TryGetProperty("ref", out JsonElement reference)
+                || reference.GetString() is not string name)
+            {
+                return (null, null);
+            }
+
+            string key = name.StartsWith("App.", StringComparison.Ordinal) ? name["App.".Length..] : name;
+            return recovered.Sounds.TryGetValue(key, out string? alias)
+                ? (alias.Length == 0 ? null : alias, null)
+                : (null, name.Split('.')[^1]);
         }
 
         /// <summary>Reads a state's shadow: its <c>DInds</c> or, for the player, its <c>DList</c>.</summary>
-        private static Shadow? ShadowOf(JsonElement state, Shadows shadows)
+        private static Shadow? ShadowOf(JsonElement state, Recovered recovered)
         {
             foreach (string field in (string[])["DInds", "DList"])
             {
                 if (state.TryGetProperty(field, out JsonElement value)
                     && value.ValueKind == JsonValueKind.Object
                     && value.TryGetProperty("ref", out JsonElement name)
-                    && shadows.TryGetValue(name.GetString() ?? string.Empty, out Shadow? shadow))
+                    && recovered.Shadows.TryGetValue(name.GetString() ?? string.Empty, out Shadow? shadow))
                 {
                     return shadow;
                 }
@@ -364,22 +393,22 @@ namespace Mooh.Presentation.Animation
                 : throw new InvalidDataException($"The animation data has no '{name}' table.");
         }
 
-        private static AnimationTable StateMap(JsonElement container, string name, string page, Shadows shadows)
+        private static AnimationTable StateMap(JsonElement container, string name, string page, Recovered recovered)
         {
-            return new AnimationTable(page, States(Required(container, name), shadows));
+            return new AnimationTable(page, States(Required(container, name), recovered));
         }
 
         /// <summary>Reads a recovered <c>CType</c> that carries a page and a state map.</summary>
-        private static AnimationTable TypeTable(JsonElement type, Shadows shadows)
+        private static AnimationTable TypeTable(JsonElement type, Recovered recovered)
         {
-            return new AnimationTable(PageOf(type) ?? throw new InvalidDataException("A type table has no page."), States(type.GetProperty("SMap"), shadows));
+            return new AnimationTable(PageOf(type) ?? throw new InvalidDataException("A type table has no page."), States(type.GetProperty("SMap"), recovered));
         }
 
         /// <summary>Reads a recovered type whose single animation is its <c>AList</c>.</summary>
-        private static AnimationTable SingleClipTable(JsonElement type, string state, string? page, Shadows shadows)
+        private static AnimationTable SingleClipTable(JsonElement type, string state, string? page, Recovered recovered)
         {
             string resolvedPage = PageOf(type) ?? page ?? throw new InvalidDataException("A single-clip table has no page.");
-            AnimationClip clip = Clip(type, variantsPerName: false, shadows);
+            AnimationClip clip = Clip(type, variantsPerName: false, recovered);
             return new AnimationTable(resolvedPage, new Dictionary<string, AnimationClip>(StringComparer.Ordinal) { [state] = clip });
         }
 
@@ -387,7 +416,7 @@ namespace Mooh.Presentation.Animation
         /// Reads an archival registration, <c>CObjRepInfo</c>. Behaviour classes with a state map of
         /// their own (the player, the monsters, the bio mass, the teleporter) carry none here.
         /// </summary>
-        private static AnimationTable? RegisteredTable(JsonElement registration, Shadows shadows)
+        private static AnimationTable? RegisteredTable(JsonElement registration, Recovered recovered)
         {
             if (!registration.TryGetProperty("Prm", out JsonElement parameter) || parameter.ValueKind != JsonValueKind.Object)
             {
@@ -396,7 +425,7 @@ namespace Mooh.Presentation.Animation
 
             if (parameter.TryGetProperty("SMap", out JsonElement stateMap) && stateMap.ValueKind == JsonValueKind.Object)
             {
-                return TypeTable(parameter, shadows);
+                return TypeTable(parameter, recovered);
             }
 
             string typeName = registration.TryGetProperty("Type", out JsonElement type) && type.TryGetProperty("ref", out JsonElement reference)
@@ -405,38 +434,39 @@ namespace Mooh.Presentation.Animation
             return typeName switch
             {
                 // Terrain picks one still frame by editor index: AList is the variants.
-                "GameCells.CGameCellBase" when parameter.TryGetProperty("AList", out _) => SingleClipTable(parameter, StillState, null, shadows) with
+                "GameCells.CGameCellBase" when parameter.TryGetProperty("AList", out _) => SingleClipTable(parameter, StillState, null, recovered) with
                 {
                     States = new Dictionary<string, AnimationClip>(StringComparer.Ordinal)
                     {
-                        [StillState] = Clip(parameter, variantsPerName: true, shadows) with { FrameMilliseconds = [0] },
+                        [StillState] = Clip(parameter, variantsPerName: true, recovered) with { FrameMilliseconds = [0] },
                     },
                 },
                 "GameCellPipes.CGameCellPipes" => new AnimationTable("SpriteCellPipes", new Dictionary<string, AnimationClip>(StringComparer.Ordinal)
                 {
-                    [StillState] = Clip(parameter, variantsPerName: true, shadows),
+                    [StillState] = Clip(parameter, variantsPerName: true, recovered),
                 }),
                 _ => null,
             };
         }
 
-        private static Dictionary<string, AnimationClip> States(JsonElement stateMap, Shadows shadows)
+        private static Dictionary<string, AnimationClip> States(JsonElement stateMap, Recovered recovered)
         {
             Dictionary<string, AnimationClip> states = [with(StringComparer.Ordinal)];
             foreach (JsonProperty state in stateMap.EnumerateObject())
             {
                 if (state.Value.ValueKind == JsonValueKind.Object && state.Value.TryGetProperty("AList", out _))
                 {
-                    states[state.Name] = Clip(state.Value, variantsPerName: false, shadows);
+                    states[state.Name] = Clip(state.Value, variantsPerName: false, recovered);
                 }
             }
 
             return states;
         }
 
-        private static AnimationClip Clip(JsonElement state, bool variantsPerName, Shadows shadows)
+        private static AnimationClip Clip(JsonElement state, bool variantsPerName, Recovered recovered)
         {
-            Shadow? shadow = ShadowOf(state, shadows);
+            Shadow? shadow = ShadowOf(state, recovered);
+            (string? sound, string? soundHandler) = SoundOf(state, recovered);
             return new AnimationClip(
                 PageOf(state),
                 Frames(state.GetProperty("AList"), variantsPerName),
@@ -448,7 +478,9 @@ namespace Mooh.Presentation.Animation
                     : null,
                 DirectionOf(state),
                 shadow?.Frames,
-                shadow?.Page);
+                shadow?.Page,
+                sound,
+                soundHandler);
         }
 
         /// <summary>
@@ -520,7 +552,15 @@ namespace Mooh.Presentation.Animation
         /// <summary>A shadow animation: its page and frames.</summary>
         private sealed record Shadow(string Page, IReadOnlyList<string> Frames);
 
-        /// <summary>The shadow animations by their recovered reference, such as <c>GMod.SfxShMed</c>.</summary>
-        private sealed class Shadows(StringComparer comparer) : Dictionary<string, Shadow>(comparer);
+        /// <summary>
+        /// The game module's data the clips refer to: the shadow animations and sound aliases by
+        /// their recovered reference, such as <c>GMod.SfxShMed</c> and <c>GMod.SndTonIn</c>.
+        /// </summary>
+        private sealed class Recovered
+        {
+            public Dictionary<string, Shadow> Shadows { get; } = [with(StringComparer.Ordinal)];
+
+            public Dictionary<string, string> Sounds { get; } = [with(StringComparer.Ordinal)];
+        }
     }
 }
