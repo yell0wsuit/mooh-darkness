@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
+using Mooh.Core.Player;
 using Mooh.Desktop.Platform.Graphics;
 using Mooh.Desktop.Platform.Input;
 
@@ -63,7 +64,8 @@ namespace Mooh.Desktop
             {
                 PumpEvents();
                 TimeSpan now = _clock.Elapsed;
-                game.Update(_controls.PlayerInput, _controls.TakeCommands(), (now - previous).TotalSeconds);
+                PlayerInputState input = options.Script is null ? _controls.PlayerInput : options.ScriptedInput(now.TotalSeconds);
+                game.Update(input, _controls.TakeCommands(), (now - previous).TotalSeconds);
                 previous = now;
                 DrawFrame(device);
             }

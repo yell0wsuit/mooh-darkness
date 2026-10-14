@@ -1,5 +1,6 @@
 using System;
 
+using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 using Mooh.Desktop.Platform.Graphics;
 
@@ -37,12 +38,33 @@ namespace Mooh.Desktop.Tests
             Assert.Equal("shot.png", options.ScreenshotPath);
         }
 
+        /// <summary>
+        /// Verifies a scripted input lists from when each set of keys is held: l, u, r, d for the
+        /// directions and f for fire, nothing for no keys.
+        /// </summary>
+        [Fact]
+        public void AScriptedInputIsRead()
+        {
+            DesktopOptions options = DesktopOptions.Parse(["--input", "2=r,3.5=rf,4="]);
+
+            Assert.Equal(
+                [
+                    (2.0, new PlayerInputState(Left: false, Up: false, Right: true, Down: false)),
+                    (3.5, new PlayerInputState(Left: false, Up: false, Right: true, Down: false, Fire: true)),
+                    (4.0, default(PlayerInputState)),
+                ],
+                options.Script);
+            Assert.Equal(new PlayerInputState(Left: false, Up: false, Right: true, Down: false), options.ScriptedInput(3));
+            Assert.Equal(default, options.ScriptedInput(1));
+        }
+
         /// <summary>Verifies an unknown or incomplete option is refused with a message.</summary>
         [Theory]
         [InlineData("--level")]
         [InlineData("--level", "0")]
         [InlineData("--renderer", "vulkan")]
         [InlineData("--bogus")]
+        [InlineData("--input", "2=x")]
         public void ABadOptionIsRefused(params string[] arguments)
         {
             _ = Assert.Throws<ArgumentException>(() => DesktopOptions.Parse(arguments));

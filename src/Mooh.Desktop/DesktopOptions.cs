@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
+using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 using Mooh.Desktop.Platform.Graphics;
 
@@ -13,16 +15,20 @@ namespace Mooh.Desktop
     /// <param name="Renderer">The renderer to force, or <see langword="null"/> to pick the best.</param>
     /// <param name="QuitAfterFrames">The frame count after which to quit, for scripted runs.</param>
     /// <param name="ScreenshotPath">Where to save the last frame as a PNG, for scripted runs.</param>
+    /// <param name="Script">
+    /// Scripted input, for scripted runs: from each time in seconds, the keys held until the next.
+    /// </param>
     internal sealed record DesktopOptions(
         int LevelIndex,
         DifficultySpeeds Difficulty,
         GraphicsBackendKind? Renderer,
         int? QuitAfterFrames,
-        string? ScreenshotPath)
+        string? ScreenshotPath,
+        IReadOnlyList<(double At, PlayerInputState Input)>? Script = null)
     {
         /// <summary>The usage line.</summary>
         internal const string Usage =
-            "Mooh [--level N] [--difficulty 0|1|2] [--renderer metal|opengl|software] [--frames N] [--screenshot file.png]";
+            "Mooh [--level N] [--difficulty 0|1|2] [--renderer metal|opengl|software] [--frames N] [--screenshot file.png] [--input 2=r,3.5=rf,4=]";
 
         private static readonly Dictionary<string, GraphicsBackendKind> Renderers = new(StringComparer.Ordinal)
         {
@@ -56,11 +62,49 @@ namespace Mooh.Desktop
                     },
                     "--frames" => options with { QuitAfterFrames = Positive(name, value) },
                     "--screenshot" => options with { ScreenshotPath = value },
+                    "--input" => options with { Script = ScriptOf(value) },
                     _ => throw new ArgumentException($"Unknown option '{name}'. Usage: {Usage}"),
                 };
             }
 
             return options;
+        }
+
+        /// <summary>Gets the scripted input held at a time.</summary>
+        /// <param name="seconds">The time since the game started.</param>
+        /// <returns>The keys held then; none before the script's first entry.</returns>
+        internal PlayerInputState ScriptedInput(double seconds)
+        {
+            PlayerInputState held = default;
+            foreach ((double at, PlayerInputState input) in Script ?? [])
+            {
+                if (at <= seconds)
+                {
+                    held = input;
+                }
+            }
+
+            return held;
+        }
+
+        private static List<(double, PlayerInputState)> ScriptOf(string value)
+        {
+            List<(double, PlayerInputState)> script = [];
+            foreach (string entry in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                string[] parts = entry.Split('=');
+                if (parts.Length != 2
+                    || !double.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out double at)
+                    || parts[1].Any(key => !"lurdf".Contains(key, StringComparison.Ordinal)))
+                {
+                    throw new ArgumentException($"Option '--input' needs entries like 2=r or 3.5=rf. Usage: {Usage}");
+                }
+
+                string keys = parts[1];
+                script.Add((at, new PlayerInputState(keys.Contains('l', StringComparison.Ordinal), keys.Contains('u', StringComparison.Ordinal), keys.Contains('r', StringComparison.Ordinal), keys.Contains('d', StringComparison.Ordinal), keys.Contains('f', StringComparison.Ordinal))));
+            }
+
+            return script;
         }
 
         private static int Positive(string name, string value)
