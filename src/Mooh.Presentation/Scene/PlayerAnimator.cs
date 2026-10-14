@@ -25,12 +25,14 @@ namespace Mooh.Presentation.Scene
     /// <exception cref="ArgumentNullException">An argument is <see langword="null"/>.</exception>
     public sealed class PlayerAnimator(AnimationLibrary library, Random random) : EntityAnimator((library ?? throw new ArgumentNullException(nameof(library))).Table(AnimationLibrary.PlayerTable), random)
     {
+        private readonly AnimationLibrary _library = library;
         private const string FlyCheckHandler = "_OnCell05_Fly";
 
         /// <summary><c>AmbDo</c>'s <c>ulAmbNum</c>: the middle state plays once, then three more times.</summary>
         private const int AmbientRepeats = 3;
 
         private int _ambientRepeats;
+        private double? _secondStepSeconds;
 
         /// <summary>Gets the pass: <c>ST_TPortMove</c> carries <c>RPass=2</c>, over everything else.</summary>
         public override int Pass => Animation.State == "st_portmove" ? 2 : 0;
@@ -145,6 +147,73 @@ namespace Mooh.Presentation.Scene
             {
                 Animation.Play("st_stpush" + StateNames.Name(facing));
             }
+        }
+
+        /// <summary>
+        /// Cues the state's sound. <c>SndStep1</c> steps once; <c>SndStep2</c> steps now and again
+        /// half the clip later, <c>TSrvLvl.Add(AnimTimeGet() / 2, SndStep1)</c>.
+        /// </summary>
+        /// <inheritdoc/>
+        protected override void CueSound(AnimationClip clip)
+        {
+            ArgumentNullException.ThrowIfNull(clip);
+            base.CueSound(clip);
+            if (clip.SoundHandler is "SndStep1" or "SndStep2")
+            {
+                Step();
+            }
+
+            if (clip.SoundHandler == "SndStep2")
+            {
+                _secondStepSeconds = Animation.Frames.Count * Animation.FrameMillisecondsNow / 2000;
+            }
+        }
+
+        /// <inheritdoc/>
+        protected override void Tick(double seconds)
+        {
+            if (_secondStepSeconds is double remaining)
+            {
+                remaining -= seconds;
+                _secondStepSeconds = remaining > 0 ? remaining : null;
+                if (remaining <= 0)
+                {
+                    Step();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Models <c>SndStep1</c>: on the ground, within 0.1 of its row, the player sounds the step
+        /// of whatever is below, its <c>RInfo.PlStepSnd</c> or earth's.
+        /// </summary>
+        private void Step()
+        {
+            if (World is null || Entity is null)
+            {
+                return;
+            }
+
+            (double x, double y) = DrawnPosition.Of(Entity);
+            double row = Math.Round(y);
+            GridPosition below = new((int)Math.Round(x), (int)row + 1);
+            if (Math.Abs(y - row) >= 0.1 || !World.Contains(below))
+            {
+                return;
+            }
+
+            IReadOnlyList<Entity> occupants = World.GetOccupants(below);
+            if (occupants.Count == 0)
+            {
+                return;
+            }
+
+            Entity ground = occupants[0];
+            Cue(ground.ArchivalIdentity is { } identity
+                && _library.TryGetLook(identity.ArchivalType, out ObjectLook look)
+                && look.Sounds.TryGetValue("PlStepSnd", out string? step)
+                ? step
+                : _library.Sound("SndStepEarth"));
         }
 
         /// <summary>Models <c>_AEnd_AmbScr</c> and <c>_AEnd_AmbWhats</c>: repeat while <c>ulAmbNum</c> lasts.</summary>

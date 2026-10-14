@@ -24,7 +24,6 @@ namespace Mooh.Presentation.Animation
         private readonly IAnimationRules _rules;
         private readonly AnimationTable _table;
         private IReadOnlyList<IReadOnlyList<string>>? _candidates;
-        private double _frameMilliseconds;
 
         /// <summary>Initializes a player over one table.</summary>
         /// <param name="table">The object's recovered state table.</param>
@@ -37,6 +36,13 @@ namespace Mooh.Presentation.Animation
             _table = table;
             _rules = rules;
         }
+
+        /// <summary>
+        /// Occurs when a state is set: entered, given a new variant list, or re-entered by its own
+        /// <c>AEnd</c>. These are the moments the original's <c>StateSet</c> plays the state's
+        /// <c>Snd</c>; a handler that resolves to the playing state does not count.
+        /// </summary>
+        public event Action<AnimationClip>? StateSet;
 
         /// <summary>Gets the playing state, or <see langword="null"/> before the first.</summary>
         public string? State
@@ -55,6 +61,12 @@ namespace Mooh.Presentation.Animation
 
         /// <summary>Gets the playing variant's frames; empty while the object is hidden.</summary>
         public IReadOnlyList<string> Frames { get; private set; } = [];
+
+        /// <summary>Gets the playing state's frame time in milliseconds.</summary>
+        public double FrameMillisecondsNow
+        {
+            get; private set;
+        }
 
         /// <summary>Gets the fractional frame position, the original's <c>fAInd</c>.</summary>
         public double Position
@@ -93,13 +105,15 @@ namespace Mooh.Presentation.Animation
                 return;
             }
 
+
             State = state;
             Clip = clip;
             _candidates = candidates;
             Frames = _rules.PickVariant(candidates);
-            _frameMilliseconds = _rules.FrameMilliseconds(clip);
+            FrameMillisecondsNow = _rules.FrameMilliseconds(clip);
             Position = _rules.StartPosition(clip, Frames);
             IsHeld = false;
+            StateSet?.Invoke(clip);
         }
 
         /// <summary>Restarts the playing state at its first frame, as a monster's <c>IceOff</c> does.</summary>
@@ -113,12 +127,12 @@ namespace Mooh.Presentation.Animation
         /// <param name="seconds">The elapsed time.</param>
         public void Advance(double seconds)
         {
-            if (Clip is null || IsHeld || _frameMilliseconds <= 0 || seconds <= 0)
+            if (Clip is null || IsHeld || FrameMillisecondsNow <= 0 || seconds <= 0)
             {
                 return;
             }
 
-            Position += seconds * 1000 / _frameMilliseconds;
+            Position += seconds * 1000 / FrameMillisecondsNow;
             while (Position >= Length)
             {
                 string? next = Clip.Next
@@ -132,20 +146,26 @@ namespace Mooh.Presentation.Animation
 
                 string? before = State;
                 IReadOnlyList<IReadOnlyList<string>>? candidates = _candidates;
-                double overshootMilliseconds = (Position - Length) * _frameMilliseconds;
+                double overshootMilliseconds = (Position - Length) * FrameMillisecondsNow;
                 Play(next);
                 if (State == before && ReferenceEquals(candidates, _candidates))
                 {
+                    // An AEnd naming the playing state is a StateSet of it; a handler is not.
+                    if (Clip.Next is not null)
+                    {
+                        StateSet?.Invoke(Clip);
+                    }
+
                     Position -= Length;
                     continue;
                 }
 
-                if (_frameMilliseconds <= 0)
+                if (FrameMillisecondsNow <= 0)
                 {
                     return;
                 }
 
-                Position += overshootMilliseconds / _frameMilliseconds;
+                Position += overshootMilliseconds / FrameMillisecondsNow;
             }
         }
     }

@@ -154,6 +154,17 @@ namespace Mooh.Presentation.Tests
             Assert.Equal("BaloonTick1", Library.Value.Table("OBaloon").States["st_tick12"].Sound);
         }
 
+        /// <summary>Verifies a registration's own sounds, such as a rock's landing and metal's steps.</summary>
+        [Fact]
+        public void ARegistrationCarriesItsSounds()
+        {
+            Assert.True(Library.Value.TryGetLook("ORock01", out ObjectLook rock));
+            Assert.Equal("RockLand", rock.Sounds["SndLand"]);
+            Assert.True(Library.Value.TryGetLook("CellsMetal01", out ObjectLook metal));
+            Assert.Equal("StepsMetal", metal.Sounds["PlStepSnd"]);
+            Assert.Equal("StepsEarth", Library.Value.Sound("SndStepEarth"));
+        }
+
         /// <summary>Verifies the types that receive shadows carry <c>CNT_CMaskResRShadow</c>.</summary>
         [Fact]
         public void TerrainRocksAndKeyDoorsReceiveShadows()

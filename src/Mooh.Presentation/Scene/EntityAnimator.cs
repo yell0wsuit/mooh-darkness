@@ -19,6 +19,7 @@ namespace Mooh.Presentation.Scene
     /// </remarks>
     public abstract class EntityAnimator : IAnimationRules
     {
+        private readonly List<string> _sounds = [];
         private string? _desired;
 
         /// <summary>Initializes the animator.</summary>
@@ -32,6 +33,7 @@ namespace Mooh.Presentation.Scene
             Table = table;
             Random = random;
             Animation = new AnimationPlayer(table, this);
+            Animation.StateSet += CueSound;
         }
 
         /// <summary>Gets the entity's animation.</summary>
@@ -110,6 +112,7 @@ namespace Mooh.Presentation.Scene
             World = world;
             Entity = entity;
 
+            Tick(seconds);
             if (!IsPaused)
             {
                 Animation.Advance(seconds);
@@ -123,6 +126,15 @@ namespace Mooh.Presentation.Scene
             }
 
             React(events);
+        }
+
+        /// <summary>Takes the sound aliases cued since the last call.</summary>
+        /// <returns>The aliases, in order.</returns>
+        public IReadOnlyList<string> TakeSounds()
+        {
+            string[] sounds = [.. _sounds];
+            _sounds.Clear();
+            return sounds;
         }
 
         /// <inheritdoc/>
@@ -165,6 +177,30 @@ namespace Mooh.Presentation.Scene
         /// <param name="entity">The animated entity.</param>
         /// <returns>The state, or <see langword="null"/> to let the playing chain continue.</returns>
         protected abstract string? DesiredState(WorldGrid world, Entity entity);
+
+        /// <summary>Cues a sound where the entity is.</summary>
+        /// <param name="alias">The <c>Sound.ini</c> alias.</param>
+        protected void Cue(string alias)
+        {
+            _sounds.Add(alias);
+        }
+
+        /// <summary>Cues a state's sound as it is set; a subclass handles its sound handlers.</summary>
+        /// <param name="clip">The state's clip.</param>
+        protected virtual void CueSound(AnimationClip clip)
+        {
+            ArgumentNullException.ThrowIfNull(clip);
+            if (clip.Sound is string alias)
+            {
+                Cue(alias);
+            }
+        }
+
+        /// <summary>Runs the entity's own timers before its animation advances.</summary>
+        /// <param name="seconds">The elapsed time.</param>
+        protected virtual void Tick(double seconds)
+        {
+        }
 
         /// <summary>Starts the transient states the frame's events call for.</summary>
         /// <param name="events">The events the simulation reported for this frame.</param>

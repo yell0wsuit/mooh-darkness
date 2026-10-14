@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Mooh.Presentation.Animation
 {
     /// <summary>What an archival registration, <c>CObjRepInfo</c>, says about drawing its objects.</summary>
@@ -28,5 +30,12 @@ namespace Mooh.Presentation.Animation
         bool ReceivesShadow = false,
         bool RandomStartPhase = false,
         LayerAnimation? Glow = null,
-        LayerAnimation? Overlay = null);
+        LayerAnimation? Overlay = null)
+    {
+        /// <summary>
+        /// Gets the registration's own sound aliases by field: <c>PlStepSnd</c>, <c>SndLand</c>,
+        /// <c>SndKill</c>, <c>SndEat</c>, <c>SndMove</c> and <c>SndExpl</c>, where it names one.
+        /// </summary>
+        public IReadOnlyDictionary<string, string> Sounds { get; init; } = new Dictionary<string, string>();
+    }
 }

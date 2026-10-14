@@ -112,6 +112,15 @@ namespace Mooh.Presentation.Animation
             return false;
         }
 
+        /// <summary>Gets one of the game module's sound aliases, such as <c>SndStepEarth</c>.</summary>
+        /// <param name="name">The sound's name in the game module.</param>
+        /// <returns>The <c>Sound.ini</c> alias.</returns>
+        /// <exception cref="KeyNotFoundException">There is no such sound.</exception>
+        public string Sound(string name)
+        {
+            return _recovered.Sounds["GMod." + name];
+        }
+
         /// <summary>Gets one of the game module's shadow animations, such as <c>SfxShSm</c>.</summary>
         /// <param name="name">The animation's name in the game module.</param>
         /// <returns>The page and frames.</returns>
@@ -178,7 +187,7 @@ namespace Mooh.Presentation.Animation
                     tables[registration.Name] = table;
                 }
 
-                looks[registration.Name] = LookOf(registration.Value, effects);
+                looks[registration.Name] = LookOf(registration.Value, effects, recovered);
             }
 
             List<EffectLayer> explosion = effects.ValueKind == JsonValueKind.Object
@@ -290,7 +299,7 @@ namespace Mooh.Presentation.Animation
             return null;
         }
 
-        private static ObjectLook LookOf(JsonElement registration, JsonElement effects)
+        private static ObjectLook LookOf(JsonElement registration, JsonElement effects, Recovered recovered)
         {
             BackdropStyle? backdrop = registration.TryGetProperty("BackType", out JsonElement back)
                 && back.ValueKind == JsonValueKind.Object
@@ -314,13 +323,30 @@ namespace Mooh.Presentation.Animation
                 && type.ValueKind == JsonValueKind.Object
                 && type.TryGetProperty("ref", out JsonElement typeName)
                 && typeName.GetString() == "GameObjs.CGameObjFallBase";
+            Dictionary<string, string> sounds = [with(StringComparer.Ordinal)];
+            foreach (string field in (string[])["PlStepSnd", "SndLand", "SndKill", "SndEat", "SndMove", "SndExpl"])
+            {
+                if (registration.TryGetProperty(field, out JsonElement sound)
+                    && sound.ValueKind == JsonValueKind.Object
+                    && sound.TryGetProperty("ref", out JsonElement soundName)
+                    && soundName.GetString() is string soundReference
+                    && soundReference.StartsWith("self.", StringComparison.Ordinal)
+                    && recovered.Sounds.TryGetValue("GMod." + soundReference["self.".Length..], out string? alias))
+                {
+                    sounds[field] = alias;
+                }
+            }
+
             return new ObjectLook(
                 backdrop,
                 depth,
                 mask is long bits && (bits & ShadowReceiverMask) != 0,
                 fallObject,
                 LayerOf(parameter, "GlowAnm", effects),
-                LayerOf(parameter, "OverAnm", effects));
+                LayerOf(parameter, "OverAnm", effects))
+            {
+                Sounds = sounds,
+            };
         }
 
         /// <summary>

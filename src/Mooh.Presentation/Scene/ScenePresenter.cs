@@ -9,6 +9,7 @@ using Mooh.Core.Grid;
 using Mooh.Core.Levels;
 using Mooh.Core.Simulation;
 using Mooh.Presentation.Animation;
+using Mooh.Presentation.Audio;
 
 namespace Mooh.Presentation.Scene
 {
@@ -42,6 +43,7 @@ namespace Mooh.Presentation.Scene
         private readonly AnimationLibrary _library;
         private readonly Random _random;
         private List<SceneSprite> _sprites = [];
+        private List<SoundCue> _sounds = [];
 
         /// <summary>Initializes the presenter.</summary>
         /// <param name="library">The recovered animation tables.</param>
@@ -55,6 +57,9 @@ namespace Mooh.Presentation.Scene
             _random = random;
             _effects = new EffectSystem(library, random);
         }
+
+        /// <summary>Gets the sounds cued this update, in order.</summary>
+        public IReadOnlyList<SoundCue> Sounds => _sounds;
 
         /// <summary>Gets the frames to draw, in draw order.</summary>
         public IReadOnlyList<SceneSprite> Sprites => _sprites;
@@ -81,6 +86,7 @@ namespace Mooh.Presentation.Scene
             _clockMilliseconds += seconds * 1000;
             HashSet<EntityId> present = [];
             List<SceneSprite> sprites = [];
+            List<SoundCue> sounds = [];
             foreach (Entity entity in world.Entities)
             {
                 _ = present.Add(entity.Id);
@@ -96,6 +102,12 @@ namespace Mooh.Presentation.Scene
                 }
 
                 animator.Update(world, entity, events, seconds);
+                foreach (string alias in animator.TakeSounds())
+                {
+                    (double soundX, double soundY) = DrawnPosition.Of(entity);
+                    sounds.Add(new SoundCue(alias, soundX, soundY));
+                }
+
                 if (animator.Frame is string frame)
                 {
                     (double x, double y) = DrawnPosition.Of(entity);
@@ -113,6 +125,7 @@ namespace Mooh.Presentation.Scene
                 }
             }
 
+            _sounds = sounds;
             _effects.Update(world, events, seconds);
             sprites.AddRange(_effects.Sprites);
             foreach (EntityId gone in _animators.Keys.Where(id => !present.Contains(id)).ToList())

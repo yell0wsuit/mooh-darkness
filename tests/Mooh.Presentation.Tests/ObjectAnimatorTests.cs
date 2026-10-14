@@ -4,6 +4,7 @@ using System.Linq;
 using Mooh.Core.Entities;
 using Mooh.Core.Player;
 using Mooh.Presentation.Animation;
+using Mooh.Presentation.Audio;
 using Mooh.Presentation.Scene;
 
 using Xunit;
@@ -93,6 +94,22 @@ namespace Mooh.Presentation.Tests
             harness.Input(default);
             harness.Step(1.0);
             Assert.Equal("st_tick12", harness.Animator(balloon).Animation.State);
+        }
+
+        /// <summary>Verifies a lit balloon cues its state's sound, <c>SndBaloonMorth</c>, where it is drawn.</summary>
+        [Fact]
+        public void ALitBalloonCuesItsStateSound()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("OBaloon", 2, 1)));
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+            Entity balloon = Placed(harness);
+
+            harness.StepUntil(() => balloon.BalloonFuseBody!.HasBeenLit);
+
+            // The push that lit it is already moving it, so it sounds from where it is drawn.
+            SoundCue cue = Assert.Single(harness.Presenter.Sounds, sound => sound.Alias == "BaloonMorph");
+            Assert.InRange(cue.X, 2, 3);
+            Assert.Equal(1, cue.Y);
         }
 
         /// <summary>Verifies a landed arrow winds up, then flies.</summary>

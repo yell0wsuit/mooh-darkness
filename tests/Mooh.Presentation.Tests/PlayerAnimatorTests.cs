@@ -53,6 +53,22 @@ namespace Mooh.Presentation.Tests
             Assert.Equal("st_wlkright", harness.Animator(harness.Player).Animation.State);
         }
 
+        /// <summary>
+        /// Verifies a walk steps on the floor's own sound: <c>SndStep2</c> plays the step of the
+        /// object below, <c>RInfo.PlStepSnd</c>, here metal's.
+        /// </summary>
+        [Fact]
+        public void AWalkStepsOnTheFloorsSound()
+        {
+            SceneHarness harness = new(Level());
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+            bool stepped = false;
+
+            harness.StepUntil(() => stepped |= harness.Presenter.Sounds.Any(cue => cue.Alias == "StepsMetal"), limitSeconds: 1);
+
+            Assert.True(stepped);
+        }
+
         /// <summary>Verifies walking into a pushable rock shows the pushing walk.</summary>
         [Fact]
         public void PushingARockShowsThePushingWalk()
