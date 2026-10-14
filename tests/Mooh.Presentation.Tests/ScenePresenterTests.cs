@@ -61,6 +61,23 @@ namespace Mooh.Presentation.Tests
             Assert.Equal(player, harness.Presenter.Sprites[^1]);
         }
 
+        /// <summary>
+        /// Verifies sprites draw as the native <c>ListRenderSort</c> orders them: by pass, then by
+        /// screen <c>x - y</c>, so of two tiles the one further down and left draws first.
+        /// </summary>
+        [Fact]
+        public void SpritesDrawFromBottomLeftToTopRight()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("CellsEat01", 5, 0), ("CellsEat01", 4, 3)));
+
+            harness.Step(0.016);
+
+            List<SceneSprite> ordinary = [.. harness.Presenter.Sprites.Where(sprite => sprite.Pass == 0)];
+            double[] keys = [.. ordinary.Select(sprite => (sprite.X * 80) - (sprite.Y * 75))];
+            Assert.Equal(keys.Order(), keys);
+            Assert.True(ordinary.FindIndex(sprite => sprite.X == 4 && sprite.Y == 3) < ordinary.FindIndex(sprite => sprite.X == 5 && sprite.Y == 0));
+        }
+
         /// <summary>Verifies a hidden player is left out of the draw list.</summary>
         [Fact]
         public void AHiddenPlayerIsNotDrawn()

@@ -17,8 +17,7 @@ namespace Mooh.Presentation.Scene
     /// </summary>
     /// <remarks>
     /// The presenter only reads the simulation. Each update advances every animator by the frame's
-    /// simulated time, then lists the frames to draw in ascending render pass; within a pass the
-    /// world's own order stands, as the native object list draws.
+    /// simulated time, then lists the frames to draw in the native <c>ListRenderSort</c> order.
     /// </remarks>
     public sealed class ScenePresenter
     {
@@ -104,7 +103,12 @@ namespace Mooh.Presentation.Scene
                 _ = _animators.Remove(gone);
             }
 
-            _sprites = [.. sprites.OrderBy(sprite => sprite.Pass)];
+            // The native ListRenderSort comparator: the pass, then the screen x - y, so tiles whose
+            // faces reach up and right overlap their lower-left neighbors. OrderBy is stable, so
+            // the world's own order breaks ties as the object addresses did.
+            _sprites = [.. sprites
+                .OrderBy(sprite => sprite.Pass)
+                .ThenBy(sprite => Math.Round((sprite.X * SceneCamera.CellWidth) - (sprite.Y * SceneCamera.CellHeight)))];
         }
 
         private EntityAnimator? Create(Entity entity)
