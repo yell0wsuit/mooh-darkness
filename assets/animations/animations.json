@@ -7671,6 +7671,1410 @@
    "ref": "SMap"
   }
  },
+ "effects": {
+  "AnmArr": [
+   {
+    "args": [
+     [
+      "PAGr_Left",
+      "PAGr_LeftTop",
+      "PAGr_Top",
+      "PAGr_RightTop",
+      "PAGr_Right",
+      "PAGr_RightBottom",
+      "PAGr_Bottom",
+      "PAGr_LeftBottom"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteScrPanel"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PABlue_Left",
+      "PABlue_LeftTop",
+      "PABlue_Top",
+      "PABlue_RightTop",
+      "PABlue_Right",
+      "PABlue_RightBottom",
+      "PABlue_Bottom",
+      "PABlue_LeftBottom"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteScrPanel"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PASm_Left",
+      "PASm_LeftTop",
+      "PASm_Top",
+      "PASm_RightTop",
+      "PASm_Right",
+      "PASm_RightBottom",
+      "PASm_Bottom",
+      "PASm_LeftBottom"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteScrPanel"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
+  "AnmMapGlass": {
+   "args": [
+    "MGlass"
+   ],
+   "call": {
+    "attr": "AnimIndGet",
+    "of": {
+     "args": [
+      "SpriteScrMap"
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "AnmMapGlass0": {
+   "args": [
+    "MGlass0"
+   ],
+   "call": {
+    "attr": "AnimIndGet",
+    "of": {
+     "args": [
+      "SpriteScrMap"
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxCola": [
+   {
+    "args": [
+     [
+      "B1_01",
+      "B1_02",
+      "B1_03",
+      "B1_04",
+      "B1_05",
+      "B1_06",
+      "B1_07",
+      "B1_08",
+      "B1_09",
+      "B1_10",
+      "B1_11",
+      "B1_12",
+      "B1_13",
+      "B1_14",
+      "B1_15",
+      "B1_16",
+      "B1_17",
+      "B1_18",
+      "B1_19",
+      "B1_20",
+      "B1_21",
+      "B1_22"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteObjCola",
+       true
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "B2_01",
+      "B2_02",
+      "B2_03",
+      "B2_04",
+      "B2_05",
+      "B2_06",
+      "B2_07",
+      "B2_08",
+      "B2_09",
+      "B2_10",
+      "B2_11",
+      "B2_12",
+      "B2_13",
+      "B2_14",
+      "B2_15",
+      "B2_16",
+      "B2_17",
+      "B2_18",
+      "B2_19",
+      "B2_20",
+      "B2_21",
+      "B2_22"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteObjCola",
+       true
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "B3_01",
+      "B3_02",
+      "B3_03",
+      "B3_04",
+      "B3_05",
+      "B3_06",
+      "B3_07",
+      "B3_08",
+      "B3_09",
+      "B3_10",
+      "B3_11",
+      "B3_12",
+      "B3_13",
+      "B3_14",
+      "B3_15",
+      "B3_16",
+      "B3_17",
+      "B3_18",
+      "B3_19",
+      "B3_20",
+      "B3_21",
+      "B3_22"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteObjCola",
+       true
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
+  "SfxEat3": {
+   "args": [
+    [
+     "P3_01",
+     "P3_02",
+     "P3_03",
+     "P3_04",
+     "P3_05",
+     "P3_06",
+     "P3_07",
+     "P3_08",
+     "P3_09",
+     "P3_10",
+     "P3_11",
+     "P3_12",
+     "P3_13",
+     "P3_14",
+     "P3_15",
+     "P3_16",
+     "P3_17",
+     "P3_18",
+     "P3_19",
+     "P3_20"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteObjEat",
+      true
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxExpl": [
+   {
+    "AList": [
+     [
+      "OExplParts1_01",
+      "OExplParts1_02",
+      "OExplParts1_03",
+      "OExplParts1_04",
+      "OExplParts1_05",
+      "OExplParts1_06"
+     ]
+    ],
+    "Num": 1,
+    "Page": {
+     "args": [
+      "SpriteExpl"
+     ],
+     "call": "DDraw.PageMake"
+    },
+    "RPass": 1,
+    "fSh": [
+     -0.1,
+     0.1
+    ],
+    "new": "CGameType.CSfxAnimObj.CType",
+    "ulATime": [
+     35,
+     50
+    ]
+   },
+   {
+    "AList": [
+     [
+      "OExplBig1_01",
+      "OExplBig1_02",
+      "OExplBig1_03",
+      "OExplBig1_04",
+      "OExplBig1_05",
+      "OExplBig1_06",
+      "OExplBig1_07",
+      "OExplBig1_08",
+      "OExplBig1_09",
+      "OExplBig1_10"
+     ]
+    ],
+    "Num": 1,
+    "Page": {
+     "args": [
+      "SpriteExpl"
+     ],
+     "call": "DDraw.PageMake"
+    },
+    "RPass": 1,
+    "fSh": [
+     -0.1,
+     0.1
+    ],
+    "new": "CGameType.CSfxAnimObj.CType",
+    "ulATime": [
+     50,
+     75
+    ]
+   },
+   {
+    "AList": [
+     [
+      "OExplSubExpl1_01",
+      "OExplSubExpl1_02",
+      "OExplSubExpl1_03",
+      "OExplSubExpl1_04",
+      "OExplSubExpl1_05",
+      "OExplSubExpl1_06",
+      "OExplSubExpl1_07"
+     ],
+     [
+      "OExplSubExpl2_01",
+      "OExplSubExpl2_02",
+      "OExplSubExpl2_03",
+      "OExplSubExpl2_04",
+      "OExplSubExpl2_05",
+      "OExplSubExpl2_06",
+      "OExplSubExpl2_07"
+     ],
+     [
+      "OExplSubExpl3_01",
+      "OExplSubExpl3_02",
+      "OExplSubExpl3_03",
+      "OExplSubExpl3_04",
+      "OExplSubExpl3_05",
+      "OExplSubExpl3_06",
+      "OExplSubExpl3_07"
+     ],
+     [
+      "OExplSubExpl4_01",
+      "OExplSubExpl4_02",
+      "OExplSubExpl4_03",
+      "OExplSubExpl4_04",
+      "OExplSubExpl4_05",
+      "OExplSubExpl4_06",
+      "OExplSubExpl4_07"
+     ]
+    ],
+    "Num": [
+     3,
+     5
+    ],
+    "Page": {
+     "args": [
+      "SpriteExpl"
+     ],
+     "call": "DDraw.PageMake"
+    },
+    "RPass": 1,
+    "fSh": [
+     -0.3,
+     0.3
+    ],
+    "new": "CGameType.CSfxAnimObj.CType",
+    "ulATime": [
+     35,
+     50
+    ]
+   },
+   {
+    "AList": [
+     [
+      "OSmokeBig1_01",
+      "OSmokeBig1_02",
+      "OSmokeBig1_03",
+      "OSmokeBig1_04",
+      "OSmokeBig1_05",
+      "OSmokeBig1_06",
+      "OSmokeBig1_07",
+      "OSmokeBig1_08",
+      "OSmokeBig1_09"
+     ],
+     [
+      "OSmokeBig2_01",
+      "OSmokeBig2_02",
+      "OSmokeBig2_03",
+      "OSmokeBig2_04",
+      "OSmokeBig2_05",
+      "OSmokeBig2_06",
+      "OSmokeBig2_07",
+      "OSmokeBig2_08",
+      "OSmokeBig2_09"
+     ]
+    ],
+    "Num": 1,
+    "Page": {
+     "args": [
+      "SpriteExpl"
+     ],
+     "call": "DDraw.PageMake"
+    },
+    "RPass": 0,
+    "fSh": [
+     -0.1,
+     0.1
+    ],
+    "new": "CGameType.CSfxAnimObj.CType",
+    "ulATime": [
+     50,
+     75
+    ]
+   },
+   {
+    "AList": [
+     [
+      "OSmokeSub1_01",
+      "OSmokeSub1_02",
+      "OSmokeSub1_03",
+      "OSmokeSub1_04",
+      "OSmokeSub1_05",
+      "OSmokeSub1_06",
+      "OSmokeSub1_07"
+     ],
+     [
+      "OSmokeSub2_01",
+      "OSmokeSub2_02",
+      "OSmokeSub2_03",
+      "OSmokeSub2_04",
+      "OSmokeSub2_05",
+      "OSmokeSub2_06",
+      "OSmokeSub2_07"
+     ],
+     [
+      "OSmokeSub3_01",
+      "OSmokeSub3_02",
+      "OSmokeSub3_03",
+      "OSmokeSub3_04",
+      "OSmokeSub3_05",
+      "OSmokeSub3_06",
+      "OSmokeSub3_07"
+     ]
+    ],
+    "Num": [
+     3,
+     5
+    ],
+    "Page": {
+     "args": [
+      "SpriteExpl"
+     ],
+     "call": "DDraw.PageMake"
+    },
+    "RPass": 0,
+    "fSh": [
+     -0.4,
+     0.4
+    ],
+    "new": "CGameType.CSfxAnimObj.CType",
+    "ulATime": [
+     75,
+     100
+    ]
+   }
+  ],
+  "SfxFlyTrail": [],
+  "SfxGem1": {
+   "args": [
+    [
+     "Prt1_01",
+     "Prt1_02",
+     "Prt1_03",
+     "Prt1_04",
+     "Prt1_05",
+     "Prt1_06",
+     "Prt1_07"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteObjDiam",
+      true
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxGem2": {
+   "args": [
+    [
+     "Prt2_01",
+     "Prt2_02",
+     "Prt2_03",
+     "Prt2_04",
+     "Prt2_05",
+     "Prt2_06",
+     "Prt2_07"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteObjDiam",
+      true
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxGem3": {
+   "args": [
+    [
+     "Prt3_01",
+     "Prt3_02",
+     "Prt3_03",
+     "Prt3_04",
+     "Prt3_05",
+     "Prt3_06",
+     "Prt3_07"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteObjDiam",
+      true
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxGem5": {
+   "args": [
+    [
+     "Prt5_01",
+     "Prt5_02",
+     "Prt5_03",
+     "Prt5_04",
+     "Prt5_05",
+     "Prt5_06",
+     "Prt5_07"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteObjDiam",
+      true
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxGlowBon": [
+   0.02,
+   {
+    "args": [
+     [
+      "OGlowBon01",
+      "OGlowBon02",
+      "OGlowBon03",
+      "OGlowBon04",
+      "OGlowBon05",
+      "OGlowBon06",
+      "OGlowBon07"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteGlow"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     "SpriteGlow"
+    ],
+    "call": "DDraw.PageMake"
+   }
+  ],
+  "SfxGlowLandH": {
+   "args": [
+    [
+     "OGlowLandH_01",
+     "OGlowLandH_02",
+     "OGlowLandH_03",
+     "OGlowLandH_04",
+     "OGlowLandH_05"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteGlow"
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxGlowLandV": {
+   "args": [
+    [
+     "OGlowLandV_01",
+     "OGlowLandV_02",
+     "OGlowLandV_03",
+     "OGlowLandV_04",
+     "OGlowLandV_05"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteGlow"
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxGlowStr": {
+   "args": [
+    [
+     "OGlowStr01",
+     "OGlowStr02",
+     "OGlowStr03",
+     "OGlowStr04",
+     "OGlowStr05"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteGlow"
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxHealth": [],
+  "SfxPlGet": {
+   "ATime": [
+    50,
+    75
+   ],
+   "Func": {
+    "ref": "self.SfxGlowKill"
+   },
+   "Lst": [
+    [
+     "PGetStar1_00",
+     "PGetStar1_01",
+     "PGetStar1_02",
+     "PGetStar1_03",
+     "PGetStar1_04",
+     "PGetStar1_05",
+     "PGetStar1_06",
+     "PGetStar1_07",
+     "PGetStar1_08",
+     "PGetStar1_09",
+     "PGetStar1_10",
+     "PGetStar1_11",
+     "PGetStar1_12",
+     "PGetStar1_13",
+     "PGetStar1_14",
+     "PGetStar1_15",
+     "PGetStar1_16",
+     "PGetStar1_17",
+     "PGetStar1_18",
+     "PGetStar1_19",
+     "PGetStar1_20"
+    ],
+    [
+     "PGetStar2_00",
+     "PGetStar2_01",
+     "PGetStar2_02",
+     "PGetStar2_03",
+     "PGetStar2_04",
+     "PGetStar2_05",
+     "PGetStar2_06",
+     "PGetStar2_07",
+     "PGetStar2_08",
+     "PGetStar2_09",
+     "PGetStar2_10",
+     "PGetStar2_11",
+     "PGetStar2_12",
+     "PGetStar2_13",
+     "PGetStar2_14",
+     "PGetStar2_15",
+     "PGetStar2_16",
+     "PGetStar2_17",
+     "PGetStar2_18",
+     "PGetStar2_19",
+     "PGetStar2_20"
+    ],
+    [
+     "PGetStar3_00",
+     "PGetStar3_01",
+     "PGetStar3_02",
+     "PGetStar3_03",
+     "PGetStar3_04",
+     "PGetStar3_05",
+     "PGetStar3_06",
+     "PGetStar3_07",
+     "PGetStar3_08",
+     "PGetStar3_09",
+     "PGetStar3_10",
+     "PGetStar3_11",
+     "PGetStar3_12",
+     "PGetStar3_13",
+     "PGetStar3_14",
+     "PGetStar3_15",
+     "PGetStar3_16",
+     "PGetStar3_17",
+     "PGetStar3_18",
+     "PGetStar3_19",
+     "PGetStar3_20"
+    ]
+   ],
+   "Num": null,
+   "Page": {
+    "args": [
+     "SpriteParts"
+    ],
+    "call": "DDraw.PageMake"
+   },
+   "new": "CGameType.CSfxPrtInfo"
+  },
+  "SfxShBig": {
+   "args": [
+    [
+     "ShBig01",
+     "ShBig02",
+     "ShBig03",
+     "ShBig04",
+     "ShBig05",
+     "ShBig06",
+     "ShBig07",
+     "ShBig08",
+     "ShBig09",
+     "ShBig10",
+     "ShBig11"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteParts"
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxShMed": {
+   "args": [
+    [
+     "ShMed01",
+     "ShMed02",
+     "ShMed03",
+     "ShMed04",
+     "ShMed05",
+     "ShMed06",
+     "ShMed07",
+     "ShMed08",
+     "ShMed09",
+     "ShMed10",
+     "ShMed11"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteParts"
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxShSm": {
+   "args": [
+    [
+     "ShSm01",
+     "ShSm02",
+     "ShSm03",
+     "ShSm04",
+     "ShSm05",
+     "ShSm06",
+     "ShSm07",
+     "ShSm08",
+     "ShSm09",
+     "ShSm10",
+     "ShSm11"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteParts"
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxSmoke": [],
+  "SfxWSmoke": [],
+  "SfxWeapBBomb": {
+   "args": [
+    [
+     "Glow00",
+     "Glow01",
+     "Glow02",
+     "Glow03",
+     "Glow04",
+     "Glow05",
+     "Glow06",
+     "Glow07",
+     "Glow08",
+     "Glow09",
+     "Glow10",
+     "Glow11",
+     "Glow12",
+     "Glow13"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteObjBBomb",
+      true
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxWeapBBombStay": {
+   "args": [
+    [
+     "Prt00",
+     "Prt01",
+     "Prt02",
+     "Prt03",
+     "Prt04",
+     "Prt05",
+     "Prt06",
+     "Prt07",
+     "Prt08",
+     "Prt09",
+     "Prt10",
+     "Prt11",
+     "Prt12",
+     "Prt13",
+     "Prt14",
+     "Prt15",
+     "Prt16",
+     "Prt17",
+     "Prt18",
+     "Prt19",
+     "Prt20",
+     "Prt21",
+     "Prt22",
+     "Prt23",
+     "Prt24",
+     "Prt25",
+     "Prt26",
+     "Prt27",
+     "Prt28",
+     "Prt29",
+     "Prt30",
+     "Prt31",
+     "Prt32",
+     "Prt33",
+     "Prt34",
+     "Prt35",
+     "Prt36",
+     "Prt37",
+     "Prt38",
+     "Prt39",
+     "Prt40",
+     "Prt41",
+     "Prt42",
+     "Prt43",
+     "Prt44",
+     "Prt45",
+     "Prt46",
+     "Prt47",
+     "Prt48",
+     "Prt49",
+     "Prt50",
+     "Prt51",
+     "Prt52",
+     "Prt53",
+     "Prt54",
+     "Prt55",
+     "Prt56",
+     "Prt57",
+     "Prt58",
+     "Prt59",
+     "Prt60"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteObjBBomb",
+      true
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "SfxWeapGr": [
+   {
+    "args": [
+     [
+      "PrtRed_01",
+      "PrtRed_02",
+      "PrtRed_03",
+      "PrtRed_04",
+      "PrtRed_05",
+      "PrtRed_06",
+      "PrtRed_07"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteObjDiam",
+       true
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
+  "SfxWeapMine": [
+   {
+    "args": [
+     [
+      "Star01",
+      "Star02",
+      "Star03",
+      "Star04",
+      "Star05",
+      "Star06",
+      "Star07"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteObjMine",
+       true
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
+  "SfxWeapRock": [
+   {
+    "args": [
+     [
+      "Prt1_01",
+      "Prt1_02",
+      "Prt1_03",
+      "Prt1_04",
+      "Prt1_05",
+      "Prt1_06",
+      "Prt1_07"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteObjDiam",
+       true
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
+  "_SfxBonEye": [
+   {
+    "args": [
+     [
+      "PBonWorkEye1_00",
+      "PBonWorkEye1_01",
+      "PBonWorkEye1_02",
+      "PBonWorkEye1_03",
+      "PBonWorkEye1_04",
+      "PBonWorkEye1_05",
+      "PBonWorkEye1_06",
+      "PBonWorkEye1_07",
+      "PBonWorkEye1_08",
+      "PBonWorkEye1_09",
+      "PBonWorkEye1_10",
+      "PBonWorkEye1_11",
+      "PBonWorkEye1_12",
+      "PBonWorkEye1_13",
+      "PBonWorkEye1_14",
+      "PBonWorkEye1_15",
+      "PBonWorkEye1_16",
+      "PBonWorkEye1_17",
+      "PBonWorkEye1_18",
+      "PBonWorkEye1_19"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PBonWorkEye2_00",
+      "PBonWorkEye2_01",
+      "PBonWorkEye2_02",
+      "PBonWorkEye2_03",
+      "PBonWorkEye2_04",
+      "PBonWorkEye2_05",
+      "PBonWorkEye2_06",
+      "PBonWorkEye2_07",
+      "PBonWorkEye2_08",
+      "PBonWorkEye2_09",
+      "PBonWorkEye2_10",
+      "PBonWorkEye2_11",
+      "PBonWorkEye2_12",
+      "PBonWorkEye2_13",
+      "PBonWorkEye2_14",
+      "PBonWorkEye2_15",
+      "PBonWorkEye2_16",
+      "PBonWorkEye2_17",
+      "PBonWorkEye2_18",
+      "PBonWorkEye2_19"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PBonWorkEye3_00",
+      "PBonWorkEye3_01",
+      "PBonWorkEye3_02",
+      "PBonWorkEye3_03",
+      "PBonWorkEye3_04",
+      "PBonWorkEye3_05",
+      "PBonWorkEye3_06",
+      "PBonWorkEye3_07",
+      "PBonWorkEye3_08",
+      "PBonWorkEye3_09",
+      "PBonWorkEye3_10",
+      "PBonWorkEye3_11",
+      "PBonWorkEye3_12",
+      "PBonWorkEye3_13",
+      "PBonWorkEye3_14",
+      "PBonWorkEye3_15",
+      "PBonWorkEye3_16",
+      "PBonWorkEye3_17",
+      "PBonWorkEye3_18",
+      "PBonWorkEye3_19"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
+  "_SfxBonEyeGlow": {
+   "args": [
+    [
+     "OGlowBonEye01",
+     "OGlowBonEye02",
+     "OGlowBonEye03",
+     "OGlowBonEye04",
+     "OGlowBonEye05"
+    ]
+   ],
+   "call": {
+    "attr": "AnimMake",
+    "of": {
+     "args": [
+      "SpriteGlow"
+     ],
+     "call": "DDraw.PageMake"
+    }
+   }
+  },
+  "_SfxBonIce": [
+   {
+    "args": [
+     [
+      "PSnow1_01",
+      "PSnow1_02",
+      "PSnow1_03",
+      "PSnow1_04",
+      "PSnow1_05",
+      "PSnow1_06",
+      "PSnow1_07",
+      "PSnow1_08",
+      "PSnow1_09",
+      "PSnow1_10",
+      "PSnow1_11",
+      "PSnow1_12"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PSnow2_01",
+      "PSnow2_02",
+      "PSnow2_03",
+      "PSnow2_04",
+      "PSnow2_05",
+      "PSnow2_06",
+      "PSnow2_07",
+      "PSnow2_08",
+      "PSnow2_09",
+      "PSnow2_10",
+      "PSnow2_11",
+      "PSnow2_12"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PSnow3_01",
+      "PSnow3_02",
+      "PSnow3_03",
+      "PSnow3_04",
+      "PSnow3_05",
+      "PSnow3_06",
+      "PSnow3_07",
+      "PSnow3_08",
+      "PSnow3_09",
+      "PSnow3_10",
+      "PSnow3_11",
+      "PSnow3_12"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
+  "_SfxBonIceKill": [
+   {
+    "args": [
+     [
+      "PBonIce1_00",
+      "PBonIce1_01",
+      "PBonIce1_02",
+      "PBonIce1_03",
+      "PBonIce1_04",
+      "PBonIce1_05",
+      "PBonIce1_06",
+      "PBonIce1_07",
+      "PBonIce1_08",
+      "PBonIce1_09"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PBonIce2_00",
+      "PBonIce2_01",
+      "PBonIce2_02",
+      "PBonIce2_03",
+      "PBonIce2_04",
+      "PBonIce2_05",
+      "PBonIce2_06",
+      "PBonIce2_07",
+      "PBonIce2_08",
+      "PBonIce2_09"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PBonIce3_00",
+      "PBonIce3_01",
+      "PBonIce3_02",
+      "PBonIce3_03",
+      "PBonIce3_04",
+      "PBonIce3_05",
+      "PBonIce3_06",
+      "PBonIce3_07",
+      "PBonIce3_08",
+      "PBonIce3_09"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
+  "_SfxLandFire": [],
+  "_SfxSmall": [
+   {
+    "args": [
+     [
+      "PSmall1_00",
+      "PSmall1_01",
+      "PSmall1_02",
+      "PSmall1_03",
+      "PSmall1_04",
+      "PSmall1_05",
+      "PSmall1_06",
+      "PSmall1_07",
+      "PSmall1_08",
+      "PSmall1_09",
+      "PSmall1_10",
+      "PSmall1_11",
+      "PSmall1_12",
+      "PSmall1_13",
+      "PSmall1_14",
+      "PSmall1_15",
+      "PSmall1_16",
+      "PSmall1_17",
+      "PSmall1_18",
+      "PSmall1_19",
+      "PSmall1_20"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteGlow"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PSmall2_00",
+      "PSmall2_01",
+      "PSmall2_02",
+      "PSmall2_03",
+      "PSmall2_04",
+      "PSmall2_05",
+      "PSmall2_06",
+      "PSmall2_07",
+      "PSmall2_08",
+      "PSmall2_09",
+      "PSmall2_10",
+      "PSmall2_11",
+      "PSmall2_12",
+      "PSmall2_13",
+      "PSmall2_14",
+      "PSmall2_15",
+      "PSmall2_16",
+      "PSmall2_17",
+      "PSmall2_18",
+      "PSmall2_19",
+      "PSmall2_20"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteGlow"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PSmall3_00",
+      "PSmall3_01",
+      "PSmall3_02",
+      "PSmall3_03",
+      "PSmall3_04",
+      "PSmall3_05",
+      "PSmall3_06",
+      "PSmall3_07",
+      "PSmall3_08",
+      "PSmall3_09",
+      "PSmall3_10",
+      "PSmall3_11",
+      "PSmall3_12",
+      "PSmall3_13",
+      "PSmall3_14",
+      "PSmall3_15",
+      "PSmall3_16",
+      "PSmall3_17",
+      "PSmall3_18",
+      "PSmall3_19",
+      "PSmall3_20"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteGlow"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ]
+ },
  "objectTypes": {
   "BBag": {
    "AmbSnd": null,

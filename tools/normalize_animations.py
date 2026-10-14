@@ -10,7 +10,8 @@ presentation needs and nothing more:
 - every constructor call (`CState`, `CType`, `CStateInfo`, `CObjRepInfo`) is bound to its
   recovered parameter names and defaults;
 - a type-table call such as `GameObjs.GameObjBubble(self)` is replaced by what that function
-  returns.
+  returns;
+- the game module's effect animations are kept under `effects`.
 
 Usage: normalize_animations.py <raw json> <output json>
 """
@@ -141,6 +142,18 @@ class Normalizer:
         registrations = self.raw["Game"]["functions"]["CGameType.__ObjRepInit"]["stores"]["self.ObjRep"]["dict"]
         return {name: self.resolve(value) for name, value in registrations}
 
+    def effects(self):
+        """The game module's effect animations: every `self.Sfx*`, `self._Sfx*` and `self.Anm*`
+        that `CGameType.ModInit` stores, such as the explosion's `SfxExpl` layers and the
+        shadows `SfxShBig`, `SfxShMed` and `SfxShSm`."""
+        result = {}
+        stores = self.raw["Game"]["functions"]["CGameType.ModInit"]["stores"]
+        for target, value in stores.items():
+            name = target[len("self."):] if target.startswith("self.") else None
+            if name and (name.startswith("Sfx") or name.startswith("_Sfx") or name.startswith("Anm")):
+                result[name] = self.resolve(value)
+        return result
+
     def module_tables(self):
         """Every type-table function's resolved return value, by qualified name."""
         tables = {}
@@ -161,6 +174,7 @@ def main():
         "classTables": normalizer.state_tables(),
         "typeFunctions": normalizer.module_tables(),
         "objectTypes": normalizer.object_types(),
+        "effects": normalizer.effects(),
     }
     with open(sys.argv[2], "w") as stream:
         json.dump(output, stream, indent=1, sort_keys=True)
