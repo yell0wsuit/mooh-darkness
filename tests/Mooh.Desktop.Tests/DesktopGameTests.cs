@@ -8,6 +8,8 @@ using Mooh.Core.Session;
 using Mooh.Core.Simulation;
 using Mooh.Desktop.Platform.Input;
 using Mooh.Presentation.Animation;
+using Mooh.Presentation.Hud;
+using Mooh.Presentation.Text;
 
 using Xunit;
 
@@ -37,7 +39,20 @@ namespace Mooh.Desktop.Tests
             game.Update(default, [], 0.016);
 
             Assert.Contains(game.Hud.Sprites, sprite => sprite.Frame == "PNrmHealth");
-            Assert.Null(game.OutcomeTextId);
+        }
+
+        /// <summary>Verifies the level's title drops in as the level starts.</summary>
+        [Fact]
+        public void TheTitleDropsInAsTheLevelStarts()
+        {
+            DesktopGame game = Create();
+
+            for (int frame = 0; frame < 60; frame++)
+            {
+                game.Update(default, [], 0.016);
+            }
+
+            Assert.Equal("Level1", string.Concat(game.Hud.Texts.Where(text => text.Font == HudPresenter.LevelFontName).Select(text => text.Text)));
         }
 
         /// <summary>Verifies the pause stops the level's time.</summary>
@@ -88,7 +103,7 @@ namespace Mooh.Desktop.Tests
             }
 
             Assert.Equal(GameSessionState.LevelFailed, game.Session.State);
-            Assert.Equal("GameScrLooser", game.OutcomeTextId);
+            Assert.Equal("Sorry,youlost:(", string.Concat(game.Hud.Texts.Where(text => text.Font == HudPresenter.LevelFontName).Select(text => text.Text)));
             for (int frame = 0; frame < 100 && game.Session.State != GameSessionState.Playing; frame++)
             {
                 game.Update(default, [], 0.05);
@@ -103,7 +118,14 @@ namespace Mooh.Desktop.Tests
             string assets = Path.Combine(AppContext.BaseDirectory, "assets");
             LoadedLevelPack pack = JsonLevelPackLoader.Load(Path.Combine(assets, "levels", "manifest.json"));
             using FileStream stream = File.OpenRead(Path.Combine(assets, "animations", "animations.json"));
-            return new DesktopGame(new GameSession(pack, DifficultySpeeds.Standard), AnimationLibrary.Load(stream), new Random(1));
+            using FileStream strings = File.OpenRead(Path.Combine(assets, "text", "strings.bin"));
+            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", HudPresenter.LevelFontName + ".fnt"));
+            return new DesktopGame(
+                new GameSession(pack, DifficultySpeeds.Standard),
+                AnimationLibrary.Load(stream),
+                new Random(1),
+                StringTable.Load(strings),
+                BitmapFont.Load(HudPresenter.LevelFontName, font));
         }
     }
 }

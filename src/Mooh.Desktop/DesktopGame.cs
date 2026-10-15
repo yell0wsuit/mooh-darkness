@@ -14,6 +14,7 @@ using Mooh.Presentation.Animation;
 using Mooh.Presentation.Audio;
 using Mooh.Presentation.Hud;
 using Mooh.Presentation.Scene;
+using Mooh.Presentation.Text;
 
 namespace Mooh.Desktop
 {
@@ -24,8 +25,9 @@ namespace Mooh.Desktop
     /// <param name="session">The session to play.</param>
     /// <param name="library">The recovered animation tables.</param>
     /// <param name="random">The source of the presentation's random choices.</param>
-    /// <param name="strings">The recovered text table the help panel reads, if loaded.</param>
-    internal sealed class DesktopGame(GameSession session, AnimationLibrary library, Random random, StringTable? strings = null)
+    /// <param name="strings">The recovered text table the help panel and level texts read, if loaded.</param>
+    /// <param name="levelFont">The font the level texts are laid out in, if loaded.</param>
+    internal sealed class DesktopGame(GameSession session, AnimationLibrary library, Random random, StringTable? strings = null, BitmapFont? levelFont = null)
     {
         /// <summary>
         /// The longest frame the game accepts. A stall — a window drag, a debugger — would otherwise
@@ -42,6 +44,7 @@ namespace Mooh.Desktop
         private readonly AnimationLibrary _library = library;
         private readonly Random _random = random;
         private readonly StringTable? _strings = strings;
+        private readonly BitmapFont? _levelFont = levelFont;
         private double _outcomeSeconds;
         private bool _started;
 
@@ -55,21 +58,7 @@ namespace Mooh.Desktop
         public Backdrop Backdrop { get; private set; } = new(BackdropStyle.Normal, 1, 1, BackdropImageSize, random);
 
         /// <summary>Gets the screen panels of the current level.</summary>
-        public HudPresenter Hud { get; private set; } = new(session.Level.World, strings, random);
-
-        /// <summary>
-        /// Gets the recovered id of the line that announces the level's outcome —
-        /// <c>GameScrWiner</c>, <c>GameScrLooser</c> or, when the clock ran out,
-        /// <c>GameScrTimeOut</c> — or <see langword="null"/> while it is undecided.
-        /// </summary>
-        public string? OutcomeTextId => Session.State switch
-        {
-            GameSessionState.LevelCompleted or GameSessionState.CampaignCompleted => "GameScrWiner",
-            GameSessionState.LevelFailed when Session.Level.World.Player?.HealthBody?.Clock?.HasRunOut == true => "GameScrTimeOut",
-            GameSessionState.LevelFailed => "GameScrLooser",
-            GameSessionState.Playing => null,
-            _ => null,
-        };
+        public HudPresenter Hud { get; private set; } = new(session.Level.World, strings, random, levelFont);
 
         /// <summary>Gets the camera over the current level.</summary>
         public SceneCamera Camera { get; private set; } = new();
@@ -200,7 +189,8 @@ namespace Mooh.Desktop
         {
             _outcomeSeconds = 0;
             Presenter = new ScenePresenter(_library, _random);
-            Hud = new HudPresenter(Session.Level.World, _strings, _random);
+            Hud = new HudPresenter(Session.Level.World, _strings, _random, _levelFont);
+            Hud.ShowLevelTitle(Session.LevelIndex + 1);
             Camera = new SceneCamera();
             LevelDocument level = Session.Level.Source;
             Backdrop = new Backdrop(

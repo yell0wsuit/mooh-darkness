@@ -6,6 +6,8 @@ using Mooh.Core.Session;
 using Mooh.Desktop.Platform.Audio;
 using Mooh.Presentation.Animation;
 using Mooh.Presentation.Audio;
+using Mooh.Presentation.Hud;
+using Mooh.Presentation.Text;
 
 using SDL3;
 
@@ -54,7 +56,13 @@ namespace Mooh.Desktop
                 strings = StringTable.Load(stream);
             }
 
-            DesktopGame game = new(new GameSession(pack, options.Difficulty, options.LevelIndex), library, new Random(), strings);
+            BitmapFont levelFont;
+            using (FileStream stream = File.OpenRead(Path.Combine(assets, "fonts", HudPresenter.LevelFontName + ".fnt")))
+            {
+                levelFont = BitmapFont.Load(HudPresenter.LevelFontName, stream);
+            }
+
+            DesktopGame game = new(new GameSession(pack, options.Difficulty, options.LevelIndex), library, new Random(), strings, levelFont);
             try
             {
                 // A machine without a playback device still plays the game, silently.
@@ -67,7 +75,7 @@ namespace Mooh.Desktop
                 SoundBoard sounds = new(catalog, audio, Path.Combine(assets, "sounds"), new Random());
                 using MusicPlayer? music = MusicPlayer.Start(audio, Path.Combine(assets, "music"), "game");
                 using SceneRenderer scene = new(Path.Combine(assets, "sprites"));
-                using HudRenderer hud = new(Path.Combine(assets, "fonts"), strings);
+                using HudRenderer hud = new(Path.Combine(assets, "fonts"));
                 using SdlApplication application = new(options, game, scene, sounds, music, hud);
                 application.Run();
                 return 0;

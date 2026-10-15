@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-using Mooh.Core.Content;
 using Mooh.Presentation.Hud;
 using Mooh.Presentation.Text;
 
@@ -11,20 +10,12 @@ using SkiaSharp;
 namespace Mooh.Desktop
 {
     /// <summary>
-    /// Draws the screen panels and the help panel with the recovered bitmap fonts, and the line that
-    /// announces a decided level.
+    /// Draws the screen panels, the level texts and the help panel with the recovered bitmap
+    /// fonts. The pause dims the screen.
     /// </summary>
-    /// <remarks>
-    /// The outcome line stands still at the original's level-text place, <c>TxtTypeLvl</c>'s
-    /// (400, 250) in <c>PanelDigScr</c>, until its slide-in is ported; the pause dims the screen.
-    /// </remarks>
     /// <param name="fontsDirectory">The folder holding the <c>.fnt</c> tables and their atlases.</param>
-    /// <param name="strings">The recovered text table, if loaded.</param>
-    internal sealed class HudRenderer(string fontsDirectory, StringTable? strings) : IDisposable
+    internal sealed class HudRenderer(string fontsDirectory) : IDisposable
     {
-        /// <summary>The font of the original's level texts, <c>PgFontDigScr</c>.</summary>
-        private const string LevelTextFont = "PanelDigScr";
-
         private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.None);
         private readonly Dictionary<string, (BitmapFont Font, SKImage Atlas)> _fonts = [with(StringComparer.Ordinal)];
         private readonly SKPaint _shade = new() { Color = new SKColor(0, 0, 0, 128) };
@@ -45,12 +36,7 @@ namespace Mooh.Desktop
 
             foreach (HudText text in game.Hud.Texts)
             {
-                DrawText(canvas, HudPresenter.FontName, text);
-            }
-
-            if (game.OutcomeTextId is string id && strings is not null && strings.TryGetText(id, out string line))
-            {
-                DrawText(canvas, LevelTextFont, new HudText(line, 400, 250, TextAlignment.Center));
+                DrawText(canvas, text);
             }
 
             if (game.IsPaused)
@@ -71,9 +57,9 @@ namespace Mooh.Desktop
             _shade.Dispose();
         }
 
-        private void DrawText(SKCanvas canvas, string fontName, HudText text)
+        private void DrawText(SKCanvas canvas, HudText text)
         {
-            (BitmapFont font, SKImage atlas) = FontOf(fontName);
+            (BitmapFont font, SKImage atlas) = FontOf(text.Font);
             foreach (GlyphPlacement glyph in font.Layout(text.Text, text.X, text.Y, text.Alignment))
             {
                 canvas.DrawImage(
