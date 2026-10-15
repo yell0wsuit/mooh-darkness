@@ -78,6 +78,11 @@ namespace Mooh.Desktop
         {
             foreach (Atlas atlas in _atlases.Values)
             {
+                foreach (SKImage frame in atlas.Images.Values)
+                {
+                    frame.Dispose();
+                }
+
                 atlas.Image.Dispose();
             }
 
@@ -100,9 +105,16 @@ namespace Mooh.Desktop
                 return;
             }
 
+            if (!atlas.Images.TryGetValue(name, out SKImage? image))
+            {
+                // A standalone frame clamps linear filtering to its edge pixels. Sampling an
+                // atlas rectangle instead can fade its edges or bleed neighboring frames.
+                image = atlas.Image.Subset(SKRectI.Create(frame.X, frame.Y, frame.Width, frame.Height));
+                atlas.Images[name] = image;
+            }
+
             canvas.DrawImage(
-                atlas.Image,
-                SKRect.Create(frame.X, frame.Y, frame.Width, frame.Height),
+                image,
                 SKRect.Create((float)(x + frame.PivotX), (float)(y + frame.PivotY), frame.Width, frame.Height),
                 Sampling,
                 paint);
@@ -126,6 +138,9 @@ namespace Mooh.Desktop
             return atlas;
         }
 
-        private sealed record Atlas(SKImage Image, SpritePage Frames);
+        private sealed record Atlas(SKImage Image, SpritePage Frames)
+        {
+            public Dictionary<string, SKImage> Images { get; } = [with(StringComparer.Ordinal)];
+        }
     }
 }
