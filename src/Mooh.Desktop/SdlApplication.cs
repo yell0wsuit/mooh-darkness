@@ -67,7 +67,7 @@ namespace Mooh.Desktop
                 PumpEvents();
                 TimeSpan now = _clock.Elapsed;
                 PlayerInputState input = options.Script is null ? _controls.PlayerInput : options.ScriptedInput(game.ElapsedSeconds);
-                game.Update(input, _controls.TakeCommands(), (now - previous).TotalSeconds);
+                game.Update(input, _controls.TakeCommands(), (now - previous).TotalSeconds, _controls.AnyKeyHeld);
                 sounds.Play(game.Sounds, game.Camera);
                 music?.Pump();
                 previous = now;

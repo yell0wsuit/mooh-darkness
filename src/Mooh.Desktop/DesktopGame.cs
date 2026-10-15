@@ -56,6 +56,8 @@ namespace Mooh.Desktop
         private readonly ISpriteMask? _masks = masks;
         private double _outcomeSeconds;
         private bool _started;
+        private bool _skipBuild;
+        private LevelBuild? _build;
 
         /// <summary>Gets the session.</summary>
         public GameSession Session { get; } = session;
@@ -81,6 +83,9 @@ namespace Mooh.Desktop
         /// <summary>Gets the sounds this frame cued; none while paused or between levels.</summary>
         public IReadOnlyList<SoundCue> Sounds { get; private set; } = [];
 
+        /// <summary>Gets whether the level is still flying into view before play.</summary>
+        public bool IsBuilding => !_started || _build?.IsDone == false;
+
         /// <summary>Gets a value indicating whether the game is paused.</summary>
         public bool IsPaused
         {
@@ -91,10 +96,17 @@ namespace Mooh.Desktop
         /// <param name="input">The held directions and fire key.</param>
         /// <param name="commands">The keyboard commands given since the last frame.</param>
         /// <param name="seconds">The wall-clock time since the last frame.</param>
-        public void Update(PlayerInputState input, IReadOnlyList<ControlCommand> commands, double seconds)
+        /// <param name="anyKeyHeld">Whether any keyboard key is held, including keys outside the player controls.</param>
+        public void Update(PlayerInputState input, IReadOnlyList<ControlCommand> commands, double seconds, bool anyKeyHeld = false)
         {
             ArgumentNullException.ThrowIfNull(commands);
             Sounds = [];
+            if (!_started)
+            {
+                _started = true;
+                StartLevelPresentation();
+            }
+
             List<SimulationEvent> events = [];
             foreach (ControlCommand command in commands)
             {
@@ -102,18 +114,12 @@ namespace Mooh.Desktop
                 {
                     IsPaused = !IsPaused;
                 }
-                else if (!IsPaused && Session.State == GameSessionState.Playing)
+                else if (!IsPaused && !IsBuilding && Session.State == GameSessionState.Playing)
                 {
                     events.AddRange(command.Kind == ControlCommandKind.NextWeapon
                         ? Session.Simulation.SelectNextWeapon()
                         : Session.Simulation.SelectWeapon(command.Weapon!.Value));
                 }
-            }
-
-            if (!_started)
-            {
-                _started = true;
-                StartLevelPresentation();
             }
 
             if (IsPaused)
@@ -124,8 +130,24 @@ namespace Mooh.Desktop
             seconds = Math.Clamp(seconds, 0, LongestFrameSeconds);
             ElapsedSeconds += seconds;
             GridPosition? pivot = Session.Simulation.WorldRotationPivot;
-            if (Session.State == GameSessionState.Playing)
+            if (IsBuilding)
             {
+                bool held = anyKeyHeld || input != default;
+                if (_skipBuild && !held)
+                {
+                    _build!.Finish();
+                }
+
+                _skipBuild |= held;
+                _build!.Advance(seconds);
+                if (_build.IsDone)
+                {
+                    Hud.ShowLevelTitle(Session.LevelIndex + 1);
+                }
+            }
+            else if (Session.State == GameSessionState.Playing)
+            {
+                _build?.Advance(seconds);
                 Session.SetPlayerInput(input);
                 events.AddRange(Session.Advance(TimeSpan.FromSeconds(seconds)));
             }
@@ -141,7 +163,7 @@ namespace Mooh.Desktop
                 && simulation.WorldRotationPivot is GridPosition center
                 ? WorldSpin.Of(center, turning, simulation.WorldRotationProgress)
                 : null;
-            Presenter.Update(Session.Level.World, events, seconds, spin);
+            Presenter.Update(Session.Level.World, events, seconds, spin, _build);
             Sounds = Presenter.Sounds;
             Backdrop.Advance(seconds);
             if (Session.Level.World.Player is Entity player)
@@ -202,7 +224,12 @@ namespace Mooh.Desktop
             _outcomeSeconds = 0;
             Presenter = new ScenePresenter(_library, _random, _strings, _masks);
             Hud = new HudPresenter(Session.Level.World, _strings, _random, _levelFont);
-            Hud.ShowLevelTitle(Session.LevelIndex + 1);
+            _skipBuild = false;
+            _build = new LevelBuild(Session.Level.World, _library, _random);
+            if (_build.IsDone)
+            {
+                Hud.ShowLevelTitle(Session.LevelIndex + 1);
+            }
             Camera = new SceneCamera();
             LevelDocument level = Session.Level.Source;
             Backdrop = new Backdrop(
@@ -217,7 +244,7 @@ namespace Mooh.Desktop
                 Camera.Snap(x, y);
             }
 
-            Presenter.Update(Session.Level.World, [], 0);
+            Presenter.Update(Session.Level.World, [], 0, build: _build);
             Hud.Update(Session.Level.World, [], Session.TotalScore, 0, Camera);
         }
     }

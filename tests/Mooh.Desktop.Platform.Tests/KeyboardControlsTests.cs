@@ -13,6 +13,22 @@ namespace Mooh.Desktop.Platform.Tests
     /// </summary>
     public sealed class KeyboardControlsTests
     {
+        /// <summary>Verifies any held key can skip construction, including keys outside the player controls.</summary>
+        [Fact]
+        public void AnyHeldKeyCanSkipConstruction()
+        {
+            KeyboardControls controls = new();
+            Assert.False(controls.AnyKeyHeld);
+            controls.KeyDown(SDL.Keycode.A, repeat: false);
+            Assert.True(controls.AnyKeyHeld);
+            Assert.Equal(default, controls.PlayerInput);
+            controls.KeyUp(SDL.Keycode.A);
+            Assert.False(controls.AnyKeyHeld);
+            controls.KeyDown(SDL.Keycode.Return, repeat: false);
+            controls.ReleaseAll();
+            Assert.False(controls.AnyKeyHeld);
+        }
+
         /// <summary>Verifies held arrows and the fire key become the player's held input.</summary>
         [Fact]
         public void HeldKeysBecomeThePlayersInput()

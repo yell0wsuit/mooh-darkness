@@ -47,6 +47,8 @@ namespace Mooh.Desktop.Tests
         {
             DesktopGame game = Create();
 
+            game.Update(new PlayerInputState(false, false, false, false, true), [], 0.016);
+            game.Update(default, [], 0.016);
             for (int frame = 0; frame < 60; frame++)
             {
                 game.Update(default, [], 0.016);
@@ -86,6 +88,8 @@ namespace Mooh.Desktop.Tests
         public void ALostLevelIsReplayed()
         {
             DesktopGame game = Create();
+            game.Update(new PlayerInputState(false, false, false, false, true), [], 0.016);
+            game.Update(default, [], 0.016);
             for (int frame = 0; frame < 50; frame++)
             {
                 game.Update(default, [], 0.05);
@@ -111,6 +115,41 @@ namespace Mooh.Desktop.Tests
 
             Assert.Equal(GameSessionState.Playing, game.Session.State);
             Assert.Equal(PlayerActionKind.LevelEntry, game.Session.Level.World.Player!.PlayerBody!.Action?.Kind);
+        }
+
+        /// <summary>Verifies the fly-in holds gameplay and the level title until the view is built.</summary>
+        [Fact]
+        public void TheFlyInHoldsGameplayAndTheTitle()
+        {
+            DesktopGame game = Create();
+            double remaining = game.Session.Level.World.Player!.PlayerBody!.Action!.RemainingSeconds;
+
+            for (int frame = 0; frame < 6; frame++)
+            {
+                game.Update(default, [], 0.1);
+            }
+
+            Assert.Equal(remaining, game.Session.Level.World.Player!.PlayerBody!.Action!.RemainingSeconds);
+            Assert.DoesNotContain(game.Presenter.Sprites, sprite => sprite.Entity == game.Session.Level.World.Player!.Id);
+            Assert.DoesNotContain(game.Hud.Texts, text => text.Font == HudPresenter.LevelFontName);
+        }
+
+        /// <summary>Verifies a skip waits for release and does not consume ammunition or advance gameplay.</summary>
+        [Fact]
+        public void ReleasingTheSkipKeyFinishesTheFlyIn()
+        {
+            DesktopGame game = Create();
+            PlayerInputState fire = new(false, false, false, false, true);
+            double remaining = game.Session.Level.World.Player!.PlayerBody!.Action!.RemainingSeconds;
+
+            game.Update(fire, [], 0.1);
+            Assert.DoesNotContain(game.Presenter.Sprites, sprite => sprite.Entity == game.Session.Level.World.Player!.Id);
+            game.Update(default, [], 0.1);
+
+            Assert.False(game.IsBuilding);
+            Assert.Equal(remaining, game.Session.Level.World.Player!.PlayerBody!.Action!.RemainingSeconds);
+            game.Update(default, [], 0.1);
+            Assert.True(game.Session.Level.World.Player!.PlayerBody!.Action!.RemainingSeconds < remaining);
         }
 
         private static DesktopGame Create()

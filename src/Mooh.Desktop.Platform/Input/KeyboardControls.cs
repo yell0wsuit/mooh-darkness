@@ -33,6 +33,9 @@ namespace Mooh.Desktop.Platform.Input
         private readonly HashSet<SDL.Keycode> _held = [];
         private readonly List<ControlCommand> _commands = [];
 
+        /// <summary>Gets whether any key is held, as the level fly-in's <c>CtrlKeyCheckAny</c> tests.</summary>
+        public bool AnyKeyHeld => _held.Count != 0;
+
         /// <summary>Gets the held directions and fire key.</summary>
         public PlayerInputState PlayerInput => new(
             Held(SDL.Keycode.Left),

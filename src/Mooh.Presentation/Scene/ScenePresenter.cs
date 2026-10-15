@@ -100,8 +100,9 @@ namespace Mooh.Presentation.Scene
         /// <param name="events">The events the simulation reported for this frame.</param>
         /// <param name="seconds">The simulated time of this frame.</param>
         /// <param name="spin">The world rotation in flight, which turns every drawn position.</param>
-        /// <exception cref="ArgumentNullException">An argument is <see langword="null"/>.</exception>
-        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds, WorldSpin? spin = null)
+        /// <param name="build">The level's fly-in, which hides and moves what it has not landed yet.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="world"/> or <paramref name="events"/> is <see langword="null"/>.</exception>
+        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds, WorldSpin? spin = null, LevelBuild? build = null)
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(events);
@@ -117,6 +118,13 @@ namespace Mooh.Presentation.Scene
                 _ = present.Add(entity.Id);
                 (double seenX, double seenY) = DrawnPosition.Of(entity);
                 seen[entity.Id] = new Sighting(TypeOf(entity), seenX, seenY, entity.PlayerBody is not null, entity.BigBombBody is not null);
+                if (build?.IsDone == false && (entity.PlayerBody is not null || entity.DoorBody is not null))
+                {
+                    // Their GameInit runs after construction, so neither animation nor its
+                    // initial sound may start while the player and entry door are hidden.
+                    continue;
+                }
+
                 if (!_animators.TryGetValue(entity.Id, out EntityAnimator? animator))
                 {
                     animator = Create(entity);
@@ -129,30 +137,43 @@ namespace Mooh.Presentation.Scene
                 }
 
                 animator.Update(world, entity, events, seconds);
+                bool hidden = build?.Hides(entity.Id) == true;
                 for (int step = animator.TakeSteps(); step > 0; step--)
                 {
-                    steps.Add(DrawnPosition.Of(entity));
+                    if (!hidden)
+                    {
+                        steps.Add(DrawnPosition.Of(entity));
+                    }
                 }
 
                 foreach (string alias in animator.TakeSounds())
                 {
-                    (double soundX, double soundY) = DrawnPosition.Of(entity);
-                    sounds.Add(new SoundCue(alias, soundX, soundY));
+                    if (!hidden)
+                    {
+                        (double soundX, double soundY) = build?.PositionOf(entity) ?? DrawnPosition.Of(entity);
+                        sounds.Add(new SoundCue(alias, soundX, soundY));
+                    }
+                }
+
+                if (hidden)
+                {
+                    continue;
                 }
 
                 if (animator.Frame is string frame)
                 {
-                    (double x, double y) = DrawnPosition.Of(entity);
+                    (double x, double y) = build?.PositionOf(entity) ?? DrawnPosition.Of(entity);
                     (double dx, double dy) = animator.Offset;
+                    int pass = build?.IsFlying(entity.Id) == true ? 1 : animator.Pass;
                     if (animator.Shadow is (string shadowPage, string shadowFrame) && CastsShadow(world, x, y))
                     {
-                        sprites.Add(new SceneSprite(entity.Id, shadowPage, shadowFrame, x + dx, y + dy, animator.Pass));
+                        sprites.Add(new SceneSprite(entity.Id, shadowPage, shadowFrame, x + dx, y + dy, pass));
                     }
 
-                    sprites.Add(new SceneSprite(entity.Id, animator.Page, frame, x + dx, y + dy, animator.Pass));
+                    sprites.Add(new SceneSprite(entity.Id, animator.Page, frame, x + dx, y + dy, pass));
                     foreach ((string overlayPage, string overlayFrame) in animator.Overlays(_clockMilliseconds))
                     {
-                        sprites.Add(new SceneSprite(entity.Id, overlayPage, overlayFrame, x + dx, y + dy, animator.Pass, Additive: true));
+                        sprites.Add(new SceneSprite(entity.Id, overlayPage, overlayFrame, x + dx, y + dy, pass, Additive: true));
                     }
                 }
             }
@@ -166,14 +187,29 @@ namespace Mooh.Presentation.Scene
 
             sounds.AddRange(_eventSounds.For(events, sighted));
             sounds.AddRange(_gameSounds.For(world, events, seconds));
-            sounds.AddRange(_waterDrops.Update(world, seconds));
+            if (build is null || build.IsDone)
+            {
+                // GameWaterSpawn starts with play, after the fly-in.
+                sounds.AddRange(_waterDrops.Update(world, seconds));
+            }
+
+            if (build is not null)
+            {
+                sounds.AddRange(build.Sounds);
+            }
+
             _shake.Update(world, events, sighted, seconds, _random);
             _seen = seen;
             _sounds = sounds;
             IReadOnlyList<GridPosition> blasts = _effects.Update(world, events, seconds);
             sprites.AddRange(_effects.Sprites);
             sprites.AddRange(_waterDrops.Sprites);
-            _particles.Update(world, events, sighted, blasts, steps, LastDrawn, seconds);
+            if (build is null || build.IsDone)
+            {
+                // The pickup timers are installed by GameInit after construction.
+                _particles.Update(world, events, sighted, blasts, steps, LastDrawn, seconds);
+            }
+
             _floating.Update(world, events, sighted, seconds);
             _texts = [.. _floating.Texts];
             foreach (EntityId gone in _animators.Keys.Where(id => !present.Contains(id)).ToList())
