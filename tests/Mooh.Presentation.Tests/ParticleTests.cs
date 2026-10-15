@@ -124,6 +124,73 @@ namespace Mooh.Presentation.Tests
             Assert.Contains(sparks, spark => Math.Abs(spark.X - (2 - (10 / 80.0))) < 0.02 && Math.Abs(spark.Y - (1 - (10 / 75.0))) < 0.02);
         }
 
+        /// <summary>
+        /// Verifies a diamond twinkles from the level's start, its <c>_Prt_Diam1</c> run by
+        /// <c>GameInit</c>: a gem glint or, about three times in ten, a mine-star flash, near it.
+        /// </summary>
+        [Fact]
+        public void ADiamondTwinklesFromTheStart()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("ODiam01", 5, 1)));
+
+            harness.Step(0.016);
+
+            SceneSprite glint = Assert.Single(harness.Presenter.Sprites, sprite => sprite.Page is "SpriteObjDiam" or "SpriteObjMine" && sprite.Pass == int.MaxValue);
+            Assert.InRange(glint.X, 4.69, 5.31);
+            Assert.InRange(glint.Y, 0.59, 1.41);
+        }
+
+        /// <summary>Verifies the twinkle comes back every 750 to 1500 ms.</summary>
+        [Fact]
+        public void ADiamondTwinklesAgain()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("ODiam01", 5, 1)));
+            int glints = 0;
+
+            for (int frame = 0; frame < 200; frame++)
+            {
+                harness.Step(0.016);
+                glints = Math.Max(glints, harness.Presenter.Sprites.Count(sprite => sprite.Page is "SpriteObjDiam" or "SpriteObjMine" && sprite.Pass == int.MaxValue));
+            }
+
+            Assert.True(glints >= 1);
+            Assert.InRange(TwinklesIn(harness, 3.2), 2, 5);
+        }
+
+        /// <summary>
+        /// Verifies cola protection starts with a burst of forty bubbles, <c>_Prt_ColaProt</c>,
+        /// and keeps bubbling, <c>_Prt_ColaOn</c>.
+        /// </summary>
+        [Fact]
+        public void ColaBurstsIntoBubbles()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("BCola", 2, 1)));
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+
+            harness.StepUntil(() => harness.Player.PlayerBody!.Progress.ColaRemaining > TimeSpan.Zero, limitSeconds: 4);
+
+            Assert.True(harness.Presenter.Sprites.Count(sprite => sprite.Page == "SpriteObjCola") >= 40);
+        }
+
+        private static int TwinklesIn(SceneHarness harness, double seconds)
+        {
+            int started = 0;
+            HashSet<(double, double)> seen = [];
+            for (double elapsed = 0; elapsed < seconds; elapsed += 0.016)
+            {
+                harness.Step(0.016);
+                foreach (SceneSprite sprite in harness.Presenter.Sprites.Where(sprite => sprite.Page is "SpriteObjDiam" or "SpriteObjMine" && sprite.Pass == int.MaxValue))
+                {
+                    if (seen.Add((Math.Round(sprite.X, 3), Math.Round(sprite.Y, 3))))
+                    {
+                        started++;
+                    }
+                }
+            }
+
+            return started;
+        }
+
         private static List<SceneSprite> Particles(SceneHarness harness, string prefix)
         {
             return [.. harness.Presenter.Sprites.Where(sprite => sprite.Page == "SpriteParts" && sprite.Frame.StartsWith(prefix, StringComparison.Ordinal))];

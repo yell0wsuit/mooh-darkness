@@ -68,5 +68,23 @@ namespace Mooh.Presentation.Tests
             Assert.Equal("ColaOn", heard.First(alias => alias.StartsWith("Cola", System.StringComparison.Ordinal) && alias != "ColaDrink" && alias != "ColaPlDrink" && alias != "ColaFizz"));
             Assert.InRange(heard.Count(alias => alias == "ColaAmb"), 2, 3);
         }
+
+        /// <summary>
+        /// Verifies a hit the cola soaks up plays <c>SndBonColaWork</c> and <c>SndBonColaFizz</c>,
+        /// as <c>OnHelthLost</c>'s cola branch does.
+        /// </summary>
+        [Fact]
+        public void ColaSoakingAHitFizzes()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("BCola", 2, 1)));
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+            harness.StepUntil(() => harness.Player.PlayerBody!.Progress.ColaRemaining > System.TimeSpan.Zero, limitSeconds: 4);
+
+            harness.Damage(10);
+            harness.Step(0.016);
+
+            Assert.Contains(harness.Presenter.Sounds, cue => cue.Alias == "ColaWork");
+            Assert.Contains(harness.Presenter.Sounds, cue => cue.Alias == "ColaFizz");
+        }
     }
 }

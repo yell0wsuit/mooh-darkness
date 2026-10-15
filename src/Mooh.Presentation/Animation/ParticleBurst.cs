@@ -45,6 +45,49 @@ namespace Mooh.Presentation.Animation
         Fire,
     }
 
+    /// <summary>A page and the frame sequences a particle picks one of.</summary>
+    /// <param name="Page">The sprite page.</param>
+    /// <param name="Variants">The frame sequences.</param>
+    public sealed record ParticleFrames(string Page, IReadOnlyList<IReadOnlyList<string>> Variants)
+    {
+        /// <summary>Gets an empty set, for frames the data does not hold.</summary>
+        public static ParticleFrames None { get; } = new(string.Empty, []);
+    }
+
+    /// <summary>
+    /// The glints a resting pickup gives off, its type's <c>PFunc</c>, which <c>GameInit</c> starts
+    /// and each run reschedules.
+    /// </summary>
+    public enum IdleSparkle
+    {
+        /// <summary><c>_Prt_Diam1</c>: a <c>SfxGem1</c> glint, or a flash.</summary>
+        Gem1,
+
+        /// <summary><c>_Prt_Diam2</c>: a <c>SfxGem2</c> glint, or a flash.</summary>
+        Gem2,
+
+        /// <summary><c>_Prt_Diam3</c>: a <c>SfxGem3</c> glint, or a flash.</summary>
+        Gem3,
+
+        /// <summary><c>_Prt_Diam5</c> and <c>_Prt_Coin13</c>: a <c>SfxGem5</c> glint, or a flash.</summary>
+        Gem5,
+
+        /// <summary><c>_Prt_Coin2</c>, <c>_Prt_DoorKey</c>, <c>_Prt_Bons</c> and <c>_Prt_WeapMine</c>: a flash, <c>_Ptr_Flash</c>.</summary>
+        Flash,
+
+        /// <summary><c>_Prt_Eat3</c>: steam rising, <c>SfxEat3</c>.</summary>
+        Steam,
+
+        /// <summary><c>_Prt_WeapGr</c>: a <c>SfxWeapGr</c> glint, or a flash.</summary>
+        Grenade,
+
+        /// <summary><c>_Prt_WeapRock</c>: a <c>SfxWeapRock</c> glint, or a flash.</summary>
+        Rocket,
+
+        /// <summary><c>_Prt_BBombGet</c>: two glints circling, <c>SfxWeapBBombStay</c>, or a flash.</summary>
+        BigBomb,
+    }
+
     /// <summary>The game module's shared particle frames, from <c>CGameType.ModInit</c>.</summary>
     /// <param name="WalkSmoke"><c>SfxWSmoke</c>: the puffs of steps, landings and pushes.</param>
     /// <param name="Smoke"><c>SfxSmoke</c>: the smoke a blast leaves.</param>
@@ -62,6 +105,15 @@ namespace Mooh.Presentation.Animation
         IReadOnlyList<string> GlowLandVertical,
         ParticleBurst? PickupStars)
     {
+        /// <summary>Gets the glints of each resting pickup's <see cref="IdleSparkle"/>, by kind.</summary>
+        public IReadOnlyDictionary<IdleSparkle, ParticleFrames> Sparkles { get; init; } = new Dictionary<IdleSparkle, ParticleFrames>();
+
+        /// <summary>Gets the flash every glinting pickup may give instead, <c>SfxWeapMine</c>.</summary>
+        public ParticleFrames Flash { get; init; } = ParticleFrames.None;
+
+        /// <summary>Gets the cola's bubbles, <c>SfxCola</c>.</summary>
+        public ParticleFrames ColaBubbles { get; init; } = ParticleFrames.None;
+
         /// <summary>The page the shared particles draw from, <c>PgParts</c>.</summary>
         public const string PartsPage = "SpriteParts";
 

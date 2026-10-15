@@ -59,6 +59,12 @@ namespace Mooh.Presentation.Animation
             get; init;
         }
 
+        /// <summary>Gets the glints the object gives off while it lies in the level, its <c>PFunc</c>.</summary>
+        public IdleSparkle? Sparkle
+        {
+            get; init;
+        }
+
         /// <summary>Gets the score eating the object floats, its <c>ulEatScore</c>.</summary>
         public int EatScore
         {

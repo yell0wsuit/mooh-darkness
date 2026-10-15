@@ -5,6 +5,7 @@ using System.Linq;
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Levels;
+using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 using Mooh.Presentation.Animation;
 using Mooh.Presentation.Audio;
@@ -74,8 +75,20 @@ namespace Mooh.Presentation.Scene
             [Direction.Down] = ((-0.4, 0.4), (0.4, 0.5)),
         };
 
+        /// <summary>The big bomb's glint period, <c>_Prt_BBombGet</c>'s <c>EvSet(..., 400)</c>.</summary>
+        private const double BigBombGlintMilliseconds = 400;
+
+        /// <summary><c>App.Rand.Prob(10000)</c>: a glint is a flash instead about three times in ten.</summary>
+        private const int FlashChance = 10000;
+
+        /// <summary><c>_Prt_BBombGet</c>'s <c>App.Rand.Prob(8096)</c>.</summary>
+        private const int BigBombFlashChance = 8096;
+
         private readonly List<Particle> _world = [];
         private readonly List<Particle> _overlay = [];
+        private readonly Dictionary<EntityId, Twinkle> _twinkles = [];
+        private TimeSpan _cola;
+        private double? _bubbleMilliseconds;
 
         /// <summary>Gets the particles' frames: the world's, then the overlay's.</summary>
         public IEnumerable<SceneSprite> Sprites => _world.Concat(_overlay).Select(particle => new SceneSprite(
@@ -118,6 +131,8 @@ namespace Mooh.Presentation.Scene
             _ = _world.RemoveAll(particle => particle.IsGone);
             _ = _overlay.RemoveAll(particle => particle.IsGone);
             Emit(world, events, seen, drawn);
+            RunSparkles(world, milliseconds);
+            Cola(world, events, milliseconds);
             foreach (GridPosition cell in blasts)
             {
                 Smoke(cell.X, cell.Y);
@@ -168,6 +183,187 @@ namespace Mooh.Presentation.Scene
                     default:
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Runs each resting pickup's <c>PFunc</c>: once as it first appears, as <c>GameInit</c>
+        /// does, then every 750 to 1500 ms (the food's 1000 to 1500, the big bomb's 400).
+        /// </summary>
+        private void RunSparkles(WorldGrid world, double milliseconds)
+        {
+            HashSet<EntityId> present = [];
+            foreach (Entity entity in world.Entities)
+            {
+                if (entity.ArchivalIdentity is not { } identity
+                    || !library.TryGetLook(identity.ArchivalType, out ObjectLook look)
+                    || look.Sparkle is not IdleSparkle sparkle)
+                {
+                    continue;
+                }
+
+                _ = present.Add(entity.Id);
+                if (!_twinkles.TryGetValue(entity.Id, out Twinkle? twinkle))
+                {
+                    twinkle = new Twinkle();
+                    _twinkles[entity.Id] = twinkle;
+                }
+                else if ((twinkle.Milliseconds -= milliseconds) > 0)
+                {
+                    continue;
+                }
+
+                (double x, double y) = DrawnPosition.Of(entity);
+                Glint(sparkle, twinkle, x, y);
+                twinkle.Milliseconds = Math.Max(0, twinkle.Milliseconds) + (sparkle switch
+                {
+                    IdleSparkle.BigBomb => BigBombGlintMilliseconds,
+                    IdleSparkle.Steam => RandRange(1000, 1500),
+                    IdleSparkle.Gem1 or IdleSparkle.Gem2 or IdleSparkle.Gem3 or IdleSparkle.Gem5 or IdleSparkle.Flash
+                        or IdleSparkle.Grenade or IdleSparkle.Rocket => RandRange(750, 1500),
+                    _ => RandRange(750, 1500),
+                });
+            }
+
+            foreach (EntityId gone in _twinkles.Keys.Where(id => !present.Contains(id)).ToList())
+            {
+                _ = _twinkles.Remove(gone);
+            }
+        }
+
+        private void Glint(IdleSparkle sparkle, Twinkle twinkle, double x, double y)
+        {
+            if (sparkle == IdleSparkle.Flash
+                || (sparkle is not (IdleSparkle.Steam or IdleSparkle.BigBomb) && Prob(FlashChance)))
+            {
+                Flash(x, y);
+                return;
+            }
+
+            ParticleFrames frames = library.Particles.Sparkles.GetValueOrDefault(sparkle) ?? ParticleFrames.None;
+            if (frames.Variants.Count == 0)
+            {
+                return;
+            }
+
+            if (sparkle == IdleSparkle.Steam)
+            {
+                _world.Add(new Particle(frames.Page, Pick(frames.Variants), Between(0.01, 0.02), x, y)
+                {
+                    SpeedY = Between(-0.0002, -0.0004),
+                    Collides = false,
+                    Additive = true,
+                });
+                return;
+            }
+
+            if (sparkle == IdleSparkle.BigBomb)
+            {
+                if (Prob(BigBombFlashChance))
+                {
+                    Flash(x, y);
+                }
+
+                // Two glints opposite each other on a 0.4-cell circle that turns half a radian a time.
+                twinkle.Rotation -= 0.5;
+                (double sine, double cosine) = Math.SinCos(twinkle.Rotation);
+                (double offsetX, double offsetY) = (0.4 * cosine, 0.4 * sine);
+                double centerY = y - 0.1875;
+                foreach (int side in (int[])[1, -1])
+                {
+                    _world.Add(new Particle(frames.Page, frames.Variants[0], Between(0.02, 0.03), x + (side * offsetX), centerY + (side * offsetY))
+                    {
+                        SpeedX = side * offsetX * 0.00015,
+                        SpeedY = side * offsetY * 0.00015,
+                        Collides = false,
+                        Additive = true,
+                    });
+                }
+
+                return;
+            }
+
+            _world.Add(new Particle(frames.Page, Pick(frames.Variants), Between(0.02, 0.03), x + Between(-0.3, 0.3), y + Between(-0.4, 0.4))
+            {
+                Collides = false,
+                Additive = true,
+            });
+        }
+
+        /// <summary><c>_Ptr_Flash</c>: a mine star near the pickup.</summary>
+        private void Flash(double x, double y)
+        {
+            ParticleFrames flash = library.Particles.Flash;
+            if (flash.Variants.Count > 0)
+            {
+                _world.Add(new Particle(flash.Page, Pick(flash.Variants), Between(0.02, 0.03), x + Between(-0.3, 0.3), y + Between(-0.4, 0.4))
+                {
+                    Collides = false,
+                    Additive = true,
+                });
+            }
+        }
+
+        /// <summary>
+        /// The cola's bubbles, <c>BonColaWork</c>: forty at once as its protection starts or runs
+        /// out and whenever it soaks up a hit (<c>_Prt_ColaProt</c>), and one every 150 to 300 ms
+        /// while it lasts (<c>_Prt_ColaOn</c>).
+        /// </summary>
+        private void Cola(WorldGrid world, IReadOnlyList<SimulationEvent> events, double milliseconds)
+        {
+            if (world.Player is not Entity player || player.PlayerBody?.Progress is not PlayerProgress progress)
+            {
+                return;
+            }
+
+            TimeSpan cola = progress.ColaRemaining;
+            (double x, double y) = DrawnPosition.Of(player);
+            bool started = _cola == TimeSpan.Zero && cola > TimeSpan.Zero;
+            bool ranOut = cola == TimeSpan.Zero && _cola > TimeSpan.Zero && _cola.TotalMilliseconds <= milliseconds + 1;
+            bool soaked = cola > TimeSpan.Zero && events.Any(item => item is DamageIgnored ignored && ignored.EntityId == player.Id);
+            _cola = cola;
+            if (started || ranOut || soaked)
+            {
+                for (int index = 0; index < 40; index++)
+                {
+                    Bubble(x, y);
+                }
+            }
+
+            if (cola == TimeSpan.Zero)
+            {
+                _bubbleMilliseconds = null;
+                return;
+            }
+
+            if (_bubbleMilliseconds is not double left)
+            {
+                Bubble(x, y);
+                _bubbleMilliseconds = RandRange(150, 300);
+                return;
+            }
+
+            left -= milliseconds;
+            if (left <= 0)
+            {
+                Bubble(x, y);
+                left += RandRange(150, 300);
+            }
+
+            _bubbleMilliseconds = left;
+        }
+
+        private void Bubble(double x, double y)
+        {
+            ParticleFrames bubbles = library.Particles.ColaBubbles;
+            if (bubbles.Variants.Count > 0)
+            {
+                _world.Add(new Particle(bubbles.Page, Pick(bubbles.Variants), Between(0.02, 0.04), Between(x - 0.3, x + 0.3), Between(y - 0.4, y + 0.4))
+                {
+                    SpeedX = Between(-0.0002, 0.0002),
+                    SpeedY = Between(-0.0004, 0),
+                    Additive = true,
+                });
             }
         }
 
@@ -453,6 +649,12 @@ namespace Mooh.Presentation.Scene
             return max > min ? random.Next(min, max) : min;
         }
 
+        /// <summary><c>App.Rand.Prob(k)</c>: true when a 15-bit draw is at most <paramref name="chance"/>.</summary>
+        private bool Prob(int chance)
+        {
+            return random.Next(32768) <= chance;
+        }
+
         /// <summary><c>App.Rand.FRange</c>.</summary>
         private double Between(double min, double max)
         {
@@ -462,6 +664,20 @@ namespace Mooh.Presentation.Scene
         private IReadOnlyList<string> Pick(IReadOnlyList<IReadOnlyList<string>> variants)
         {
             return variants[random.Next(variants.Count)];
+        }
+
+        /// <summary>A resting pickup's glint timer and, for the big bomb, its glints' turn.</summary>
+        private sealed class Twinkle
+        {
+            public double Milliseconds
+            {
+                get; set;
+            }
+
+            public double Rotation
+            {
+                get; set;
+            }
         }
 
         /// <summary>One particle as <c>PartsCycle</c> moves it.</summary>

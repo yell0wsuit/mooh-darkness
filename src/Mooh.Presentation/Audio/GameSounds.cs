@@ -21,7 +21,8 @@ namespace Mooh.Presentation.Audio
     /// The bonus sounds follow the player's timed bonuses: <c>GMod.BonOn</c> plays the bonus's
     /// <c>SndOn</c> at the player as it starts, the cola then plays <c>SndBonColaAmb</c> every 300 to
     /// 350 ms while it lasts, and a bonus that runs out plays its <c>SndOff</c> (the ice's is its
-    /// <c>SndBonIceOn</c> again). The heartbeat, <c>SndPlHeart1</c>, beats at most once a second
+    /// <c>SndBonIceOn</c> again); a hit the cola soaks up plays <c>SndBonColaWork</c> and
+    /// <c>SndBonColaFizz</c>. The heartbeat, <c>SndPlHeart1</c>, beats at most once a second
     /// while health drains below 40.
     /// </para>
     /// <para>
@@ -75,6 +76,14 @@ namespace Mooh.Presentation.Audio
                 _started = true;
                 Remember(progress, health);
                 return cues;
+            }
+
+            if (progress.ColaRemaining > TimeSpan.Zero
+                && System.Linq.Enumerable.Any(events, item => item is DamageIgnored ignored && ignored.EntityId == player.Id))
+            {
+                // OnHelthLost's cola branch: the bonus soaks up the hit.
+                cues.Add(Placed("SndBonColaWork", x, y));
+                cues.Add(Placed("SndBonColaFizz", x, y));
             }
 
             Bonus(progress.ColaRemaining, ref _cola, "SndBonColaOn", "SndBonColaOff", milliseconds, x, y, cues);

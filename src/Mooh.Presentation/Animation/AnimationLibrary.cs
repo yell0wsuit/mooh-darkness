@@ -241,7 +241,76 @@ namespace Mooh.Presentation.Animation
                 Variants("_SfxLandFire"),
                 Single("SfxGlowLandH"),
                 Single("SfxGlowLandV"),
-                stars);
+                stars)
+            {
+                Sparkles = new Dictionary<IdleSparkle, ParticleFrames>
+                {
+                    [IdleSparkle.Gem1] = FramesOf(effects, "SfxGem1"),
+                    [IdleSparkle.Gem2] = FramesOf(effects, "SfxGem2"),
+                    [IdleSparkle.Gem3] = FramesOf(effects, "SfxGem3"),
+                    [IdleSparkle.Gem5] = FramesOf(effects, "SfxGem5"),
+                    [IdleSparkle.Steam] = FramesOf(effects, "SfxEat3"),
+                    [IdleSparkle.Grenade] = FramesOf(effects, "SfxWeapGr"),
+                    [IdleSparkle.Rocket] = FramesOf(effects, "SfxWeapRock"),
+                    [IdleSparkle.BigBomb] = FramesOf(effects, "SfxWeapBBombStay"),
+                },
+                Flash = FramesOf(effects, "SfxWeapMine"),
+                ColaBubbles = FramesOf(effects, "SfxCola"),
+            };
+        }
+
+        /// <summary>
+        /// Reads a module effect that is one <c>Page.AnimMake([...])</c> call or a list or tuple of
+        /// them, with the page named in the call.
+        /// </summary>
+        private static ParticleFrames FramesOf(JsonElement effects, string name)
+        {
+            if (effects.ValueKind != JsonValueKind.Object || !effects.TryGetProperty(name, out JsonElement value))
+            {
+                return ParticleFrames.None;
+            }
+
+            List<JsonElement> calls = value.ValueKind == JsonValueKind.Array ? [.. value.EnumerateArray()] : [value];
+            string? page = calls.Select(AnimMadePage).FirstOrDefault(found => found is not null);
+            List<IReadOnlyList<string>> variants = [.. calls.Select(AnimMadeFrames).Where(frames => frames.Count > 0)];
+            return page is null || variants.Count == 0 ? ParticleFrames.None : new ParticleFrames(page, variants);
+        }
+
+        /// <summary>Reads the page of a recovered <c>DDraw.PageMake(name).AnimMake([...])</c> call.</summary>
+        private static string? AnimMadePage(JsonElement call)
+        {
+            return call.ValueKind == JsonValueKind.Object
+                && call.TryGetProperty("call", out JsonElement function)
+                && function.ValueKind == JsonValueKind.Object
+                && function.TryGetProperty("of", out JsonElement of)
+                && of.ValueKind == JsonValueKind.Object
+                && of.TryGetProperty("args", out JsonElement args)
+                && args.GetArrayLength() > 0
+                ? args[0].GetString()
+                : null;
+        }
+
+        /// <summary>Reads a registration's resting glints from its type's <c>PFunc</c>.</summary>
+        private static IdleSparkle? SparkleOf(JsonElement parameter)
+        {
+            return parameter.ValueKind == JsonValueKind.Object
+                && parameter.TryGetProperty("PFunc", out JsonElement function)
+                && function.ValueKind == JsonValueKind.Object
+                && function.TryGetProperty("ref", out JsonElement reference)
+                ? reference.GetString()?.Split('.')[^1] switch
+                {
+                    "_Prt_Diam1" => IdleSparkle.Gem1,
+                    "_Prt_Diam2" => IdleSparkle.Gem2,
+                    "_Prt_Diam3" => IdleSparkle.Gem3,
+                    "_Prt_Diam5" or "_Prt_Coin13" => IdleSparkle.Gem5,
+                    "_Prt_Coin2" or "_Prt_DoorKey" or "_Prt_Bons" or "_Prt_WeapMine" => IdleSparkle.Flash,
+                    "_Prt_Eat3" => IdleSparkle.Steam,
+                    "_Prt_WeapGr" => IdleSparkle.Grenade,
+                    "_Prt_WeapRock" => IdleSparkle.Rocket,
+                    "_Prt_BBombGet" => IdleSparkle.BigBomb,
+                    _ => null,
+                }
+                : null;
         }
 
         /// <summary>Reads the frame names of a recovered <c>Page.AnimMake([...])</c> call.</summary>
@@ -559,6 +628,7 @@ namespace Mooh.Presentation.Animation
                 KillBursts = BurstsOf(registration, "PrtKill", effects),
                 LandPuff = PuffOf(registration, "PrtLand"),
                 MovePuff = PuffOf(registration, "PrtMove"),
+                Sparkle = SparkleOf(parameter),
                 EatScore = ScoreOf(registration, "ulEatScore"),
                 KillScore = ScoreOf(registration, "ulKillScore"),
                 EatLine = registration.TryGetProperty("GetTxt", out JsonElement eatLine) ? LineOf(eatLine) : null,
