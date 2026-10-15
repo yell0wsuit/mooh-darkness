@@ -23,6 +23,33 @@ namespace Mooh.Core.Tests.Simulation
     /// </summary>
     public sealed class FireContactTests
     {
+        /// <summary>Fire contact waits for arrival even though occupancy commits at movement start.</summary>
+        [Fact]
+        public void FireDoesNotBurnPlayerBeforeTheMovementSegmentFinishes()
+        {
+            WorldGrid world = new(4, 3);
+            Entity player = NewPlayer(new GridPosition(1, 1));
+            Entity fire = NewFire(new GridPosition(2, 1));
+            world.Add(player);
+            world.Add(fire);
+            world.Add(NewFloor(new GridPosition(1, 2)));
+            world.Add(NewFloor(new GridPosition(2, 2)));
+            SimulationWorld simulation = CreateSimulation(world);
+            simulation.SetPlayerInput(new PlayerInputState(false, false, true, false, false));
+
+            IReadOnlyList<SimulationEvent> movingEvents = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(fire.Position, player.Position);
+            Assert.NotNull(player.Motion);
+            Assert.Equal(100, player.HealthBody!.Current);
+            Assert.DoesNotContain(movingEvents, item => item is FireContactResolved or DamageApplied);
+
+            IReadOnlyList<SimulationEvent> arrivalEvents = simulation.Advance(TimeSpan.FromSeconds(1));
+
+            _ = Assert.Single(arrivalEvents.OfType<FireContactResolved>());
+            Assert.Equal(100 - DifficultySpeeds.Standard.FireDamage, player.HealthBody.Current);
+        }
+
         /// <summary>
         /// Verifies a player walking into fire is damaged for the recovered <c>Compl.HFire</c>
         /// and the fire is spent, which is the recovered order: <c>ObjKill(self)</c> first, then

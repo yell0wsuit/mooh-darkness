@@ -1583,6 +1583,11 @@ namespace Mooh.Core.Simulation
             childBody.State = BioMassState.Grow;
             childBody.RemainingSeconds = BioGrowSeconds;
             _world.Add(child);
+            if (ResolveFireContact(child, events))
+            {
+                return;
+            }
+
             _world.CommitMoves([new PlannedMove(child.Id, bio.Position, cell)]);
             KinematicsSystem.Start(
                 child,
@@ -1630,7 +1635,10 @@ namespace Mooh.Core.Simulation
                 rocketBody: new RocketBody(direction));
             _world.Add(rocket);
             events.Add(new RocketFired(player.Id, rocket.Id, cell, direction));
-            AdvanceRocketFlight(rocket, events);
+            if (!ResolveFireContact(rocket, events))
+            {
+                AdvanceRocketFlight(rocket, events);
+            }
         }
 
         /// <summary>
@@ -1679,6 +1687,7 @@ namespace Mooh.Core.Simulation
                 _difficultySpeeds);
             _world.Add(mine);
             events.Add(new MineLaid(player.Id, mine.Id, cell));
+            _ = ResolveFireContact(mine, events);
         }
 
         /// <summary>
@@ -1753,6 +1762,7 @@ namespace Mooh.Core.Simulation
                 bigBombBody: new BigBombBody());
             _world.Add(bomb);
             events.Add(new BigBombPlaced(player.Id, bomb.Id, cell));
+            _ = ResolveFireContact(bomb, events);
         }
 
         private double? SecondsUntilNextBigBomb()
@@ -2206,6 +2216,7 @@ namespace Mooh.Core.Simulation
                 explosionBody: new ExplosionBody(ExplosionReaction.Destroy, detonatesOnLanding: false));
             _world.Add(beetle);
             events.Add(new SmallBeetleSpawned(monster.Id, beetle.Id, position, color));
+            _ = ResolveFireContact(beetle, events);
         }
 
         private EntityId CreateSpawnedEntityId(EntityId parentEntityId)
@@ -2437,6 +2448,7 @@ namespace Mooh.Core.Simulation
                 _difficultySpeeds);
             _world.Add(grenade);
             events.Add(new PlayerGrenadePlaced(player.Id, grenade.Id, cell));
+            _ = ResolveFireContact(grenade, events);
         }
 
         private void ClearWeaponCell(GridPosition cell, List<SimulationEvent> events)
@@ -3036,19 +3048,14 @@ namespace Mooh.Core.Simulation
         }
 
         /// <summary>
-        /// Applies the recovered <c>_ObjHere_Fire</c> to an entity that has just arrived in its
-        /// cell. The handler is registered on the fire through <c>EvObjHere</c>, so it runs for
-        /// the entity that entered and never when the fire itself arrives somewhere: fire falling
-        /// onto a standing player burns nobody.
+        /// Applies fire contact when another entity finishes entering its cell or is spawned there.
+        /// Fire falling onto a standing player does not burn that player.
         /// </summary>
         /// <remarks>
-        /// The recovered branches are taken in this order and each kills in this order. A player
-        /// spends the fire and is then burned for <c>Compl.HFire</c>; a <c>bFireKill</c> carrier
-        /// and the fire destroy each other; anything else is consumed while the fire survives.
-        /// The native dispatch point of <c>WEvObjHere</c> could not be confirmed, so arrival is
-        /// a structural reading: the relink that commits occupancy at movement start carries
-        /// no callback at all, and other per-cell interactions in the engine — <c>PlHere</c>,
-        /// <c>WEvOnCell</c> — resolve on arrival.
+        /// A player spends the fire before taking damage. A bubble and the fire destroy each
+        /// other; other objects are consumed while the fire survives. Ordinary movement commits
+        /// occupancy at the start but dispatches contact only after its fractional offset reaches
+        /// zero, before the arriving object's own cell handler. Runtime spawns dispatch immediately.
         /// </remarks>
         /// <returns><see langword="true"/> when the arriving entity was destroyed.</returns>
         private bool ResolveFireContact(Entity arriving, List<SimulationEvent> events)
@@ -3093,7 +3100,7 @@ namespace Mooh.Core.Simulation
                 events.Add(new FireContactResolved(fire.Id, fire.Position, FireContactKind.Consumed));
             }
 
-            return true;
+            return !_world.Entities.Contains(arriving);
         }
     }
 }

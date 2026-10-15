@@ -20,6 +20,29 @@ namespace Mooh.Core.Tests.Player
     /// </summary>
     public sealed class PlayerActionTests
     {
+        /// <summary>A newly placed grenade triggers an existing fire immediately, without a fall segment.</summary>
+        [Fact]
+        public void GrenadePlacedInsideFireIsConsumedImmediately()
+        {
+            MaterializedLevel level = Materialize(
+                Object(1, "OPlayer", 1, 1),
+                Object(2, "OFire", 1, 2),
+                Object(3, "CellsMetal01", 1, 3),
+                Object(4, "CellsMetal01", 0, 2),
+                Object(5, "CellsMetal01", 2, 2));
+            Entity fire = level.GetEntity(2);
+            level.Simulation.SetPlayerInput(Fire());
+
+            IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(TimeSpan.FromMilliseconds(350));
+
+            PlayerGrenadePlaced placed = Assert.Single(events.OfType<PlayerGrenadePlaced>());
+            Assert.DoesNotContain(level.World.Entities, entity => entity.Id == placed.GrenadeEntityId);
+            Assert.Contains(level.World.Entities, entity => entity.Id == fire.Id);
+            Assert.Equal(new FireContactResolved(fire.Id, fire.Position, FireContactKind.Consumed),
+                Assert.Single(events.OfType<FireContactResolved>()));
+            Assert.DoesNotContain(events, item => item is ExplosionStarted);
+        }
+
         /// <summary>Verifies a grenade is placed in an empty faced cell after the recovered delay.</summary>
         [Fact]
         public void FiringIntoAnEmptyCellPlacesAGrenade()
