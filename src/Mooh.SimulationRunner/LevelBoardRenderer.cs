@@ -164,7 +164,7 @@ namespace Mooh.SimulationRunner
                 "ODiam01" or "ODiam02" or "ODiam03" or "ODiam04" or "ODiam05" => Diamond,
                 "OCoin01" or "OCoin02" or "OCoin03" => Coin,
                 "OEat01" or "OEat02" or "OEat03" => Food,
-                "BCola" or "BIce" or "BBag" => Bonus,
+                "BCola" or "BIce" => Bonus,
                 "OKDKey1" or "OKDKey2" or "OKDKey3" => Key,
                 "OBottle" => Bottle,
                 "OBarel" => Barrel,

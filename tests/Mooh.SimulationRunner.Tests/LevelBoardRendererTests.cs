@@ -10,6 +10,17 @@ namespace Mooh.SimulationRunner.Tests
     /// <summary>Verifies observational emoji rendering of archival level documents.</summary>
     public sealed class LevelBoardRendererTests
     {
+        /// <summary>The dormant bag registration is reported as unsupported rather than a playable bonus.</summary>
+        [Fact]
+        public void ReportsUnusedBagAsUnknown()
+        {
+            LevelDocument level = CreateLevel(1, 1, NewObject(1, "BBag", 0, 0));
+
+            string result = LevelBoardRenderer.Render(level, "unused.json");
+
+            Assert.Contains("Unknown legacy types: BBag", result, StringComparison.Ordinal);
+        }
+
         /// <summary>Verifies known objects are rendered as stable emoji cells with a used-glyph legend.</summary>
         [Fact]
         public void RendersKnownObjectsAndEmptyCells()
