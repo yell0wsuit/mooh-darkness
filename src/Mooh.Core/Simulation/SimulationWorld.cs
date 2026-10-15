@@ -445,7 +445,7 @@ namespace Mooh.Core.Simulation
                 if (_world.Player is Entity player && player.PlayerBody is PlayerBody playerBody)
                 {
                     int score = playerBody.Progress.OpenDoor();
-                    events.Add(new KeyDoorOpened(player.Id, door.Id, door.ArchivalIdentity?.Variant ?? 0, score));
+                    events.Add(new KeyDoorOpened(player.Id, door.Id, door.ArchivalIdentity?.Variant ?? 0, score, door.Position));
                 }
             }
         }

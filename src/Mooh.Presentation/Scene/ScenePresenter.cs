@@ -205,6 +205,15 @@ namespace Mooh.Presentation.Scene
                     spawned.Position.X, spawned.Position.Y, false, false));
             }
 
+            foreach (KeyDoorOpened opened in events.OfType<KeyDoorOpened>())
+            {
+                if (opened.Position is GridPosition position)
+                {
+                    _ = sighted.TryAdd(opened.DoorEntityId,
+                        new Sighting($"OKDDoor{opened.KeyNumber}", position.X, position.Y, false, false));
+                }
+            }
+
             sounds.AddRange(_eventSounds.For(events, sighted, seconds));
             sounds.AddRange(_gameSounds.For(world, events, bonusSeconds ?? seconds, seconds));
             if (build is null || build.IsDone)

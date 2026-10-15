@@ -51,17 +51,34 @@ namespace Mooh.Presentation.Scene
             }
 
             _ = _effects.RemoveAll(effect => effect.Position >= effect.Frames.Count);
-            foreach (ExplosionCellReached reached in events.OfType<ExplosionCellReached>())
+            foreach (SimulationEvent item in events)
             {
-                if (!SimulationWorld.ShowsBlast(world, reached.Position)
-                    || (_blastUntil.TryGetValue(reached.Position, out double until) && until > _time))
+                GridPosition? position = item switch
+                {
+                    ExplosionCellReached reached => reached.Position,
+                    MagicDiamondSpawned magic => magic.Position,
+                    FireContactResolved fire => fire.Position,
+                    _ => null,
+                };
+                if (position is not GridPosition cell)
                 {
                     continue;
                 }
 
-                _blastUntil[reached.Position] = _time + BlastRepeatSeconds;
-                Spawn(library.Explosion, reached.Position);
-                shown.Add(reached.Position);
+                bool direct = item is FireContactResolved;
+                if ((item is ExplosionCellReached && !SimulationWorld.ShowsBlast(world, cell))
+                    || (!direct && _blastUntil.TryGetValue(cell, out double until) && until > _time))
+                {
+                    continue;
+                }
+
+                if (!direct)
+                {
+                    _blastUntil[cell] = _time + BlastRepeatSeconds;
+                }
+
+                Spawn(library.Explosion, cell);
+                shown.Add(cell);
             }
 
             return shown;

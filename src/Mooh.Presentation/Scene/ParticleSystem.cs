@@ -165,8 +165,13 @@ namespace Mooh.Presentation.Scene
                     case ShakeImpact impact:
                         ImpactGlow(impact.X, impact.Y);
                         break;
+                    case KeyDoorOpened opened when seen.TryGetValue(opened.DoorEntityId, out Sighting door):
+                        Destroyed(door, blasted: false, DoorFinalFrame(door));
+                        break;
                     case PlayerAte ate when seen.TryGetValue(ate.EatenEntityId, out Sighting beetle)
-                        && beetle.Type is "OSmGr" or "OSmBlue":
+                        && (beetle.Type is "OSmGr" or "OSmBlue"
+                            || beetle.Type?.StartsWith("MGr", StringComparison.Ordinal) == true
+                            || beetle.Type?.StartsWith("MBlue", StringComparison.Ordinal) == true):
                         CollectBeetle(beetle);
                         break;
                     case Landed landed when seen.TryGetValue(landed.EntityId, out Sighting at) && Exists(world, landed.EntityId):
@@ -215,6 +220,19 @@ namespace Mooh.Presentation.Scene
                         break;
                 }
             }
+        }
+
+        private (string Page, string Frame)? DoorFinalFrame(Sighting door)
+        {
+            if (door.Type is string type && library.TryGetTable(type, out AnimationTable table)
+                && table.States.TryGetValue("st_work", out AnimationClip? opening)
+                && opening.Variants.Count > 0 && opening.Variants[0].Count > 0)
+            {
+                // Unlocking pins the final opening frame before sampling its pixels for sparks.
+                return (opening.Page ?? table.Page, opening.Variants[0][^1]);
+            }
+
+            return null;
         }
 
         private void ImpactGlow(double x, double y)

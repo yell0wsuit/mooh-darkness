@@ -1,4 +1,5 @@
 using Mooh.Core.Entities;
+using Mooh.Core.Grid;
 
 namespace Mooh.Core.Simulation
 {
@@ -7,10 +8,12 @@ namespace Mooh.Core.Simulation
     /// <param name="DoorEntityId">The removed door entity.</param>
     /// <param name="KeyNumber">The matching key number.</param>
     /// <param name="ScoreAwarded">The recovered door score.</param>
+    /// <param name="Position">The door cell retained after its removal.</param>
     public sealed record KeyDoorOpened(
         EntityId EntityId,
         EntityId DoorEntityId,
         int KeyNumber,
-        int ScoreAwarded)
+        int ScoreAwarded,
+        GridPosition? Position = null)
         : SimulationEvent(EntityId);
 }
