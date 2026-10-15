@@ -6,6 +6,7 @@ using Mooh.Core.Content;
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Levels;
+using Mooh.Core.Motion;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
@@ -237,6 +238,28 @@ namespace Mooh.Core.Tests.Player
 
             Assert.Contains(events, value => value is PushStarted);
             Assert.DoesNotContain(level.World.Entities, entity => entity.Id == bubbleId);
+        }
+
+        /// <summary>A strike takes over a moving target without advancing its cell or losing its offset.</summary>
+        [Fact]
+        public void StrikingAnObjectMovingInTheSameDirectionPreservesItsSegment()
+        {
+            MaterializedLevel level = Materialize(Floor(0, 8, 2),
+                [Object(100, "OPlayer", 0, 1), Object(101, "ORock01", 3, 1)]);
+            Entity rock = level.GetEntity(101);
+            WalkRightTo(level, 2);
+            level.Simulation.SetPlayerInput(Fire());
+            _ = level.Simulation.Advance(TimeSpan.FromMilliseconds(10));
+            KinematicsSystem.Start(rock, MotionCause.PlayerPushed, Direction.Right, 1);
+            KinematicsSystem.Advance(rock, TimeSpan.FromMilliseconds(200));
+
+            IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(TimeSpan.FromMilliseconds(150));
+
+            Assert.Contains(events, item => item == new PushStarted(rock.Id, Direction.Right));
+            Assert.Equal(new GridPosition(3, 1), rock.Position);
+            Assert.Equal(MotionCause.StrikePushed, rock.Motion!.Cause);
+            Assert.Equal(0.3775, rock.Motion.Progress, 10);
+            Assert.Equal(3.75, rock.Motion.Speed);
         }
 
         /// <summary>

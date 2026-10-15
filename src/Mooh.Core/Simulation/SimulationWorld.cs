@@ -2454,12 +2454,23 @@ namespace Mooh.Core.Simulation
                 return false;
             }
 
-            _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, ahead)]);
+            double progress = entity.Motion?.Progress ?? 0;
+            if (entity.Motion is null)
+            {
+                _world.CommitMoves([new PlannedMove(entity.Id, entity.Position, ahead)]);
+            }
+            else
+            {
+                // A strike can catch an unfinished segment along its own direction.
+                KinematicsSystem.Stop(entity);
+            }
+
             KinematicsSystem.Start(
                 entity,
                 MotionCause.StrikePushed,
                 direction,
                 _difficultySpeeds.PlayerSpeed * PushSpeedMultiplier);
+            entity.Motion!.Progress = progress;
             events.Add(new PushStarted(entity.Id, direction));
             return true;
         }
