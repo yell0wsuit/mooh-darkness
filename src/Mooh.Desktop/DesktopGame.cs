@@ -80,7 +80,7 @@ namespace Mooh.Desktop
             get; private set;
         }
 
-        /// <summary>Gets the sounds this frame cued; none while paused or between levels.</summary>
+        /// <summary>Gets the sounds this frame cued, including a bonus expiring while paused.</summary>
         public IReadOnlyList<SoundCue> Sounds { get; private set; } = [];
 
         /// <summary>Gets whether the level is still flying into view before play.</summary>
@@ -122,12 +122,18 @@ namespace Mooh.Desktop
                 }
             }
 
+            seconds = Math.Clamp(seconds, 0, LongestFrameSeconds);
             if (IsPaused)
             {
+                events.AddRange(Session.Simulation.AdvanceBonusTimers(TimeSpan.FromSeconds(seconds)));
+                _build?.Advance(0);
+                Presenter.Update(Session.Level.World, events, 0, CurrentSpin, _build, bonusSeconds: seconds);
+                Sounds = Presenter.Sounds;
+                Backdrop.Advance(seconds);
+                Hud.Update(Session.Level.World, events, Session.TotalScore, seconds, Camera);
                 return;
             }
 
-            seconds = Math.Clamp(seconds, 0, LongestFrameSeconds);
             ElapsedSeconds += seconds;
             GridPosition? pivot = Session.Simulation.WorldRotationPivot;
             if (IsBuilding)
@@ -158,12 +164,7 @@ namespace Mooh.Desktop
             }
 
             FollowWorldRotation(events, pivot);
-            SimulationWorld simulation = Session.Simulation;
-            WorldSpin? spin = simulation.WorldRotationInFlight is WorldRotationDirection turning
-                && simulation.WorldRotationPivot is GridPosition center
-                ? WorldSpin.Of(center, turning, simulation.WorldRotationProgress)
-                : null;
-            Presenter.Update(Session.Level.World, events, seconds, spin, _build);
+            Presenter.Update(Session.Level.World, events, seconds, CurrentSpin, _build);
             Sounds = Presenter.Sounds;
             Backdrop.Advance(seconds);
             if (Session.Level.World.Player is Entity player)
@@ -176,6 +177,12 @@ namespace Mooh.Desktop
 
             Hud.Update(Session.Level.World, events, Session.TotalScore, seconds, Camera);
         }
+
+        /// <summary>Gets the same world transform for active and paused frames.</summary>
+        private WorldSpin? CurrentSpin => Session.Simulation.WorldRotationInFlight is WorldRotationDirection turning
+            && Session.Simulation.WorldRotationPivot is GridPosition center
+                ? WorldSpin.Of(center, turning, Session.Simulation.WorldRotationProgress)
+                : null;
 
         /// <summary>
         /// Keeps the view still across a turn, as <c>WorldRotStopCBack</c> does: the world base

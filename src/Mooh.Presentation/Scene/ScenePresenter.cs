@@ -101,8 +101,9 @@ namespace Mooh.Presentation.Scene
         /// <param name="seconds">The simulated time of this frame.</param>
         /// <param name="spin">The world rotation in flight, which turns every drawn position.</param>
         /// <param name="build">The level's fly-in, which hides and moves what it has not landed yet.</param>
+        /// <param name="bonusSeconds">The bonus clock's elapsed time when physics and animation are paused.</param>
         /// <exception cref="ArgumentNullException"><paramref name="world"/> or <paramref name="events"/> is <see langword="null"/>.</exception>
-        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds, WorldSpin? spin = null, LevelBuild? build = null)
+        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds, WorldSpin? spin = null, LevelBuild? build = null, double? bonusSeconds = null)
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(events);
@@ -186,7 +187,7 @@ namespace Mooh.Presentation.Scene
             }
 
             sounds.AddRange(_eventSounds.For(events, sighted));
-            sounds.AddRange(_gameSounds.For(world, events, seconds));
+            sounds.AddRange(_gameSounds.For(world, events, bonusSeconds ?? seconds));
             if (build is null || build.IsDone)
             {
                 // GameWaterSpawn starts with play, after the fly-in.

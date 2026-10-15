@@ -171,7 +171,7 @@ namespace Mooh.Core.Tests.Simulation
         /// <summary>
         /// Verifies the whole simulation is frozen while the world spins. The recovered
         /// <c>Game.ModCycle</c> replaces the entire object cycle with <c>WorldRotCycle</c>, so no
-        /// object moves, no timer runs and the world clock itself never advances.
+        /// object moves and the world clock never advances; BonList has a separate timer.
         /// </summary>
         [Fact]
         public void NothingAdvancesWhileTheWorldSpins()
@@ -194,6 +194,42 @@ namespace Mooh.Core.Tests.Simulation
 
             Assert.Equal(frozenAt, rock.Position);
             Assert.Equal(frozenProgress, rock.Motion?.Progress ?? 0);
+        }
+
+        /// <summary>Verifies BonList still counts down during a spin while the world clock is frozen.</summary>
+        [Fact]
+        public void BonusTimeAdvancesWhileTheWorldSpins()
+        {
+            List<LevelObject> objects =
+            [
+                new(1, "OPlayer", 0, new LevelPosition(1, 1), [], new Dictionary<string, System.Text.Json.JsonElement>()),
+                new(2, "BIce", 0, new LevelPosition(2, 1), [], new Dictionary<string, System.Text.Json.JsonElement>()),
+                new(3, "OWRotL", 0, new LevelPosition(3, 1), [], new Dictionary<string, System.Text.Json.JsonElement>()),
+            ];
+            for (int x = 0; x < 7; x++)
+            {
+                objects.Add(new LevelObject(100 + x, "CellsMetal01", 0, new LevelPosition(x, 2), [], new Dictionary<string, System.Text.Json.JsonElement>()));
+            }
+
+            MaterializedLevel level = LevelMaterializer.Materialize(
+                new LevelDocument(1, null, new LevelSize(7, 5), new EditorPreview(0, 0, 7, 5), objects));
+            level.Simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
+            _ = level.Simulation.Advance(TimeSpan.FromMilliseconds(600));
+            level.Simulation.SetPlayerInput(Fire);
+            for (int frame = 0; frame < 100 && level.Simulation.WorldRotationInFlight is null; frame++)
+            {
+                _ = level.Simulation.Advance(TimeSpan.FromMilliseconds(20));
+            }
+
+            _ = Assert.NotNull(level.Simulation.WorldRotationInFlight);
+            Entity player = level.GetEntity(1);
+            TimeSpan bonus = player.PlayerBody!.Progress.IceRemaining;
+            GridPosition position = player.Position;
+            _ = level.Simulation.Advance(TimeSpan.FromMilliseconds(200));
+
+            Assert.Equal(position, player.Position);
+            Assert.InRange(player.PlayerBody.Progress.IceRemaining,
+                bonus - TimeSpan.FromMilliseconds(201), bonus - TimeSpan.FromMilliseconds(199));
         }
 
         /// <summary>

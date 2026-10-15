@@ -448,6 +448,28 @@ namespace Mooh.Core.Simulation
                 : [];
         }
 
+        /// <summary>
+        /// Advances cola and ice while physics is paused. The recovered <c>Game.ModCycle</c>
+        /// cycles <c>BonList</c> before its activity and world-rotation gates; expiring ice still
+        /// thaws monsters, while movement, actions, immunity and the world clock stay frozen.
+        /// </summary>
+        /// <param name="elapsed">The elapsed bonus time.</param>
+        /// <returns>The ordered monster transformations caused by bonus expiration.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="elapsed"/> is negative.</exception>
+        public IReadOnlyList<SimulationEvent> AdvanceBonusTimers(TimeSpan elapsed)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(elapsed, TimeSpan.Zero);
+            if (elapsed == TimeSpan.Zero)
+            {
+                return [];
+            }
+
+            List<SimulationEvent> events = [];
+            _world.Player?.PlayerBody?.Progress.Advance(elapsed);
+            SynchronizeMonsterIce(events);
+            return events;
+        }
+
         /// <summary>Applies health damage and starts any corresponding player reaction.</summary>
         /// <param name="request">The requested damage.</param>
         /// <returns>The complete ordered event sequence produced by the request.</returns>
@@ -648,11 +670,13 @@ namespace Mooh.Core.Simulation
             while (remainingSeconds > 0)
             {
                 // A turn in flight replaces everything else, which is the recovered
-                // Game.ModCycle:2693 swapping the whole object cycle for WorldRotCycle. Not even
-                // the world clock advances, so cell locks and repeat times keep their remainders.
+                // Game.ModCycle:2693 swapping the whole object cycle for WorldRotCycle. The world
+                // clock freezes, but BonList cycles above that gate and still expires bonuses.
                 if (_rotationOwner is not null)
                 {
                     double spinSeconds = Math.Min(remainingSeconds, _rotationRemainingSeconds);
+                    AdvancePlayerProgress(spinSeconds);
+                    SynchronizeMonsterIce(events);
                     _rotationRemainingSeconds -= spinSeconds;
                     remainingSeconds -= spinSeconds;
                     if (remainingSeconds < TimeTolerance)
