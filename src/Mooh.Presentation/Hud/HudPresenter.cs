@@ -10,6 +10,7 @@ using Mooh.Core.Grid;
 using Mooh.Core.Levels;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
+using Mooh.Presentation.Text;
 
 namespace Mooh.Presentation.Hud
 {
@@ -39,6 +40,12 @@ namespace Mooh.Presentation.Hud
 
         /// <summary>The font every panel value and the help draw in, <c>PgPnlFontDig</c>.</summary>
         public const string FontName = "PanelDigFnt";
+
+        /// <summary>The font of the level texts, <c>PgFontDigScr</c>.</summary>
+        public const string LevelFontName = "PanelDigScr";
+
+        /// <summary>How long a level text holds before it falls away, the 2000 ms every <c>TxtAdd</c> passes.</summary>
+        private const double LevelTextHoldMilliseconds = 2000;
 
         /// <summary>The health below which the heartbeat warning jerks the panel, <c>CNT_GPrmHealthWrn</c>.</summary>
         private const double HealthWarning = 40;
@@ -77,12 +84,15 @@ namespace Mooh.Presentation.Hud
         private readonly HudPanel _ice = new("PNrmBonIce", "PNrmBonIce", "PSmBonIce", 763, 433, textRight: true);
         private readonly HashSet<HudPanel> _shown = [];
         private readonly HelpPanel _help = new();
+        private readonly LevelTexts? _levelTexts;
         private readonly StringTable? _strings;
         private readonly Random _random;
         private readonly int[] _ammo = new int[4];
         private HashSet<EntityId> _greenMonsterIds = [];
         private HashSet<EntityId> _blueMonsterIds = [];
         private int? _lastScore;
+        private bool _treasureAvailable;
+        private bool _treasureEarned;
         private double? _lastHealth;
         private double _sinceHeartbeat = HeartbeatMilliseconds;
         private List<HudSprite> _sprites = [];
@@ -91,14 +101,16 @@ namespace Mooh.Presentation.Hud
         /// <summary>Starts the panels of a level, as the level's start resets them.</summary>
         /// <param name="world">The level's world at its start.</param>
         /// <param name="strings">The text table the help resolves its ids against, if any.</param>
-        /// <param name="random">The source of the jerks' directions.</param>
+        /// <param name="random">The source of the jerks' directions and the level texts' jiggles.</param>
+        /// <param name="levelFont">The <see cref="LevelFontName"/> font the level texts are laid out in; without it none show.</param>
         /// <exception cref="ArgumentNullException"><paramref name="world"/> or <paramref name="random"/> is <see langword="null"/>.</exception>
-        public HudPresenter(WorldGrid world, StringTable? strings, Random random)
+        public HudPresenter(WorldGrid world, StringTable? strings, Random random, BitmapFont? levelFont = null)
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(random);
             _strings = strings;
             _random = random;
+            _levelTexts = levelFont is null ? null : new LevelTexts(levelFont);
             bool timed = world.Player?.HealthBody?.Clock is not null;
             _health = timed
                 ? new HudPanel("PNrmTime", "PNrmTime", "PNrmTime", 36, 51, textRight: false)
@@ -116,6 +128,8 @@ namespace Mooh.Presentation.Hud
 
             if (world.Player?.PlayerBody?.Progress is PlayerProgress progress)
             {
+                _treasureAvailable = progress.IsTreasureBonusAvailable;
+                _treasureEarned = progress.HasEarnedTreasureBonus;
                 for (int index = 0; index < Weapons.Length; index++)
                 {
                     _ammo[index] = progress.AmmoOf(Weapons[index]);
@@ -128,6 +142,13 @@ namespace Mooh.Presentation.Hud
 
         /// <summary>Gets the lines of text to draw over the frames, in draw order.</summary>
         public IReadOnlyList<HudText> Texts => _texts;
+
+        /// <summary>Drops in the level's title, <c>GameScrLvl</c>, as the level's play starts.</summary>
+        /// <param name="number">The level's number, counting from 1.</param>
+        public void ShowLevelTitle(int number)
+        {
+            ShowLevelText("GameScrLvl", number);
+        }
 
         /// <summary>Follows the level through one frame.</summary>
         /// <param name="world">The simulated world.</param>
@@ -146,6 +167,7 @@ namespace Mooh.Presentation.Hud
 
             React(events, player, score);
             WarnHealth(health, milliseconds);
+            FollowTreasure(progress);
             if (progress is not null)
             {
                 for (int index = 0; index < Weapons.Length; index++)
@@ -168,6 +190,7 @@ namespace Mooh.Presentation.Hud
             }
 
             _help.Advance(milliseconds);
+            _levelTexts?.Advance(milliseconds, _random);
             List<HudSprite> sprites = [];
             List<HudText> texts = [];
             for (int index = 0; index < Weapons.Length; index++)
@@ -188,6 +211,7 @@ namespace Mooh.Presentation.Hud
                 Draw(sprites, texts, _keys[key - 1], progress?.HasKey(key) == true ? false : null, value: null);
             }
 
+            _levelTexts?.Draw(texts);
             _help.Draw(texts);
             _sprites = sprites;
             _texts = texts;
@@ -234,6 +258,11 @@ namespace Mooh.Presentation.Hud
                     case EntityDestroyed destroyed when _blueMonsterIds.Contains(destroyed.EntityId):
                         _blueMonsters.Jerk(_random);
                         break;
+                    case LevelOutcomeAnnounced announced:
+                        ShowLevelText(announced.Outcome == LevelOutcome.Won
+                            ? "GameScrWiner"
+                            : announced.TimedOut ? "GameScrTimeOut" : "GameScrLooser");
+                        break;
                     case HelpTextRequested help:
                         _help.Add(help.HelpTextId, _strings is not null && _strings.TryGetText(help.HelpTextId, out string text) ? text : null);
                         break;
@@ -241,6 +270,42 @@ namespace Mooh.Presentation.Hud
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Announces the treasure bonus: <c>GameScrLostTreas</c> when <c>Game.ObjKill</c> forfeits
+        /// it, <c>GameScrAllTreas</c> when the last treasure is eaten.
+        /// </summary>
+        private void FollowTreasure(PlayerProgress? progress)
+        {
+            if (progress is null)
+            {
+                return;
+            }
+
+            if (!_treasureEarned && progress.HasEarnedTreasureBonus)
+            {
+                ShowLevelText("GameScrAllTreas");
+            }
+            else if (_treasureAvailable && !progress.IsTreasureBonusAvailable && !progress.HasEarnedTreasureBonus)
+            {
+                ShowLevelText("GameScrLostTreas");
+            }
+
+            _treasureAvailable = progress.IsTreasureBonusAvailable;
+            _treasureEarned = progress.HasEarnedTreasureBonus;
+        }
+
+        private void ShowLevelText(string id, int? number = null)
+        {
+            if (_levelTexts is null || _strings is null || !_strings.TryGetText(id, out string text))
+            {
+                return;
+            }
+
+            _levelTexts.Add(
+                number is int value ? text.Replace("%d", value.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) : text,
+                LevelTextHoldMilliseconds);
         }
 
         /// <summary>
@@ -307,7 +372,7 @@ namespace Mooh.Presentation.Hud
                     shown.ToString(CultureInfo.InvariantCulture),
                     x,
                     y,
-                    panel.TextRight ? Text.TextAlignment.Right : Text.TextAlignment.Left));
+                    panel.TextRight ? TextAlignment.Right : TextAlignment.Left));
             }
         }
 

@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
-using Mooh.Core.Content;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 using Mooh.Presentation.Hud;
@@ -19,12 +16,6 @@ namespace Mooh.Presentation.Tests
     /// </summary>
     public sealed class HudPresenterTests
     {
-        private static readonly Lazy<StringTable> Strings = new(() =>
-        {
-            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
-            return StringTable.Load(stream);
-        });
-
         /// <summary>
         /// Verifies a level without monsters, keys, bonuses or other weapons shows only the health,
         /// score and grenade panels, each with its value beside it.
@@ -32,7 +23,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void APlainLevelShowsHealthScoreAndGrenades()
         {
-            Run run = new(SceneHarness.BuildLevel(1));
+            HudRun run = new(SceneHarness.BuildLevel(1));
 
             run.Step(0.016);
 
@@ -50,7 +41,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void MonsterPanelsCountTheMonsters()
         {
-            Run run = new(SceneHarness.BuildLevel(1, ("MGrL", 5, 1), ("MGrL", 6, 1), ("MBlueL", 7, 1)));
+            HudRun run = new(SceneHarness.BuildLevel(1, ("MGrL", 5, 1), ("MGrL", 6, 1), ("MBlueL", 7, 1)));
 
             run.Step(0.016);
 
@@ -67,7 +58,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void AKeysPanelLightsWhenTheKeyIsEaten()
         {
-            Run run = new(SceneHarness.BuildLevel(1, ("OKDKey1", 2, 1)));
+            HudRun run = new(SceneHarness.BuildLevel(1, ("OKDKey1", 2, 1)));
             run.Step(0.016);
             Assert.Equal(new HudSprite("PSmKeyBlue", 480, 600), run.Sprite("PSmKeyBlue"));
 
@@ -85,7 +76,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void AWeaponPanelShowsItsAmmunition()
         {
-            Run run = new(SceneHarness.BuildLevel(1, ("WRBox", 5, 1)));
+            HudRun run = new(SceneHarness.BuildLevel(1, ("WRBox", 5, 1)));
 
             run.Step(0.016);
 
@@ -100,7 +91,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void ATimedLevelShowsTheClock()
         {
-            Run run = new(SceneHarness.BuildLevel(1), DifficultySpeeds.Timed);
+            HudRun run = new(SceneHarness.BuildLevel(1), DifficultySpeeds.Timed);
 
             run.Step(0.5);
 
@@ -115,7 +106,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void AScoreGainJerksTheScorePanel()
         {
-            Run run = new(SceneHarness.BuildLevel(1));
+            HudRun run = new(SceneHarness.BuildLevel(1));
             run.Step(0.016);
 
             run.Score = 100;
@@ -136,7 +127,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void HelpSlidesInThenRests()
         {
-            Run run = new(SceneHarness.BuildLevel(1));
+            HudRun run = new(SceneHarness.BuildLevel(1));
             run.Step(0.016);
             run.Step(0.016);
             string[] lines = ["Dig into the earth ", "to move forward."];
@@ -154,7 +145,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void HelpLeavesAfterFiveSeconds()
         {
-            Run run = new(SceneHarness.BuildLevel(1));
+            HudRun run = new(SceneHarness.BuildLevel(1));
             run.Step(0.016);
             run.Step(0.016);
             run.Events.Add(new HelpTextRequested(run.Harness.Player.Id, "HlpTutAllObjsFire"));
@@ -166,53 +157,6 @@ namespace Mooh.Presentation.Tests
             }
 
             Assert.DoesNotContain(run.Hud.Texts, text => text.Text == "Fire will burn objects.");
-        }
-
-        private sealed class Run
-        {
-            public Run(LevelDocument level, DifficultySpeeds? speeds = null)
-            {
-                Harness = new SceneHarness(level, speeds);
-                Hud = new HudPresenter(Harness.Level.World, Strings.Value, new Random(1));
-            }
-
-            public SceneHarness Harness
-            {
-                get;
-            }
-
-            public HudPresenter Hud
-            {
-                get;
-            }
-
-            public int Score
-            {
-                get; set;
-            }
-
-            public List<SimulationEvent> Events { get; } = [];
-
-            public void Step(double seconds)
-            {
-                Harness.Step(seconds);
-                Hud.Update(Harness.Level.World, [.. Harness.LastEvents, .. Events], Score, seconds);
-                Events.Clear();
-            }
-
-            public void StepUntil(Func<bool> condition)
-            {
-                for (double elapsed = 0; !condition(); elapsed += 0.016)
-                {
-                    Assert.True(elapsed < 5, "The condition never held.");
-                    Step(0.016);
-                }
-            }
-
-            public HudSprite Sprite(string frame)
-            {
-                return Hud.Sprites.Single(sprite => sprite.Frame == frame);
-            }
         }
     }
 }

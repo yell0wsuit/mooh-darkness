@@ -28,6 +28,7 @@ namespace Mooh.Presentation.Text
 
         private readonly byte[] _data;
         private readonly int _defaultAdvance;
+        private readonly int _defaultVerticalAdvance;
 
         private BitmapFont(string name, byte[] data)
         {
@@ -36,6 +37,7 @@ namespace Mooh.Presentation.Text
             FirstCode = data[8];
             LastCode = data[9];
             _defaultAdvance = BinaryPrimitives.ReadInt16LittleEndian(data.AsSpan(10));
+            _defaultVerticalAdvance = BinaryPrimitives.ReadInt16LittleEndian(data.AsSpan(12));
         }
 
         /// <summary>Gets the font name, such as <c>PanelDigFnt</c>.</summary>
@@ -97,6 +99,60 @@ namespace Mooh.Presentation.Text
             }
 
             return width / FixedPoint;
+        }
+
+        /// <summary>Gets whether a character has a glyph, <c>TextCharPresent</c>.</summary>
+        /// <param name="character">The character.</param>
+        /// <returns><see langword="true"/> when the font draws the character.</returns>
+        public bool Has(char character)
+        {
+            return TryRecord(character, out ReadOnlySpan<byte> record) && record[0] != 0;
+        }
+
+        /// <summary>Gets how far a character moves the pen, <c>TextOutStepGet</c>.</summary>
+        /// <param name="character">The character.</param>
+        /// <returns>The pen's step in pixels; the default advance for a character without a glyph.</returns>
+        public (double X, double Y) Advance(char character)
+        {
+            return TryRecord(character, out ReadOnlySpan<byte> record) && record[0] != 0
+                ? (BinaryPrimitives.ReadInt16LittleEndian(record[6..]) / FixedPoint, BinaryPrimitives.ReadInt16LittleEndian(record[8..]) / FixedPoint)
+                : (_defaultAdvance / FixedPoint, _defaultVerticalAdvance / FixedPoint);
+        }
+
+        /// <summary>
+        /// Measures the box around a line's glyphs with the pen starting at the origin,
+        /// <c>TextOutRectGet</c> (<c>sub_407F10</c>).
+        /// </summary>
+        /// <param name="text">The text.</param>
+        /// <returns>The box's edges in pixels, all zero when no character has a glyph.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="text"/> is <see langword="null"/>.</exception>
+        public (int Left, int Top, int Right, int Bottom) Bounds(string text)
+        {
+            ArgumentNullException.ThrowIfNull(text);
+            int penX = 0;
+            int penY = 0;
+            (int Left, int Top, int Right, int Bottom)? box = null;
+            foreach (char character in text)
+            {
+                if (TryRecord(character, out ReadOnlySpan<byte> record) && record[0] != 0)
+                {
+                    int left = (penX + BinaryPrimitives.ReadInt16LittleEndian(record[2..])) >> 8;
+                    int bottom = (penY + BinaryPrimitives.ReadInt16LittleEndian(record[4..])) >> 8;
+                    (int Left, int Top, int Right, int Bottom) glyph = (left, bottom - record[1], left + record[0], bottom);
+                    box = box is { } grown
+                        ? (Math.Min(grown.Left, glyph.Left), Math.Min(grown.Top, glyph.Top), Math.Max(grown.Right, glyph.Right), Math.Max(grown.Bottom, glyph.Bottom))
+                        : glyph;
+                    penX += BinaryPrimitives.ReadInt16LittleEndian(record[6..]);
+                    penY += BinaryPrimitives.ReadInt16LittleEndian(record[8..]);
+                }
+                else
+                {
+                    penX += _defaultAdvance;
+                    penY += _defaultVerticalAdvance;
+                }
+            }
+
+            return box ?? (0, 0, 0, 0);
         }
 
         /// <summary>Lays out a line of text against a point.</summary>

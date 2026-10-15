@@ -83,6 +83,32 @@ namespace Mooh.Presentation.Tests
             Assert.Equal(271, glyph.SourceY);
         }
 
+        /// <summary>
+        /// Verifies a line's bounds are the box around its glyphs, <c>TextOutRectGet</c>
+        /// (<c>sub_407F10</c>), not the sum of its advances.
+        /// </summary>
+        [Fact]
+        public void ALinesBoundsSurroundItsGlyphs()
+        {
+            Assert.Equal((-4, -43, 204, 5), Load("PanelDigScr").Bounds("Level 3"));
+        }
+
+        /// <summary>
+        /// Verifies a character has a glyph only inside the range with a nonzero width,
+        /// <c>TextCharPresent</c>, and steps the pen by its own advance or the default,
+        /// <c>TextOutStepGet</c>.
+        /// </summary>
+        [Fact]
+        public void ACharacterStepsThePenByItsAdvance()
+        {
+            BitmapFont font = Load("PanelDigScr");
+
+            Assert.True(font.Has('L'));
+            Assert.False(font.Has(' '));
+            Assert.Equal((29, 0), font.Advance('L'));
+            Assert.Equal((20, 0), font.Advance(' '));
+        }
+
         /// <summary>Verifies data without the recovered signature is rejected.</summary>
         [Fact]
         public void DataWithoutTheSignatureIsRejected()
