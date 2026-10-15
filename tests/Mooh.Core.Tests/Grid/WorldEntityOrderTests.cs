@@ -38,7 +38,7 @@ namespace Mooh.Core.Tests.Grid
             world.Add(registered);
             IReadOnlyList<Entity> snapshot = world.Entities;
 
-            ICollection<Entity> collection = Assert.IsAssignableFrom<ICollection<Entity>>(snapshot);
+            ICollection<Entity> collection = Assert.IsType<ICollection<Entity>>(snapshot, exactMatch: false);
             _ = Assert.Throws<NotSupportedException>(() => collection.Add(NewEntity(2, 2)));
 
             Assert.Equal([registered], world.Entities);

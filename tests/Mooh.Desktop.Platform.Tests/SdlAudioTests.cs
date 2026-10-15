@@ -20,7 +20,7 @@ namespace Mooh.Desktop.Platform.Tests
         public void AFeedContinuesAfterRunningDry()
         {
             using SdlAudio audio = Open();
-            using IAudioFeed feed = Assert.IsAssignableFrom<IAudioFeed>(audio.OpenFeed(44100));
+            using IAudioFeed feed = Assert.IsType<IAudioFeed>(audio.OpenFeed(44100), exactMatch: false);
             Thread.Sleep(100);
             feed.Write(new float[16384]);
             Assert.True(WaitUntil(() => feed.QueuedFrames == 0), "The music track stopped consuming its stream after an underrun.");
