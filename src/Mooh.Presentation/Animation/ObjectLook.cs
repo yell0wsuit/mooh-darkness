@@ -59,6 +59,30 @@ namespace Mooh.Presentation.Animation
             get; init;
         }
 
+        /// <summary>Gets the score eating the object floats, its <c>ulEatScore</c>.</summary>
+        public int EatScore
+        {
+            get; init;
+        }
+
+        /// <summary>Gets the score killing the object other than by eating floats, its <c>ulKillScore</c>.</summary>
+        public int KillScore
+        {
+            get; init;
+        }
+
+        /// <summary>Gets the line eating the object floats, its <c>GetTxt</c>.</summary>
+        public ScoreLine? EatLine
+        {
+            get; init;
+        }
+
+        /// <summary>Gets the line killing the object floats, its <c>KillTxt</c>.</summary>
+        public ScoreLine? KillLine
+        {
+            get; init;
+        }
+
         /// <summary>Gets the puff the object raises when pushed, its <c>PrtMove</c>, when it names one.</summary>
         public ParticlePuff? MovePuff
         {

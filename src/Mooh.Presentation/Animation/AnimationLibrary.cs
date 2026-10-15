@@ -312,6 +312,64 @@ namespace Mooh.Presentation.Animation
                 : new ParticleBurst(kind, page, variants, min, max, time[0].GetDouble(), time[1].GetDouble());
         }
 
+        /// <summary>Reads a registration's score: a number, or the first of a per-variant tuple.</summary>
+        private static int ScoreOf(JsonElement registration, string field)
+        {
+            return !registration.TryGetProperty(field, out JsonElement value) ? 0
+                : value.ValueKind == JsonValueKind.Number ? value.GetInt32()
+                : value.ValueKind == JsonValueKind.Array && value.GetArrayLength() > 0 && value[0].ValueKind == JsonValueKind.Number ? value[0].GetInt32()
+                : 0;
+        }
+
+        /// <summary>
+        /// Reads a recovered line: <c>StrHost.StrGet(id)</c>, the same paired with the treasure
+        /// test, or one formatted with <c>%</c> by a number or by <c>Compl.HEat</c>.
+        /// </summary>
+        private static ScoreLine? LineOf(JsonElement value)
+        {
+            if (value.ValueKind == JsonValueKind.Array && value.GetArrayLength() == 2)
+            {
+                return LineOf(value[0]) is ScoreLine guarded ? guarded with
+                {
+                    WhileTreasure = true
+                } : null;
+            }
+
+            if (value.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            if (value.TryGetProperty("op", out JsonElement op) && op.GetString() == "MODULO" && LineOf(value.GetProperty("left")) is ScoreLine formatted)
+            {
+                JsonElement right = value.GetProperty("right");
+                return right.ValueKind == JsonValueKind.Number
+                    ? formatted with
+                    {
+                        Argument = right.GetInt32()
+                    }
+                    : formatted with
+                    {
+                        FormatsGain = true
+                    };
+            }
+
+            if (!value.TryGetProperty("call", out JsonElement call)
+                || call.ValueKind != JsonValueKind.String
+                || call.GetString() != "StrHost.StrGet")
+            {
+                return null;
+            }
+
+            JsonElement id = value.GetProperty("args")[0];
+            // App.Quest(self.Compl.bTimed, timed, plain) picks by the level's clock.
+            return id.ValueKind == JsonValueKind.String
+                ? new ScoreLine(id.GetString() ?? string.Empty)
+                : id.ValueKind == JsonValueKind.Object && id.TryGetProperty("args", out JsonElement quest) && quest.GetArrayLength() == 3
+                ? new ScoreLine(quest[2].GetString() ?? string.Empty, quest[1].GetString())
+                : null;
+        }
+
         /// <summary>Reads a registration's <c>PrtLand</c> or <c>PrtMove</c> handler, when it names one.</summary>
         private static ParticlePuff? PuffOf(JsonElement registration, string field)
         {
@@ -490,6 +548,10 @@ namespace Mooh.Presentation.Animation
                 KillBursts = BurstsOf(registration, "PrtKill", effects),
                 LandPuff = PuffOf(registration, "PrtLand"),
                 MovePuff = PuffOf(registration, "PrtMove"),
+                EatScore = ScoreOf(registration, "ulEatScore"),
+                KillScore = ScoreOf(registration, "ulKillScore"),
+                EatLine = registration.TryGetProperty("GetTxt", out JsonElement eatLine) ? LineOf(eatLine) : null,
+                KillLine = registration.TryGetProperty("KillTxt", out JsonElement killLine) ? LineOf(killLine) : null,
             };
         }
 

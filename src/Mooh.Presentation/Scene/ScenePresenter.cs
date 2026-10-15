@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Mooh.Core.Content;
 using Mooh.Core.Enemies;
 using Mooh.Core.Entities;
 using Mooh.Core.Explosions;
@@ -42,6 +43,8 @@ namespace Mooh.Presentation.Scene
         private readonly EventSounds _eventSounds;
         private readonly ScreenShake _shake = new();
         private readonly ParticleSystem _particles;
+        private readonly FloatingTexts _floating;
+        private List<SceneText> _texts = [];
         private Dictionary<EntityId, Sighting> _seen = [];
         private double _clockMilliseconds;
         private readonly AnimationLibrary _library;
@@ -52,8 +55,9 @@ namespace Mooh.Presentation.Scene
         /// <summary>Initializes the presenter.</summary>
         /// <param name="library">The recovered animation tables.</param>
         /// <param name="random">The source of the original's presentation-only random choices.</param>
-        /// <exception cref="ArgumentNullException">An argument is <see langword="null"/>.</exception>
-        public ScenePresenter(AnimationLibrary library, Random random)
+        /// <param name="strings">The recovered text table the floating lines read, if loaded.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="library"/> or <paramref name="random"/> is <see langword="null"/>.</exception>
+        public ScenePresenter(AnimationLibrary library, Random random, StringTable? strings = null)
         {
             ArgumentNullException.ThrowIfNull(library);
             ArgumentNullException.ThrowIfNull(random);
@@ -61,6 +65,7 @@ namespace Mooh.Presentation.Scene
             _random = random;
             _effects = new EffectSystem(library, random);
             _particles = new ParticleSystem(library, random);
+            _floating = new FloatingTexts(library, strings, random);
             _eventSounds = new EventSounds(library);
         }
 
@@ -69,6 +74,9 @@ namespace Mooh.Presentation.Scene
 
         /// <summary>Gets how far the view is jerked off its place, in screen pixels.</summary>
         public (double X, double Y) Shake => (_shake.X, _shake.Y);
+
+        /// <summary>Gets the floating scores and lines, drawn over the world, in order.</summary>
+        public IReadOnlyList<SceneText> Texts => _texts;
 
         /// <summary>Gets the frames to draw, in draw order.</summary>
         public IReadOnlyList<SceneSprite> Sprites => _sprites;
@@ -102,7 +110,7 @@ namespace Mooh.Presentation.Scene
             {
                 _ = present.Add(entity.Id);
                 (double seenX, double seenY) = DrawnPosition.Of(entity);
-                seen[entity.Id] = new Sighting(entity.ArchivalIdentity?.ArchivalType, seenX, seenY, entity.PlayerBody is not null, entity.BigBombBody is not null);
+                seen[entity.Id] = new Sighting(TypeOf(entity), seenX, seenY, entity.PlayerBody is not null, entity.BigBombBody is not null);
                 if (!_animators.TryGetValue(entity.Id, out EntityAnimator? animator))
                 {
                     animator = Create(entity);
@@ -157,6 +165,8 @@ namespace Mooh.Presentation.Scene
             IReadOnlyList<GridPosition> blasts = _effects.Update(world, events, seconds);
             sprites.AddRange(_effects.Sprites);
             _particles.Update(world, events, sighted, blasts, steps, seconds);
+            _floating.Update(world, events, sighted, seconds);
+            _texts = [.. _floating.Texts];
             foreach (EntityId gone in _animators.Keys.Where(id => !present.Contains(id)).ToList())
             {
                 _ = _animators.Remove(gone);
@@ -212,6 +222,17 @@ namespace Mooh.Presentation.Scene
                 && world.GetOccupants(below).Any(occupant => occupant.ArchivalIdentity is ArchivalObjectIdentity identity
                     && _library.TryGetLook(identity.ArchivalType, out ObjectLook look)
                     && look.ReceivesShadow);
+        }
+
+        /// <summary>
+        /// The registration an entity was made from: its archival type, or for a spawned beetle
+        /// the original's <c>CNT_OName_SmGr</c> or <c>CNT_OName_SmBlue</c>.
+        /// </summary>
+        private static string? TypeOf(Entity entity)
+        {
+            return entity.SmallBeetleBody is SmallBeetleBody beetle
+                ? beetle.Color == SmallBeetleColor.Green ? "OSmGr" : "OSmBlue"
+                : entity.ArchivalIdentity?.ArchivalType;
         }
 
         private EntityAnimator? Create(Entity entity)
