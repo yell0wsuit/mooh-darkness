@@ -25,6 +25,22 @@ namespace Mooh.Core.Tests.Content
             Assert.Equal("Level %d", table["GameScrLvl"]);
         }
 
+        /// <summary>
+        /// Verifies a text character maps back to its Windows-1252 byte, the code the bitmap fonts
+        /// index by, and a character outside the code page has none.
+        /// </summary>
+        [Fact]
+        public void ACharacterMapsBackToItsCodePageByte()
+        {
+            Assert.True(StringTable.TryEncode('A', out byte letter));
+            Assert.Equal(0x41, letter);
+            Assert.True(StringTable.TryEncode('\u2019', out byte apostrophe));
+            Assert.Equal(0x92, apostrophe);
+            Assert.True(StringTable.TryEncode('\u00E9', out byte accented));
+            Assert.Equal(0xE9, accented);
+            Assert.False(StringTable.TryEncode('\u4E00', out _));
+        }
+
         /// <summary>Verifies a file without the recovered signature is rejected.</summary>
         [Fact]
         public void AFileWithoutTheSignatureIsRejected()

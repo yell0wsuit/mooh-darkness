@@ -72,6 +72,32 @@ namespace Mooh.Core.Content
             return false;
         }
 
+        /// <summary>
+        /// Maps a text character back to its Windows-1252 byte, the code the recovered bitmap fonts
+        /// index their glyphs by.
+        /// </summary>
+        /// <param name="character">The character.</param>
+        /// <param name="value">The byte, when the code page has the character.</param>
+        /// <returns><see langword="true"/> when the code page has the character.</returns>
+        public static bool TryEncode(char character, out byte value)
+        {
+            int high = Array.IndexOf(Windows1252High, character);
+            if (high >= 0)
+            {
+                value = (byte)(0x80 + high);
+                return true;
+            }
+
+            if (character is <= (char)0xFF and not (>= '\u0080' and <= '\u009F'))
+            {
+                value = (byte)character;
+                return true;
+            }
+
+            value = 0;
+            return false;
+        }
+
         /// <summary>Reads a string table.</summary>
         /// <param name="stream">The table's bytes.</param>
         /// <returns>The table.</returns>
