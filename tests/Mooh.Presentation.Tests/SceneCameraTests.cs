@@ -39,5 +39,23 @@ namespace Mooh.Presentation.Tests
             (double x, _) = camera.ToScreen(1, 0);
             Assert.Equal(400 + (80 * Math.Exp(-1)), x, 6);
         }
+
+        /// <summary>
+        /// Verifies a jerk moves everything the camera places, the world base plus <c>fScrX</c>
+        /// and <c>fScrY</c>, without moving where it eases toward.
+        /// </summary>
+        [Fact]
+        public void AJerkMovesWhatTheCameraPlaces()
+        {
+            SceneCamera camera = new();
+            camera.Snap(3, 2);
+
+            camera.Shake = (2.5, -5);
+
+            Assert.Equal((402.5, 295.0), camera.ToScreen(3, 2));
+            Assert.Equal((162.5, 145.0), camera.Base);
+            camera.Shake = (0, 0);
+            Assert.Equal((400.0, 300.0), camera.ToScreen(3, 2));
+        }
     }
 }

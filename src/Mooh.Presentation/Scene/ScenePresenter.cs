@@ -40,6 +40,7 @@ namespace Mooh.Presentation.Scene
         private readonly Dictionary<EntityId, EntityAnimator> _animators = [];
         private readonly EffectSystem _effects;
         private readonly EventSounds _eventSounds;
+        private readonly ScreenShake _shake = new();
         private Dictionary<EntityId, Sighting> _seen = [];
         private double _clockMilliseconds;
         private readonly AnimationLibrary _library;
@@ -63,6 +64,9 @@ namespace Mooh.Presentation.Scene
 
         /// <summary>Gets the sounds cued this update, in order.</summary>
         public IReadOnlyList<SoundCue> Sounds => _sounds;
+
+        /// <summary>Gets how far the view is jerked off its place, in screen pixels.</summary>
+        public (double X, double Y) Shake => (_shake.X, _shake.Y);
 
         /// <summary>Gets the frames to draw, in draw order.</summary>
         public IReadOnlyList<SceneSprite> Sprites => _sprites;
@@ -139,6 +143,7 @@ namespace Mooh.Presentation.Scene
             }
 
             sounds.AddRange(_eventSounds.For(events, sighted));
+            _shake.Update(world, events, sighted, seconds, _random);
             _seen = seen;
             _sounds = sounds;
             _effects.Update(world, events, seconds);

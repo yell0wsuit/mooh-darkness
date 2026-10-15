@@ -19,6 +19,27 @@ namespace Mooh.Presentation.Tests
             Assert.Contains("RockLand", Heard(harness, 2));
         }
 
+        /// <summary>
+        /// Verifies a struck rock stopping against a wall plays its <c>SndLand</c>, as
+        /// <c>PlPush_OnCell</c> does when the chain stops.
+        /// </summary>
+        [Fact]
+        public void AStruckRockStoppingPlaysItsLandSound()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("ORock01", 3, 1), ("CellsMetal01", 6, 1)));
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+            harness.StepUntil(() => harness.Player.Position.X == 2);
+            harness.Input(default);
+            harness.StepUntil(() => harness.Player.Motion is null);
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: false, Down: false, Fire: true));
+            bool landed = false;
+
+            harness.StepUntil(() => landed |= harness.LastEvents.OfType<Core.Simulation.StrikePushStopped>().Any()
+                && harness.Presenter.Sounds.Any(cue => cue.Alias == "RockLand"));
+
+            Assert.True(landed);
+        }
+
         /// <summary>Verifies eating plays the type's <c>SndEat</c>, here a coin's.</summary>
         [Fact]
         public void EatingPlaysTheTypesEatSound()

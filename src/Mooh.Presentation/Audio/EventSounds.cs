@@ -30,6 +30,9 @@ namespace Mooh.Presentation.Audio
                     case Landed landed:
                         alias = Registered(seen, landed.EntityId, "SndLand") ?? Sound("SndDefFall");
                         break;
+                    case StrikePushStopped stopped:
+                        alias = Registered(seen, stopped.EntityId, "SndLand") ?? Sound("SndDefFall");
+                        break;
                     case PushStarted pushed:
                         alias = Registered(seen, pushed.EntityId, "SndMove") ?? Sound("SndDefMove");
                         break;

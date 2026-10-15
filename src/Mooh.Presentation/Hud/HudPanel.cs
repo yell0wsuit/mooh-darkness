@@ -23,7 +23,8 @@ namespace Mooh.Presentation.Hud
 
         public bool TextRight { get; } = textRight;
 
-        public PanelSpring Spring { get; } = new();
+        /// <summary>The panel's spring, <c>CNT_ScrPnlStiffK</c>: ω = 0.05 and λ = −0.012 per millisecond.</summary>
+        public DampedSpring Spring { get; } = new(0.05, -0.012);
 
         /// <summary>The text's point, <c>TPos</c>, which does not jerk with the frame.</summary>
         public (int X, int Y) TextPoint => (X + (TextRight ? -20 : 20), Y + 30);

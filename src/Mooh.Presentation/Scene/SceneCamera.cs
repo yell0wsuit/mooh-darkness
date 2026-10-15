@@ -34,8 +34,20 @@ namespace Mooh.Presentation.Scene
         private double _baseX;
         private double _baseY;
 
-        /// <summary>Gets the world base, <c>fWrdBaseX</c> and <c>fWrdBaseY</c>: where cell (0, 0) is drawn.</summary>
-        public (double X, double Y) Base => (_baseX, _baseY);
+        /// <summary>
+        /// Gets the world base, <c>fWrdBaseX</c> and <c>fWrdBaseY</c> plus the jerk: where cell (0, 0)
+        /// is drawn.
+        /// </summary>
+        public (double X, double Y) Base => (_baseX + Shake.X, _baseY + Shake.Y);
+
+        /// <summary>
+        /// Gets or sets the view's jerk, <c>fScrX</c> and <c>fScrY</c>, which moves everything the
+        /// camera places but not the base it eases.
+        /// </summary>
+        public (double X, double Y) Shake
+        {
+            get; set;
+        }
 
         /// <summary>Puts the target at the screen center at once, as a level start does.</summary>
         /// <param name="x">The target's column.</param>
@@ -75,7 +87,7 @@ namespace Mooh.Presentation.Scene
         /// <returns>The screen position in pixels.</returns>
         public (double X, double Y) ToScreen(double x, double y)
         {
-            return (_baseX + (x * CellWidth), _baseY + (y * CellHeight));
+            return (_baseX + Shake.X + (x * CellWidth), _baseY + Shake.Y + (y * CellHeight));
         }
 
         private static (double X, double Y) BaseFor(double x, double y)
