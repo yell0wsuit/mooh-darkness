@@ -90,9 +90,10 @@ namespace Mooh.Core.Movement
                 return new MovementPlan(MoveResult.Blocked, []);
             }
 
-            // CellObjStillOrDir(c, d) is the last gate before the PlPush dispatch. Everything
-            // after it decides only whether the push moves.
-            if (pushed.Exists(entity => entity.Motion is not null))
+            // A push can take over motion along its direction, preserving its offset.
+            // Opposite and perpendicular motion still block it.
+            if (pushed.Exists(entity => entity.Motion is { } motion
+                && motion.TravelDirection != request.Direction))
             {
                 return new MovementPlan(MoveResult.Blocked, []);
             }
@@ -120,7 +121,8 @@ namespace Mooh.Core.Movement
             List<MovementStep> steps = [];
             steps.AddRange(
                 pushed.Select(
-                    entity => new MovementStep(entity.Id, entity.Position, pushedDestination)));
+                    entity => new MovementStep(entity.Id, entity.Position,
+                        entity.Motion is null ? pushedDestination : entity.Position)));
             steps.Add(new MovementStep(mover.Id, mover.Position, destination));
             return new MovementPlan(MoveResult.Pushed, steps, offered);
         }

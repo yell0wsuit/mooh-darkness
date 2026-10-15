@@ -314,6 +314,49 @@ namespace Mooh.Core.Tests.Player
             Assert.DoesNotContain(events, item => item is CellEntered entered && entered.EntityId == block.Id);
         }
 
+        /// <summary>Verifies catching a forward-moving pushable preserves its current cell and offset.</summary>
+        [Theory]
+        [InlineData(MotionCause.PlayerPushed)]
+        [InlineData(MotionCause.StrikePushed)]
+        [InlineData(MotionCause.Sliding)]
+        public void APlayerCanPushAnObjectAlreadyMovingInTheSameDirection(MotionCause cause)
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(2, 1.5);
+            Entity block = Add(world, x: 2, Pushable);
+            KinematicsSystem.Start(block, cause, Direction.Right, 1);
+            KinematicsSystem.Advance(block, TimeSpan.FromMilliseconds(500));
+            simulation.SetPlayerInput(HeldRight);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(10));
+
+            Assert.Contains(events, item => item == new PushStarted(block.Id, Direction.Right));
+            Assert.Equal(new GridPosition(2, 1), block.Position);
+            Assert.Equal(0.53, block.Motion!.Progress, 10);
+            Assert.Equal(3, block.Motion.Speed);
+            Assert.Equal(new GridPosition(2, 1), player.Position);
+            Assert.Equal([player, block], world.GetOccupants(new GridPosition(2, 1)));
+        }
+
+        /// <summary>Verifies opposite and perpendicular motion cannot be taken over by a walking push.</summary>
+        [Theory]
+        [InlineData(MotionCause.PlayerPushed, Direction.Left)]
+        [InlineData(MotionCause.PlayerPushed, Direction.Up)]
+        [InlineData(MotionCause.Falling, Direction.Down)]
+        [InlineData(MotionCause.Sliding, Direction.Left)]
+        public void IncompatibleMovingObjectsBlockThePush(MotionCause cause, Direction direction)
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(2, 1.5);
+            Entity block = Add(world, x: 2, Pushable);
+            KinematicsSystem.Start(block, cause, direction, 1);
+            simulation.SetPlayerInput(HeldRight);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(10));
+
+            Assert.DoesNotContain(events, item => item is PushStarted);
+            Assert.Equal(new GridPosition(1, 1), player.Position);
+            Assert.Equal(cause, block.Motion!.Cause);
+        }
+
         private static PlayerInputState HeldRight => new(
             Left: false,
             Up: false,

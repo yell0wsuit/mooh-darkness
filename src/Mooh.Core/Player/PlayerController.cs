@@ -752,7 +752,8 @@ namespace Mooh.Core.Player
             }
 
             _world.CommitMoves(
-                [.. plan.Steps.Select(step => new PlannedMove(step.EntityId, step.From, step.To))]);
+                [.. plan.Steps.Where(step => step.From != step.To)
+                    .Select(step => new PlannedMove(step.EntityId, step.From, step.To))]);
 
             if (plan.Result == MoveResult.Pushed)
             {
@@ -784,12 +785,15 @@ namespace Mooh.Core.Player
                 }
 
                 Entity pushed = _world.GetEntity(step.EntityId);
+                double progress = pushed.Motion?.Progress ?? 0;
+                KinematicsSystem.Stop(pushed);
                 KinematicsSystem.Start(
                     pushed,
                     MotionCause.PlayerPushed,
                     direction,
                     playerBody.MoveSpeed * playerBody.PushSpeedMultiplier * speedMultiplier,
                     resolutionOrder);
+                pushed.Motion!.Progress = progress;
                 resolutionOrder++;
                 events.Add(new PushStarted(pushed.Id, direction));
             }
