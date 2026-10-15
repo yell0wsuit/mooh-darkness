@@ -119,7 +119,7 @@ namespace Mooh.Presentation.Music
             return module;
         }
 
-        /// <summary>Chunk 1 v3, <c>sub_100135A0</c>.</summary>
+        /// <summary>Reads the title, tempo and speed from the version 3 information chunk.</summary>
         private void ReadInfo(Reader reader)
         {
             Title = reader.CString();
@@ -132,7 +132,7 @@ namespace Mooh.Presentation.Music
             Speed = reader.U8();
         }
 
-        /// <summary>Chunk 2 v1, <c>sub_100154D0</c>, and its pattern subchunks, <c>sub_10014A70</c>.</summary>
+        /// <summary>Reads the version 1 sequence chunk and its pattern subchunks.</summary>
         private void ReadPatterns(Reader reader, int end, Dictionary<int, SkalePattern> patterns)
         {
             _ = reader.U8();
@@ -186,9 +186,9 @@ namespace Mooh.Presentation.Music
         }
 
         /// <summary>
-        /// Per-channel rows, <c>sub_100136D0</c>: a byte under <c>0x80</c> is the effect of an
+        /// Decodes per-channel rows: a byte under <c>0x80</c> is the effect of an
         /// unpacked cell, otherwise a mask of the fields that follow; missing fields keep the
-        /// defaults <c>sub_10007CE0</c> sets.
+        /// pattern cell's defaults.
         /// </summary>
         private static void ReadChannel(Reader reader, SkalePattern pattern)
         {
@@ -258,7 +258,7 @@ namespace Mooh.Presentation.Music
             pattern.SetChannel(channel, cells);
         }
 
-        /// <summary>Chunk 3, <c>sub_10016240</c>: version 6 instruments.</summary>
+        /// <summary>Reads version 6 instruments from chunk 3.</summary>
         private static void ReadInstruments(byte[] data, int start, int end, Dictionary<int, SkaleInstrument> instruments)
         {
             Reader reader = new(data, start);
@@ -322,7 +322,7 @@ namespace Mooh.Presentation.Music
                 return value;
             }
 
-            /// <summary>A NUL-terminated string, <c>sub_100132F0</c>.</summary>
+            /// <summary>Reads a NUL-terminated Latin-1 string.</summary>
             public string CString()
             {
                 int end = Array.IndexOf(Data, (byte)0, Position);

@@ -10,8 +10,8 @@ namespace Mooh.Core.Grid
     /// A rotation rewrites more than one coordinate space — every entity's cell, every locked
     /// cell's state, every <c>CLinkCoordBase.LinkCoords</c> entry and, in the original, the
     /// particle list — so the mapping is stated once here and used by each of them rather than
-    /// re-derived. The recovered code does the same: <c>sub_49DC10</c> and <c>sub_49DB30</c> each
-    /// walk the cell array, the object list and the particle list with one expression.
+    /// re-derived. Each rotation applies the same coordinate mapping to the cell array, the
+    /// object list and the particle list.
     /// </para>
     /// <para>
     /// Only positions rotate. Gravity keeps pulling the same way, because nothing in the rotation

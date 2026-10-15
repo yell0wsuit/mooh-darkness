@@ -7,7 +7,7 @@ namespace Mooh.Presentation
     /// <c>StiffSetPos</c> for a panel, <c>StiffCalc</c> for the view.
     /// </summary>
     /// <remarks>
-    /// The native solver, <c>sub_497560</c>, keeps the angular frequency, its inverse, the decay,
+    /// The spring solver keeps the angular frequency, its inverse, the decay,
     /// and the sine, cosine and exponential of a step, and moves an offset and its speed along
     /// <c>x(t) = e^(λt)(x cos ωt + v/ω sin ωt)</c>, both in milliseconds. The spring comes to rest
     /// once both are negligible, so a whole-pixel draw position does not hang one pixel off.

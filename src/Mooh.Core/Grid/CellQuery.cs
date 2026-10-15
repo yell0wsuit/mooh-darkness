@@ -111,9 +111,9 @@ namespace Mooh.Core.Grid
         }
 
         /// <summary>
-        /// Tests native sub_49FF30's landing gate: the support cell's deadline has elapsed and
-        /// sub_49D190 finds no moving visible occupant. A vacated-cell lock and a descending
-        /// monster suspend falling without constituting a landing surface.
+        /// Allows a landing after the support cell's deadline has elapsed and no visible occupant
+        /// is moving. A vacated-cell lock and a descending monster suspend falling without
+        /// constituting a landing surface.
         /// </summary>
         internal static bool AllowsLanding(WorldGrid world, GridPosition cell)
         {

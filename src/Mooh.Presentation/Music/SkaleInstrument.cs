@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Mooh.Presentation.Music
 {
-    /// <summary>A sample of an instrument, <c>sub_10014C50</c>, with its Ogg payload.</summary>
+    /// <summary>An instrument sample with its Ogg payload.</summary>
     public sealed class SkaleSample
     {
         /// <summary>No loop.</summary>
@@ -96,7 +96,7 @@ namespace Mooh.Presentation.Music
         public bool IsUsable => Pcm is { Length: > 1 };
     }
 
-    /// <summary>An instrument envelope, subchunk v3 (<c>sub_10013F50</c>). Points are (x, y), y in 0 to 64.</summary>
+    /// <summary>An instrument envelope stored in a version 3 subchunk. Points are (x, y), y in 0 to 64.</summary>
     public sealed class SkaleEnvelope
     {
         /// <summary>Gets the kind: 1 volume, 2 panning, 3 filter, 4 resonance.</summary>
@@ -157,7 +157,7 @@ namespace Mooh.Presentation.Music
         }
     }
 
-    /// <summary>An instrument, version 6 (<c>sub_100179A0</c>).</summary>
+    /// <summary>An instrument stored in the version 6 format.</summary>
     public sealed class SkaleInstrument
     {
         private readonly List<(byte[] Samples, int Low, int High)>[] _groups = new List<(byte[], int, int)>[128];
@@ -220,7 +220,7 @@ namespace Mooh.Presentation.Music
             return _envelopes.GetValueOrDefault((kind, _envelopeSelection[kind - 1]));
         }
 
-        /// <summary>Picks the sample a note plays at a velocity, <c>sub_10007240</c>.</summary>
+        /// <summary>Picks the sample a note plays at a velocity.</summary>
         /// <param name="note">The note.</param>
         /// <param name="velocity">The velocity.</param>
         /// <returns>The sample, or <see langword="null"/>.</returns>
@@ -375,7 +375,7 @@ namespace Mooh.Presentation.Music
                 int at = reader.Position;
                 if (id >> 16 == 1 && (id & 0xFFFF) == 4)
                 {
-                    // sub_10013A80: the frame count, a byte, the payload size, the payload.
+                    // The sample subchunk stores the frame count, a byte, the payload size, then the payload.
                     sample.Length = (int)BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(at));
                     int payload = (int)BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(at + 5));
                     sample.Ogg = data[(at + 9)..(at + 9 + payload)];

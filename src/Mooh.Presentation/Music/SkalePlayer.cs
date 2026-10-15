@@ -8,11 +8,10 @@ namespace Mooh.Presentation.Music
     /// engine in <c>skm_render.py</c>, rendering stereo frames on demand so a host can stream it.
     /// </summary>
     /// <remarks>
-    /// Timing is <c>rate * 2.5 / bpm</c> frames a tick (<c>sub_100035F0</c>); pitch is
-    /// <c>8363 * 2^((4608 - period) / 768)</c> with <c>period = 7680 - 64 * note - finetune / 2</c>
-    /// (<c>sub_10008E90</c>); a channel's volume is <c>fade * volume * envelope / 0x400000</c>
-    /// (<c>sub_10002D70</c>), panned and scaled by the instrument (<c>sub_10009970</c>,
-    /// <c>sub_100049D0</c>). The MultiFX and Mixer chunks are not applied, as in the Python port.
+    /// Timing is <c>rate * 2.5 / bpm</c> frames a tick; pitch is
+    /// <c>8363 * 2^((4608 - period) / 768)</c> with <c>period = 7680 - 64 * note - finetune / 2</c>.
+    /// A channel's volume is <c>fade * volume * envelope / 0x400000</c>, panned and scaled by
+    /// the instrument. The MultiFX and Mixer chunks are not applied, as in the Python port.
     /// The sequence plays on past the song's end from its first position, so a host can loop it.
     /// </remarks>
     public sealed class SkalePlayer
@@ -108,7 +107,7 @@ namespace Mooh.Presentation.Music
             return PitchReferenceHz * Math.Pow(2, (4608.0 - period) * (1.0 / 768.0));
         }
 
-        /// <summary><c>sub_10003010</c>: a BCD row number.</summary>
+        /// <summary>Decodes a BCD row number, preserving values with invalid BCD digits.</summary>
         private static int Bcd(int value)
         {
             int high = value >> 4;
@@ -153,7 +152,7 @@ namespace Mooh.Presentation.Music
             _tickOffset = 0;
             _tickIndex++;
 
-            // sub_100066E0 re-reads the speed every tick, so an Fxx shortens or lengthens its row.
+            // Re-read the speed every tick so an Fxx effect shortens or lengthens its row.
             if (_tickIndex < _speed)
             {
                 return;
@@ -227,7 +226,7 @@ namespace Mooh.Presentation.Music
             return _module.Instruments.GetValueOrDefault(index);
         }
 
-        /// <summary><c>sub_100054F0</c>: returns whether the channel was addressed.</summary>
+        /// <summary>Triggers or releases a note and returns whether the channel was addressed.</summary>
         private bool Trigger(int index, int note, int cellInstrument, int volume, bool restartEnvelopes)
         {
             Channel channel = _channels[index];
@@ -285,7 +284,7 @@ namespace Mooh.Presentation.Music
             return true;
         }
 
-        /// <summary><c>sub_100049D0</c>.</summary>
+        /// <summary>Selects and starts a note's sample, optionally restarting its envelopes.</summary>
         private static void StartNote(Channel channel, SkaleInstrument instrument, int note, int volume, bool restartEnvelopes)
         {
             int velocity = volume <= 0x7F ? volume : 127;
@@ -324,7 +323,7 @@ namespace Mooh.Presentation.Music
             }
         }
 
-        /// <summary><c>sub_10004380</c>.</summary>
+        /// <summary>Starts the volume and panning envelopes with their default fallback values.</summary>
         private static void StartEnvelopes(Channel channel, SkaleInstrument instrument)
         {
             channel.VolumeEnvelope.Start(instrument.Envelope(1), 64);
@@ -335,7 +334,7 @@ namespace Mooh.Presentation.Music
             }
         }
 
-        /// <summary><c>sub_10005B70</c>: tick 0 of a row.</summary>
+        /// <summary>Applies notes and effects at tick zero of a row.</summary>
         private void DoRow(SkalePattern pattern)
         {
             for (int index = 0; index < _channels.Length; index++)
@@ -627,7 +626,7 @@ namespace Mooh.Presentation.Music
             }
         }
 
-        /// <summary><c>sub_10009AE0</c>.</summary>
+        /// <summary>Sets the sample playback offset while respecting its bounds and loop.</summary>
         private static void SetOffset(Channel channel, int frames)
         {
             SkaleSample? sample = channel.Sample;
@@ -655,7 +654,7 @@ namespace Mooh.Presentation.Music
             }
         }
 
-        /// <summary><c>sub_10005790</c>: ticks 1 to speed - 1.</summary>
+        /// <summary>Applies ongoing effects on ticks one through speed minus one.</summary>
         private void DoTick()
         {
             int tick = _tickIndex;
@@ -716,7 +715,7 @@ namespace Mooh.Presentation.Music
             }
         }
 
-        /// <summary><c>sub_100036F0</c>.</summary>
+        /// <summary>Slides the current period toward the portamento target without overshooting.</summary>
         private static void TonePortamento(Channel channel)
         {
             if (channel.PortaNote < 0)
@@ -734,7 +733,7 @@ namespace Mooh.Presentation.Music
             }
         }
 
-        /// <summary><c>sub_10003040</c>.</summary>
+        /// <summary>Modulates pitch using the vibrato depth, speed and waveform position.</summary>
         private static void Vibrato(Channel channel)
         {
             int depth = channel.CommandParameter & 0x0F;
@@ -756,7 +755,7 @@ namespace Mooh.Presentation.Music
             channel.VibratoPosition = position;
         }
 
-        /// <summary><c>sub_100030E0</c>.</summary>
+        /// <summary>Modulates volume using the tremolo depth, speed and waveform position.</summary>
         private static void Tremolo(Channel channel)
         {
             int depth = channel.CommandParameter & 0x0F;
@@ -778,7 +777,7 @@ namespace Mooh.Presentation.Music
             channel.TremoloPosition = position;
         }
 
-        /// <summary><c>sub_100036B0</c>: two units a tick, one nibble only.</summary>
+        /// <summary>Slides volume by two units per tick, using only one nonzero parameter nibble.</summary>
         private static void VolumeSlide(Channel channel)
         {
             int up = channel.CommandParameter >> 4;
@@ -793,7 +792,7 @@ namespace Mooh.Presentation.Music
             }
         }
 
-        /// <summary><c>sub_10004690</c> and <c>sub_100045A0</c>, once a tick.</summary>
+        /// <summary>Advances instrument envelopes and fade once per tick.</summary>
         private void AdvanceEnvelopes()
         {
             double rate = 50.0 / (_bpm * 0.4);
@@ -818,7 +817,7 @@ namespace Mooh.Presentation.Music
                 {
                     channel.PanEnvelope.Step(rate, channel.KeyOff);
 
-                    // sub_10003490: the envelope swings the base pan by (env - 32) * (128 - |base - 128|) / 32.
+                    // The envelope swings the base pan by (env - 32) * (128 - |base - 128|) / 32.
                     int swing = ((channel.PanEnvelope.Value - 32) * (128 - Math.Abs(channel.PanBase - 128))) >> 5;
                     channel.Pan = Math.Clamp(channel.PanBase + swing, 0, 255);
                 }
@@ -880,7 +879,7 @@ namespace Mooh.Presentation.Music
         }
 
         /// <summary>
-        /// <c>sub_10009890</c>: the mixing gain slews by 1/128 of the gap a frame, for at most 128
+        /// The mixing gain slews by 1/128 of the gap a frame, for at most 128
         /// frames, then holds the target.
         /// </summary>
         private static double Ramp(double current, double target, int frame, int count)
@@ -1133,21 +1132,21 @@ namespace Mooh.Presentation.Music
                 get; set;
             }
 
-            /// <summary><c>sub_10009260</c>: clamp, then derive the note.</summary>
+            /// <summary>Clamps the period, then derives its note number.</summary>
             public void SetPeriod(double period)
             {
                 Period = Math.Clamp(period, 0, MaxPeriod);
                 Note = (int)((MaxPeriod - Period) * 0.015625);
             }
 
-            /// <summary><c>sub_1000A250</c>.</summary>
+            /// <summary>Sets the note and period, applying the period limits.</summary>
             public void SetNote(int note, double period)
             {
                 Note = note;
                 SetPeriod(period);
             }
 
-            /// <summary><c>sub_10002D70</c> and <c>sub_10009970</c>.</summary>
+            /// <summary>Computes stereo gains from fade, volume, envelope, pan and instrument scaling.</summary>
             public (double Left, double Right) TargetGains()
             {
                 int volume = (int)((long)Fade * Volume * EnvelopeValue / 0x400000);
@@ -1157,7 +1156,7 @@ namespace Mooh.Presentation.Music
             }
         }
 
-        /// <summary><c>sub_10003180</c>: evaluates at the current position, then advances.</summary>
+        /// <summary>Evaluates an envelope at its current position, then advances it.</summary>
         private sealed class EnvelopeState
         {
             private SkaleEnvelope? _envelope;

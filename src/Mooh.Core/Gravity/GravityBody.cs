@@ -47,7 +47,7 @@ namespace Mooh.Core.Gravity
 
         /// <summary>
         /// Remembers a completed falling segment whose landing callback waits for a stable,
-        /// unlocked support cell, as native sub_49FF30 does.
+        /// unlocked support cell.
         /// </summary>
         internal bool AwaitingLanding
         {

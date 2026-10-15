@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Mooh.Presentation.Music
 {
-    /// <summary>One pattern cell as the player reads it, <c>sub_10005B70</c>.</summary>
+    /// <summary>One pattern cell containing a note, instrument, volume and effect.</summary>
     /// <param name="Note">0 to 95 a pitch, 128 no new note, 129 key off.</param>
     /// <param name="Instrument">The one-based instrument, 0 for none.</param>
     /// <param name="Volume">0 to 0x80 a volume, 0x81 and up use the sample's.</param>
@@ -10,7 +10,7 @@ namespace Mooh.Presentation.Music
     /// <param name="Param">The effect's parameter.</param>
     public readonly record struct SkaleCell(int Note, int Instrument, int Volume, int Effect, int Param)
     {
-        /// <summary>Gets a cell with every field at its default, <c>sub_10007CE0</c>.</summary>
+        /// <summary>Gets a cell with every field at its default.</summary>
         public static SkaleCell Empty { get; } = new(128, 0, 129, 0, 0);
     }
 

@@ -16,7 +16,7 @@ namespace Mooh.Presentation.Text
     /// two 8.8 fixed-point values, then one 14-byte record per code from the first to the last:
     /// the glyph's width and height in bytes, its x and y offsets and its x and y advances as
     /// signed 8.8 values, and its atlas position as two 16-bit values. A record of zero width has
-    /// no glyph. The native lookup, <c>sub_406FA0</c>, places a glyph's left edge at the pen plus
+    /// no glyph. Glyph layout places a glyph's left edge at the pen plus
     /// its x offset and its bottom edge at the pen plus its y offset, both shifted down to whole
     /// pixels; a code outside the range draws nothing and moves the pen by the default advance.
     /// </remarks>
@@ -84,7 +84,7 @@ namespace Mooh.Presentation.Text
         }
 
         /// <summary>
-        /// Measures a line: the sum of its advances, the native <c>sub_408040</c>.
+        /// Measures a line by summing its characters' advances.
         /// </summary>
         /// <param name="text">The text.</param>
         /// <returns>The width in pixels.</returns>
@@ -121,7 +121,7 @@ namespace Mooh.Presentation.Text
 
         /// <summary>
         /// Measures the box around a line's glyphs with the pen starting at the origin,
-        /// <c>TextOutRectGet</c> (<c>sub_407F10</c>).
+        /// matching <c>TextOutRectGet</c>.
         /// </summary>
         /// <param name="text">The text.</param>
         /// <returns>The box's edges in pixels, all zero when no character has a glyph.</returns>

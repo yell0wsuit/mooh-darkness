@@ -5,16 +5,14 @@ using Xunit;
 namespace Mooh.Core.Tests.Grid
 {
     /// <summary>
-    /// Verifies the recovered quarter-turn coordinate transform. The two remap routines the
-    /// native <c>WorldRotCycle</c> selects between — <c>sub_49DC10</c> for a left turn and
-    /// <c>sub_49DB30</c> for a right one — rewrite every object's cell before the world's own
-    /// dimensions are swapped, so both read the pre-rotation width and height.
+    /// Verifies the recovered quarter-turn coordinate transform. Left and right turns rewrite
+    /// every object's cell before the world's dimensions are swapped, so both mappings use
+    /// the pre-rotation width and height.
     /// </summary>
     public sealed class WorldRotationTests
     {
         /// <summary>
-        /// Verifies the recovered left mapping <c>newX = height - 1 - y</c>, <c>newY = x</c>, which
-        /// is <c>sub_49DC10</c>'s <c>j[58] = *(this + 24) - j[59] - 1; j[59] = v8</c>.
+        /// Verifies the recovered left mapping <c>newX = height - 1 - y</c>, <c>newY = x</c>.
         /// </summary>
         [Theory]
         [InlineData(0, 0, 4, 0)]
@@ -34,8 +32,7 @@ namespace Mooh.Core.Tests.Grid
         }
 
         /// <summary>
-        /// Verifies the recovered right mapping <c>newX = y</c>, <c>newY = width - 1 - x</c>, which
-        /// is <c>sub_49DB30</c>'s <c>j[58] = j[59]; j[59] = *(this + 23) - v8 - 1</c>.
+        /// Verifies the recovered right mapping <c>newX = y</c>, <c>newY = width - 1 - x</c>.
         /// </summary>
         [Theory]
         [InlineData(0, 0, 0, 6)]

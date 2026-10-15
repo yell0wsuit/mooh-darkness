@@ -17,8 +17,8 @@ namespace Mooh.Core.Tests.Player
     /// <summary>
     /// Verifies the recovered mine: <c>Weap_Mine</c> lays it in the faced cell after the 250 ms
     /// <c>ST_Mine*</c>, and the deployed <c>WMine</c> — laid or placed — is a shadow that runs a 3x3
-    /// blast as soon as any <c>CNT_CMaskCellLockMotion</c> carrier shares its cell, the collision
-    /// <c>sub_4A2F30</c> checks every object cycle.
+    /// blast as soon as any <c>CNT_CMaskCellLockMotion</c> carrier shares its cell. Collisions
+    /// are checked every object cycle.
     /// </summary>
     public sealed class MineTests
     {

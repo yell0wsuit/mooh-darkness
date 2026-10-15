@@ -128,7 +128,7 @@ namespace Mooh.Core.Simulation
 
         /// <summary>
         /// The recovered spin duration. <c>CNT_GPrm_WorldRotSp</c> is 0.002, and the native
-        /// <c>WorldRotStart</c> (<c>sub_4A09D0</c>) divides it by <c>pi/2</c> before accumulating
+        /// <c>WorldRotStart</c> divides it by <c>pi/2</c> before accumulating
         /// it per millisecond until the total reaches one, so a quarter turn takes
         /// <c>pi/2 / 0.002</c> milliseconds.
         /// </summary>
@@ -670,7 +670,7 @@ namespace Mooh.Core.Simulation
             while (remainingSeconds > 0)
             {
                 // A turn in flight replaces everything else, which is the recovered
-                // Game.ModCycle:2693 swapping the whole object cycle for WorldRotCycle. The world
+                // Game.ModCycle swapping the whole object cycle for WorldRotCycle. The world
                 // clock freezes, but BonList cycles above that gate and still expires bonuses.
                 if (_rotationOwner is not null)
                 {
@@ -1647,7 +1647,7 @@ namespace Mooh.Core.Simulation
         }
 
         /// <summary>
-        /// Applies the recovered collision pass, <c>sub_4A2F30</c>: every object cycle, an object with
+        /// Applies the recovered collision pass: every object cycle, an object with
         /// a collision mask runs its handler for each live co-occupant of its committed cell whose
         /// mask intersects it. A deployed mine's mask is <c>CNT_CMaskCellLockMotion</c> and its
         /// handler is its own 3x3 blast.
@@ -2988,11 +2988,10 @@ namespace Mooh.Core.Simulation
         /// The recovered branches are taken in this order and each kills in this order. A player
         /// spends the fire and is then burned for <c>Compl.HFire</c>; a <c>bFireKill</c> carrier
         /// and the fire destroy each other; anything else is consumed while the fire survives.
-        /// The native dispatch point of <c>WEvObjHere</c> could not be located in
-        /// <c>mooh.exe.c</c>, so arrival is a structural reading: the relink that commits
-        /// occupancy at movement start (<c>sub_4A0540</c>) carries no callback at all, and every
-        /// other per-cell interaction in the engine — <c>PlHere</c>, <c>WEvOnCell</c> — resolves
-        /// on arrival.
+        /// The native dispatch point of <c>WEvObjHere</c> could not be confirmed, so arrival is
+        /// a structural reading: the relink that commits occupancy at movement start carries
+        /// no callback at all, and other per-cell interactions in the engine — <c>PlHere</c>,
+        /// <c>WEvOnCell</c> — resolve on arrival.
         /// </remarks>
         /// <returns><see langword="true"/> when the arriving entity was destroyed.</returns>
         private bool ResolveFireContact(Entity arriving, List<SimulationEvent> events)

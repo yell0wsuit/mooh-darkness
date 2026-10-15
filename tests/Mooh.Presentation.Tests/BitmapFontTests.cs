@@ -9,8 +9,7 @@ using Xunit;
 namespace Mooh.Presentation.Tests
 {
     /// <summary>
-    /// Verifies the recovered <c>.fnt</c> bitmap fonts and the native text layout,
-    /// <c>sub_406FA0</c> and <c>sub_407D40</c>.
+    /// Verifies the recovered <c>.fnt</c> bitmap fonts and glyph placement.
     /// </summary>
     public sealed class BitmapFontTests
     {
@@ -84,8 +83,7 @@ namespace Mooh.Presentation.Tests
         }
 
         /// <summary>
-        /// Verifies a line's bounds are the box around its glyphs, <c>TextOutRectGet</c>
-        /// (<c>sub_407F10</c>), not the sum of its advances.
+        /// Verifies a line's bounds enclose its glyphs rather than the sum of its advances.
         /// </summary>
         [Fact]
         public void ALinesBoundsSurroundItsGlyphs()
