@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 
 using Mooh.Presentation.Hud;
+using Mooh.Presentation.Scene;
 using Mooh.Presentation.Text;
 
 using SkiaSharp;
@@ -19,6 +20,7 @@ namespace Mooh.Desktop
         private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.None);
         private readonly Dictionary<string, (BitmapFont Font, SKImage Atlas)> _fonts = [with(StringComparer.Ordinal)];
         private readonly SKPaint _shade = new() { Color = new SKColor(0, 0, 0, 128) };
+        private readonly SKPaint _fade = new();
 
         /// <summary>Draws the panels, their values, the help and the outcome.</summary>
         /// <param name="canvas">The canvas, in the 800 by 600 screen space.</param>
@@ -29,6 +31,13 @@ namespace Mooh.Desktop
             ArgumentNullException.ThrowIfNull(canvas);
             ArgumentNullException.ThrowIfNull(game);
             ArgumentNullException.ThrowIfNull(scene);
+            // The floating scores are overlay parts, drawn after the world and before the panels.
+            foreach (SceneText floating in game.Presenter.Texts)
+            {
+                (double x, double y) = game.Camera.ToScreen(floating.X, floating.Y);
+                DrawText(canvas, new HudText(floating.Text, x, y, TextAlignment.Center, floating.Font), floating.Opacity);
+            }
+
             foreach (HudSprite sprite in game.Hud.Sprites)
             {
                 scene.DrawScreenFrame(canvas, HudPresenter.PageName, sprite.Frame, sprite.X, sprite.Y);
@@ -55,18 +64,21 @@ namespace Mooh.Desktop
 
             _fonts.Clear();
             _shade.Dispose();
+            _fade.Dispose();
         }
 
-        private void DrawText(SKCanvas canvas, HudText text)
+        private void DrawText(SKCanvas canvas, HudText text, double opacity = 1)
         {
             (BitmapFont font, SKImage atlas) = FontOf(text.Font);
+            _fade.Color = SKColors.White.WithAlpha((byte)Math.Round(255 * Math.Clamp(opacity, 0, 1)));
             foreach (GlyphPlacement glyph in font.Layout(text.Text, text.X, text.Y, text.Alignment))
             {
                 canvas.DrawImage(
                     atlas,
                     SKRect.Create(glyph.SourceX, glyph.SourceY, glyph.Width, glyph.Height),
                     SKRect.Create((float)glyph.X, (float)glyph.Y, glyph.Width, glyph.Height),
-                    Sampling);
+                    Sampling,
+                    opacity < 1 ? _fade : null);
             }
         }
 

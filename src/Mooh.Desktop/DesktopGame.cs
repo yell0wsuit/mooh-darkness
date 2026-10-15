@@ -191,7 +191,7 @@ namespace Mooh.Desktop
         private void StartLevelPresentation()
         {
             _outcomeSeconds = 0;
-            Presenter = new ScenePresenter(_library, _random);
+            Presenter = new ScenePresenter(_library, _random, _strings);
             Hud = new HudPresenter(Session.Level.World, _strings, _random, _levelFont);
             Hud.ShowLevelTitle(Session.LevelIndex + 1);
             Camera = new SceneCamera();
