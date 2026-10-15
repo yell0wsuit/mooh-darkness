@@ -4,9 +4,9 @@ namespace Mooh.Core.Simulation
 {
     /// <summary>
     /// Reports that the player walked onto a message table, the recovered
-    /// <c>_PlHere_Table</c> calling <c>GMod.HlpAdd</c>. The text itself lives in a localized string
-    /// table that was not recovered, so the event carries the recovered id; the panel's slide and
-    /// hold timings are presentation.
+    /// <c>_PlHere_Table</c> calling <c>GMod.HlpAdd</c>. The event carries the recovered id, which
+    /// the localized <see cref="Content.StringTable"/> resolves; the panel's slide and hold timings
+    /// are presentation.
     /// </summary>
     /// <param name="EntityId">The table that was read.</param>
     /// <param name="HelpTextId">The recovered <c>_TableTxt</c> id, such as <c>HlpTutAllObjsFire</c>.</param>

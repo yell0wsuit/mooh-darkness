@@ -25,12 +25,12 @@ namespace Mooh.Presentation.Tests
 
         private List<SimulationEvent> _pending = [];
 
-        public SceneHarness(LevelDocument document)
+        public SceneHarness(LevelDocument document, DifficultySpeeds? speeds = null)
         {
             Level = LevelMaterializer.Materialize(
                 document,
                 Core.Grid.Direction.Down,
-                DifficultySpeeds.Standard with
+                speeds ?? DifficultySpeeds.Standard with
                 {
                     HealthDrainPerSecond = 0
                 });
