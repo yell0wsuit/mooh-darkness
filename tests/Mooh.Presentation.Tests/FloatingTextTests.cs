@@ -76,10 +76,39 @@ namespace Mooh.Presentation.Tests
             Assert.Empty(harness.Presenter.Texts);
         }
 
+        /// <summary>Verifies this port suppresses floating pickup and score labels by default.</summary>
+        [Fact]
+        public void PickupsDoNotFloatTextByDefault()
+        {
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("OCoin01", 2, 1)), strings: StringTable.Load(stream));
+            harness.Input(new PlayerInputState(false, false, true, false));
+
+            harness.Step(0.6);
+
+            Assert.True(harness.Player.PlayerBody!.Progress.Score > 0);
+            Assert.Empty(harness.Presenter.Texts);
+        }
+
+        /// <summary>Verifies this port suppresses floating damage labels by default.</summary>
+        [Fact]
+        public void DamageDoesNotFloatTextByDefault()
+        {
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
+            SceneHarness harness = new(SceneHarness.BuildLevel(1), strings: StringTable.Load(stream));
+            harness.Step(0.016);
+
+            harness.Damage(10);
+            harness.Step(0.016);
+
+            Assert.Equal(90, harness.Player.HealthBody!.Current);
+            Assert.Empty(harness.Presenter.Texts);
+        }
+
         private static SceneHarness Harness(params (string Type, int X, int Y)[] extra)
         {
             using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
-            return new SceneHarness(SceneHarness.BuildLevel(1, extra), strings: StringTable.Load(stream));
+            return new SceneHarness(SceneHarness.BuildLevel(1, extra), strings: StringTable.Load(stream), showFloatingText: true);
         }
 
         private static void EatRight(SceneHarness harness)

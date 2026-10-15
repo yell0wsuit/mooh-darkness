@@ -44,7 +44,7 @@ namespace Mooh.Presentation.Scene
         private readonly EventSounds _eventSounds;
         private readonly ScreenShake _shake = new();
         private readonly ParticleSystem _particles;
-        private readonly FloatingTexts _floating;
+        private readonly FloatingTexts? _floating;
         private readonly GameSounds _gameSounds;
         private readonly WaterDrops _waterDrops;
         private List<SceneText> _texts = [];
@@ -60,8 +60,9 @@ namespace Mooh.Presentation.Scene
         /// <param name="random">The source of the original's presentation-only random choices.</param>
         /// <param name="strings">The recovered text table the floating lines read, if loaded.</param>
         /// <param name="masks">The sprites' solid pixels, which the pickup sparks need, if loaded.</param>
+        /// <param name="showFloatingText">Whether to emit floating score and status labels; disabled by default in this port.</param>
         /// <exception cref="ArgumentNullException"><paramref name="library"/> or <paramref name="random"/> is <see langword="null"/>.</exception>
-        public ScenePresenter(AnimationLibrary library, Random random, StringTable? strings = null, ISpriteMask? masks = null)
+        public ScenePresenter(AnimationLibrary library, Random random, StringTable? strings = null, ISpriteMask? masks = null, bool showFloatingText = false)
         {
             ArgumentNullException.ThrowIfNull(library);
             ArgumentNullException.ThrowIfNull(random);
@@ -69,7 +70,7 @@ namespace Mooh.Presentation.Scene
             _random = random;
             _effects = new EffectSystem(library, random);
             _particles = new ParticleSystem(library, random, masks);
-            _floating = new FloatingTexts(library, strings, random);
+            _floating = showFloatingText ? new FloatingTexts(library, strings, random) : null;
             _gameSounds = new GameSounds(library, random);
             _waterDrops = new WaterDrops(library, random);
             _eventSounds = new EventSounds(library);
@@ -211,8 +212,8 @@ namespace Mooh.Presentation.Scene
                 _particles.Update(world, events, sighted, blasts, steps, LastDrawn, seconds);
             }
 
-            _floating.Update(world, events, sighted, seconds);
-            _texts = [.. _floating.Texts];
+            _floating?.Update(world, events, sighted, seconds);
+            _texts = _floating is null ? [] : [.. _floating.Texts];
             foreach (EntityId gone in _animators.Keys.Where(id => !present.Contains(id)).ToList())
             {
                 _ = _animators.Remove(gone);

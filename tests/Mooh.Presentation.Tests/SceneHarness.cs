@@ -25,7 +25,7 @@ namespace Mooh.Presentation.Tests
 
         private List<SimulationEvent> _pending = [];
 
-        public SceneHarness(LevelDocument document, DifficultySpeeds? speeds = null, StringTable? strings = null, Sprites.ISpriteMask? masks = null)
+        public SceneHarness(LevelDocument document, DifficultySpeeds? speeds = null, StringTable? strings = null, Sprites.ISpriteMask? masks = null, bool showFloatingText = false)
         {
             Level = LevelMaterializer.Materialize(
                 document,
@@ -35,7 +35,7 @@ namespace Mooh.Presentation.Tests
                     HealthDrainPerSecond = 0
                 });
             Player = Level.GetEntity(1);
-            Presenter = new ScenePresenter(Library, new Random(1), strings, masks);
+            Presenter = new ScenePresenter(Library, new Random(1), strings, masks, showFloatingText);
         }
 
         /// <summary>Gets the recovered animation tables every test shares.</summary>
