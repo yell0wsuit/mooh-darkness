@@ -290,7 +290,7 @@ namespace Mooh.Presentation.Animation
             if (info.ValueKind != JsonValueKind.Object
                 || !info.TryGetProperty("Lst", out JsonElement list)
                 || !info.TryGetProperty("ATime", out JsonElement time)
-                || PageOf(info) is not string page)
+                || (PageOf(info) ?? PageMadeOf(info)) is not string page)
             {
                 return null;
             }
@@ -367,6 +367,17 @@ namespace Mooh.Presentation.Animation
                 ? new ScoreLine(id.GetString() ?? string.Empty)
                 : id.ValueKind == JsonValueKind.Object && id.TryGetProperty("args", out JsonElement quest) && quest.GetArrayLength() == 3
                 ? new ScoreLine(quest[2].GetString() ?? string.Empty, quest[1].GetString())
+                : null;
+        }
+
+        /// <summary>Reads a page given as a recovered <c>DDraw.PageMake(name)</c> call.</summary>
+        private static string? PageMadeOf(JsonElement element)
+        {
+            return element.TryGetProperty("Page", out JsonElement page)
+                && page.ValueKind == JsonValueKind.Object
+                && page.TryGetProperty("args", out JsonElement args)
+                && args.GetArrayLength() > 0
+                ? args[0].GetString()
                 : null;
         }
 

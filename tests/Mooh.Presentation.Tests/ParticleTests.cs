@@ -5,6 +5,7 @@ using System.Linq;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 using Mooh.Presentation.Scene;
+using Mooh.Presentation.Sprites;
 
 using Xunit;
 
@@ -105,9 +106,41 @@ namespace Mooh.Presentation.Tests
             Assert.All(Particles(harness, "PWSmoke"), puff => Assert.InRange(puff.Y, 1.39, 1.51));
         }
 
+        /// <summary>
+        /// Verifies an eaten coin throws sparks from its visible pixels, <c>SfxGetStars</c>: one
+        /// per solid point of a 7 px grid over its frame, flying out from the cell's middle.
+        /// </summary>
+        [Fact]
+        public void AnEatenCoinThrowsSparksFromItsPixels()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("OCoin01", 2, 1)), masks: new SolidMask());
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+
+            harness.StepUntil(() => harness.LastEvents.OfType<PickupCollected>().Any(), limitSeconds: 2);
+
+            List<SceneSprite> sparks = Particles(harness, "PGetStar");
+            Assert.Equal(9, sparks.Count);
+            Assert.All(sparks, spark => Assert.True(spark.Additive));
+            Assert.Contains(sparks, spark => Math.Abs(spark.X - (2 - (10 / 80.0))) < 0.02 && Math.Abs(spark.Y - (1 - (10 / 75.0))) < 0.02);
+        }
+
         private static List<SceneSprite> Particles(SceneHarness harness, string prefix)
         {
             return [.. harness.Presenter.Sprites.Where(sprite => sprite.Page == "SpriteParts" && sprite.Frame.StartsWith(prefix, StringComparison.Ordinal))];
+        }
+
+        /// <summary>A mask whose every frame is a solid 20 by 20 square around its anchor.</summary>
+        private sealed class SolidMask : ISpriteMask
+        {
+            public SpriteFrame? FrameOf(string page, string frame)
+            {
+                return new SpriteFrame(frame, 0, 0, 20, 20, -10, -10);
+            }
+
+            public bool IsSolid(string page, int x, int y)
+            {
+                return true;
+            }
         }
     }
 }

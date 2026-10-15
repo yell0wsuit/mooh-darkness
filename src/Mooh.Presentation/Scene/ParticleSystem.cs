@@ -4,9 +4,11 @@ using System.Linq;
 
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
+using Mooh.Core.Levels;
 using Mooh.Core.Simulation;
 using Mooh.Presentation.Animation;
 using Mooh.Presentation.Audio;
+using Mooh.Presentation.Sprites;
 
 namespace Mooh.Presentation.Scene
 {
@@ -27,13 +29,27 @@ namespace Mooh.Presentation.Scene
     /// <para>
     /// The overlay parts, landing glows, play at a fixed 35 ms a frame and are drawn after the
     /// world, as <c>ModRender</c> renders <c>PartsOvr</c> last. The pickup sparks of
-    /// <c>SfxGlowKill</c>, which sample the eaten sprite's pixels, are not emitted.
+    /// <c>SfxGlowKill</c> sample the eaten sprite's solid pixels, so they need a sprite mask.
     /// </para>
     /// </remarks>
     /// <param name="library">The recovered particle frames and registrations.</param>
     /// <param name="random">The source of the effects' random choices.</param>
-    internal sealed class ParticleSystem(AnimationLibrary library, Random random)
+    /// <param name="masks">The sprites' solid pixels, which the pickup sparks need.</param>
+    internal sealed class ParticleSystem(AnimationLibrary library, Random random, ISpriteMask? masks)
     {
+        /// <summary><c>SfxGlowKill</c>'s sampling step, <c>CNT_SX</c> and <c>CNT_SY</c>.</summary>
+        private const int SparkStep = 7;
+
+        /// <summary>
+        /// The pickups whose eating throws sparks, <c>SfxGetStars</c>: the treasure of
+        /// <c>CtrlCellEat</c>, its weapons, and the keys and bonuses of their <c>OnPlEat</c>.
+        /// </summary>
+        private static readonly HashSet<EntityKind> SparklingPickups =
+        [
+            EntityKind.Coin, EntityKind.Diamond, EntityKind.Grenade, EntityKind.GrenadeBox, EntityKind.Rocket,
+            EntityKind.RocketBox, EntityKind.MineBox, EntityKind.BigBomb, EntityKind.Key, EntityKind.Cola, EntityKind.Ice,
+        ];
+
         /// <summary><c>SfxEPartsObj</c>'s <c>fGravity</c>.</summary>
         private const double BurstGravity = 4e-6;
 
@@ -77,6 +93,7 @@ namespace Mooh.Presentation.Scene
         /// <param name="seen">Where every entity was last drawn, including the ones now gone.</param>
         /// <param name="blasts">The cells a blast was shown in this frame.</param>
         /// <param name="steps">Where the player sounded a step this frame.</param>
+        /// <param name="drawn">The frame an entity was last drawn with, if any.</param>
         /// <param name="seconds">The step's length.</param>
         public void Update(
             WorldGrid world,
@@ -84,6 +101,7 @@ namespace Mooh.Presentation.Scene
             IReadOnlyDictionary<EntityId, Sighting> seen,
             IReadOnlyList<GridPosition> blasts,
             IReadOnlyList<(double X, double Y)> steps,
+            Func<EntityId, (string Page, string Frame)?> drawn,
             double seconds)
         {
             double milliseconds = seconds * 1000;
@@ -99,7 +117,7 @@ namespace Mooh.Presentation.Scene
 
             _ = _world.RemoveAll(particle => particle.IsGone);
             _ = _overlay.RemoveAll(particle => particle.IsGone);
-            Emit(world, events, seen);
+            Emit(world, events, seen, drawn);
             foreach (GridPosition cell in blasts)
             {
                 Smoke(cell.X, cell.Y);
@@ -111,7 +129,11 @@ namespace Mooh.Presentation.Scene
             }
         }
 
-        private void Emit(WorldGrid world, IReadOnlyList<SimulationEvent> events, IReadOnlyDictionary<EntityId, Sighting> seen)
+        private void Emit(
+            WorldGrid world,
+            IReadOnlyList<SimulationEvent> events,
+            IReadOnlyDictionary<EntityId, Sighting> seen,
+            Func<EntityId, (string Page, string Frame)?> drawn)
         {
             HashSet<EntityId> eaten = [.. events.OfType<PlayerAte>().Select(ate => ate.EatenEntityId)];
             eaten.UnionWith(events.OfType<PickupCollected>().Select(collected => collected.PickupEntityId));
@@ -132,8 +154,13 @@ namespace Mooh.Presentation.Scene
                     case PushStarted pushed when seen.TryGetValue(pushed.EntityId, out Sighting at) && IsSupportedSideways(world, pushed):
                         Puff(LookOf(at)?.MovePuff ?? ParticlePuff.Smoke, at, pushed.Direction, landing: false);
                         break;
+                    case PickupCollected collected when SparklingPickups.Contains(collected.Kind)
+                        && seen.TryGetValue(collected.PickupEntityId, out Sighting at)
+                        && library.Particles.PickupStars is ParticleBurst stars:
+                        Sparks(stars, at, drawn(collected.PickupEntityId));
+                        break;
                     case EntityDestroyed destroyed when !eaten.Contains(destroyed.EntityId) && seen.TryGetValue(destroyed.EntityId, out Sighting at):
-                        Destroyed(at, exploded.Contains(destroyed.EntityId) || blasted.Contains(new GridPosition((int)Math.Round(at.X), (int)Math.Round(at.Y))));
+                        Destroyed(at, exploded.Contains(destroyed.EntityId) || blasted.Contains(new GridPosition((int)Math.Round(at.X), (int)Math.Round(at.Y))), drawn(destroyed.EntityId));
                         break;
                     case DamageApplied { Amount: > 0 } damage when seen.TryGetValue(damage.EntityId, out Sighting hurt) && hurt.IsPlayer:
                         Hearts(hurt.X, hurt.Y);
@@ -148,7 +175,7 @@ namespace Mooh.Presentation.Scene
         /// Bursts a killed object: <c>ObjKill</c>'s <c>RInfo.PrtKill</c>, then, when a blast
         /// killed it, <c>_ObjKillWrd</c>'s <c>RInfo.EParts</c>.
         /// </summary>
-        private void Destroyed(Sighting at, bool blasted)
+        private void Destroyed(Sighting at, bool blasted, (string Page, string Frame)? frame)
         {
             if (LookOf(at) is not ObjectLook look)
             {
@@ -157,7 +184,14 @@ namespace Mooh.Presentation.Scene
 
             foreach (ParticleBurst burst in look.KillBursts)
             {
-                Burst(burst, at.X, at.Y);
+                if (burst.Kind == ParticleBurstKind.Stars)
+                {
+                    Sparks(burst, at, frame);
+                }
+                else
+                {
+                    Burst(burst, at.X, at.Y);
+                }
             }
 
             if (!blasted)
@@ -193,6 +227,49 @@ namespace Mooh.Presentation.Scene
                     SpeedY = Between(-0.001, 0.001),
                     Gravity = burst.Kind == ParticleBurstKind.Ground ? BurstGravity : 0,
                 });
+            }
+        }
+
+        /// <summary>
+        /// <c>SfxGlowKill</c>: a spark at every solid point of a 7 px grid over the object's frame,
+        /// flying out from its cell's middle at 0.00001 to 0.0002 cells/ms, turned up to half a
+        /// radian.
+        /// </summary>
+        private void Sparks(ParticleBurst burst, Sighting at, (string Page, string Frame)? drawn)
+        {
+            if (masks is null || drawn is not (string page, string name) || masks.FrameOf(page, name) is not SpriteFrame frame)
+            {
+                return;
+            }
+
+            for (int row = 0; row < frame.Height; row += SparkStep)
+            {
+                for (int column = 0; column < frame.Width; column += SparkStep)
+                {
+                    if (!masks.IsSolid(page, frame.X + column, frame.Y + row))
+                    {
+                        continue;
+                    }
+
+                    double x = at.X + ((frame.PivotX + column) / SceneCamera.CellWidth);
+                    double y = at.Y + ((frame.PivotY + row) / SceneCamera.CellHeight);
+                    (double outX, double outY) = (x - Math.Round(x), y - Math.Round(y));
+                    double length = Math.Sqrt((outX * outX) + (outY * outY));
+                    double speed = Between(1e-5, 0.0002);
+                    (double speedX, double speedY) = length > 0 ? (outX / length * speed, outY / length * speed) : (0, 0);
+                    (speedX, speedY) = Rotate(speedX, speedY, Between(-0.5, 0.5));
+                    _world.Add(new Particle(
+                        burst.Page,
+                        Pick(burst.Variants),
+                        Between(1 / burst.MinFrameMilliseconds, 1 / burst.MaxFrameMilliseconds),
+                        x,
+                        y)
+                    {
+                        SpeedX = speedX,
+                        SpeedY = speedY,
+                        Additive = true,
+                    });
+                }
             }
         }
 

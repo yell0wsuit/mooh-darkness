@@ -11,6 +11,7 @@ using Mooh.Core.Levels;
 using Mooh.Core.Simulation;
 using Mooh.Presentation.Animation;
 using Mooh.Presentation.Audio;
+using Mooh.Presentation.Sprites;
 
 namespace Mooh.Presentation.Scene
 {
@@ -56,15 +57,16 @@ namespace Mooh.Presentation.Scene
         /// <param name="library">The recovered animation tables.</param>
         /// <param name="random">The source of the original's presentation-only random choices.</param>
         /// <param name="strings">The recovered text table the floating lines read, if loaded.</param>
+        /// <param name="masks">The sprites' solid pixels, which the pickup sparks need, if loaded.</param>
         /// <exception cref="ArgumentNullException"><paramref name="library"/> or <paramref name="random"/> is <see langword="null"/>.</exception>
-        public ScenePresenter(AnimationLibrary library, Random random, StringTable? strings = null)
+        public ScenePresenter(AnimationLibrary library, Random random, StringTable? strings = null, ISpriteMask? masks = null)
         {
             ArgumentNullException.ThrowIfNull(library);
             ArgumentNullException.ThrowIfNull(random);
             _library = library;
             _random = random;
             _effects = new EffectSystem(library, random);
-            _particles = new ParticleSystem(library, random);
+            _particles = new ParticleSystem(library, random, masks);
             _floating = new FloatingTexts(library, strings, random);
             _eventSounds = new EventSounds(library);
         }
@@ -164,7 +166,7 @@ namespace Mooh.Presentation.Scene
             _sounds = sounds;
             IReadOnlyList<GridPosition> blasts = _effects.Update(world, events, seconds);
             sprites.AddRange(_effects.Sprites);
-            _particles.Update(world, events, sighted, blasts, steps, seconds);
+            _particles.Update(world, events, sighted, blasts, steps, LastDrawn, seconds);
             _floating.Update(world, events, sighted, seconds);
             _texts = [.. _floating.Texts];
             foreach (EntityId gone in _animators.Keys.Where(id => !present.Contains(id)).ToList())
@@ -222,6 +224,14 @@ namespace Mooh.Presentation.Scene
                 && world.GetOccupants(below).Any(occupant => occupant.ArchivalIdentity is ArchivalObjectIdentity identity
                     && _library.TryGetLook(identity.ArchivalType, out ObjectLook look)
                     && look.ReceivesShadow);
+        }
+
+        /// <summary>The frame an entity's animator last showed, which a just-removed entity still keeps.</summary>
+        private (string Page, string Frame)? LastDrawn(EntityId id)
+        {
+            return _animators.TryGetValue(id, out EntityAnimator? animator) && animator.Frame is string frame
+                ? (animator.Page, frame)
+                : null;
         }
 
         /// <summary>
