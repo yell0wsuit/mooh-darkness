@@ -46,6 +46,7 @@ namespace Mooh.Presentation.Scene
         private readonly ParticleSystem _particles;
         private readonly FloatingTexts _floating;
         private readonly GameSounds _gameSounds;
+        private readonly WaterDrops _waterDrops;
         private List<SceneText> _texts = [];
         private Dictionary<EntityId, Sighting> _seen = [];
         private double _clockMilliseconds;
@@ -70,6 +71,7 @@ namespace Mooh.Presentation.Scene
             _particles = new ParticleSystem(library, random, masks);
             _floating = new FloatingTexts(library, strings, random);
             _gameSounds = new GameSounds(library, random);
+            _waterDrops = new WaterDrops(library, random);
             _eventSounds = new EventSounds(library);
         }
 
@@ -164,11 +166,13 @@ namespace Mooh.Presentation.Scene
 
             sounds.AddRange(_eventSounds.For(events, sighted));
             sounds.AddRange(_gameSounds.For(world, events, seconds));
+            sounds.AddRange(_waterDrops.Update(world, seconds));
             _shake.Update(world, events, sighted, seconds, _random);
             _seen = seen;
             _sounds = sounds;
             IReadOnlyList<GridPosition> blasts = _effects.Update(world, events, seconds);
             sprites.AddRange(_effects.Sprites);
+            sprites.AddRange(_waterDrops.Sprites);
             _particles.Update(world, events, sighted, blasts, steps, LastDrawn, seconds);
             _floating.Update(world, events, sighted, seconds);
             _texts = [.. _floating.Texts];

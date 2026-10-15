@@ -47,6 +47,18 @@ namespace Mooh.Presentation.Animation
             get; init;
         }
 
+        /// <summary>Gets whether the object stops a water drop, <c>CNT_CMaskCellLockMotion</c> (<c>1 &lt;&lt; 3</c>).</summary>
+        public bool LocksMotion
+        {
+            get; init;
+        }
+
+        /// <summary>Gets whether water drips from under the object, <c>CNT_CMaskSpawnWaterDrop</c> (<c>1 &lt;&lt; 21</c>).</summary>
+        public bool Drips
+        {
+            get; init;
+        }
+
         /// <summary>Gets the pieces a blast breaks the object into, its <c>EParts</c>.</summary>
         public IReadOnlyList<ParticleBurst> BlastBursts { get; init; } = [];
 

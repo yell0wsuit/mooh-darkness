@@ -65,6 +65,12 @@ namespace Mooh.Presentation.Animation
         /// <summary>The original's <c>CNT_CMaskResRShadow</c>, <c>1 &lt;&lt; 17</c>.</summary>
         private const long ShadowReceiverMask = 1L << 17;
 
+        /// <summary>The original's <c>CNT_CMaskCellLockMotion</c>, <c>1 &lt;&lt; 3</c>.</summary>
+        private const long LockMotionMask = 1L << 3;
+
+        /// <summary>The original's <c>CNT_CMaskSpawnWaterDrop</c>, <c>1 &lt;&lt; 21</c>.</summary>
+        private const long DripMask = 1L << 21;
+
         /// <summary>The original's <c>CNT_CMaskPartsCollide</c>, <c>1 &lt;&lt; 16</c>.</summary>
         private const long ParticleStopMask = 1L << 16;
 
@@ -624,6 +630,8 @@ namespace Mooh.Presentation.Animation
             {
                 Sounds = sounds,
                 StopsParticles = mask is long particleBits && (particleBits & ParticleStopMask) != 0,
+                LocksMotion = mask is long lockBits && (lockBits & LockMotionMask) != 0,
+                Drips = mask is long dripBits && (dripBits & DripMask) != 0,
                 BlastBursts = BurstsOf(registration, "EParts", effects),
                 KillBursts = BurstsOf(registration, "PrtKill", effects),
                 LandPuff = PuffOf(registration, "PrtLand"),
