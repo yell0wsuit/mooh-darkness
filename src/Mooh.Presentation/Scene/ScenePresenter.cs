@@ -219,37 +219,28 @@ namespace Mooh.Presentation.Scene
                 _ = _animators.Remove(gone);
             }
 
+            // World particles sort at their owning cell in the terrain pass; overlay glows
+            // follow the whole world. Objects retain their fractional drawn positions.
+            sprites = [.. _particles.Sprites, .. sprites];
             if (spin is WorldSpin turning)
             {
                 sprites = [.. sprites.Select(sprite =>
                 {
                     (double x, double y) = turning.Transform(sprite.X, sprite.Y);
-                    return sprite with { X = x, Y = y };
-                })];
-            }
-
-            // The native ListRenderSort comparator: the pass, then the screen x - y, so tiles whose
-            // faces reach up and right overlap their lower-left neighbors. OrderBy is stable, so
-            // the world's own order breaks ties as the object addresses did.
-            // The particles are drawn over the sorted world, the overlay parts last of all.
-            IEnumerable<SceneSprite> particles = _particles.Sprites;
-            if (spin is WorldSpin spinning)
-            {
-                particles = particles.Select(sprite =>
-                {
-                    (double x, double y) = spinning.Transform(sprite.X, sprite.Y);
                     return sprite with
                     {
                         X = x,
                         Y = y
                     };
-                });
+                })];
             }
 
-            _sprites = [.. sprites
-                .OrderBy(sprite => sprite.Pass)
-                .ThenBy(sprite => Math.Round((sprite.X * SceneCamera.CellWidth) - (sprite.Y * SceneCamera.CellHeight))),
-                .. particles];
+            _sprites = [.. sprites.OrderBy(sprite => sprite.Pass)
+                .ThenBy(sprite =>
+                {
+                    (double x, double y) = sprite.SortAnchor ?? (sprite.X, sprite.Y);
+                    return Math.Round((x * SceneCamera.CellWidth) - (y * SceneCamera.CellHeight));
+                })];
         }
 
         /// <summary>

@@ -135,7 +135,7 @@ namespace Mooh.Presentation.Tests
 
             harness.Step(0.016);
 
-            SceneSprite glint = Assert.Single(harness.Presenter.Sprites, sprite => sprite.Page is "SpriteObjDiam" or "SpriteObjMine" && sprite.Pass == int.MaxValue);
+            SceneSprite glint = Assert.Single(harness.Presenter.Sprites, sprite => sprite.Page is "SpriteObjDiam" or "SpriteObjMine" && sprite.Pass == 1);
             Assert.InRange(glint.X, 4.69, 5.31);
             Assert.InRange(glint.Y, 0.59, 1.41);
         }
@@ -150,7 +150,7 @@ namespace Mooh.Presentation.Tests
             for (int frame = 0; frame < 200; frame++)
             {
                 harness.Step(0.016);
-                glints = Math.Max(glints, harness.Presenter.Sprites.Count(sprite => sprite.Page is "SpriteObjDiam" or "SpriteObjMine" && sprite.Pass == int.MaxValue));
+                glints = Math.Max(glints, harness.Presenter.Sprites.Count(sprite => sprite.Page is "SpriteObjDiam" or "SpriteObjMine" && sprite.Pass == 1));
             }
 
             Assert.True(glints >= 1);
@@ -172,6 +172,27 @@ namespace Mooh.Presentation.Tests
             Assert.True(harness.Presenter.Sprites.Count(sprite => sprite.Page == "SpriteObjCola") >= 40);
         }
 
+        /// <summary>World particles share the terrain pass and sort by their owning cell.</summary>
+        [Fact]
+        public void WorldParticlesInterleaveWithTerrainByCell()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("ORock01", 4, 0), ("OTable", 0, 1), ("OTable", 7, 1)));
+            harness.StepUntil(() => harness.LastEvents.OfType<Landed>().Any());
+
+            List<SceneSprite> sprites = [.. harness.Presenter.Sprites];
+            List<SceneSprite> puffs = Particles(harness, "PWSmoke");
+            Assert.NotEmpty(puffs);
+            Assert.All(puffs, puff => Assert.Equal(1, puff.Pass));
+            int leftFloor = sprites.FindIndex(sprite => sprite.Entity == harness.Level.GetEntity(201).Id);
+            int rightFloor = sprites.FindIndex(sprite => sprite.Entity == harness.Level.GetEntity(202).Id);
+            Assert.All(puffs, puff =>
+            {
+                Assert.True(sprites.IndexOf(puff) > leftFloor);
+                Assert.True(sprites.IndexOf(puff) < rightFloor);
+            });
+            Assert.StartsWith("OGlowLand", sprites[^1].Frame);
+        }
+
         private static int TwinklesIn(SceneHarness harness, double seconds)
         {
             int started = 0;
@@ -179,7 +200,7 @@ namespace Mooh.Presentation.Tests
             for (double elapsed = 0; elapsed < seconds; elapsed += 0.016)
             {
                 harness.Step(0.016);
-                foreach (SceneSprite sprite in harness.Presenter.Sprites.Where(sprite => sprite.Page is "SpriteObjDiam" or "SpriteObjMine" && sprite.Pass == int.MaxValue))
+                foreach (SceneSprite sprite in harness.Presenter.Sprites.Where(sprite => sprite.Page is "SpriteObjDiam" or "SpriteObjMine" && sprite.Pass == 1))
                 {
                     if (seen.Add((Math.Round(sprite.X, 3), Math.Round(sprite.Y, 3))))
                     {

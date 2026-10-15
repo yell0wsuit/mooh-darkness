@@ -13,5 +13,12 @@ namespace Mooh.Presentation.Scene
     /// ordinary objects 0, terrain, pipes and message tables 1, and the teleporting player 2.
     /// </param>
     /// <param name="Additive">Whether the frame is drawn additively, as glows are, <c>OModeAdd</c>.</param>
-    public readonly record struct SceneSprite(EntityId Entity, string Page, string Frame, double X, double Y, int Pass, bool Additive = false);
+    public readonly record struct SceneSprite(EntityId Entity, string Page, string Frame, double X, double Y, int Pass, bool Additive = false)
+    {
+        /// <summary>Gets the cell anchor used to sort world particles independently of their offsets.</summary>
+        public (double X, double Y)? SortAnchor
+        {
+            get; init;
+        }
+    }
 }

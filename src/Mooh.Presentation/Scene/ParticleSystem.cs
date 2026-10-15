@@ -90,15 +90,18 @@ namespace Mooh.Presentation.Scene
         private TimeSpan _cola;
         private double? _bubbleMilliseconds;
 
-        /// <summary>Gets the particles' frames: the world's, then the overlay's.</summary>
-        public IEnumerable<SceneSprite> Sprites => _world.Concat(_overlay).Select(particle => new SceneSprite(
-            default,
-            particle.Page,
-            particle.Frames[(int)particle.Index],
-            particle.X,
-            particle.Y,
-            int.MaxValue,
-            particle.Additive));
+        /// <summary>Gets world particles in the terrain pass, followed by overlay particles.</summary>
+        public IEnumerable<SceneSprite> Sprites => _world.Select(particle => SpriteOf(particle, 1))
+            .Concat(_overlay.Select(particle => SpriteOf(particle, int.MaxValue)));
+
+        private static SceneSprite SpriteOf(Particle particle, int pass)
+        {
+            return new SceneSprite(default, particle.Page, particle.Frames[(int)particle.Index],
+                particle.X, particle.Y, pass, particle.Additive)
+            {
+                SortAnchor = particle.Cell
+            };
+        }
 
         /// <summary>Moves the particles on, then emits what the frame's events call for.</summary>
         /// <param name="world">The simulated world, after the step.</param>
@@ -684,6 +687,8 @@ namespace Mooh.Presentation.Scene
         private sealed class Particle(string page, IReadOnlyList<string> frames, double framesPerMillisecond, double x, double y)
         {
             private (int X, int Y) _cell = ((int)Math.Round(x), (int)Math.Round(y));
+
+            public (double X, double Y) Cell => _cell;
 
             public string Page { get; } = page;
 
