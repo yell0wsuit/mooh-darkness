@@ -8,6 +8,7 @@ using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
 using Mooh.Core.Levels;
+using Mooh.Core.Motion;
 using Mooh.Core.Simulation;
 
 using Xunit;
@@ -22,6 +23,37 @@ namespace Mooh.Core.Tests.Simulation
     /// </summary>
     public sealed class MagicGemTests
     {
+        /// <summary>Treasure protects its committed cell while a movement segment is still in progress.</summary>
+        [Fact]
+        public void MovingTreasureIsLeftAlone()
+        {
+            (SimulationWorld simulation, WorldGrid world) = Create();
+            _ = Add(world, "OMagic", 4, 2);
+            Entity coin = Add(world, "OCoin01", 5, 1);
+            KinematicsSystem.Start(coin, MotionCause.PlayerPushed, Direction.Right, 0.01);
+            _ = Add(world, "ORock01", 4, 0);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(800));
+
+            Assert.Contains(coin, world.Entities);
+            Assert.DoesNotContain(new GridPosition(5, 1), SpawnedCells(events));
+        }
+
+        /// <summary>A shadow occupant still prevents a diamond from spawning in its cell.</summary>
+        [Fact]
+        public void MagicDoesNotSpawnIntoAMessageTable()
+        {
+            (SimulationWorld simulation, WorldGrid world) = Create();
+            _ = Add(world, "OMagic", 4, 2);
+            Entity table = Add(world, "OTable", 5, 2);
+            _ = Add(world, "ORock01", 4, 0);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(800));
+
+            Assert.Contains(table, world.Entities);
+            Assert.DoesNotContain(table.Position, SpawnedCells(events));
+        }
+
         /// <summary>Verifies a landing shake works the center at once and the ring 200 ms later.</summary>
         [Fact]
         public void AShakeFillsTheSurroundingsWithDiamonds()

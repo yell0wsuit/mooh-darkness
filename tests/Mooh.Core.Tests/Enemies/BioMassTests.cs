@@ -8,6 +8,7 @@ using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
 using Mooh.Core.Levels;
+using Mooh.Core.Motion;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
 
@@ -24,6 +25,46 @@ namespace Mooh.Core.Tests.Enemies
     /// </summary>
     public sealed class BioMassTests
     {
+        /// <summary>A new bio mass's growth animation runs while it slides into the neighboring cell.</summary>
+        [Fact]
+        public void GrowthTimerAdvancesDuringTheSpawnMovement()
+        {
+            (SimulationWorld simulation, WorldGrid world) = Create(ScriptedRandom.Lowest);
+            _ = AddBio(world, 2, 1);
+            WallIn(world, 2, 1, open: Direction.Right);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(1500));
+
+            BioMassSpread spread = Assert.Single(events.OfType<BioMassSpread>());
+            Entity child = world.GetEntity(spread.ChildEntityId);
+            Assert.NotNull(child.Motion);
+            Assert.Equal(0.9, child.BioMassBody!.RemainingSeconds, 8);
+        }
+
+        /// <summary>Non-target occupants block spreading even while moving or transparent to ordinary movement.</summary>
+        /// <param name="moving">Whether the occupant is in a movement segment.</param>
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void OccupiedNonTargetNeighborPreventsSpreading(bool moving)
+        {
+            (SimulationWorld simulation, WorldGrid world) = Create(ScriptedRandom.Lowest);
+            _ = AddBio(world, 2, 1);
+            WallIn(world, 2, 1, open: Direction.Right);
+            Entity blocker = new(EntityId.New(), new GridPosition(3, 1),
+                moving ? InteractionMask.BlocksMovement : InteractionMask.OccupancyTransparent);
+            world.Add(blocker);
+            if (moving)
+            {
+                KinematicsSystem.Start(blocker, MotionCause.PlayerPushed, Direction.Right, 0.01);
+            }
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromSeconds(2));
+
+            Assert.DoesNotContain(events, item => item is BioMassSpread);
+            Assert.Contains(blocker, world.Entities);
+        }
+
         /// <summary>
         /// Verifies a bio mass spreads into its one open neighbor. With every draw at its lowest the
         /// loop runs at 45 ms a frame, 900 ms, and the spawn takes 500 ms more.

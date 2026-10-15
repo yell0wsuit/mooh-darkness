@@ -1316,20 +1316,20 @@ namespace Mooh.Core.Simulation
         }
 
         /// <summary>
-        /// Applies the recovered <c>MagicWork</c> to one cell. A cell holding still treasure is
-        /// left alone; otherwise its explodable occupants are killed and, if nothing still and
-        /// visible remains, a random diamond is spawned there under the recovered kill lock.
+        /// Works one cell of a magic burst. A cell holding treasure, including moving treasure, is
+        /// left alone; otherwise its explodable occupants are killed and, if no live occupant
+        /// remains, a random diamond is spawned there under a short kill lock.
         /// </summary>
         private void WorkMagicCell(EntityId gemId, GridPosition cell, List<SimulationEvent> events)
         {
             if (!_world.Contains(cell)
-                || _world.GetOccupants(cell).Any(occupant => occupant.IsTreasure && occupant.Motion is null))
+                || _world.GetOccupants(cell).Any(occupant => occupant.IsTreasure))
             {
                 return;
             }
 
             KillExplodables(gemId, cell, events);
-            if (CellQuery.IsOccupied(_world, cell))
+            if (_world.GetOccupants(cell).Count != 0)
             {
                 return;
             }
@@ -1459,7 +1459,6 @@ namespace Mooh.Core.Simulation
             foreach (Entity entity in _world.Entities)
             {
                 if (entity.BioMassBody is { IsStarted: true } body
-                    && entity.Motion is null
                     && (result is null || body.RemainingSeconds < result))
                 {
                     result = body.RemainingSeconds;
@@ -1476,7 +1475,7 @@ namespace Mooh.Core.Simulation
             foreach (Entity bio in bios)
             {
                 BioMassBody body = bio.BioMassBody!;
-                if (!_world.Entities.Contains(bio) || bio.Motion is not null)
+                if (!_world.Entities.Contains(bio))
                 {
                     continue;
                 }
@@ -1516,8 +1515,8 @@ namespace Mooh.Core.Simulation
         }
 
         /// <summary>
-        /// Lists the sides <c>_AEnd_SLook</c> and <c>_AEnd_SWork</c> accept, left, up, right and
-        /// down: a cell with no still, visible occupant, or one holding a bio-strike target.
+        /// Lists accepted spread directions: left, up, right and down. A cell must be empty or
+        /// hold a strike target. Moving objects and shadow occupants still make a cell occupied.
         /// </summary>
         private List<Direction> BioSpawnSides(Entity bio)
         {
@@ -1531,10 +1530,7 @@ namespace Mooh.Core.Simulation
                 }
 
                 IReadOnlyList<Entity> occupants = _world.GetOccupants(cell);
-                bool open = !occupants.Any(
-                    occupant => occupant.Motion is null
-                        && (occupant.Interactions
-                            & (InteractionMask.OccupancyTransparent | InteractionMask.MonsterTransparent)) == 0);
+                bool open = occupants.Count == 0;
                 if (open || occupants.Any(occupant => occupant.IsBioMassTarget))
                 {
                     sides.Add(direction);
