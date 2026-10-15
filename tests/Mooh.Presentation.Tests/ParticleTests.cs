@@ -1,0 +1,113 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Mooh.Core.Player;
+using Mooh.Core.Simulation;
+using Mooh.Presentation.Scene;
+
+using Xunit;
+
+namespace Mooh.Presentation.Tests
+{
+    /// <summary>
+    /// Verifies the world particles of <c>PartAddSeq</c> and the overlay parts of
+    /// <c>PartsOvr.AddSeq</c> that the original's effect functions emit.
+    /// </summary>
+    public sealed class ParticleTests
+    {
+        /// <summary>
+        /// Verifies a landing raises three to five puffs of walking smoke at the object's foot,
+        /// <c>SfxLandPuff</c>, and a horizontal glow over them, <c>SfxLandGlow</c>.
+        /// </summary>
+        [Fact]
+        public void ALandingRaisesPuffsAndAGlow()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("ORock01", 4, 0)));
+
+            harness.StepUntil(() => harness.LastEvents.OfType<Landed>().Any());
+
+            List<SceneSprite> puffs = [.. Particles(harness, "PWSmoke").Where(puff => puff.X > 3)];
+            Assert.InRange(puffs.Count, 3, 5);
+            Assert.All(puffs, puff => Assert.InRange(puff.Y, 1.39, 1.51));
+            Assert.All(puffs, puff => Assert.InRange(puff.X, 3.59, 4.41));
+            SceneSprite glow = Assert.Single(harness.Presenter.Sprites, sprite => sprite.Frame.StartsWith("OGlowLandH", StringComparison.Ordinal));
+            Assert.True(glow.Additive);
+        }
+
+        /// <summary>Verifies the puffs are gone once their frames have played.</summary>
+        [Fact]
+        public void PuffsEndWithTheirFrames()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("ORock01", 4, 0)));
+            harness.StepUntil(() => harness.LastEvents.OfType<Landed>().Any());
+
+            for (int frame = 0; frame < 125; frame++)
+            {
+                harness.Step(0.016);
+            }
+
+            Assert.Empty(Particles(harness, "PWSmoke"));
+            Assert.DoesNotContain(harness.Presenter.Sprites, sprite => sprite.Frame.StartsWith("OGlowLand", StringComparison.Ordinal));
+        }
+
+        /// <summary>Verifies a shown blast leaves five puffs of smoke, as <c>SfxExplAdd1x1</c> does.</summary>
+        [Fact]
+        public void ABlastLeavesSmoke()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("WBomb", 5, 1)));
+            harness.Step(0.016);
+
+            harness.Detonate(harness.Level.World.Entities.Single(entity => entity.ArchivalIdentity?.ArchivalType == "WBomb"));
+            harness.StepUntil(() => harness.LastEvents.OfType<ExplosionCellReached>().Any());
+
+            Assert.True(Particles(harness, "PSmoke").Count >= 5);
+        }
+
+        /// <summary>
+        /// Verifies a blasted coin bursts into its own pieces, its <c>EParts</c>, which fall under
+        /// the burst's gravity.
+        /// </summary>
+        [Fact]
+        public void ABlastedCoinBurstsIntoPieces()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("OCoin01", 5, 1), ("WBomb", 4, 1)));
+            harness.Step(0.016);
+
+            harness.Detonate(harness.Level.World.Entities.Single(entity => entity.ArchivalIdentity?.ArchivalType == "WBomb"));
+            harness.StepUntil(() => Particles(harness, "PCoin").Count > 0);
+
+            Assert.InRange(Particles(harness, "PCoin").Count, 2, 4);
+        }
+
+        /// <summary>Verifies a hurt player sheds three to six hearts, <c>SfxHealth</c>.</summary>
+        [Fact]
+        public void AHurtPlayerShedsHearts()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1));
+            harness.Step(0.016);
+
+            harness.Damage(10);
+            harness.Step(0.016);
+
+            Assert.InRange(Particles(harness, "PHeart").Count, 3, 6);
+        }
+
+        /// <summary>Verifies each step of a walk raises a puff at the player's feet, <c>SfxPlWalk</c>.</summary>
+        [Fact]
+        public void WalkingRaisesPuffsAtTheFeet()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1));
+            harness.Input(new PlayerInputState(Left: false, Up: false, Right: true, Down: false));
+
+            harness.StepUntil(() => Particles(harness, "PWSmoke").Count > 0, limitSeconds: 1);
+
+            Assert.All(Particles(harness, "PWSmoke"), puff => Assert.InRange(puff.Y, 1.39, 1.51));
+        }
+
+        private static List<SceneSprite> Particles(SceneHarness harness, string prefix)
+        {
+            return [.. harness.Presenter.Sprites.Where(sprite => sprite.Page == "SpriteParts" && sprite.Frame.StartsWith(prefix, StringComparison.Ordinal))];
+        }
+    }
+}

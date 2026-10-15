@@ -185,7 +185,8 @@ namespace Mooh.Presentation.Scene
 
         /// <summary>
         /// Models <c>SndStep1</c>: on the ground, within 0.1 of its row, the player sounds the step
-        /// of whatever is below, its <c>RInfo.PlStepSnd</c> or earth's.
+        /// of whatever is below, its <c>RInfo.PlStepSnd</c> or earth's, and raises smoke there,
+        /// <c>SfxPlWalk</c>.
         /// </summary>
         private void Step()
         {
@@ -209,6 +210,7 @@ namespace Mooh.Presentation.Scene
             }
 
             Entity ground = occupants[0];
+            CueStep();
             Cue(ground.ArchivalIdentity is { } identity
                 && _library.TryGetLook(identity.ArchivalType, out ObjectLook look)
                 && look.Sounds.TryGetValue("PlStepSnd", out string? step)

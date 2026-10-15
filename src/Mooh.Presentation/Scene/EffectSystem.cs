@@ -40,8 +40,10 @@ namespace Mooh.Presentation.Scene
         /// <param name="world">The simulated world, after the step.</param>
         /// <param name="events">The step's events.</param>
         /// <param name="seconds">The step's length.</param>
-        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds)
+        /// <returns>The cells a blast was shown in.</returns>
+        public IReadOnlyList<GridPosition> Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds)
         {
+            List<GridPosition> shown = [];
             _time += seconds;
             foreach (Effect effect in _effects)
             {
@@ -59,7 +61,10 @@ namespace Mooh.Presentation.Scene
 
                 _blastUntil[reached.Position] = _time + BlastRepeatSeconds;
                 Spawn(library.Explosion, reached.Position);
+                shown.Add(reached.Position);
             }
+
+            return shown;
         }
 
         private void Spawn(IReadOnlyList<EffectLayer> layers, GridPosition cell)

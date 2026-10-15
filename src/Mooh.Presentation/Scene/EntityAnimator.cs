@@ -20,6 +20,7 @@ namespace Mooh.Presentation.Scene
     public abstract class EntityAnimator : IAnimationRules
     {
         private readonly List<string> _sounds = [];
+        private int _steps;
         private string? _desired;
 
         /// <summary>Initializes the animator.</summary>
@@ -177,6 +178,21 @@ namespace Mooh.Presentation.Scene
         /// <param name="entity">The animated entity.</param>
         /// <returns>The state, or <see langword="null"/> to let the playing chain continue.</returns>
         protected abstract string? DesiredState(WorldGrid world, Entity entity);
+
+        /// <summary>Takes the count of steps sounded since the last call, which raise walking smoke.</summary>
+        /// <returns>The steps.</returns>
+        internal int TakeSteps()
+        {
+            int steps = _steps;
+            _steps = 0;
+            return steps;
+        }
+
+        /// <summary>Notes a sounded step, whose smoke <c>SfxPlWalk</c> raises at the entity's feet.</summary>
+        protected void CueStep()
+        {
+            _steps++;
+        }
 
         /// <summary>Cues a sound where the entity is.</summary>
         /// <param name="alias">The <c>Sound.ini</c> alias.</param>

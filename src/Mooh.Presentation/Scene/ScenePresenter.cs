@@ -41,6 +41,7 @@ namespace Mooh.Presentation.Scene
         private readonly EffectSystem _effects;
         private readonly EventSounds _eventSounds;
         private readonly ScreenShake _shake = new();
+        private readonly ParticleSystem _particles;
         private Dictionary<EntityId, Sighting> _seen = [];
         private double _clockMilliseconds;
         private readonly AnimationLibrary _library;
@@ -59,6 +60,7 @@ namespace Mooh.Presentation.Scene
             _library = library;
             _random = random;
             _effects = new EffectSystem(library, random);
+            _particles = new ParticleSystem(library, random);
             _eventSounds = new EventSounds(library);
         }
 
@@ -95,6 +97,7 @@ namespace Mooh.Presentation.Scene
             Dictionary<EntityId, Sighting> seen = [];
             List<SceneSprite> sprites = [];
             List<SoundCue> sounds = [];
+            List<(double X, double Y)> steps = [];
             foreach (Entity entity in world.Entities)
             {
                 _ = present.Add(entity.Id);
@@ -112,6 +115,11 @@ namespace Mooh.Presentation.Scene
                 }
 
                 animator.Update(world, entity, events, seconds);
+                for (int step = animator.TakeSteps(); step > 0; step--)
+                {
+                    steps.Add(DrawnPosition.Of(entity));
+                }
+
                 foreach (string alias in animator.TakeSounds())
                 {
                     (double soundX, double soundY) = DrawnPosition.Of(entity);
@@ -146,8 +154,9 @@ namespace Mooh.Presentation.Scene
             _shake.Update(world, events, sighted, seconds, _random);
             _seen = seen;
             _sounds = sounds;
-            _effects.Update(world, events, seconds);
+            IReadOnlyList<GridPosition> blasts = _effects.Update(world, events, seconds);
             sprites.AddRange(_effects.Sprites);
+            _particles.Update(world, events, sighted, blasts, steps, seconds);
             foreach (EntityId gone in _animators.Keys.Where(id => !present.Contains(id)).ToList())
             {
                 _ = _animators.Remove(gone);
@@ -165,9 +174,25 @@ namespace Mooh.Presentation.Scene
             // The native ListRenderSort comparator: the pass, then the screen x - y, so tiles whose
             // faces reach up and right overlap their lower-left neighbors. OrderBy is stable, so
             // the world's own order breaks ties as the object addresses did.
+            // The particles are drawn over the sorted world, the overlay parts last of all.
+            IEnumerable<SceneSprite> particles = _particles.Sprites;
+            if (spin is WorldSpin spinning)
+            {
+                particles = particles.Select(sprite =>
+                {
+                    (double x, double y) = spinning.Transform(sprite.X, sprite.Y);
+                    return sprite with
+                    {
+                        X = x,
+                        Y = y
+                    };
+                });
+            }
+
             _sprites = [.. sprites
                 .OrderBy(sprite => sprite.Pass)
-                .ThenBy(sprite => Math.Round((sprite.X * SceneCamera.CellWidth) - (sprite.Y * SceneCamera.CellHeight)))];
+                .ThenBy(sprite => Math.Round((sprite.X * SceneCamera.CellWidth) - (sprite.Y * SceneCamera.CellHeight))),
+                .. particles];
         }
 
         /// <summary>

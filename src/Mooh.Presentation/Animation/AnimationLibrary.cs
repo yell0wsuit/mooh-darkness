@@ -65,17 +65,32 @@ namespace Mooh.Presentation.Animation
         /// <summary>The original's <c>CNT_CMaskResRShadow</c>, <c>1 &lt;&lt; 17</c>.</summary>
         private const long ShadowReceiverMask = 1L << 17;
 
+        /// <summary>The original's <c>CNT_CMaskPartsCollide</c>, <c>1 &lt;&lt; 16</c>.</summary>
+        private const long ParticleStopMask = 1L << 16;
+
         private readonly Dictionary<string, AnimationTable> _tables;
         private readonly Dictionary<string, ObjectLook> _looks;
 
         private readonly Recovered _recovered;
 
-        private AnimationLibrary(Dictionary<string, AnimationTable> tables, Dictionary<string, ObjectLook> looks, IReadOnlyList<EffectLayer> explosion, Recovered recovered)
+        private AnimationLibrary(
+            Dictionary<string, AnimationTable> tables,
+            Dictionary<string, ObjectLook> looks,
+            IReadOnlyList<EffectLayer> explosion,
+            ParticleEffects particles,
+            Recovered recovered)
         {
             _recovered = recovered;
             _tables = tables;
             _looks = looks;
             Explosion = explosion;
+            Particles = particles;
+        }
+
+        /// <summary>Gets the game module's shared particle frames.</summary>
+        public ParticleEffects Particles
+        {
+            get;
         }
 
         /// <summary>Gets the blast's layers, <c>SfxExpl</c>, which <c>SfxExplAdd1x1</c> plays in a cell.</summary>
@@ -194,7 +209,122 @@ namespace Mooh.Presentation.Animation
                 && effects.TryGetProperty("SfxExpl", out JsonElement layers)
                 ? [.. layers.EnumerateArray().Select(EffectLayerOf)]
                 : [];
-            return new AnimationLibrary(tables, looks, explosion, recovered);
+            return new AnimationLibrary(tables, looks, explosion, ParticleEffectsOf(effects), recovered);
+        }
+
+        /// <summary>Reads the shared particle frames the effect functions draw from.</summary>
+        private static ParticleEffects ParticleEffectsOf(JsonElement effects)
+        {
+            IReadOnlyList<IReadOnlyList<string>> Variants(string name)
+            {
+                return effects.ValueKind == JsonValueKind.Object
+                    && effects.TryGetProperty(name, out JsonElement value)
+                    && value.ValueKind == JsonValueKind.Array
+                    ? [.. value.EnumerateArray().Select(AnimMadeFrames)]
+                    : [];
+            }
+
+            IReadOnlyList<string> Single(string name)
+            {
+                return effects.ValueKind == JsonValueKind.Object && effects.TryGetProperty(name, out JsonElement value)
+                    ? AnimMadeFrames(value)
+                    : [];
+            }
+
+            ParticleBurst? stars = effects.ValueKind == JsonValueKind.Object && effects.TryGetProperty("SfxPlGet", out JsonElement pickup)
+                ? BurstOf(pickup)
+                : null;
+            return new ParticleEffects(
+                Variants("SfxWSmoke"),
+                Variants("SfxSmoke"),
+                Variants("SfxHealth"),
+                Variants("_SfxLandFire"),
+                Single("SfxGlowLandH"),
+                Single("SfxGlowLandV"),
+                stars);
+        }
+
+        /// <summary>Reads the frame names of a recovered <c>Page.AnimMake([...])</c> call.</summary>
+        private static IReadOnlyList<string> AnimMadeFrames(JsonElement call)
+        {
+            return call.ValueKind == JsonValueKind.Object && call.TryGetProperty("args", out JsonElement args) && args.GetArrayLength() > 0
+                ? [.. args[0].EnumerateArray().Select(frame => frame.GetString() ?? string.Empty)]
+                : [];
+        }
+
+        /// <summary>
+        /// Reads a registration's bursts: nothing, one recovered <c>CSfxPrtInfo</c>, a tuple of
+        /// them, or a reference to the game module's shared <c>SfxPlGet</c>.
+        /// </summary>
+        private static IReadOnlyList<ParticleBurst> BurstsOf(JsonElement registration, string field, JsonElement effects)
+        {
+            if (!registration.TryGetProperty(field, out JsonElement value))
+            {
+                return [];
+            }
+
+            if (value.ValueKind == JsonValueKind.Object
+                && value.TryGetProperty("ref", out JsonElement reference)
+                && reference.GetString() is string name
+                && name.StartsWith("self.", StringComparison.Ordinal)
+                && effects.ValueKind == JsonValueKind.Object
+                && effects.TryGetProperty(name["self.".Length..], out JsonElement shared))
+            {
+                value = shared;
+            }
+
+            IEnumerable<JsonElement> items = value.ValueKind switch
+            {
+                JsonValueKind.Array => value.EnumerateArray(),
+                JsonValueKind.Object => [value],
+                JsonValueKind.Undefined or JsonValueKind.String or JsonValueKind.Number or JsonValueKind.True
+                    or JsonValueKind.False or JsonValueKind.Null => [],
+                _ => [],
+            };
+            return [.. items.Select(BurstOf).OfType<ParticleBurst>()];
+        }
+
+        /// <summary>Reads a recovered <c>CSfxPrtInfo(Func, Num, Page, Lst, ATime)</c>.</summary>
+        private static ParticleBurst? BurstOf(JsonElement info)
+        {
+            if (info.ValueKind != JsonValueKind.Object
+                || !info.TryGetProperty("Lst", out JsonElement list)
+                || !info.TryGetProperty("ATime", out JsonElement time)
+                || PageOf(info) is not string page)
+            {
+                return null;
+            }
+
+            string function = info.TryGetProperty("Func", out JsonElement func) && func.TryGetProperty("ref", out JsonElement name)
+                ? name.GetString() ?? string.Empty
+                : string.Empty;
+            ParticleBurstKind kind = function.EndsWith("SfxEPartsObjAir", StringComparison.Ordinal) ? ParticleBurstKind.Air
+                : function.EndsWith("SfxGlowKill", StringComparison.Ordinal) ? ParticleBurstKind.Stars
+                : ParticleBurstKind.Ground;
+            (int min, int max) = info.TryGetProperty("Num", out JsonElement count) && count.ValueKind == JsonValueKind.Array
+                ? (count[0].GetInt32(), count[1].GetInt32())
+                : (0, 0);
+            List<IReadOnlyList<string>> variants = [.. list.EnumerateArray()
+                .Select(frames => (IReadOnlyList<string>)[.. frames.EnumerateArray().Select(frame => frame.GetString() ?? string.Empty)])
+                .Where(frames => frames.Count > 0)];
+            return variants.Count == 0
+                ? null
+                : new ParticleBurst(kind, page, variants, min, max, time[0].GetDouble(), time[1].GetDouble());
+        }
+
+        /// <summary>Reads a registration's <c>PrtLand</c> or <c>PrtMove</c> handler, when it names one.</summary>
+        private static ParticlePuff? PuffOf(JsonElement registration, string field)
+        {
+            return registration.TryGetProperty(field, out JsonElement value)
+                && value.ValueKind == JsonValueKind.Object
+                && value.TryGetProperty("ref", out JsonElement reference)
+                ? reference.GetString() switch
+                {
+                    "self.SfxLandPuff" or "self.SfxMovePuff" => ParticlePuff.Smoke,
+                    "self.SfxLandFire" or "self.SfxMoveFire" => ParticlePuff.Fire,
+                    _ => null,
+                }
+                : null;
         }
 
         /// <summary>Reads a recovered <c>CSfxAnimObj.CType(Page, AList, ulATime, fSh, Num, RPass)</c>.</summary>
@@ -355,6 +485,11 @@ namespace Mooh.Presentation.Animation
                 LayerOf(parameter, "OverAnm", effects))
             {
                 Sounds = sounds,
+                StopsParticles = mask is long particleBits && (particleBits & ParticleStopMask) != 0,
+                BlastBursts = BurstsOf(registration, "EParts", effects),
+                KillBursts = BurstsOf(registration, "PrtKill", effects),
+                LandPuff = PuffOf(registration, "PrtLand"),
+                MovePuff = PuffOf(registration, "PrtMove"),
             };
         }
 

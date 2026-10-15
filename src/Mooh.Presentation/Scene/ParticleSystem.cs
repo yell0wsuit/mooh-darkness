@@ -1,0 +1,477 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Mooh.Core.Entities;
+using Mooh.Core.Grid;
+using Mooh.Core.Simulation;
+using Mooh.Presentation.Animation;
+using Mooh.Presentation.Audio;
+
+namespace Mooh.Presentation.Scene
+{
+    /// <summary>
+    /// The world particles of <c>PartAddSeq</c> and the overlay parts of <c>PartsOvr.AddSeq</c>,
+    /// with the effect functions of <c>CGameType</c> that emit them.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A particle plays its frames once at its own rate and is gone after the last, as
+    /// <c>PartsCycle</c> runs it: positions are in cells, speeds in cells per millisecond, and
+    /// gravity, <c>fGravity</c>, accelerates it down. None of the effects ported here orbits
+    /// (<c>fR</c>, <c>fD</c>, <c>fSR</c>, <c>fSD</c>). A particle that crosses into a
+    /// cell holding a <c>CNT_CMaskPartsCollide</c> object turns back along that axis at
+    /// <c>CNT_GPrm_PartsCollResp</c>, 0.75 of its speed. Its cell is its rounded position, the
+    /// native's conversion under round-to-nearest.
+    /// </para>
+    /// <para>
+    /// The overlay parts, landing glows, play at a fixed 35 ms a frame and are drawn after the
+    /// world, as <c>ModRender</c> renders <c>PartsOvr</c> last. The pickup sparks of
+    /// <c>SfxGlowKill</c>, which sample the eaten sprite's pixels, are not emitted.
+    /// </para>
+    /// </remarks>
+    /// <param name="library">The recovered particle frames and registrations.</param>
+    /// <param name="random">The source of the effects' random choices.</param>
+    internal sealed class ParticleSystem(AnimationLibrary library, Random random)
+    {
+        /// <summary><c>SfxEPartsObj</c>'s <c>fGravity</c>.</summary>
+        private const double BurstGravity = 4e-6;
+
+        /// <summary><c>SfxLandFire</c>'s and <c>SfxMoveFire</c>'s <c>fGravity</c>.</summary>
+        private const double FireGravity = 8e-6;
+
+        /// <summary><c>CNT_GPrm_PartsCollResp</c>.</summary>
+        private const double Bounce = 0.75;
+
+        /// <summary>The landing glow's frame time, <c>SfxLandGlow</c>'s <c>AddSeq(..., 35, ...)</c>.</summary>
+        private const double GlowFrameMilliseconds = 35;
+
+        /// <summary>
+        /// <c>SfxLandSize</c>: the strip along each side of a cell that landing and pushing effects
+        /// rise from, by direction.
+        /// </summary>
+        private static readonly Dictionary<Direction, ((double, double) X, (double, double) Y)> SideStrips = new()
+        {
+            [Direction.Left] = ((-0.4, -0.5), (-0.4, 0.4)),
+            [Direction.Up] = ((-0.4, 0.4), (-0.4, -0.5)),
+            [Direction.Right] = ((0.4, 0.5), (-0.4, 0.4)),
+            [Direction.Down] = ((-0.4, 0.4), (0.4, 0.5)),
+        };
+
+        private readonly List<Particle> _world = [];
+        private readonly List<Particle> _overlay = [];
+
+        /// <summary>Gets the particles' frames: the world's, then the overlay's.</summary>
+        public IEnumerable<SceneSprite> Sprites => _world.Concat(_overlay).Select(particle => new SceneSprite(
+            default,
+            particle.Page,
+            particle.Frames[(int)particle.Index],
+            particle.X,
+            particle.Y,
+            int.MaxValue,
+            particle.Additive));
+
+        /// <summary>Moves the particles on, then emits what the frame's events call for.</summary>
+        /// <param name="world">The simulated world, after the step.</param>
+        /// <param name="events">The step's events.</param>
+        /// <param name="seen">Where every entity was last drawn, including the ones now gone.</param>
+        /// <param name="blasts">The cells a blast was shown in this frame.</param>
+        /// <param name="steps">Where the player sounded a step this frame.</param>
+        /// <param name="seconds">The step's length.</param>
+        public void Update(
+            WorldGrid world,
+            IReadOnlyList<SimulationEvent> events,
+            IReadOnlyDictionary<EntityId, Sighting> seen,
+            IReadOnlyList<GridPosition> blasts,
+            IReadOnlyList<(double X, double Y)> steps,
+            double seconds)
+        {
+            double milliseconds = seconds * 1000;
+            foreach (Particle particle in _world)
+            {
+                particle.Advance(milliseconds, cell => StopsParticles(world, cell));
+            }
+
+            foreach (Particle particle in _overlay)
+            {
+                particle.Advance(milliseconds, _ => false);
+            }
+
+            _ = _world.RemoveAll(particle => particle.IsGone);
+            _ = _overlay.RemoveAll(particle => particle.IsGone);
+            Emit(world, events, seen);
+            foreach (GridPosition cell in blasts)
+            {
+                Smoke(cell.X, cell.Y);
+            }
+
+            foreach ((double x, double y) in steps)
+            {
+                WalkSmoke(x, y);
+            }
+        }
+
+        private void Emit(WorldGrid world, IReadOnlyList<SimulationEvent> events, IReadOnlyDictionary<EntityId, Sighting> seen)
+        {
+            HashSet<EntityId> eaten = [.. events.OfType<PlayerAte>().Select(ate => ate.EatenEntityId)];
+            eaten.UnionWith(events.OfType<PickupCollected>().Select(collected => collected.PickupEntityId));
+            HashSet<GridPosition> blasted = [.. events.OfType<ExplosionCellReached>().Select(reached => reached.Position)];
+            HashSet<EntityId> exploded = [.. events.OfType<ExplosionStarted>().Select(started => started.EntityId)];
+            foreach (SimulationEvent item in events)
+            {
+                switch (item)
+                {
+                    case Landed landed when seen.TryGetValue(landed.EntityId, out Sighting at) && Exists(world, landed.EntityId):
+                        // CGameObjFallBase's landing: RInfo.PrtLand, or SfxLandPuff.
+                        Puff(LookOf(at)?.LandPuff ?? ParticlePuff.Smoke, at, landed.Direction, landing: true);
+                        break;
+                    case StrikePushStopped stopped when seen.TryGetValue(stopped.EntityId, out Sighting at) && LookOf(at)?.LandPuff is ParticlePuff puff:
+                        // PlPush_OnCell's stop: RInfo.PrtLand only when the type names one.
+                        Puff(puff, at, stopped.Direction, landing: true);
+                        break;
+                    case PushStarted pushed when seen.TryGetValue(pushed.EntityId, out Sighting at) && IsSupportedSideways(world, pushed):
+                        Puff(LookOf(at)?.MovePuff ?? ParticlePuff.Smoke, at, pushed.Direction, landing: false);
+                        break;
+                    case EntityDestroyed destroyed when !eaten.Contains(destroyed.EntityId) && seen.TryGetValue(destroyed.EntityId, out Sighting at):
+                        Destroyed(at, exploded.Contains(destroyed.EntityId) || blasted.Contains(new GridPosition((int)Math.Round(at.X), (int)Math.Round(at.Y))));
+                        break;
+                    case DamageApplied { Amount: > 0 } damage when seen.TryGetValue(damage.EntityId, out Sighting hurt) && hurt.IsPlayer:
+                        Hearts(hurt.X, hurt.Y);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Bursts a killed object: <c>ObjKill</c>'s <c>RInfo.PrtKill</c>, then, when a blast
+        /// killed it, <c>_ObjKillWrd</c>'s <c>RInfo.EParts</c>.
+        /// </summary>
+        private void Destroyed(Sighting at, bool blasted)
+        {
+            if (LookOf(at) is not ObjectLook look)
+            {
+                return;
+            }
+
+            foreach (ParticleBurst burst in look.KillBursts)
+            {
+                Burst(burst, at.X, at.Y);
+            }
+
+            if (!blasted)
+            {
+                return;
+            }
+
+            foreach (ParticleBurst burst in look.BlastBursts)
+            {
+                Burst(burst, at.X, at.Y);
+            }
+        }
+
+        /// <summary><c>SfxEPartsObj</c> and <c>SfxEPartsObjAir</c>: pieces strewn over the cell.</summary>
+        private void Burst(ParticleBurst burst, double x, double y)
+        {
+            if (burst.Kind == ParticleBurstKind.Stars)
+            {
+                return;
+            }
+
+            int count = RandRange(burst.MinCount, burst.MaxCount);
+            for (int index = 0; index < count; index++)
+            {
+                _world.Add(new Particle(
+                    burst.Page,
+                    Pick(burst.Variants),
+                    Between(1 / burst.MinFrameMilliseconds, 1 / burst.MaxFrameMilliseconds),
+                    Between(x - 0.5, x + 0.5),
+                    Between(y - 0.5, y + 0.5))
+                {
+                    SpeedX = Between(-0.001, 0.001),
+                    SpeedY = Between(-0.001, 0.001),
+                    Gravity = burst.Kind == ParticleBurstKind.Ground ? BurstGravity : 0,
+                });
+            }
+        }
+
+        /// <summary>
+        /// <c>SfxLandPuff</c>, <c>SfxLandFire</c>, <c>SfxMovePuff</c> and <c>SfxMoveFire</c>: smoke
+        /// or sparks from the side of the cell it landed on, or from under a pushed object, thrown
+        /// back against the push.
+        /// </summary>
+        private void Puff(ParticlePuff puff, Sighting at, Direction direction, bool landing)
+        {
+            ((double, double) stripX, (double, double) stripY) = SideStrips[landing ? direction : Direction.Down];
+            (double minX, double maxX) = (at.X + stripX.Item1, at.X + stripX.Item2);
+            (double minY, double maxY) = (at.Y + stripY.Item1, at.Y + stripY.Item2);
+            bool fire = puff == ParticlePuff.Fire;
+            IReadOnlyList<IReadOnlyList<string>> variants = fire ? library.Particles.Fire : library.Particles.WalkSmoke;
+            int count = fire ? RandRange(5, 10) : RandRange(3, 6);
+            (int pushX, int pushY) = Step(Opposite(direction));
+            for (int index = 0; index < count && variants.Count > 0; index++)
+            {
+                (double speedX, double speedY) = (Between(-0.0005, 0.0005), Between(-0.0005, 0.0005));
+                if (landing && fire)
+                {
+                    (speedX, speedY) = (Between(-0.002, 0.002), Between(-0.002, -0.004));
+                }
+                else if (!landing)
+                {
+                    double speed = Between(0.0005, 0.001);
+                    double turn = Between(-0.8, 0.8);
+                    (speedX, speedY) = Rotate(pushX * speed, pushY * speed, turn);
+                }
+
+                _world.Add(new Particle(
+                    ParticleEffects.PartsPage,
+                    Pick(variants),
+                    Between(0.01, 0.02),
+                    Between(minX, maxX),
+                    Between(minY, maxY))
+                {
+                    SpeedX = speedX,
+                    SpeedY = speedY,
+                    Gravity = fire ? FireGravity : 0,
+                });
+            }
+
+            if (landing)
+            {
+                Glow(direction, minX, maxX, minY, maxY);
+            }
+        }
+
+        /// <summary>
+        /// <c>SfxLandGlow</c>: an overlay glow at a point of the strip, horizontal for a landing
+        /// along a vertical direction.
+        /// </summary>
+        private void Glow(Direction direction, double minX, double maxX, double minY, double maxY)
+        {
+            IReadOnlyList<string> frames = direction is Direction.Up or Direction.Down
+                ? library.Particles.GlowLandHorizontal
+                : library.Particles.GlowLandVertical;
+            if (frames.Count > 0)
+            {
+                _overlay.Add(new Particle(ParticleEffects.GlowPage, frames, 1 / GlowFrameMilliseconds, Between(minX, maxX), Between(minY, maxY))
+                {
+                    Additive = true,
+                    Collides = false,
+                });
+            }
+        }
+
+        /// <summary><c>SfxPlWalk</c>: one puff at the player's feet.</summary>
+        private void WalkSmoke(double x, double y)
+        {
+            if (library.Particles.WalkSmoke.Count > 0)
+            {
+                _world.Add(new Particle(
+                    ParticleEffects.PartsPage,
+                    Pick(library.Particles.WalkSmoke),
+                    Between(0.01, 0.02),
+                    x + Between(-0.3, 0.3),
+                    y + Between(0.4, 0.5)));
+            }
+        }
+
+        /// <summary>The five puffs of smoke <c>SfxExplAdd1x1</c> leaves in a blast cell.</summary>
+        private void Smoke(double x, double y)
+        {
+            for (int index = 0; index < 5 && library.Particles.Smoke.Count > 0; index++)
+            {
+                _world.Add(new Particle(
+                    ParticleEffects.PartsPage,
+                    Pick(library.Particles.Smoke),
+                    Between(0.01, 0.02),
+                    x + Between(-0.5, 0.5),
+                    y + Between(-0.5, 0.5))
+                {
+                    SpeedX = Between(-0.0001, 0.0001),
+                    SpeedY = Between(-0.0001, 0.0001),
+                });
+            }
+        }
+
+        /// <summary>The hearts a hurt player sheds, <c>SfxHealth</c> in <c>GamePlayer</c>'s damage handler.</summary>
+        private void Hearts(double x, double y)
+        {
+            int count = RandRange(3, 7);
+            for (int index = 0; index < count && library.Particles.Hearts.Count > 0; index++)
+            {
+                _world.Add(new Particle(
+                    ParticleEffects.PartsPage,
+                    Pick(library.Particles.Hearts),
+                    Between(0.02, 0.04),
+                    x + Between(-0.3, 0.3),
+                    y + Between(-0.5, 0.5))
+                {
+                    SpeedX = Between(-0.0005, 0.0005),
+                    SpeedY = Between(-0.0005, 0.0005),
+                });
+            }
+        }
+
+        /// <summary>
+        /// Models the push's puff test: a sideways push of an object with something in the cell
+        /// below its rounded column.
+        /// </summary>
+        private static bool IsSupportedSideways(WorldGrid world, PushStarted pushed)
+        {
+            if (pushed.Direction is Direction.Up or Direction.Down || !Exists(world, pushed.EntityId))
+            {
+                return false;
+            }
+
+            GridPosition below = world.GetEntity(pushed.EntityId).Position.Offset(Direction.Down);
+            return world.Contains(below) && world.GetOccupants(below).Count > 0;
+        }
+
+        private static bool Exists(WorldGrid world, EntityId id)
+        {
+            return world.Entities.Any(entity => entity.Id == id);
+        }
+
+        private bool StopsParticles(WorldGrid world, GridPosition cell)
+        {
+            return world.Contains(cell)
+                && world.GetOccupants(cell).Any(occupant => occupant.ArchivalIdentity is { } identity
+                    && library.TryGetLook(identity.ArchivalType, out ObjectLook look)
+                    && look.StopsParticles);
+        }
+
+        private ObjectLook? LookOf(Sighting at)
+        {
+            return at.Type is string type && library.TryGetLook(type, out ObjectLook look) ? look : null;
+        }
+
+        private static Direction Opposite(Direction direction)
+        {
+            return direction switch
+            {
+                Direction.Left => Direction.Right,
+                Direction.Right => Direction.Left,
+                Direction.Up => Direction.Down,
+                Direction.Down => Direction.Up,
+                _ => direction,
+            };
+        }
+
+        private static (int X, int Y) Step(Direction direction)
+        {
+            GridPosition step = new GridPosition(0, 0).Offset(direction);
+            return (step.X, step.Y);
+        }
+
+        private static (double X, double Y) Rotate(double x, double y, double angle)
+        {
+            (double sine, double cosine) = Math.SinCos(angle);
+            return ((x * cosine) - (y * sine), (x * sine) + (y * cosine));
+        }
+
+        /// <summary><c>App.Rand.Range</c>: a whole number from the first up to, not including, the second.</summary>
+        private int RandRange(int min, int max)
+        {
+            return max > min ? random.Next(min, max) : min;
+        }
+
+        /// <summary><c>App.Rand.FRange</c>.</summary>
+        private double Between(double min, double max)
+        {
+            return min + (random.NextDouble() * (max - min));
+        }
+
+        private IReadOnlyList<string> Pick(IReadOnlyList<IReadOnlyList<string>> variants)
+        {
+            return variants[random.Next(variants.Count)];
+        }
+
+        /// <summary>One particle as <c>PartsCycle</c> moves it.</summary>
+        private sealed class Particle(string page, IReadOnlyList<string> frames, double framesPerMillisecond, double x, double y)
+        {
+            private (int X, int Y) _cell = ((int)Math.Round(x), (int)Math.Round(y));
+
+            public string Page { get; } = page;
+
+            public IReadOnlyList<string> Frames { get; } = frames;
+
+            public double Index
+            {
+                get; private set;
+            }
+
+            public double X { get; private set; } = x;
+
+            public double Y { get; private set; } = y;
+
+            public double SpeedX
+            {
+                get; set;
+            }
+
+            public double SpeedY
+            {
+                get; set;
+            }
+
+            public double Gravity
+            {
+                get; init;
+            }
+
+            public bool Additive
+            {
+                get; init;
+            }
+
+            public bool Collides { get; init; } = true;
+
+            public bool IsGone
+            {
+                get; private set;
+            }
+
+            public void Advance(double milliseconds, Func<GridPosition, bool> stops)
+            {
+                Index += framesPerMillisecond * milliseconds;
+                if (Index >= Frames.Count)
+                {
+                    IsGone = true;
+                    return;
+                }
+
+                X += SpeedX * milliseconds;
+                Y += SpeedY * milliseconds;
+                if (Gravity != 0)
+                {
+                    SpeedY += Gravity * milliseconds;
+                    Y += Gravity * milliseconds * milliseconds * 0.5;
+                }
+
+                (int X, int Y) cell = ((int)Math.Round(X), (int)Math.Round(Y));
+                if (cell == _cell)
+                {
+                    return;
+                }
+
+                if (Collides && stops(new GridPosition(cell.X, cell.Y)))
+                {
+                    int dx = cell.X - _cell.X;
+                    int dy = cell.Y - _cell.Y;
+                    if ((dx > 0 && SpeedX > 0) || (dx < 0 && SpeedX < 0))
+                    {
+                        SpeedX = -Bounce * SpeedX;
+                    }
+
+                    if ((dy > 0 && SpeedY > 0) || (dy < 0 && SpeedY < 0))
+                    {
+                        SpeedY = -Bounce * SpeedY;
+                    }
+                }
+
+                _cell = cell;
+            }
+        }
+    }
+}

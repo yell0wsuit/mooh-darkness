@@ -37,5 +37,32 @@ namespace Mooh.Presentation.Animation
         /// <c>SndKill</c>, <c>SndEat</c>, <c>SndMove</c> and <c>SndExpl</c>, where it names one.
         /// </summary>
         public IReadOnlyDictionary<string, string> Sounds { get; init; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Gets whether particles bounce off the object's cell, <c>CNT_CMaskPartsCollide</c>
+        /// (<c>1 &lt;&lt; 16</c>).
+        /// </summary>
+        public bool StopsParticles
+        {
+            get; init;
+        }
+
+        /// <summary>Gets the pieces a blast breaks the object into, its <c>EParts</c>.</summary>
+        public IReadOnlyList<ParticleBurst> BlastBursts { get; init; } = [];
+
+        /// <summary>Gets the burst of a kill other than by eating, its <c>PrtKill</c>.</summary>
+        public IReadOnlyList<ParticleBurst> KillBursts { get; init; } = [];
+
+        /// <summary>Gets the puff the object raises on landing or stopping, its <c>PrtLand</c>, when it names one.</summary>
+        public ParticlePuff? LandPuff
+        {
+            get; init;
+        }
+
+        /// <summary>Gets the puff the object raises when pushed, its <c>PrtMove</c>, when it names one.</summary>
+        public ParticlePuff? MovePuff
+        {
+            get; init;
+        }
     }
 }
