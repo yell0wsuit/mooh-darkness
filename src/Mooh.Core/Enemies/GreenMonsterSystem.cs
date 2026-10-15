@@ -101,7 +101,7 @@ namespace Mooh.Core.Enemies
             events.Add(new EnemyFrozen(monster.Id));
         }
 
-        internal static void Thaw(Entity monster, List<SimulationEvent> events)
+        internal void Thaw(Entity monster, List<SimulationEvent> events)
         {
             ArgumentNullException.ThrowIfNull(monster);
             ArgumentNullException.ThrowIfNull(events);
@@ -113,12 +113,31 @@ namespace Mooh.Core.Enemies
             }
 
             body.IsFrozen = false;
+            // IceOff restarts the current animation, including the second part of a strike.
+            TimeSpan strikePhase = body.AttackWindupDuration * 0.4;
+            body.Remaining = body.State switch
+            {
+                GreenMonsterState.Turning => body.IsSmall ? body.SmallTurnDuration : body.TurnDuration,
+                GreenMonsterState.AttackWindup => body.Remaining <= strikePhase
+                    ? strikePhase : body.AttackWindupDuration,
+                GreenMonsterState.AttackRecovery => body.AttackRecoveryDuration,
+                GreenMonsterState.TransformingSmall or GreenMonsterState.TransformingNormal => body.TransformationDuration,
+                GreenMonsterState.Deciding or GreenMonsterState.Walking => TimeSpan.Zero,
+                _ => throw new InvalidOperationException("Undefined green-monster state.")
+            };
+            events.Add(new EnemyThawed(monster.Id));
             if (body.State == GreenMonsterState.Walking)
             {
-                body.State = GreenMonsterState.Deciding;
+                GridPosition destination = monster.Position.Offset(body.FacingDirection);
+                if (_world.Contains(destination))
+                {
+                    StartWalking(monster, body, destination, 0, events);
+                }
+                else
+                {
+                    body.State = GreenMonsterState.Deciding;
+                }
             }
-
-            events.Add(new EnemyThawed(monster.Id));
         }
 
         internal void SetSmall(Entity monster, bool isSmall, List<SimulationEvent> events)
@@ -170,22 +189,28 @@ namespace Mooh.Core.Enemies
 
             if (CellQuery.CanMonsterEnter(_world, monster, destination))
             {
-                GridPosition source = monster.Position;
-                _world.CommitMoves([new PlannedMove(monster.Id, source, destination)]);
-                KinematicsSystem.Start(
-                    monster,
-                    MotionCause.MonsterWalking,
-                    body.FacingDirection,
-                    CellQuery.HasCounterMotion(_world, destination, body.FacingDirection)
-                        ? body.MoveSpeed * CounterMotionMultiplier
-                        : body.MoveSpeed,
-                    resolutionOrder);
-                body.State = GreenMonsterState.Walking;
-                events.Add(new EnemyMoveStarted(monster.Id, source, destination));
+                StartWalking(monster, body, destination, resolutionOrder, events);
                 return;
             }
 
             StartTurn(monster, body, events);
+        }
+
+        private void StartWalking(Entity monster, GreenMonsterBody body, GridPosition destination,
+            int resolutionOrder, List<SimulationEvent> events)
+        {
+            GridPosition source = monster.Position;
+            _world.CommitMoves([new PlannedMove(monster.Id, source, destination)]);
+            KinematicsSystem.Start(
+                monster,
+                MotionCause.MonsterWalking,
+                body.FacingDirection,
+                CellQuery.HasCounterMotion(_world, destination, body.FacingDirection)
+                    ? body.MoveSpeed * CounterMotionMultiplier
+                    : body.MoveSpeed,
+                resolutionOrder);
+            body.State = GreenMonsterState.Walking;
+            events.Add(new EnemyMoveStarted(monster.Id, source, destination));
         }
 
         /// <summary>

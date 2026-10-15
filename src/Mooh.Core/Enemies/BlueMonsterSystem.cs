@@ -140,9 +140,9 @@ namespace Mooh.Core.Enemies
 
         /// <summary>
         /// Applies the recovered <c>IceOff</c>, whose <c>StateMove</c> resumes the interrupted
-        /// state. A walk was stopped by the freeze, so it resumes as a fresh decision.
+        /// state from frame zero. A saved walk resumes directly without another navigation decision.
         /// </summary>
-        internal static void Thaw(Entity monster, List<SimulationEvent> events)
+        internal void Thaw(Entity monster, List<SimulationEvent> events)
         {
             ArgumentNullException.ThrowIfNull(monster);
             ArgumentNullException.ThrowIfNull(events);
@@ -154,12 +154,34 @@ namespace Mooh.Core.Enemies
             }
 
             body.IsFrozen = false;
+            TimeSpan strikePhase = body.AttackWindupDuration * 0.25;
+            TimeSpan recovery = (body.FacingDirection == Direction.Left
+                ? body.LeftAttackRecoveryDuration : body.AttackRecoveryDuration) - body.TurnDuration;
+            // Recovery contains a recoil animation followed by the first quarter-turn.
+            // Restart only the native animation that was active when ice interrupted it.
+            body.Remaining = body.State switch
+            {
+                BlueMonsterState.TurningLeft or BlueMonsterState.TurningRight or BlueMonsterState.AttackTurnaround => body.TurnDuration,
+                BlueMonsterState.AttackWindup => body.Remaining <= strikePhase
+                    ? strikePhase : body.AttackWindupDuration,
+                BlueMonsterState.AttackRecovery => body.Remaining <= body.TurnDuration
+                    ? body.TurnDuration : recovery,
+                BlueMonsterState.Deciding or BlueMonsterState.DecidingAfterLeftTurn or BlueMonsterState.Walking => TimeSpan.Zero,
+                _ => throw new InvalidOperationException("Undefined blue-monster state.")
+            };
+            events.Add(new EnemyThawed(monster.Id));
             if (body.State == BlueMonsterState.Walking)
             {
-                body.State = BlueMonsterState.Deciding;
+                GridPosition destination = monster.Position.Offset(body.FacingDirection);
+                if (_world.Contains(destination))
+                {
+                    StartWalking(monster, body, destination, 0, events);
+                }
+                else
+                {
+                    body.State = BlueMonsterState.Deciding;
+                }
             }
-
-            events.Add(new EnemyThawed(monster.Id));
         }
 
         internal void DecideAfterLeftTurn(

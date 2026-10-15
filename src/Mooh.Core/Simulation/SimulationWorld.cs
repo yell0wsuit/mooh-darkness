@@ -853,6 +853,7 @@ namespace Mooh.Core.Simulation
                     KinematicsSystem.Advance(entity, substepSeconds);
                 }
 
+                EntityId[] frozenAtStart = [.. _world.Entities.Where(entity => entity.IsFrozenMonster).Select(entity => entity.Id)];
                 _world.AdvanceTime(substepSeconds);
                 AdvanceHealthImmunity(substepSeconds);
                 AdvancePlayerProgress(substepSeconds);
@@ -875,7 +876,7 @@ namespace Mooh.Core.Simulation
                 // DecideMonsters pass at the end of AdvanceMonsterTimers rather than one substep
                 // later.
                 AdvanceBeetles(substepSeconds, events);
-                AdvanceMonsterTimers(substepSeconds, events);
+                AdvanceMonsterTimers(substepSeconds, events, frozenAtStart);
                 AdvanceArrowWindups(substepSeconds, events);
                 AdvanceRotatorWindups(substepSeconds, events);
                 bool resolvedExplosion = ResolvePendingExplosionCells(events);
@@ -1039,7 +1040,7 @@ namespace Mooh.Core.Simulation
                 {
                     if (!iceActive)
                     {
-                        GreenMonsterSystem.Thaw(monster, events);
+                        _greenMonsters.Thaw(monster, events);
                         continue;
                     }
 
@@ -1056,7 +1057,7 @@ namespace Mooh.Core.Simulation
                 }
                 else
                 {
-                    BlueMonsterSystem.Thaw(monster, events);
+                    _blueMonsters.Thaw(monster, events);
                 }
             }
         }
@@ -2180,10 +2181,16 @@ namespace Mooh.Core.Simulation
             }
         }
 
-        private void AdvanceMonsterTimers(double elapsedSeconds, List<SimulationEvent> events)
+        private void AdvanceMonsterTimers(double elapsedSeconds, List<SimulationEvent> events, EntityId[] frozenAtStart)
         {
             foreach (Entity entity in _world.Entities)
             {
+                // A thaw at this substep's end cannot spend the preceding frozen time.
+                if (frozenAtStart.Contains(entity.Id))
+                {
+                    continue;
+                }
+
                 if (entity.GreenMonsterBody is not null)
                 {
                     _greenMonsters.AdvanceTimer(
