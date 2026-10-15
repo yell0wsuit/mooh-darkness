@@ -80,6 +80,42 @@ namespace Mooh.Presentation.Tests
             Assert.Equal(new SceneSprite(Placed(harness).Id, "SpriteObjBombs", "GlowGr02", sprites[bomb].X, sprites[bomb].Y, 0, Additive: true), sprites[bomb + 1]);
         }
 
+        /// <summary>Pickup glows stay above their own sprite and below objects drawn in front.</summary>
+        [Theory]
+        [InlineData("ODiam01", 1)]
+        [InlineData("ODiam02", 1)]
+        [InlineData("ODiam03", 1)]
+        [InlineData("ODiam05", 1)]
+        [InlineData("ODiam01", 0)]
+        [InlineData("WBomb", 1)]
+        [InlineData("WGrBox", 1)]
+        [InlineData("WROne", 1)]
+        [InlineData("WRBox", 1)]
+        [InlineData("WMinesBox", 1)]
+        [InlineData("BCola", 1)]
+        [InlineData("BIce", 1)]
+        [InlineData("ODiam04", 1)]
+        public void PickupGlowsShareTheirObjectsLayer(string type, int y)
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, (type, 5, y), ("CellsMetal01", 6, 1)));
+            harness.Step(0.120);
+
+            Entity pickup = Placed(harness);
+            List<SceneSprite> sprites = [.. harness.Presenter.Sprites];
+            SceneSprite glow = Assert.Single(sprites, sprite => sprite.Entity == pickup.Id && sprite.Additive);
+            int glowIndex = sprites.IndexOf(glow);
+            SceneSprite body = sprites[glowIndex - 1];
+            Assert.Equal(pickup.Id, body.Entity);
+            Assert.False(body.Additive);
+            Assert.Equal(body.Pass, glow.Pass);
+            Assert.Equal((body.X, body.Y), (glow.X, glow.Y));
+            Assert.True(glowIndex < sprites.FindIndex(sprite => sprite.Entity == harness.Level.GetEntity(201).Id));
+            if (y == 0)
+            {
+                Assert.NotNull(pickup.Motion);
+            }
+        }
+
         /// <summary>Verifies a lit balloon plays its fuse chain through the ticks.</summary>
         [Fact]
         public void ALitBalloonPlaysItsFuseChain()
