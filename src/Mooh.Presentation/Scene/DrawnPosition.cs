@@ -32,6 +32,14 @@ namespace Mooh.Presentation.Scene
                     flight.Origin.Y + ((flight.Destination.Y - flight.Origin.Y) * flight.Progress));
             }
 
+            if (entity.PlayerBody?.Rotation is { SuspendedProgress: double progress } rotation)
+            {
+                // Native MoveStop clears only the movement flag, preserving fShX/fShY through
+                // ST_Rot*. The simulation stores that stopped offset with the pending reversal.
+                (int turnX, int turnY) = Step(rotation.From);
+                return (entity.Position.X - (turnX * (1 - progress)), entity.Position.Y - (turnY * (1 - progress)));
+            }
+
             if (entity.Motion is not MotionState motion)
             {
                 return (entity.Position.X, entity.Position.Y);
