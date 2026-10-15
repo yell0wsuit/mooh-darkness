@@ -2425,7 +2425,7 @@ namespace Mooh.Core.Simulation
                 || !_world.IsCellUnlocked(ahead)
                 || CellQuery.IsOccupied(_world, ahead))
             {
-                ResolveStrikePushImpact(entity, ahead, events);
+                ResolveStrikePushImpact(entity, ahead, direction, events);
                 return false;
             }
 
@@ -2442,15 +2442,18 @@ namespace Mooh.Core.Simulation
         /// <summary>
         /// Applies the recovered end of the strike-push chain, which shakes the stopped object
         /// itself and then every occupant of the cell it stopped against. A struck bottle therefore
-        /// explodes where it stops, and a struck rock detonates whatever it stops against.
+        /// explodes where it stops, and a struck rock detonates whatever it stops against. The stop
+        /// is reported after the shakes, where the original jerks the view.
         /// </summary>
         private void ResolveStrikePushImpact(
             Entity entity,
             GridPosition ahead,
+            Direction direction,
             List<SimulationEvent> events)
         {
             ApplyShake(entity, entity.Id, hard: false, events);
             ShakeCell(ahead, entity.Id, hard: false, events);
+            events.Add(new StrikePushStopped(entity.Id, direction));
         }
 
         private double? SecondsUntilPlayerReactionEnds()

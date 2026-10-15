@@ -44,6 +44,30 @@ namespace Mooh.Core.Tests.Player
         }
 
         /// <summary>
+        /// Verifies a struck rock reports where the chain stops it, the moment the recovered
+        /// <c>PlPush_OnCell</c> shakes the view along the push and plays the landing sound.
+        /// </summary>
+        [Fact]
+        public void AStruckRockReportsItsStop()
+        {
+            MaterializedLevel level = Materialize(
+                Floor(0, 8, 2),
+                [
+                    Object(100, "OPlayer", 0, 1),
+                    Object(101, "ORock01", 3, 1),
+                    Object(102, "CellsSolid01", 7, 1),
+                ]);
+            Entity rock = level.GetEntity(101);
+            WalkRightTo(level, 2);
+
+            level.Simulation.SetPlayerInput(Fire());
+            IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(
+                TimeSpan.FromMilliseconds(1500));
+
+            Assert.Equal(new StrikePushStopped(rock.Id, Direction.Right), Assert.Single(events.OfType<StrikePushStopped>()));
+        }
+
+        /// <summary>
         /// Verifies the recovered end of the chain shakes the cell the object stops against, which
         /// is how a struck rock detonates a bomb it reaches.
         /// </summary>

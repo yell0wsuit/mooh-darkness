@@ -441,7 +441,7 @@ namespace Mooh.SimulationRunner
                 "CellEntered" or "PlayerReturned" => EventFields.Position,
                 "FallStarted" or "Landed" or "PlayerBlocked" or "PlayerMoveStarted"
                     or "PlayerReversed" or "PlayerRotationCompleted" or "PushStarted"
-                    or "SlideStarted" => EventFields.Direction,
+                    or "SlideStarted" or "StrikePushStopped" => EventFields.Direction,
                 "PlayerAte" => EventFields.EatenEntity,
                 "PlayerGrenadeThrowStarted" or "PlayerStrikeStarted" => EventFields.Direction
                     | EventFields.DurationMilliseconds,
@@ -540,6 +540,7 @@ namespace Mooh.SimulationRunner
             "PlayerStruck",
             "PlayerWeaponEmpty",
             "PushStarted",
+            "StrikePushStopped",
             "SlideStarted",
             "SmallBeetleSpawned",
             "WorldRotationCompleted",

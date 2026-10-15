@@ -108,6 +108,11 @@
                         "x": 4,
                         "y": 1
                     }
+                },
+                {
+                    "type": "StrikePushStopped",
+                    "entity": "rock",
+                    "direction": "Right"
                 }
             ]
         }
