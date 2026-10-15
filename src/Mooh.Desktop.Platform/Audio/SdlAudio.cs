@@ -101,11 +101,12 @@ namespace Mooh.Desktop.Platform.Audio
             ObjectDisposedException.ThrowIf(_disposed, this);
             ArgumentNullException.ThrowIfNull(sound);
             Track track = IdleTrack();
+            track.Generation++;
             _ = Mixer.SetTrackAudio(track.Handle, ((Sound)sound).Audio);
             SetStereo(track.Handle, left, right);
             _ = Mixer.SetTrackFrequencyRatio(track.Handle, rate);
             _ = Mixer.PlayTrack(track.Handle, 0);
-            return track;
+            return new Voice(track, track.Generation);
         }
 
         /// <inheritdoc/>
@@ -194,9 +195,29 @@ namespace Mooh.Desktop.Platform.Audio
                 return null;
             }
 
-            _ = Mixer.SetTrackAudioStream(track, stream);
-            _ = Mixer.PlayTrack(track, 0);
-            return new Feed(track, stream);
+            uint options = SDL.CreateProperties();
+            try
+            {
+                // A live stream has no final buffer: keep listening through temporary underruns.
+                if (options == 0
+                    || !SDL.SetBooleanProperty(options, Mixer.Props.PlayHaltWhenExhaustedBoolean, false)
+                    || !Mixer.SetTrackAudioStream(track, stream)
+                    || !Mixer.PlayTrack(track, options))
+                {
+                    Mixer.DestroyTrack(track);
+                    SDL.DestroyAudioStream(stream);
+                    return null;
+                }
+
+                return new Feed(track, stream);
+            }
+            finally
+            {
+                if (options != 0)
+                {
+                    SDL.DestroyProperties(options);
+                }
+            }
         }
 
         /// <summary>Releases the tracks, then the sounds, then the mixer that owns both.</summary>
@@ -210,6 +231,7 @@ namespace Mooh.Desktop.Platform.Audio
             _disposed = true;
             foreach (Track track in _tracks)
             {
+                track.Disposed = true;
                 Mixer.DestroyTrack(track.Handle);
             }
 
@@ -322,11 +344,27 @@ namespace Mooh.Desktop.Platform.Audio
             public nint Audio { get; } = audio;
         }
 
-        private sealed class Track(nint handle) : IVoice
+        private sealed class Track(nint handle)
         {
             public nint Handle { get; } = handle;
 
-            public bool IsPlaying => Mixer.TrackPlaying(Handle) || Mixer.TrackPaused(Handle);
+            public long Generation
+            {
+                get; set;
+            }
+
+            public bool Disposed
+            {
+                get; set;
+            }
+
+            public bool IsPlaying => !Disposed && (Mixer.TrackPlaying(Handle) || Mixer.TrackPaused(Handle));
+        }
+
+        // A voice belongs to one playback, even after the native track is reused by another sound.
+        private sealed class Voice(Track track, long generation) : IVoice
+        {
+            public bool IsPlaying => track.Generation == generation && track.IsPlaying;
         }
     }
 }
