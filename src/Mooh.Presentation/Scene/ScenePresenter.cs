@@ -45,6 +45,7 @@ namespace Mooh.Presentation.Scene
         private readonly ScreenShake _shake = new();
         private readonly ParticleSystem _particles;
         private readonly FloatingTexts _floating;
+        private readonly GameSounds _gameSounds;
         private List<SceneText> _texts = [];
         private Dictionary<EntityId, Sighting> _seen = [];
         private double _clockMilliseconds;
@@ -68,6 +69,7 @@ namespace Mooh.Presentation.Scene
             _effects = new EffectSystem(library, random);
             _particles = new ParticleSystem(library, random, masks);
             _floating = new FloatingTexts(library, strings, random);
+            _gameSounds = new GameSounds(library, random);
             _eventSounds = new EventSounds(library);
         }
 
@@ -161,6 +163,7 @@ namespace Mooh.Presentation.Scene
             }
 
             sounds.AddRange(_eventSounds.For(events, sighted));
+            sounds.AddRange(_gameSounds.For(world, events, seconds));
             _shake.Update(world, events, sighted, seconds, _random);
             _seen = seen;
             _sounds = sounds;

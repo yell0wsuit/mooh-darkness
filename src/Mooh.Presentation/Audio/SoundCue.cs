@@ -4,5 +4,6 @@ namespace Mooh.Presentation.Audio
     /// <param name="Alias">The <c>Sound.ini</c> alias.</param>
     /// <param name="X">The column it happens at.</param>
     /// <param name="Y">The row it happens at.</param>
-    public readonly record struct SoundCue(string Alias, double X, double Y);
+    /// <param name="Centered">Whether it plays unplaced at full gain, as <c>SndPlay</c> does, rather than <c>ObjSnd</c>'s placement.</param>
+    public readonly record struct SoundCue(string Alias, double X, double Y, bool Centered = false);
 }

@@ -86,9 +86,6 @@ namespace Mooh.Presentation.Audio
                     case HelpTextRequested:
                         alias = Sound("SndTableTxt");
                         break;
-                    case LevelWon:
-                        alias = Sound("SndPlFinalOk");
-                        break;
                     default:
                         break;
                 }
