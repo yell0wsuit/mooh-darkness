@@ -642,7 +642,7 @@ namespace Mooh.Core.Simulation
             DecideMonsters(events);
             _playerController?.TryStart(events);
             ResolveWeaponCollisions(events);
-            _levelOutcome.Observe();
+            _levelOutcome.Observe(events);
 
             double remainingSeconds = elapsed.TotalSeconds;
             while (remainingSeconds > 0)

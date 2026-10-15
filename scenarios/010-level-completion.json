@@ -51,6 +51,10 @@
             "advanceMilliseconds": 900,
             "expectEvents": [
                 {
+                    "type": "LevelOutcomeAnnounced",
+                    "entity": "player"
+                },
+                {
                     "type": "CellEntered",
                     "entity": "player",
                     "position": { "x": 1, "y": 0 }

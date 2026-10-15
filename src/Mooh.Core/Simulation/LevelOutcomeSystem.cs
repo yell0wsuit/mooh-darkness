@@ -91,7 +91,7 @@ namespace Mooh.Core.Simulation
         internal void Advance(double elapsedSeconds, List<SimulationEvent> events)
         {
             AdvanceSettle(SimulationTime.Elapsed(elapsedSeconds), events);
-            Observe();
+            Observe(events);
         }
 
         /// <summary>
@@ -99,7 +99,8 @@ namespace Mooh.Core.Simulation
         /// tested first because the original tests it in an earlier branch whose inner wait keeps
         /// the win branch from running in the same tick.
         /// </summary>
-        internal void Observe()
+        /// <param name="events">The ordered event sink, which hears a loss announced.</param>
+        internal void Observe(List<SimulationEvent> events)
         {
             if (Outcome != LevelOutcome.InProgress || _phase != LevelSettlePhase.None)
             {
@@ -124,6 +125,7 @@ namespace Mooh.Core.Simulation
             {
                 _phase = LevelSettlePhase.LossSettle;
                 _remaining = LossSettleDelay;
+                events.Add(new LevelOutcomeAnnounced(player.Id, LevelOutcome.Lost, TimedOut: false));
                 return;
             }
 
@@ -131,6 +133,14 @@ namespace Mooh.Core.Simulation
             {
                 _phase = LevelSettlePhase.WinAnnounce;
                 _remaining = WinAnnounceDelay;
+            }
+        }
+
+        private void Announce(LevelOutcome outcome, bool timedOut, List<SimulationEvent> events)
+        {
+            if (_world.Player is Entity player)
+            {
+                events.Add(new LevelOutcomeAnnounced(player.Id, outcome, timedOut));
             }
         }
 
@@ -164,6 +174,7 @@ namespace Mooh.Core.Simulation
                 case LevelSettlePhase.WinAnnounce:
                     _phase = LevelSettlePhase.WinSettle;
                     _remaining = WinSettleDelay;
+                    Announce(LevelOutcome.Won, timedOut: false, events);
                     return;
                 case LevelSettlePhase.WinSettle:
                     if (IsPlayerHoldingLevelEnd())
@@ -179,6 +190,7 @@ namespace Mooh.Core.Simulation
                 case LevelSettlePhase.TimeoutAnnounce:
                     _phase = LevelSettlePhase.TimeoutSettle;
                     _remaining = TimeoutSettleDelay;
+                    Announce(LevelOutcome.Lost, timedOut: true, events);
                     return;
                 case LevelSettlePhase.TimeoutSettle:
                     if (IsPlayerHoldingLevelEnd())

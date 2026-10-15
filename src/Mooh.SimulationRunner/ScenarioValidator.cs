@@ -467,7 +467,7 @@ namespace Mooh.SimulationRunner
                 "WorldRotationCompleted" => EventFields.WorldRotation | EventFields.Width
                     | EventFields.Height,
                 "PlayerShockStarted" => EventFields.DurationMilliseconds,
-                "LevelLost" or "LevelWon" => EventFields.None,
+                "LevelLost" or "LevelOutcomeAnnounced" or "LevelWon" => EventFields.None,
                 "PlayerDied" or "PlayerShockEnded" or "PlayerStopped"
                     or "PlayerWeaponEmpty" => EventFields.None,
                 _ => EventFields.None,
@@ -521,6 +521,7 @@ namespace Mooh.SimulationRunner
             "FallStarted",
             "Landed",
             "LevelLost",
+            "LevelOutcomeAnnounced",
             "LevelWon",
             "PlayerAte",
             "PlayerBlocked",

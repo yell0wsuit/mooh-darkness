@@ -49,6 +49,61 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(LevelOutcome.Won, simulation.Outcome);
         }
 
+        /// <summary>
+        /// Verifies the win is announced when the recovered 500 ms pause ends, the moment
+        /// <c>__GStatePlay</c> shows <c>GameScrWiner</c>, and settles 1500 ms later.
+        /// </summary>
+        [Fact]
+        public void TheWinIsAnnouncedBeforeItSettles()
+        {
+            WorldGrid world = new(7, 5);
+            Entity player = AddPlayer(world, new GridPosition(0, 0));
+            _ = AddLockCarrier(world, new GridPosition(4, 2));
+            Entity explosive = AddExplosive(world, new GridPosition(3, 2));
+            SimulationWorld simulation = CreateSimulation(world);
+
+            _ = simulation.Detonate(explosive.Id);
+            Assert.Empty(simulation.Advance(TimeSpan.FromMilliseconds(699)).OfType<LevelOutcomeAnnounced>());
+            IReadOnlyList<SimulationEvent> announced = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(new LevelOutcomeAnnounced(player.Id, LevelOutcome.Won, TimedOut: false), Assert.Single(announced.OfType<LevelOutcomeAnnounced>()));
+            Assert.Empty(announced.OfType<LevelWon>());
+        }
+
+        /// <summary>
+        /// Verifies a loss is announced as soon as it is observed, as <c>GameScrLooser</c> is shown
+        /// before the 1500 ms settle.
+        /// </summary>
+        [Fact]
+        public void ALossIsAnnouncedAtOnce()
+        {
+            WorldGrid world = new(5, 5);
+            Entity player = AddPlayer(world, new GridPosition(0, 0));
+            SimulationWorld simulation = CreateSimulation(world);
+
+            _ = simulation.ApplyDamage(new DamageRequest(player.Id, player.Id, DamageKind.Explosion, 100));
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(new LevelOutcomeAnnounced(player.Id, LevelOutcome.Lost, TimedOut: false), Assert.Single(events.OfType<LevelOutcomeAnnounced>()));
+        }
+
+        /// <summary>
+        /// Verifies a clock that runs out is announced as a timeout once the recovered 500 ms
+        /// pause after <c>SndClockEnd</c> ends.
+        /// </summary>
+        [Fact]
+        public void ARunOutClockIsAnnouncedAsATimeout()
+        {
+            WorldGrid world = new(5, 5);
+            Entity player = AddPlayer(world, new GridPosition(0, 0));
+            SimulationWorld simulation = CreateSimulation(world, DifficultySpeeds.Timed);
+
+            Assert.Empty(simulation.Advance(PlayClock.StartingTime + TimeSpan.FromMilliseconds(400)).OfType<LevelOutcomeAnnounced>());
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(200));
+
+            Assert.Equal(new LevelOutcomeAnnounced(player.Id, LevelOutcome.Lost, TimedOut: true), Assert.Single(events.OfType<LevelOutcomeAnnounced>()));
+        }
+
         /// <summary>Verifies a level that never held a lock carrier can never be won.</summary>
         [Fact]
         public void LevelWithoutLockCarriersIsNeverWon()

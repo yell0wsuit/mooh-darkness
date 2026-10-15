@@ -103,6 +103,7 @@ namespace Mooh.SimulationRunner
                         entity,
                         direction: value.Direction),
                     LevelLost => new ObservedEvent(nameof(LevelLost), entity),
+                    LevelOutcomeAnnounced => new ObservedEvent(nameof(LevelOutcomeAnnounced), entity),
                     LevelWon => new ObservedEvent(nameof(LevelWon), entity),
                     PlayerAte value => new ObservedEvent(
                         nameof(PlayerAte),
