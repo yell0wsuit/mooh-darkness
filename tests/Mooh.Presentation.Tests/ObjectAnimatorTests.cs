@@ -65,7 +65,7 @@ namespace Mooh.Presentation.Tests
         }
 
         /// <summary>
-        /// Verifies a weapon pickup draws its glow additively right after itself, stepping with the
+        /// Verifies a weapon pickup draws its glow additively before its shadow and body, stepping with the
         /// game's clock at <c>GlowAnm</c>'s 0.02 frames per millisecond.
         /// </summary>
         [Fact]
@@ -77,10 +77,14 @@ namespace Mooh.Presentation.Tests
 
             List<SceneSprite> sprites = [.. harness.Presenter.Sprites];
             int bomb = sprites.FindIndex(sprite => sprite.Entity == Placed(harness).Id && sprite.Page == "SpriteObjBombs" && !sprite.Additive);
-            Assert.Equal(new SceneSprite(Placed(harness).Id, "SpriteObjBombs", "GlowGr02", sprites[bomb].X, sprites[bomb].Y, 0, Additive: true), sprites[bomb + 1]);
+            int glow = sprites.FindIndex(sprite => sprite.Entity == Placed(harness).Id && sprite.Additive);
+            Assert.Equal(new SceneSprite(Placed(harness).Id, "SpriteObjBombs", "GlowGr02", sprites[bomb].X, sprites[bomb].Y, 0, Additive: true), sprites[glow]);
+            Assert.True(glow < bomb);
+            Assert.All(sprites.Where(sprite => sprite.Entity == Placed(harness).Id && !sprite.Additive),
+                sprite => Assert.True(glow < sprites.IndexOf(sprite)));
         }
 
-        /// <summary>Pickup glows stay above their own sprite and below objects drawn in front.</summary>
+        /// <summary>Pickup glows stay beneath their own sprite and below objects drawn in front.</summary>
         [Theory]
         [InlineData("ODiam01", 1)]
         [InlineData("ODiam02", 1)]
@@ -104,7 +108,11 @@ namespace Mooh.Presentation.Tests
             List<SceneSprite> sprites = [.. harness.Presenter.Sprites];
             SceneSprite glow = Assert.Single(sprites, sprite => sprite.Entity == pickup.Id && sprite.Additive);
             int glowIndex = sprites.IndexOf(glow);
-            SceneSprite body = sprites[glowIndex - 1];
+            SceneSprite body = Assert.Single(sprites, sprite => sprite.Entity == pickup.Id
+                && !sprite.Additive && sprite.Page != "SpriteParts");
+            Assert.True(glowIndex < sprites.IndexOf(body));
+            Assert.All(sprites.Where(sprite => sprite.Entity == pickup.Id && !sprite.Additive),
+                sprite => Assert.True(glowIndex < sprites.IndexOf(sprite)));
             Assert.Equal(pickup.Id, body.Entity);
             Assert.False(body.Additive);
             Assert.Equal(body.Pass, glow.Pass);

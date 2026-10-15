@@ -17,7 +17,7 @@ namespace Mooh.Presentation.Animation
     /// <c>CGameObjFallBase</c> does in its constructor.
     /// </param>
     /// <param name="Glow">
-    /// The glow drawn over the object at the game's clock, <c>GlowAnm</c>, or
+    /// The glow drawn behind the object's shadow and body at the game's clock, <c>GlowAnm</c>, or
     /// <see langword="null"/>.
     /// </param>
     /// <param name="Overlay">

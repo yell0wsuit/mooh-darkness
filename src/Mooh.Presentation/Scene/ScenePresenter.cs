@@ -167,6 +167,11 @@ namespace Mooh.Presentation.Scene
                     (double x, double y) = build?.PositionOf(entity) ?? DrawnPosition.Of(entity);
                     (double dx, double dy) = animator.Offset;
                     int pass = build?.IsFlying(entity.Id) == true ? 1 : animator.Pass;
+                    foreach ((string glowPage, string glowFrame) in animator.Underlays(_clockMilliseconds))
+                    {
+                        sprites.Add(new SceneSprite(entity.Id, glowPage, glowFrame, x + dx, y + dy, pass, Additive: true));
+                    }
+
                     if (animator.Shadow is (string shadowPage, string shadowFrame) && CastsShadow(world, x, y))
                     {
                         sprites.Add(new SceneSprite(entity.Id, shadowPage, shadowFrame, x + dx, y + dy, pass));

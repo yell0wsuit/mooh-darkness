@@ -58,32 +58,25 @@ namespace Mooh.Presentation.Scene
         public override (double X, double Y) Offset =>
             (depth * DepthShiftX / SceneCamera.CellWidth, depth * DepthShiftY / SceneCamera.CellHeight);
 
-        /// <summary>
-        /// Gets the overlay at the frame's own phase, the native render's
-        /// <c>fAInd / len(AInds) * len(AIndsOvr)</c>, then the glow at the game's clock,
-        /// <c>fASpeedBk</c> times the time.
-        /// </summary>
+        /// <inheritdoc/>
+        public override IReadOnlyList<(string Page, string Frame)> Underlays(double clockMilliseconds)
+        {
+            return Frame is not null && look?.Glow is { Frames.Count: > 0 } glow
+                ? [(glow.Page, glow.Frames[(int)(clockMilliseconds * glow.FramesPerMillisecond) % glow.Frames.Count])]
+                : [];
+        }
+
+        /// <summary>Gets the overlay at the object's animation phase.</summary>
         /// <inheritdoc/>
         public override IReadOnlyList<(string Page, string Frame)> Overlays(double clockMilliseconds)
         {
-            if (Frame is null || look is null)
+            if (Frame is null || look?.Overlay is not { Frames.Count: > 0 } overlay)
             {
                 return [];
             }
 
-            List<(string, string)> overlays = [];
-            if (look.Overlay is LayerAnimation overlay && overlay.Frames.Count != 0)
-            {
-                int index = (int)(Animation.Position / Math.Max(Animation.Frames.Count, 1) * overlay.Frames.Count);
-                overlays.Add((overlay.Page, overlay.Frames[index % overlay.Frames.Count]));
-            }
-
-            if (look.Glow is LayerAnimation glow && glow.Frames.Count != 0)
-            {
-                overlays.Add((glow.Page, glow.Frames[(int)(glow.FramesPerMillisecond * clockMilliseconds) % glow.Frames.Count]));
-            }
-
-            return overlays;
+            int index = (int)(Animation.Position / Math.Max(Animation.Frames.Count, 1) * overlay.Frames.Count);
+            return [(overlay.Page, overlay.Frames[index % overlay.Frames.Count])];
         }
 
         /// <inheritdoc/>

@@ -58,6 +58,14 @@ namespace Mooh.Presentation.Scene
                 ? (page, frames[(int)Animation.Position % frames.Count])
                 : null;
 
+        /// <summary>Gets the glow frames drawn additively before the entity's shadow and body.</summary>
+        /// <param name="clockMilliseconds">The game's clock, which a glow steps with.</param>
+        /// <returns>The pages and frames.</returns>
+        public virtual IReadOnlyList<(string Page, string Frame)> Underlays(double clockMilliseconds)
+        {
+            return [];
+        }
+
         /// <summary>Gets the frames drawn additively over the entity's own, in order.</summary>
         /// <param name="clockMilliseconds">The game's clock, which a glow steps with.</param>
         /// <returns>The pages and frames.</returns>
