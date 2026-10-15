@@ -26,6 +26,21 @@ namespace Mooh.Desktop.Tests
             Assert.Equal((0.5f, 0.25f, 1f), (left, right, rate));
         }
 
+        /// <summary>Verifies a centered cue plays unplaced, at full gain, as <c>SndPlay</c> does.</summary>
+        [Fact]
+        public void ACenteredCuePlaysUnplaced()
+        {
+            RecordingOutput output = new();
+            SoundBoard board = Create(output);
+            Presentation.Scene.SceneCamera camera = new();
+            camera.Snap(0, 0);
+
+            board.Play([new SoundCue("KeyDoor", 20, 20, Centered: true)], camera);
+
+            (_, float left, float right, _) = Assert.Single(output.Plays);
+            Assert.Equal((1f, 1f), (left, right));
+        }
+
         /// <summary>Verifies an alias never plays more at once than its buffer count.</summary>
         [Fact]
         public void AnAliasKeepsToItsBuffers()

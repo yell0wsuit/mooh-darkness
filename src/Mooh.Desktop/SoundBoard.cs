@@ -32,7 +32,7 @@ namespace Mooh.Desktop
             foreach (SoundCue cue in cues)
             {
                 (double x, double y) = camera.ToScreen(cue.X, cue.Y);
-                Play(cue.Alias, SoundPlacement.At(x, y));
+                Play(cue.Alias, cue.Centered ? SoundPlacement.Centered : SoundPlacement.At(x, y));
             }
         }
 
