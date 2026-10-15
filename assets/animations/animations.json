@@ -8141,7 +8141,48 @@
     ]
    }
   ],
-  "SfxFlyTrail": [],
+  "SfxFlyTrail": [
+   {
+    "args": [
+     [
+      "PFly1_01",
+      "PFly1_03",
+      "PFly1_05",
+      "PFly1_07",
+      "PFly1_09"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PFly2_01",
+      "PFly2_03",
+      "PFly2_05",
+      "PFly2_07",
+      "PFly2_09"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
   "SfxGem1": {
    "args": [
     [
@@ -8325,7 +8366,167 @@
     }
    }
   },
-  "SfxHealth": [],
+  "SfxHealth": [
+   {
+    "args": [
+     [
+      "PHeart1_01",
+      "PHeart1_02",
+      "PHeart1_03",
+      "PHeart1_04",
+      "PHeart1_05",
+      "PHeart1_06",
+      "PHeart1_07",
+      "PHeart1_08",
+      "PHeart1_09",
+      "PHeart1_10",
+      "PHeart1_01",
+      "PHeart1_02",
+      "PHeart1_03",
+      "PHeart1_04",
+      "PHeart1_05",
+      "PHeart1_06",
+      "PHeart1_07",
+      "PHeart1_08",
+      "PHeart1_09",
+      "PHeart1_10",
+      "PHeart1_01",
+      "PHeart1_02",
+      "PHeart1_03",
+      "PHeart1_04",
+      "PHeart1_05",
+      "PHeart1_06",
+      "PHeart1_07",
+      "PHeart1_08",
+      "PHeart1_09",
+      "PHeart1_10",
+      "PHeartF_01",
+      "PHeartF_02",
+      "PHeartF_03",
+      "PHeartF_04",
+      "PHeartF_05",
+      "PHeartF_06",
+      "PHeartF_07",
+      "PHeartF_08",
+      "PHeartF_09",
+      "PHeartF_10",
+      "PHeartF_11"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PHeart2_01",
+      "PHeart2_02",
+      "PHeart2_03",
+      "PHeart2_04",
+      "PHeart2_05",
+      "PHeart2_06",
+      "PHeart2_07",
+      "PHeart2_08",
+      "PHeart2_09",
+      "PHeart2_10",
+      "PHeart2_01",
+      "PHeart2_02",
+      "PHeart2_03",
+      "PHeart2_04",
+      "PHeart2_05",
+      "PHeart2_06",
+      "PHeart2_07",
+      "PHeart2_08",
+      "PHeart2_09",
+      "PHeart2_10",
+      "PHeart2_01",
+      "PHeart2_02",
+      "PHeart2_03",
+      "PHeart2_04",
+      "PHeart2_05",
+      "PHeart2_06",
+      "PHeart2_07",
+      "PHeart2_08",
+      "PHeart2_09",
+      "PHeart2_10",
+      "PHeartF_01",
+      "PHeartF_02",
+      "PHeartF_03",
+      "PHeartF_04",
+      "PHeartF_05",
+      "PHeartF_06",
+      "PHeartF_07",
+      "PHeartF_08",
+      "PHeartF_09",
+      "PHeartF_10",
+      "PHeartF_11"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PHeart3_01",
+      "PHeart3_02",
+      "PHeart3_03",
+      "PHeart3_04",
+      "PHeart3_05",
+      "PHeart3_06",
+      "PHeart3_07",
+      "PHeart3_01",
+      "PHeart3_02",
+      "PHeart3_03",
+      "PHeart3_04",
+      "PHeart3_05",
+      "PHeart3_06",
+      "PHeart3_07",
+      "PHeart3_01",
+      "PHeart3_02",
+      "PHeart3_03",
+      "PHeart3_04",
+      "PHeart3_05",
+      "PHeart3_06",
+      "PHeart3_07",
+      "PHeartF_01",
+      "PHeartF_02",
+      "PHeartF_03",
+      "PHeartF_04",
+      "PHeartF_05",
+      "PHeartF_06",
+      "PHeartF_07",
+      "PHeartF_08",
+      "PHeartF_09",
+      "PHeartF_10",
+      "PHeartF_11"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
   "SfxPlGet": {
    "ATime": [
     50,
@@ -8492,8 +8693,119 @@
     }
    }
   },
-  "SfxSmoke": [],
-  "SfxWSmoke": [],
+  "SfxSmoke": [
+   {
+    "args": [
+     [
+      "PSmoke1_01",
+      "PSmoke1_02",
+      "PSmoke1_03",
+      "PSmoke1_04",
+      "PSmoke1_05",
+      "PSmoke1_06",
+      "PSmoke1_07",
+      "PSmoke1_08",
+      "PSmoke1_09",
+      "PSmoke1_10",
+      "PSmoke1_11"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PSmoke2_01",
+      "PSmoke2_02",
+      "PSmoke2_03",
+      "PSmoke2_04",
+      "PSmoke2_05",
+      "PSmoke2_06",
+      "PSmoke2_07",
+      "PSmoke2_08",
+      "PSmoke2_09",
+      "PSmoke2_10",
+      "PSmoke2_11",
+      "PSmoke2_12"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
+  "SfxWSmoke": [
+   {
+    "args": [
+     [
+      "PWSmoke1_01",
+      "PWSmoke1_02",
+      "PWSmoke1_03",
+      "PWSmoke1_04",
+      "PWSmoke1_05",
+      "PWSmoke1_06",
+      "PWSmoke1_07",
+      "PWSmoke1_08",
+      "PWSmoke1_09",
+      "PWSmoke1_10",
+      "PWSmoke1_11",
+      "PWSmoke1_12",
+      "PWSmoke1_13",
+      "PWSmoke1_14",
+      "PWSmoke1_15"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PWSmoke2_01",
+      "PWSmoke2_02",
+      "PWSmoke2_03",
+      "PWSmoke2_04",
+      "PWSmoke2_05",
+      "PWSmoke2_06",
+      "PWSmoke2_07",
+      "PWSmoke2_08",
+      "PWSmoke2_09",
+      "PWSmoke2_10",
+      "PWSmoke2_11"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
   "SfxWeapBBomb": {
    "args": [
     [
@@ -8963,7 +9275,105 @@
     }
    }
   ],
-  "_SfxLandFire": [],
+  "_SfxLandFire": [
+   {
+    "args": [
+     [
+      "PFire1_01",
+      "PFire1_02",
+      "PFire1_03",
+      "PFire1_04",
+      "PFire1_05",
+      "PFire1_06",
+      "PFire1_07",
+      "PFire1_08",
+      "PFire1_09"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PFire2_01",
+      "PFire2_02",
+      "PFire2_03",
+      "PFire2_04",
+      "PFire2_05",
+      "PFire2_06",
+      "PFire2_07",
+      "PFire2_08",
+      "PFire2_09"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PFire3_01",
+      "PFire3_02",
+      "PFire3_03",
+      "PFire3_04",
+      "PFire3_05",
+      "PFire3_06",
+      "PFire3_07",
+      "PFire3_08",
+      "PFire3_09",
+      "PFire3_10",
+      "PFire3_11",
+      "PFire3_12"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   },
+   {
+    "args": [
+     [
+      "PFire4_01",
+      "PFire4_02",
+      "PFire4_03",
+      "PFire4_04",
+      "PFire4_05",
+      "PFire4_06",
+      "PFire4_07"
+     ]
+    ],
+    "call": {
+     "attr": "AnimMake",
+     "of": {
+      "args": [
+       "SpriteParts"
+      ],
+      "call": "DDraw.PageMake"
+     }
+    }
+   }
+  ],
   "_SfxSmall": [
    {
     "args": [
@@ -21744,7 +22154,53 @@
     "Func": {
      "ref": "self.SfxEPartsObjAir"
     },
-    "Lst": [],
+    "Lst": [
+     [
+      "PFire1_01",
+      "PFire1_02",
+      "PFire1_03",
+      "PFire1_04",
+      "PFire1_05",
+      "PFire1_06",
+      "PFire1_07",
+      "PFire1_08",
+      "PFire1_09"
+     ],
+     [
+      "PFire2_01",
+      "PFire2_02",
+      "PFire2_03",
+      "PFire2_04",
+      "PFire2_05",
+      "PFire2_06",
+      "PFire2_07",
+      "PFire2_08",
+      "PFire2_09"
+     ],
+     [
+      "PFire3_01",
+      "PFire3_02",
+      "PFire3_03",
+      "PFire3_04",
+      "PFire3_05",
+      "PFire3_06",
+      "PFire3_07",
+      "PFire3_08",
+      "PFire3_09",
+      "PFire3_10",
+      "PFire3_11",
+      "PFire3_12"
+     ],
+     [
+      "PFire4_01",
+      "PFire4_02",
+      "PFire4_03",
+      "PFire4_04",
+      "PFire4_05",
+      "PFire4_06",
+      "PFire4_07"
+     ]
+    ],
     "Num": [
      5,
      10

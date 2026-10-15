@@ -272,6 +272,9 @@ def run(code, module_globals, local_values=None, limit=200000):
             elif isinstance(func, Sym) and func.kind == "name" and func.fields["name"] in ("xrange", "range") \
                     and all(isinstance(a, int) for a in args):
                 stack.append(list(range(*args)))
+            elif isinstance(func, Sym) and func.kind == "name" and func.fields["name"] == "enumerate" \
+                    and args and isinstance(args[0], (list, tuple, str)):
+                stack.append([tuple(pair) for pair in enumerate(args[0])])
             elif isinstance(func, Sym) and func.kind == "name" and func.fields["name"] == "intern" and args:
                 stack.append(args[0])
             elif isinstance(func, Sym) and func.kind == "name" and func.fields["name"] == "len" \
