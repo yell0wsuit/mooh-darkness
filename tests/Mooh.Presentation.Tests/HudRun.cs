@@ -50,13 +50,19 @@ namespace Mooh.Presentation.Tests
 
         public List<SimulationEvent> Events { get; } = [];
 
+        /// <summary>Gets or sets the camera the monster arrows are placed by, if any.</summary>
+        public Scene.SceneCamera? Camera
+        {
+            get; set;
+        }
+
         /// <summary>Gets the falling characters of the level texts, in draw order.</summary>
         public IReadOnlyList<HudText> LevelCharacters => [.. Hud.Texts.Where(text => text.Font == HudPresenter.LevelFontName)];
 
         public void Step(double seconds)
         {
             Harness.Step(seconds);
-            Hud.Update(Harness.Level.World, [.. Harness.LastEvents, .. Events], Score, seconds);
+            Hud.Update(Harness.Level.World, [.. Harness.LastEvents, .. Events], Score, seconds, Camera);
             Events.Clear();
         }
 

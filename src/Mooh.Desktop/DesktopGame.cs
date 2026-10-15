@@ -133,7 +133,6 @@ namespace Mooh.Desktop
                 ? WorldSpin.Of(center, turning, simulation.WorldRotationProgress)
                 : null;
             Presenter.Update(Session.Level.World, events, seconds, spin);
-            Hud.Update(Session.Level.World, events, Session.TotalScore, seconds);
             Sounds = Presenter.Sounds;
             Backdrop.Advance(seconds);
             if (Session.Level.World.Player is Entity player)
@@ -141,6 +140,8 @@ namespace Mooh.Desktop
                 (double x, double y) = DrawnPosition.Of(player);
                 Camera.Follow(x, y, seconds);
             }
+
+            Hud.Update(Session.Level.World, events, Session.TotalScore, seconds, Camera);
         }
 
         /// <summary>
@@ -206,7 +207,7 @@ namespace Mooh.Desktop
             }
 
             Presenter.Update(Session.Level.World, [], 0);
-            Hud.Update(Session.Level.World, [], Session.TotalScore, 0);
+            Hud.Update(Session.Level.World, [], Session.TotalScore, 0, Camera);
         }
     }
 }

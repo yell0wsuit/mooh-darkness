@@ -7,9 +7,11 @@ using Mooh.Core.Combat;
 using Mooh.Core.Content;
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
+using Mooh.Core.Interactions;
 using Mooh.Core.Levels;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
+using Mooh.Presentation.Scene;
 using Mooh.Presentation.Text;
 
 namespace Mooh.Presentation.Hud
@@ -58,6 +60,23 @@ namespace Mooh.Presentation.Hud
 
         /// <summary>The heartbeat warning's repeat, the <c>App.TimePast(ulGPrmHWrn) &gt; 1000</c> test.</summary>
         private const double HeartbeatMilliseconds = 1000;
+
+        /// <summary>The count of carriers from which arrows show, <c>CNT_MArr_ShowNum</c>.</summary>
+        private const int ArrowLimit = 6;
+
+        /// <summary>The arrows' inset from the screen edge, <c>CNT_GPrm_MArrRect</c>.</summary>
+        private const int ArrowInset = 5;
+
+        /// <summary>
+        /// The arrow for each side a point lies beyond, by row and column, as
+        /// <c>RectPntDir8Get</c> picks it; a point inside gets none.
+        /// </summary>
+        private static readonly string?[,] ArrowDirections =
+        {
+            { "LeftTop", "Top", "RightTop" },
+            { "Left", null, "Right" },
+            { "LeftBottom", "Bottom", "RightBottom" },
+        };
 
         private static readonly WeaponKind[] Weapons = [WeaponKind.Grenade, WeaponKind.Rocket, WeaponKind.Mine, WeaponKind.BigBomb];
 
@@ -155,8 +174,9 @@ namespace Mooh.Presentation.Hud
         /// <param name="events">The events the simulation reported for this frame.</param>
         /// <param name="score">The score the score panel shows, <c>HScoreScoreGet</c>.</param>
         /// <param name="seconds">The simulated time of this frame.</param>
+        /// <param name="camera">The camera over the level, which places the monster arrows; without it none show.</param>
         /// <exception cref="ArgumentNullException"><paramref name="world"/> or <paramref name="events"/> is <see langword="null"/>.</exception>
-        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, int score, double seconds)
+        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, int score, double seconds, SceneCamera? camera = null)
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(events);
@@ -213,8 +233,47 @@ namespace Mooh.Presentation.Hud
 
             _levelTexts?.Draw(texts);
             _help.Draw(texts);
+            if (camera is not null)
+            {
+                PointAtMonsters(world, camera, sprites);
+            }
+
             _sprites = sprites;
             _texts = texts;
+        }
+
+        /// <summary>
+        /// Points at the last level-end lock carriers off the screen, as <c>ModRender</c> does
+        /// while fewer than <c>CNT_MArr_ShowNum</c> remain: each gets its kind's arrow, pinned
+        /// inside <c>CNT_GPrm_MArrRect</c> on the side it lies beyond.
+        /// </summary>
+        private static void PointAtMonsters(WorldGrid world, SceneCamera camera, List<HudSprite> sprites)
+        {
+            List<Entity> carriers = [.. world.Entities.Where(entity => entity.Interactions.HasFlag(InteractionMask.LevelEndLock))];
+            if (carriers.Count >= ArrowLimit)
+            {
+                return;
+            }
+
+            foreach (Entity carrier in carriers)
+            {
+                string kind = carrier.GreenMonsterBody is not null ? "PAGr_"
+                    : carrier.BlueMonsterBody is not null ? "PABlue_"
+                    : "PASm_";
+                (double drawnX, double drawnY) = DrawnPosition.Of(carrier);
+                (double screenX, double screenY) = camera.ToScreen(drawnX, drawnY);
+                int x = (int)Math.Round(screenX);
+                int y = (int)Math.Round(screenY);
+                int column = x < ArrowInset ? 0 : x > 800 - ArrowInset ? 2 : 1;
+                int row = y < ArrowInset ? 0 : y > 600 - ArrowInset ? 2 : 1;
+                if (ArrowDirections[row, column] is string direction)
+                {
+                    sprites.Add(new HudSprite(
+                        kind + direction,
+                        Math.Clamp(x, ArrowInset, 800 - ArrowInset),
+                        Math.Clamp(y, ArrowInset, 600 - ArrowInset)));
+                }
+            }
         }
 
         private static (bool? Lit, int? Value) Bonus(TimeSpan? remaining)
