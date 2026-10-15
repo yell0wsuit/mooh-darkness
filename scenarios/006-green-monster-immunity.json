@@ -86,6 +86,10 @@
                     "durationMilliseconds": 700
                 },
                 {
+                    "type": "ShakeImpact",
+                    "entity": "first-monster"
+                },
+                {
                     "type": "EnemyStrike",
                     "entity": "second-monster",
                     "position": { "x": 1, "y": 0 }

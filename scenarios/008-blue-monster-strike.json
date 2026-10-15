@@ -68,6 +68,10 @@
                     "durationMilliseconds": 700
                 },
                 {
+                    "type": "ShakeImpact",
+                    "entity": "blue"
+                },
+                {
                     "type": "EnemyTurnStarted",
                     "entity": "blue",
                     "from": "Right",

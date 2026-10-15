@@ -76,7 +76,7 @@ namespace Mooh.Core.Enemies
             double elapsedSeconds,
             List<SimulationEvent> events,
             Action<DamageRequest> applyDamage,
-            Action<Entity, EntityId> applyShake)
+            Func<Entity, EntityId, bool> applyShake)
         {
             ArgumentNullException.ThrowIfNull(applyDamage);
             ArgumentNullException.ThrowIfNull(applyShake);
@@ -253,7 +253,7 @@ namespace Mooh.Core.Enemies
             BlueMonsterBody body,
             List<SimulationEvent> events,
             Action<DamageRequest> applyDamage,
-            Action<Entity, EntityId> applyShake)
+            Func<Entity, EntityId, bool> applyShake)
         {
             switch (body.State)
             {
@@ -313,7 +313,7 @@ namespace Mooh.Core.Enemies
             BlueMonsterBody body,
             List<SimulationEvent> events,
             Action<DamageRequest> applyDamage,
-            Action<Entity, EntityId> applyShake)
+            Func<Entity, EntityId, bool> applyShake)
         {
             GridPosition targetCell = monster.Position.Offset(body.FacingDirection);
             body.State = BlueMonsterState.AttackRecovery;
@@ -323,6 +323,7 @@ namespace Mooh.Core.Enemies
             body.Remaining = turnaroundDuration - body.TurnDuration;
             events.Add(new EnemyStrike(monster.Id, targetCell));
 
+            bool hit = false;
             if (_world.Contains(targetCell))
             {
                 foreach (Entity target in _world.GetOccupants(targetCell))
@@ -334,6 +335,7 @@ namespace Mooh.Core.Enemies
 
                     if (target.PlayerBody is not null)
                     {
+                        hit = true;
                         applyDamage(
                             new DamageRequest(
                                 monster.Id,
@@ -343,9 +345,22 @@ namespace Mooh.Core.Enemies
                     }
                     else
                     {
-                        applyShake(target, monster.Id);
+                        hit |= applyShake(target, monster.Id);
                     }
                 }
+            }
+
+            if (hit)
+            {
+                (double x, double y) = body.FacingDirection switch
+                {
+                    Direction.Left => (-48.0 / 80, 8.0 / 75),
+                    Direction.Up => (-13.0 / 80, -51.0 / 75),
+                    Direction.Right => (47.0 / 80, -9.0 / 75),
+                    Direction.Down => (13.0 / 80, 50.0 / 75),
+                    _ => throw new InvalidOperationException("Undefined strike direction.")
+                };
+                events.Add(new ShakeImpact(monster.Id, monster.Position.X + x, monster.Position.Y + y));
             }
 
             events.Add(

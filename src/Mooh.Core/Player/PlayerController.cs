@@ -683,7 +683,7 @@ namespace Mooh.Core.Player
 
         /// <summary>
         /// Determines whether the faced cell can receive a placed weapon, applying the recovered
-        /// <c>CellObjCheck(n, -1, CNT_OrMaskPlBombHere, True)</c>. A still occupant blocks the
+        /// <c>CellObjCheck(n, -1, CNT_OrMaskPlBombHere, True)</c>. An occupant blocks the
         /// weapon unless it is crushable, which <c>Game._CellPlKill</c> then destroys, or a shadow
         /// object. <c>CNT_CMaskShadowObj</c> has no flag of its own, because every carrier of it —
         /// the table, the teleporter, fire and the spawned beetle — is exactly an occupant that
@@ -693,8 +693,7 @@ namespace Mooh.Core.Player
         {
             return _world.Contains(target)
                 && !_world.GetOccupants(target).Any(
-                    occupant => occupant.Motion is null
-                        && occupant.Interactions.HasFlag(InteractionMask.BlocksMovement)
+                    occupant => occupant.Interactions.HasFlag(InteractionMask.BlocksMovement)
                         && !occupant.Interactions.HasFlag(InteractionMask.CanBePushedThrough));
         }
 

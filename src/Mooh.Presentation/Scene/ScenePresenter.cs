@@ -197,6 +197,14 @@ namespace Mooh.Presentation.Scene
                 sighted[id] = sighting;
             }
 
+            foreach (SmallBeetleSpawned spawned in events.OfType<SmallBeetleSpawned>())
+            {
+                // A beetle can be collected before the frame ever draws it.
+                _ = sighted.TryAdd(spawned.SpawnedEntityId, new Sighting(
+                    spawned.Color == SmallBeetleColor.Green ? "OSmGr" : "OSmBlue",
+                    spawned.Position.X, spawned.Position.Y, false, false));
+            }
+
             sounds.AddRange(_eventSounds.For(events, sighted));
             sounds.AddRange(_gameSounds.For(world, events, bonusSeconds ?? seconds));
             if (build is null || build.IsDone)

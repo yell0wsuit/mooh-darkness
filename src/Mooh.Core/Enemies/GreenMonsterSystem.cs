@@ -272,6 +272,16 @@ namespace Mooh.Core.Enemies
                         target.Id,
                         DamageKind.Strike,
                         body.StrikeDamage));
+
+                (double x, double y) = body.FacingDirection switch
+                {
+                    Direction.Left => (-43.0 / 80, -3.0 / 75),
+                    Direction.Up => (-14.0 / 80, -51.0 / 75),
+                    Direction.Right => (54.0 / 80, 0),
+                    Direction.Down => (-16.0 / 80, 40.0 / 75),
+                    _ => throw new InvalidOperationException("Undefined strike direction.")
+                };
+                events.Add(new ShakeImpact(monster.Id, monster.Position.X + x, monster.Position.Y + y));
             }
         }
 

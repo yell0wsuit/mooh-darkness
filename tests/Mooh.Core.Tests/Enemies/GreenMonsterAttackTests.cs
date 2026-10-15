@@ -138,6 +138,7 @@ namespace Mooh.Core.Tests.Enemies
                     new EnemyStrike(monsterId, new GridPosition(1, 0)),
                     new DamageApplied(player.Id, monsterId, DamageKind.Strike, 20, 80),
                     new PlayerShockStarted(player.Id, TimeSpan.FromMilliseconds(700)),
+                    new ShakeImpact(monsterId, 54.0 / 80, 0),
                 ],
                 events);
         }
@@ -229,6 +230,7 @@ namespace Mooh.Core.Tests.Enemies
                     new EnemyStrike(monster.Id, player.Position),
                     new DamageApplied(player.Id, monster.Id, DamageKind.Strike, 20, 60),
                     new PlayerShockStarted(player.Id, TimeSpan.FromMilliseconds(700)),
+                    new ShakeImpact(monster.Id, monster.Position.X + (54.0 / 80), monster.Position.Y),
                 ],
                 events);
         }
@@ -304,6 +306,7 @@ namespace Mooh.Core.Tests.Enemies
                     new EnemyStrike(first.Id, player.Position),
                     new DamageApplied(player.Id, first.Id, DamageKind.Strike, 20, 80),
                     new PlayerShockStarted(player.Id, TimeSpan.FromMilliseconds(700)),
+                    new ShakeImpact(first.Id, 54.0 / 80, 0),
                     new EnemyStrike(second.Id, player.Position),
                 ],
                 events);

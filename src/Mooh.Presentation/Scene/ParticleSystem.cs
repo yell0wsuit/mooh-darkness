@@ -162,6 +162,13 @@ namespace Mooh.Presentation.Scene
             {
                 switch (item)
                 {
+                    case ShakeImpact impact:
+                        ImpactGlow(impact.X, impact.Y);
+                        break;
+                    case PlayerAte ate when seen.TryGetValue(ate.EatenEntityId, out Sighting beetle)
+                        && beetle.Type is "OSmGr" or "OSmBlue":
+                        CollectBeetle(beetle);
+                        break;
                     case Landed landed when seen.TryGetValue(landed.EntityId, out Sighting at) && Exists(world, landed.EntityId):
                         // CGameObjFallBase's landing: RInfo.PrtLand, or SfxLandPuff.
                         Puff(LookOf(at)?.LandPuff ?? ParticlePuff.Smoke, at, landed.Direction, landing: true);
@@ -207,6 +214,41 @@ namespace Mooh.Presentation.Scene
                     default:
                         break;
                 }
+            }
+        }
+
+        private void ImpactGlow(double x, double y)
+        {
+            ParticleFrames glow = library.Particles.ImpactGlow;
+            if (glow.Variants.Count > 0)
+            {
+                _overlay.Add(new Particle(glow.Page, glow.Variants[0], 1.0 / 25, x, y)
+                {
+                    Additive = true,
+                    Collides = false,
+                });
+            }
+        }
+
+        private void CollectBeetle(Sighting at)
+        {
+            ParticleFrames glow = library.Particles.BeetleCollectionGlow;
+            if (glow.Variants.Count > 0)
+            {
+                _world.Add(new Particle(glow.Page, Pick(glow.Variants), Between(0.01, 0.02), at.X, at.Y)
+                {
+                    Additive = true,
+                });
+            }
+
+            ParticleFrames stars = library.Particles.Flash;
+            for (int index = 0; index < 10 && stars.Variants.Count > 0; index++)
+            {
+                _world.Add(new Particle(stars.Page, Pick(stars.Variants), Between(0.01, 0.02),
+                    Between(at.X - 0.3, at.X + 0.3), Between(at.Y - 0.4, at.Y + 0.4))
+                {
+                    Additive = true,
+                });
             }
         }
 

@@ -71,6 +71,7 @@ namespace Mooh.Core.Tests.Enemies
                     new EnemyStrike(monster.Id, new GridPosition(1, 0)),
                     new DamageApplied(player.Id, monster.Id, DamageKind.Strike, 20, 80),
                     new PlayerShockStarted(player.Id, TimeSpan.FromMilliseconds(700)),
+                    new ShakeImpact(monster.Id, 47.0 / 80, -9.0 / 75),
                     new EnemyTurnStarted(
                         monster.Id,
                         Direction.Right,

@@ -48,9 +48,9 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Contains(events, item => item is EntityDestroyed destroyed && destroyed.EntityId == monster.Id);
         }
 
-        /// <summary>Verifies ice stopping the support monster resolves a pending landing in that step.</summary>
+        /// <summary>Verifies a falling grenade lands against and kills a frozen support monster.</summary>
         [Fact]
-        public void FreezingTheSupportCompletesAPendingLanding()
+        public void AFallingGrenadeKillsAFrozenSupport()
         {
             WorldGrid world = new(7, 12);
             Entity player = new(EntityId.New(), new GridPosition(0, 0), InteractionMask.None,
@@ -66,25 +66,16 @@ namespace Mooh.Core.Tests.Simulation
             world.Add(LevelMaterializer.CreateRuntimeObject(EntityId.New(), new GridPosition(1, 0), "BIce", DifficultySpeeds.Standard));
             world.Add(new Entity(EntityId.New(), new GridPosition(1, 1), InteractionMask.BlocksMovement));
             SimulationWorld simulation = new(world, Direction.Down, new DefaultGravityCollisionPolicy());
-            for (int frame = 0; frame < 300 && !WaitingOnMovingSupport(); frame++)
-            {
-                _ = simulation.Advance(TimeSpan.FromMilliseconds(10));
-            }
-
-            Assert.True(WaitingOnMovingSupport());
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(10));
             simulation.SetPlayerInput(new PlayerInputState(false, false, true, false));
 
-            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(1));
+            List<SimulationEvent> events = [.. simulation.Advance(TimeSpan.FromMilliseconds(1))];
+            events.AddRange(simulation.Advance(TimeSpan.FromSeconds(2)));
 
             Assert.Contains(events, item => item is EnemyFrozen frozen && frozen.EntityId == monster.Id);
             Assert.Contains(events, item => item is Landed landed && landed.EntityId == bomb.Id);
             Assert.Contains(events, item => item is ExplosionStarted started && started.EntityId == bomb.Id);
 
-            bool WaitingOnMovingSupport()
-            {
-                return bomb.Motion is null && monster.Motion?.Progress is >= 0.5
-                    && bomb.Position.Offset(Direction.Down) == monster.Position;
-            }
         }
 
         /// <summary>Verifies a blast kills a moving monster when it reaches the monster's committed cell.</summary>

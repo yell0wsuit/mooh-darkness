@@ -89,6 +89,7 @@ namespace Mooh.Core.Tests.Simulation
                     new Landed(bottle, Direction.Down),
                     new DamageApplied(player, bottle, DamageKind.Shake, 20, 80),
                     new PlayerShockStarted(player, TimeSpan.FromMilliseconds(700)),
+                    new ShakeImpact(bottle, 2, 2.5),
                     new ExplosionStarted(bottle, new GridPosition(2, 2)),
                     new EntityDestroyed(bottle, bottle),
                     new ExplosionCellReached(bottle, new GridPosition(2, 2)),

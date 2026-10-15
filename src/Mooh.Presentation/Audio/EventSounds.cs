@@ -38,7 +38,9 @@ namespace Mooh.Presentation.Audio
                         break;
                     case PlayerAte ate when eaten.Add(ate.EatenEntityId):
                         at = ate.EatenEntityId;
-                        alias = Registered(seen, ate.EatenEntityId, "SndEat") ?? Sound("SndCellBrk");
+                        alias = seen.TryGetValue(ate.EatenEntityId, out Sighting food) && food.Type is "OSmGr" or "OSmBlue"
+                            ? Sound("SndSmallGet")
+                            : Registered(seen, ate.EatenEntityId, "SndEat") ?? Sound("SndCellBrk");
                         break;
                     case PickupCollected collected when eaten.Add(collected.PickupEntityId):
                         at = collected.PickupEntityId;

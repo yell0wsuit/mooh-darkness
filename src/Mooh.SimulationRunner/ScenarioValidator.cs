@@ -541,6 +541,7 @@ namespace Mooh.SimulationRunner
             "PlayerWeaponEmpty",
             "PushStarted",
             "StrikePushStopped",
+            "ShakeImpact",
             "SlideStarted",
             "SmallBeetleSpawned",
             "WorldRotationCompleted",

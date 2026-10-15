@@ -166,6 +166,7 @@ namespace Mooh.SimulationRunner
                         nameof(PushStarted),
                         entity,
                         direction: value.Direction),
+                    ShakeImpact => new ObservedEvent(nameof(ShakeImpact), entity),
                     SlideStarted value => new ObservedEvent(
                         nameof(SlideStarted),
                         entity,

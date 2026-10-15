@@ -915,7 +915,6 @@ namespace Mooh.Core.Simulation
 
                 AdvancePlayerAmbient(substepSeconds, wasStandingStill: ambientSeconds is not null, events);
                 ResolveWeaponCollisions(events);
-                ResolvePendingLandings(events);
 
                 _levelOutcome.Advance(substepSeconds, events);
                 ObserveLossDeath(events);
@@ -1572,7 +1571,7 @@ namespace Mooh.Core.Simulation
             }
             else if (target.ShakeBody is { OrdinaryReaction: not ShakeReaction.None } || IsMonster(target))
             {
-                ApplyShake(target, sourceEntityId, hard: false, events);
+                _ = ApplyShake(target, sourceEntityId, hard: false, events);
             }
             else
             {
@@ -1619,7 +1618,7 @@ namespace Mooh.Core.Simulation
             if (CellQuery.IsOccupied(_world, ahead))
             {
                 StartExplosion(rocket, events);
-                ShakeCell(ahead, rocket.Id, hard: false, events);
+                _ = ShakeCell(ahead, rocket.Id, hard: false, events);
                 return;
             }
 
@@ -2090,7 +2089,7 @@ namespace Mooh.Core.Simulation
             if (CellQuery.IsOccupied(_world, ahead))
             {
                 StartExplosion(arrow, events);
-                ShakeCell(ahead, arrow.Id, hard: false, events);
+                _ = ShakeCell(ahead, arrow.Id, hard: false, events);
                 return;
             }
 
@@ -2494,8 +2493,14 @@ namespace Mooh.Core.Simulation
             Direction direction,
             List<SimulationEvent> events)
         {
-            ApplyShake(entity, entity.Id, hard: false, events);
-            ShakeCell(ahead, entity.Id, hard: false, events);
+            bool shook = ApplyShake(entity, entity.Id, hard: false, events);
+            shook |= ShakeCell(ahead, entity.Id, hard: false, events);
+            if (shook)
+            {
+                GridPosition offset = new GridPosition(0, 0).Offset(direction);
+                events.Add(new ShakeImpact(entity.Id, entity.Position.X + (offset.X * 0.5), entity.Position.Y + (offset.Y * 0.5)));
+            }
+
             events.Add(new StrikePushStopped(entity.Id, direction));
         }
 
@@ -2708,14 +2713,15 @@ namespace Mooh.Core.Simulation
                 }
 
                 GridPosition following = destination.Offset(_gravityDirection);
-                if (!_gravity.CanEnter(_world, entity, following))
+                if (entity.GravityBody!.ImpactStrength == GravityImpactStrength.Hard)
+                {
+                    CrushCell(following, events);
+                }
+
+                if (!_gravity.CanContinueFalling(_world, entity, following))
                 {
                     KinematicsSystem.Stop(entity);
-                    entity.GravityBody!.AwaitingLanding = true;
-                    if (CellQuery.AllowsLanding(_world, following))
-                    {
-                        CompleteLanding(entity, following, events);
-                    }
+                    CompleteLanding(entity, following, events);
                 }
                 else
                 {
@@ -2728,52 +2734,26 @@ namespace Mooh.Core.Simulation
             return true;
         }
 
-        /// <summary>Rechecks deferred landings when a moving support or its cell lock changes.</summary>
+        /// <summary>Starts falls and slides for objects that are currently stationary.</summary>
         private void EvaluateGravity(List<SimulationEvent> events)
         {
             _gravity.EvaluateStationary(_world, _gravityDirection, events);
-            ResolvePendingLandings(events);
-        }
-
-        private void ResolvePendingLandings(List<SimulationEvent> events)
-        {
-            foreach (Entity entity in _world.Entities.Where(entity => entity.GravityBody?.AwaitingLanding == true))
-            {
-                if (!_world.Entities.Contains(entity) || entity.Motion is not null)
-                {
-                    continue;
-                }
-
-                // A state/timer change can free or stabilize support without a cell boundary.
-                // Re-run the original fall/slide pass before offering its landing callback.
-                if (_gravity.EvaluateStationary(_world, entity, _gravityDirection, events))
-                {
-                    continue;
-                }
-
-                GridPosition following = entity.Position.Offset(_gravityDirection);
-                if (CellQuery.AllowsLanding(_world, following))
-                {
-                    CompleteLanding(entity, following, events);
-                }
-            }
         }
 
         private void CompleteLanding(Entity entity, GridPosition following, List<SimulationEvent> events)
         {
-            entity.GravityBody!.AwaitingLanding = false;
             events.Add(new Landed(entity.Id, _gravityDirection));
             ResolveFallingImpact(entity, following, events);
             if (entity.ExplosionBody?.DetonatesOnLanding == true)
             {
-                // The recovered ExplWork: the 3x3 blast, then the downward shake again.
+                // Landing explosions repeat the downward shake after starting the blast.
                 StartExplosion(entity, events);
-                ResolveFallingImpact(entity, following, events);
+                _ = ShakeCell(following, entity.Id, entity.GravityBody!.ImpactStrength == GravityImpactStrength.Hard, events);
             }
             else if (entity.ShakeBody?.ReactsToLanding == true)
             {
                 // The barrel, magic gem and arrows also name their shake handler as OnLand.
-                ApplyShake(entity, entity.Id, hard: false, events);
+                _ = ApplyShake(entity, entity.Id, hard: false, events);
             }
         }
 
@@ -2782,11 +2762,15 @@ namespace Mooh.Core.Simulation
             GridPosition impactedPosition,
             List<SimulationEvent> events)
         {
-            ShakeCell(
+            if (ShakeCell(
                 impactedPosition,
                 source.Id,
                 source.GravityBody!.ImpactStrength == GravityImpactStrength.Hard,
-                events);
+                events))
+            {
+                GridPosition offset = new GridPosition(0, 0).Offset(_gravityDirection);
+                events.Add(new ShakeImpact(source.Id, source.Position.X + (offset.X * 0.5), source.Position.Y + (offset.Y * 0.5)));
+            }
         }
 
         /// <summary>
@@ -2794,7 +2778,7 @@ namespace Mooh.Core.Simulation
         /// runs its <c>OnShake</c> or <c>OnShakeHard</c>. The player's handlers are shake damage, so a
         /// player in the cell is hurt in its place in that order.
         /// </summary>
-        private void ShakeCell(
+        private bool ShakeCell(
             GridPosition cell,
             EntityId sourceEntityId,
             bool hard,
@@ -2802,9 +2786,10 @@ namespace Mooh.Core.Simulation
         {
             if (!_world.Contains(cell))
             {
-                return;
+                return false;
             }
 
+            bool shook = false;
             foreach (Entity occupant in _world.GetOccupants(cell))
             {
                 if (occupant.IsDamageablePlayer)
@@ -2816,11 +2801,14 @@ namespace Mooh.Core.Simulation
                             hard ? DamageKind.HardShake : DamageKind.Shake,
                             hard ? _difficultySpeeds.HardShakeDamage : _difficultySpeeds.ShakeDamage),
                         events);
+                    shook = true;
                     continue;
                 }
 
-                ApplyShake(occupant, sourceEntityId, hard, events);
+                shook |= ApplyShake(occupant, sourceEntityId, hard, events);
             }
+
+            return shook;
         }
 
         /// <summary>
@@ -2828,7 +2816,7 @@ namespace Mooh.Core.Simulation
         /// Occupants that define neither are only nudged by the original and are left alone,
         /// and a deferred handler is a recovered specialization that is not implemented yet.
         /// </summary>
-        private void ApplyShake(
+        private bool ApplyShake(
             Entity occupant,
             EntityId sourceEntityId,
             bool hard,
@@ -2839,13 +2827,13 @@ namespace Mooh.Core.Simulation
             if (occupant.IsFrozenMonster)
             {
                 DestroyMonster(occupant, sourceEntityId, spawnBeetle: false, events);
-                return;
+                return true;
             }
 
             ShakeBody? shake = occupant.ShakeBody;
             if (shake is null)
             {
-                return;
+                return false;
             }
 
             switch (hard ? shake.HardReaction : shake.OrdinaryReaction)
@@ -2869,10 +2857,12 @@ namespace Mooh.Core.Simulation
                     StartBigBomb(occupant, events);
                     break;
                 case ShakeReaction.None:
-                    break;
+                    return false;
                 default:
                     throw new InvalidOperationException("Undefined shake reaction.");
             }
+
+            return true;
         }
 
         private static bool IsAtBoundary(Entity entity)

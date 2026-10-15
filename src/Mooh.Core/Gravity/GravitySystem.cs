@@ -59,7 +59,6 @@ namespace Mooh.Core.Gravity
             GridPosition destination = entity.Position.Offset(gravityDirection);
             if (CanEnter(world, entity, destination))
             {
-                body.AwaitingLanding = false;
                 world.CommitMoves([new PlannedMove(entity.Id, entity.Position, destination)]);
                 KinematicsSystem.Start(entity, MotionCause.Falling, gravityDirection, body.FallSpeed);
                 events.Add(new FallStarted(entity.Id, gravityDirection));
@@ -106,11 +105,16 @@ namespace Mooh.Core.Gravity
 
             Direction slideDirection = viable.Count == 1 ? viable[0] : viable[_random.Next(2)];
             GridPosition slideDestination = entity.Position.Offset(slideDirection);
-            body.AwaitingLanding = false;
             world.CommitMoves([new PlannedMove(entity.Id, entity.Position, slideDestination)]);
             KinematicsSystem.Start(entity, MotionCause.Sliding, slideDirection, body.FallSpeed);
             events.Add(new SlideStarted(entity.Id, slideDirection));
             return true;
+        }
+
+        /// <summary>Checks an ongoing fall's next cell without applying entry deadlines.</summary>
+        internal bool CanContinueFalling(WorldGrid world, Entity entity, GridPosition destination)
+        {
+            return world.Contains(destination) && _collisionPolicy.CanEnter(world, entity, destination);
         }
 
         internal bool CanEnter(WorldGrid world, Entity entity, GridPosition destination)

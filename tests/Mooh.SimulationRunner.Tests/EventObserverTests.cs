@@ -81,11 +81,13 @@ namespace Mooh.SimulationRunner.Tests
                 new ExplosionStarted(rock, new GridPosition(2, 2)),
                 new ExplosionCellReached(rock, new GridPosition(1, 2)),
                 new EntityDestroyed(monster, rock),
+                new ShakeImpact(rock, 1, 2.5),
             ];
 
             IReadOnlyList<ObservedEvent> observed = EventObserver.Observe(events, aliases);
 
-            Assert.Equal(31, observed.Count);
+            Assert.Equal(32, observed.Count);
+            Assert.Equal(new ObservedEvent("ShakeImpact", "rock"), observed[31]);
             Assert.Equal(new ObservedEvent("FallStarted", "rock", direction: Direction.Down), observed[0]);
             Assert.Equal(new ObservedEvent("SlideStarted", "rock", direction: Direction.Left), observed[1]);
             Assert.Equal(

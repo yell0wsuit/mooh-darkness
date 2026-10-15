@@ -65,6 +65,10 @@
                     "type": "PlayerShockStarted",
                     "entity": "player",
                     "durationMilliseconds": 700
+                },
+                {
+                    "type": "ShakeImpact",
+                    "entity": "monster"
                 }
             ]
         }

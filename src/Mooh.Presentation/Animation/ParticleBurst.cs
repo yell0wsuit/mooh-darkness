@@ -111,6 +111,12 @@ namespace Mooh.Presentation.Animation
         /// <summary>Gets the flash every glinting pickup may give instead, <c>SfxWeapMine</c>.</summary>
         public ParticleFrames Flash { get; init; } = ParticleFrames.None;
 
+        /// <summary>Gets the central glow emitted when a spawned beetle is collected.</summary>
+        public ParticleFrames BeetleCollectionGlow { get; init; } = ParticleFrames.None;
+
+        /// <summary>Gets the overlay flash emitted when a shake handler receives an impact.</summary>
+        public ParticleFrames ImpactGlow { get; init; } = ParticleFrames.None;
+
         /// <summary>Gets the cola's bubbles, <c>SfxCola</c>.</summary>
         public ParticleFrames ColaBubbles { get; init; } = ParticleFrames.None;
 

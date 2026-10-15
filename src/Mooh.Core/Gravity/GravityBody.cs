@@ -45,15 +45,6 @@ namespace Mooh.Core.Gravity
             TreatsShadowAsSupport = treatsShadowAsSupport;
         }
 
-        /// <summary>
-        /// Remembers a completed falling segment whose landing callback waits for a stable,
-        /// unlocked support cell.
-        /// </summary>
-        internal bool AwaitingLanding
-        {
-            get; set;
-        }
-
         /// <summary>Gets the fall speed in cells per second.</summary>
         public double FallSpeed
         {

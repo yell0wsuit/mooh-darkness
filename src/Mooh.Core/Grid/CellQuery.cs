@@ -10,12 +10,8 @@ namespace Mooh.Core.Grid
     /// Holds the recovered cell-occupancy queries every system shares.
     /// </summary>
     /// <remarks>
-    /// The original asks these questions through one native entry point,
-    /// <c>CellObjCheck(cell, ulMaskAny, ulMaskNone, bStill, ExclObj, Class)</c>, and its
-    /// siblings. Each member here names the recovered call it models, so a rule is stated once
-    /// rather than re-derived per system: two systems translating the same call independently
-    /// have already drifted apart once, when the strike-push chain gained a stationary-occupant
-    /// filter the walking push never had.
+    /// Movement commits occupancy as soon as a segment begins. Ordinary occupancy queries
+    /// therefore include moving entities; only explicit stationary-support checks exclude them.
     /// </remarks>
     internal static class CellQuery
     {
@@ -108,20 +104,6 @@ namespace Mooh.Core.Grid
                     occupant => occupant.Motion is null
                         && (occupant.Interactions
                             & (InteractionMask.OccupancyTransparent | InteractionMask.MonsterTransparent)) == 0);
-        }
-
-        /// <summary>
-        /// Allows a landing after the support cell's deadline has elapsed and no visible occupant
-        /// is moving. A vacated-cell lock and a descending monster suspend falling without
-        /// constituting a landing surface.
-        /// </summary>
-        internal static bool AllowsLanding(WorldGrid world, GridPosition cell)
-        {
-            return !world.Contains(cell)
-                || (world.IsCellUnlocked(cell)
-                    && world.GetOccupants(cell).All(occupant =>
-                        (occupant.Interactions & (InteractionMask.OccupancyTransparent | InteractionMask.MonsterTransparent)) != 0
-                        || (occupant.Motion is null && occupant.PlayerBody?.Rotation?.SuspendedProgress is null)));
         }
 
         /// <summary>

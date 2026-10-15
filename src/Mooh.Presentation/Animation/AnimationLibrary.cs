@@ -261,6 +261,8 @@ namespace Mooh.Presentation.Animation
                     [IdleSparkle.BigBomb] = FramesOf(effects, "SfxWeapBBombStay"),
                 },
                 Flash = FramesOf(effects, "SfxWeapMine"),
+                BeetleCollectionGlow = FramesOf(effects, "_SfxSmall"),
+                ImpactGlow = FramesOf(effects, "SfxGlowStr"),
                 ColaBubbles = FramesOf(effects, "SfxCola"),
                 IceSnow = FramesOf(effects, "_SfxBonIce"),
                 IceFragments = FramesOf(effects, "_SfxBonIceKill"),
