@@ -55,16 +55,14 @@ namespace Mooh.Core.Enemies
         /// </summary>
         /// <param name="beetle">The beetle to advance.</param>
         /// <param name="elapsedSeconds">The substep length in seconds.</param>
-        /// <param name="expire">Removes a beetle whose lifetime has run out.</param>
-        internal static void AdvanceTimers(Entity beetle, double elapsedSeconds, Action<Entity> expire)
+        internal static void AdvanceTimers(Entity beetle, double elapsedSeconds)
         {
             ArgumentNullException.ThrowIfNull(beetle);
-            ArgumentNullException.ThrowIfNull(expire);
             SmallBeetleBody body = beetle.SmallBeetleBody
                 ?? throw new InvalidOperationException("Advancing requires a small-beetle body.");
 
             TimeSpan elapsed = SimulationTime.Elapsed(elapsedSeconds);
-            body.RemainingImmunity = Reduce(body.RemainingImmunity, elapsed);
+            body.RemainingImmunity -= elapsed;
             if (body.State == SmallBeetleState.Waiting)
             {
                 body.RemainingRecheck = Reduce(body.RemainingRecheck, elapsed);
@@ -74,11 +72,7 @@ namespace Mooh.Core.Enemies
                 }
             }
 
-            body.RemainingLifetime = Reduce(body.RemainingLifetime, elapsed);
-            if (body.RemainingLifetime == TimeSpan.Zero)
-            {
-                expire(beetle);
-            }
+            body.RemainingLifetime -= elapsed;
         }
 
         /// <summary>Marks a beetle that finished a flight segment as ready to decide again.</summary>
@@ -95,9 +89,16 @@ namespace Mooh.Core.Enemies
         /// <param name="beetle">The deciding beetle.</param>
         /// <param name="resolutionOrder">The order in which simultaneous boundaries resolve.</param>
         /// <param name="events">The ordered event list to append to.</param>
-        internal void Decide(Entity beetle, int resolutionOrder, List<SimulationEvent> events)
+        /// <param name="expire">Removes a beetle whose lifetime has passed at this decision.</param>
+        internal void Decide(Entity beetle, int resolutionOrder, List<SimulationEvent> events, Action<Entity> expire)
         {
             SmallBeetleBody body = beetle.SmallBeetleBody!;
+            if (body.RemainingLifetime < TimeSpan.Zero)
+            {
+                expire(beetle);
+                return;
+            }
+
             Entity? player = _world.Player;
             if (player is null)
             {

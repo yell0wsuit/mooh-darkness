@@ -54,10 +54,10 @@ namespace Mooh.Core.Enemies
         /// <summary>Gets the current flight state.</summary>
         public SmallBeetleState State { get; internal set; } = SmallBeetleState.Deciding;
 
-        /// <summary>Gets the time left before the beetle removes itself.</summary>
+        /// <summary>Gets the lifetime remaining; expiration is checked at the next movement decision.</summary>
         public TimeSpan RemainingLifetime { get; internal set; } = Lifetime;
 
-        /// <summary>Gets the time left before a blast can destroy the beetle.</summary>
+        /// <summary>Gets the immunity remaining; blasts can destroy the beetle only after it becomes negative.</summary>
         public TimeSpan RemainingImmunity { get; internal set; } = ExplosionImmunity;
 
         /// <summary>Gets the time left in a blocked-decision wait, or zero when not waiting.</summary>

@@ -157,8 +157,10 @@ namespace Mooh.Core.Tests.Enemies
 
             Assert.Empty(beforeExpiry.OfType<EntityDestroyed>());
 
-            IReadOnlyList<SimulationEvent> afterExpiry = simulation.Advance(
-                TimeSpan.FromMilliseconds(1));
+            IReadOnlyList<SimulationEvent> atDeadline = simulation.Advance(TimeSpan.FromMilliseconds(1));
+            Assert.DoesNotContain(atDeadline, item => item is EntityDestroyed);
+            Assert.Same(beetle, world.GetEntity(beetle.Id));
+            IReadOnlyList<SimulationEvent> afterExpiry = simulation.Advance(SmallBeetleBody.RecheckDelay);
 
             Assert.Equal(beetle.Id, Assert.Single(afterExpiry.OfType<EntityDestroyed>()).EntityId);
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(beetle.Id));
@@ -201,12 +203,49 @@ namespace Mooh.Core.Tests.Enemies
             _ = simulation.Advance(SmallBeetleBody.ExplosionImmunity);
             Assert.Equal(TimeSpan.Zero, beetle.SmallBeetleBody!.RemainingImmunity);
 
+            _ = simulation.Advance(TimeSpan.FromMilliseconds(1));
             Entity second = AddExplosive(world, new GridPosition(5, 1));
             List<SimulationEvent> events = [.. simulation.Detonate(second.Id)];
             events.AddRange(simulation.Advance(TimeSpan.FromMilliseconds(10)));
 
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(beetle.Id));
             _ = Assert.Single(events, item => item is SmallBeetleKilled);
+        }
+
+        /// <summary>A lifetime deadline cannot remove a beetle in the middle of a flight segment.</summary>
+        [Fact]
+        public void LifetimeIsCheckedAtTheNextFlightDecision()
+        {
+            WorldGrid world = new(5, 5);
+            _ = AddPlayer(world, new GridPosition(1, 1));
+            Entity beetle = new(EntityId.New(), new GridPosition(3, 2), InteractionMask.LevelEndLock,
+                smallBeetleBody: new SmallBeetleBody(SmallBeetleColor.Green, 0.01));
+            world.Add(beetle);
+            SimulationWorld simulation = new(world, Direction.Down, new DefaultGravityCollisionPolicy(), new Random(1));
+            IReadOnlyList<SimulationEvent> beforeArrival = simulation.Advance(TimeSpan.FromSeconds(31));
+            Assert.Same(beetle, world.GetEntity(beetle.Id));
+            Assert.NotNull(beetle.Motion);
+            Assert.DoesNotContain(beforeArrival, item => item is SmallBeetleKilled);
+            IReadOnlyList<SimulationEvent> arrival = simulation.Advance(TimeSpan.FromSeconds(100));
+            Assert.DoesNotContain(world.Entities, entity => entity.Id == beetle.Id);
+            _ = Assert.Single(arrival, item => item is SmallBeetleKilled);
+        }
+
+        /// <summary>The original's strict immunity comparison includes the exact1500ms boundary.</summary>
+        [Fact]
+        public void BlastAtTheExactImmunityDeadlineLeavesTheBeetleAlive()
+        {
+            (WorldGrid world, _, Entity beetle, SimulationWorld simulation, _) = SpawnBeetle(new GridPosition(5, 1));
+            foreach (Direction direction in new[] { Direction.Left, Direction.Right, Direction.Up, Direction.Down })
+            {
+                _ = AddBlocker(world, beetle.Position.Offset(direction), InteractionMask.BlocksFlight);
+            }
+
+            _ = simulation.Advance(SmallBeetleBody.ExplosionImmunity);
+            Entity bomb = AddExplosive(world, beetle.Position);
+            IReadOnlyList<SimulationEvent> events = simulation.Detonate(bomb.Id);
+            Assert.Same(beetle, world.GetEntity(beetle.Id));
+            Assert.DoesNotContain(events, item => item is SmallBeetleKilled);
         }
 
         /// <summary>

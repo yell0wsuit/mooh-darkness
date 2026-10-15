@@ -1853,7 +1853,7 @@ namespace Mooh.Core.Simulation
                 // A beetle is immune to blasts for the recovered CNT_ImTime after it spawns, so a
                 // monster's own death blast cannot kill the child it just spawned.
                 if (occupant.SmallBeetleBody is { RemainingImmunity: var immunity }
-                    && immunity > TimeSpan.Zero)
+                    && immunity >= TimeSpan.Zero)
                 {
                     continue;
                 }
@@ -2278,27 +2278,24 @@ namespace Mooh.Core.Simulation
                 }
                 else if (entity.SmallBeetleBody?.State == SmallBeetleState.Deciding)
                 {
-                    _smallBeetles.Decide(entity, index, events);
+                    _smallBeetles.Decide(entity, index, events, expired =>
+                    {
+                        DestroyEntity(expired, expired.Id, events);
+                        events.Add(new SmallBeetleKilled(expired.Id, expired.Position));
+                    });
                 }
             }
         }
 
         /// <summary>
-        /// Advances spawned beetles, removing any whose recovered lifetime has run out and
+        /// Advances spawned beetle timers and
         /// absorbing any that now shares a cell with a live player.
         /// </summary>
         private void AdvanceBeetles(double elapsedSeconds, List<SimulationEvent> events)
         {
             foreach (Entity beetle in _world.Entities.Where(entity => entity.SmallBeetleBody is not null))
             {
-                SmallBeetleSystem.AdvanceTimers(
-                    beetle,
-                    elapsedSeconds,
-                    expired =>
-                    {
-                        DestroyEntity(expired, expired.Id, events);
-                        events.Add(new SmallBeetleKilled(expired.Id, expired.Position));
-                    });
+                SmallBeetleSystem.AdvanceTimers(beetle, elapsedSeconds);
             }
 
             AbsorbBeetles(events);
