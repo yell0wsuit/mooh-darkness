@@ -12,6 +12,7 @@ using Mooh.Core.Simulation;
 using Mooh.Desktop.Platform.Input;
 using Mooh.Presentation.Animation;
 using Mooh.Presentation.Audio;
+using Mooh.Presentation.Hud;
 using Mooh.Presentation.Scene;
 
 namespace Mooh.Desktop
@@ -23,7 +24,8 @@ namespace Mooh.Desktop
     /// <param name="session">The session to play.</param>
     /// <param name="library">The recovered animation tables.</param>
     /// <param name="random">The source of the presentation's random choices.</param>
-    internal sealed class DesktopGame(GameSession session, AnimationLibrary library, Random random)
+    /// <param name="strings">The recovered text table the help panel reads, if loaded.</param>
+    internal sealed class DesktopGame(GameSession session, AnimationLibrary library, Random random, StringTable? strings = null)
     {
         /// <summary>
         /// The longest frame the game accepts. A stall — a window drag, a debugger — would otherwise
@@ -39,6 +41,7 @@ namespace Mooh.Desktop
 
         private readonly AnimationLibrary _library = library;
         private readonly Random _random = random;
+        private readonly StringTable? _strings = strings;
         private double _outcomeSeconds;
         private bool _started;
 
@@ -50,6 +53,23 @@ namespace Mooh.Desktop
 
         /// <summary>Gets the current level's backdrop.</summary>
         public Backdrop Backdrop { get; private set; } = new(BackdropStyle.Normal, 1, 1, BackdropImageSize, random);
+
+        /// <summary>Gets the screen panels of the current level.</summary>
+        public HudPresenter Hud { get; private set; } = new(session.Level.World, strings, random);
+
+        /// <summary>
+        /// Gets the recovered id of the line that announces the level's outcome —
+        /// <c>GameScrWiner</c>, <c>GameScrLooser</c> or, when the clock ran out,
+        /// <c>GameScrTimeOut</c> — or <see langword="null"/> while it is undecided.
+        /// </summary>
+        public string? OutcomeTextId => Session.State switch
+        {
+            GameSessionState.LevelCompleted or GameSessionState.CampaignCompleted => "GameScrWiner",
+            GameSessionState.LevelFailed when Session.Level.World.Player?.HealthBody?.Clock?.HasRunOut == true => "GameScrTimeOut",
+            GameSessionState.LevelFailed => "GameScrLooser",
+            GameSessionState.Playing => null,
+            _ => null,
+        };
 
         /// <summary>Gets the camera over the current level.</summary>
         public SceneCamera Camera { get; private set; } = new();
@@ -124,6 +144,7 @@ namespace Mooh.Desktop
                 ? WorldSpin.Of(center, turning, simulation.WorldRotationProgress)
                 : null;
             Presenter.Update(Session.Level.World, events, seconds, spin);
+            Hud.Update(Session.Level.World, events, Session.TotalScore, seconds);
             Sounds = Presenter.Sounds;
             Backdrop.Advance(seconds);
             if (Session.Level.World.Player is Entity player)
@@ -179,6 +200,7 @@ namespace Mooh.Desktop
         {
             _outcomeSeconds = 0;
             Presenter = new ScenePresenter(_library, _random);
+            Hud = new HudPresenter(Session.Level.World, _strings, _random);
             Camera = new SceneCamera();
             LevelDocument level = Session.Level.Source;
             Backdrop = new Backdrop(
@@ -194,6 +216,7 @@ namespace Mooh.Desktop
             }
 
             Presenter.Update(Session.Level.World, [], 0);
+            Hud.Update(Session.Level.World, [], Session.TotalScore, 0);
         }
     }
 }

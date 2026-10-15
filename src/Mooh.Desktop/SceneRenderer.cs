@@ -61,6 +61,18 @@ namespace Mooh.Desktop
             }
         }
 
+        /// <summary>Draws one frame with its anchor at a screen point, as the screen panels do.</summary>
+        /// <param name="canvas">The canvas, set up in the original's 800 by 600 screen space.</param>
+        /// <param name="page">The sprite page.</param>
+        /// <param name="frame">The frame name.</param>
+        /// <param name="x">The anchor's screen x.</param>
+        /// <param name="y">The anchor's screen y.</param>
+        public void DrawScreenFrame(SKCanvas canvas, string page, string frame, double x, double y)
+        {
+            ArgumentNullException.ThrowIfNull(canvas);
+            DrawFrame(canvas, page, frame, x, y, null);
+        }
+
         /// <summary>Releases every loaded atlas image.</summary>
         public void Dispose()
         {

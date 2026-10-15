@@ -28,6 +28,18 @@ namespace Mooh.Desktop.Tests
             Assert.True(game.Session.Level.World.Entities.Any());
         }
 
+        /// <summary>Verifies the screen panels follow the level from its first frame.</summary>
+        [Fact]
+        public void ThePanelsFollowTheLevel()
+        {
+            DesktopGame game = Create();
+
+            game.Update(default, [], 0.016);
+
+            Assert.Contains(game.Hud.Sprites, sprite => sprite.Frame == "PNrmHealth");
+            Assert.Null(game.OutcomeTextId);
+        }
+
         /// <summary>Verifies the pause stops the level's time.</summary>
         [Fact]
         public void ThePauseStopsTheLevel()
@@ -76,6 +88,7 @@ namespace Mooh.Desktop.Tests
             }
 
             Assert.Equal(GameSessionState.LevelFailed, game.Session.State);
+            Assert.Equal("GameScrLooser", game.OutcomeTextId);
             for (int frame = 0; frame < 100 && game.Session.State != GameSessionState.Playing; frame++)
             {
                 game.Update(default, [], 0.05);

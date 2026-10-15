@@ -48,7 +48,13 @@ namespace Mooh.Desktop
                 catalog = SoundCatalog.Load(stream);
             }
 
-            DesktopGame game = new(new GameSession(pack, options.Difficulty, options.LevelIndex), library, new Random());
+            StringTable strings;
+            using (FileStream stream = File.OpenRead(Path.Combine(assets, "text", "strings.bin")))
+            {
+                strings = StringTable.Load(stream);
+            }
+
+            DesktopGame game = new(new GameSession(pack, options.Difficulty, options.LevelIndex), library, new Random(), strings);
             try
             {
                 // A machine without a playback device still plays the game, silently.
@@ -61,7 +67,8 @@ namespace Mooh.Desktop
                 SoundBoard sounds = new(catalog, audio, Path.Combine(assets, "sounds"), new Random());
                 using MusicPlayer? music = MusicPlayer.Start(audio, Path.Combine(assets, "music"), "game");
                 using SceneRenderer scene = new(Path.Combine(assets, "sprites"));
-                using SdlApplication application = new(options, game, scene, sounds, music);
+                using HudRenderer hud = new(Path.Combine(assets, "fonts"), strings);
+                using SdlApplication application = new(options, game, scene, sounds, music, hud);
                 application.Run();
                 return 0;
             }

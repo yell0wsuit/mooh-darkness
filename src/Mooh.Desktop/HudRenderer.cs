@@ -1,60 +1,107 @@
 using System;
-using System.Globalization;
+using System.Collections.Generic;
+using System.IO;
 
-using Mooh.Core.Player;
-using Mooh.Core.Session;
+using Mooh.Core.Content;
+using Mooh.Presentation.Hud;
+using Mooh.Presentation.Text;
 
 using SkiaSharp;
 
 namespace Mooh.Desktop
 {
     /// <summary>
-    /// Draws a plain status line until the original's panels and bitmap fonts are drawn: the level,
-    /// score, health or time, the current weapon and its ammunition, and the session state.
+    /// Draws the screen panels and the help panel with the recovered bitmap fonts, and the line that
+    /// announces a decided level.
     /// </summary>
-    internal sealed class HudRenderer : IDisposable
+    /// <remarks>
+    /// The outcome line stands still at the original's level-text place, <c>TxtTypeLvl</c>'s
+    /// (400, 250) in <c>PanelDigScr</c>, until its slide-in is ported; the pause dims the screen.
+    /// </remarks>
+    /// <param name="fontsDirectory">The folder holding the <c>.fnt</c> tables and their atlases.</param>
+    /// <param name="strings">The recovered text table, if loaded.</param>
+    internal sealed class HudRenderer(string fontsDirectory, StringTable? strings) : IDisposable
     {
-        private readonly SKFont _font = new(SKTypeface.Default, 16);
-        private readonly SKPaint _text = new() { Color = SKColors.White, IsAntialias = true };
-        private readonly SKPaint _shade = new() { Color = new SKColor(0, 0, 0, 160) };
+        /// <summary>The font of the original's level texts, <c>PgFontDigScr</c>.</summary>
+        private const string LevelTextFont = "PanelDigScr";
 
-        /// <summary>Draws the status line.</summary>
+        private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.None);
+        private readonly Dictionary<string, (BitmapFont Font, SKImage Atlas)> _fonts = [with(StringComparer.Ordinal)];
+        private readonly SKPaint _shade = new() { Color = new SKColor(0, 0, 0, 128) };
+
+        /// <summary>Draws the panels, their values, the help and the outcome.</summary>
         /// <param name="canvas">The canvas, in the 800 by 600 screen space.</param>
         /// <param name="game">The game.</param>
-        public void Draw(SKCanvas canvas, DesktopGame game)
+        /// <param name="scene">The renderer holding the sprite atlases.</param>
+        public void Draw(SKCanvas canvas, DesktopGame game, SceneRenderer scene)
         {
             ArgumentNullException.ThrowIfNull(canvas);
             ArgumentNullException.ThrowIfNull(game);
-            GameSession session = game.Session;
-            PlayerBody? body = session.Level.World.Player?.PlayerBody;
-            double? clock = session.Level.World.Player?.HealthBody?.Clock?.Remaining.TotalSeconds;
-            string vitality = clock is double seconds
-                ? string.Create(CultureInfo.InvariantCulture, $"Time {Math.Ceiling(seconds):0}")
-                : string.Create(CultureInfo.InvariantCulture, $"Health {session.Level.World.Player?.HealthBody?.Current ?? 0:0}");
-            string weapon = body is null
-                ? string.Empty
-                : string.Create(CultureInfo.InvariantCulture, $"{body.Progress.CurrentWeapon} {body.Progress.AmmoOf(body.Progress.CurrentWeapon)}");
-            string state = game.IsPaused ? "  PAUSED" : session.State switch
+            ArgumentNullException.ThrowIfNull(scene);
+            foreach (HudSprite sprite in game.Hud.Sprites)
             {
-                GameSessionState.Playing => string.Empty,
-                GameSessionState.LevelCompleted => "  LEVEL COMPLETE",
-                GameSessionState.LevelFailed => "  LEVEL LOST",
-                GameSessionState.CampaignCompleted => "  CAMPAIGN COMPLETE",
-                _ => string.Empty,
-            };
-            string line = string.Create(
-                CultureInfo.InvariantCulture,
-                $"Level {session.LevelIndex + 1}/{session.LevelCount}   Score {session.TotalScore}   {vitality}   {weapon}{state}");
-            canvas.DrawRect(SKRect.Create(0, 0, 800, 24), _shade);
-            canvas.DrawText(line, 8, 17, SKTextAlign.Left, _font, _text);
+                scene.DrawScreenFrame(canvas, HudPresenter.PageName, sprite.Frame, sprite.X, sprite.Y);
+            }
+
+            foreach (HudText text in game.Hud.Texts)
+            {
+                DrawText(canvas, HudPresenter.FontName, text);
+            }
+
+            if (game.OutcomeTextId is string id && strings is not null && strings.TryGetText(id, out string line))
+            {
+                DrawText(canvas, LevelTextFont, new HudText(line, 400, 250, TextAlignment.Center));
+            }
+
+            if (game.IsPaused)
+            {
+                canvas.DrawRect(SKRect.Create(0, 0, 800, 600), _shade);
+            }
         }
 
-        /// <summary>Releases the font and paints.</summary>
+        /// <summary>Releases the font atlases and the paint.</summary>
         public void Dispose()
         {
-            _font.Dispose();
-            _text.Dispose();
+            foreach ((BitmapFont _, SKImage atlas) in _fonts.Values)
+            {
+                atlas.Dispose();
+            }
+
+            _fonts.Clear();
             _shade.Dispose();
+        }
+
+        private void DrawText(SKCanvas canvas, string fontName, HudText text)
+        {
+            (BitmapFont font, SKImage atlas) = FontOf(fontName);
+            foreach (GlyphPlacement glyph in font.Layout(text.Text, text.X, text.Y, text.Alignment))
+            {
+                canvas.DrawImage(
+                    atlas,
+                    SKRect.Create(glyph.SourceX, glyph.SourceY, glyph.Width, glyph.Height),
+                    SKRect.Create((float)glyph.X, (float)glyph.Y, glyph.Width, glyph.Height),
+                    Sampling);
+            }
+        }
+
+        private (BitmapFont Font, SKImage Atlas) FontOf(string name)
+        {
+            if (_fonts.TryGetValue(name, out (BitmapFont Font, SKImage Atlas) loaded))
+            {
+                return loaded;
+            }
+
+            BitmapFont font;
+            using (FileStream stream = File.OpenRead(Path.Combine(fontsDirectory, name + ".fnt")))
+            {
+                font = BitmapFont.Load(name, stream);
+            }
+
+            string image = Path.Combine(fontsDirectory, name + ".png");
+            SKImage atlas = SKImage.FromEncodedData(image)
+                ?? throw new InvalidDataException($"The font atlas '{image}' could not be decoded.");
+            _fonts[name] = (font, atlas);
+            return (font, atlas);
         }
     }
 }

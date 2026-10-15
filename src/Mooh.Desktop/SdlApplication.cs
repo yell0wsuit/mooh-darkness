@@ -22,13 +22,13 @@ namespace Mooh.Desktop
     /// <param name="scene">The scene renderer.</param>
     /// <param name="sounds">The sound board the game's cues play on.</param>
     /// <param name="music">The music, kept fed every frame, or <see langword="null"/> when silent.</param>
-    internal sealed class SdlApplication(DesktopOptions options, DesktopGame game, SceneRenderer scene, SoundBoard sounds, MusicPlayer? music) : IDisposable
+    /// <param name="hud">The panel renderer.</param>
+    internal sealed class SdlApplication(DesktopOptions options, DesktopGame game, SceneRenderer scene, SoundBoard sounds, MusicPlayer? music, HudRenderer hud) : IDisposable
     {
         /// <summary>The level's backdrop until the original's parallax layers are drawn.</summary>
         private static readonly SKColor Backdrop = new(24, 30, 46);
 
         private readonly KeyboardControls _controls = new();
-        private readonly HudRenderer _hud = new();
         private readonly Stopwatch _clock = new();
         private GraphicsSelection<SdlGraphicsDevice>? _selection;
         private bool _sdlStarted;
@@ -78,7 +78,6 @@ namespace Mooh.Desktop
         /// <summary>Releases the atlases' window and SDL.</summary>
         public void Dispose()
         {
-            _hud.Dispose();
             _selection?.Dispose();
             if (_sdlStarted)
             {
@@ -174,7 +173,7 @@ namespace Mooh.Desktop
             canvas.Clear(Backdrop);
             scene.DrawBackdrop(canvas, game.Backdrop, game.Camera);
             scene.Draw(canvas, game.Presenter.Sprites, game.Camera);
-            _hud.Draw(canvas, game);
+            hud.Draw(canvas, game, scene);
             canvas.RestoreToCount(saved);
             device.Flush();
             _frames++;

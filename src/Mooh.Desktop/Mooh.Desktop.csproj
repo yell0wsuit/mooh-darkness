@@ -29,6 +29,9 @@
     <Content Include="../../assets/levels/*.json"
              Link="assets/levels/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/fonts/*.fnt;../../assets/fonts/*.png"
+             Link="assets/fonts/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/text/*.bin"
              Link="assets/text/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
