@@ -406,14 +406,30 @@ namespace Mooh.Core.Tests.Content
             Assert.Equal(["OArrowB", "OArrowL", "OArrowR", "OArrowT", "OBarel", "OMagic"], carriers);
         }
 
-        /// <summary>Verifies unsupported legacy names are rejected at the catalog boundary.</summary>
-        [Fact]
-        public void UnsupportedTypeIsRejected()
+        /// <summary>Unused or incompletely initialized original objects stay outside the runtime catalog.</summary>
+        /// <param name="type">An original registration absent from the shipped levels.</param>
+        [Theory]
+        [InlineData("BBag")]
+        [InlineData("BGlasses")]
+        [InlineData("OChest")]
+        [InlineData("MCanonL")]
+        [InlineData("MCanonT")]
+        [InlineData("MCanonR")]
+        [InlineData("MCanonB")]
+        [InlineData("OAntiGLeft")]
+        [InlineData("OAntiGTop")]
+        [InlineData("OAntiGRight")]
+        [InlineData("OAntiGBottom")]
+        [InlineData("CellsAirLeft")]
+        [InlineData("CellsAirTop")]
+        [InlineData("CellsAirRight")]
+        [InlineData("CellsAirBottom")]
+        public void UnusedTypeIsRejected(string type)
         {
             KeyNotFoundException exception = Assert.Throws<KeyNotFoundException>(
-                () => ArchivalObjectCatalog.Get("OChest"));
+                () => ArchivalObjectCatalog.Get(type));
 
-            Assert.Contains("OChest", exception.Message, StringComparison.Ordinal);
+            Assert.Contains(type, exception.Message, StringComparison.Ordinal);
         }
     }
 }
