@@ -162,6 +162,7 @@ namespace Mooh.Core.Tests.Enemies
 
             Assert.Equal(beetle.Id, Assert.Single(afterExpiry.OfType<EntityDestroyed>()).EntityId);
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(beetle.Id));
+            _ = Assert.Single(afterExpiry, item => item is SmallBeetleKilled);
         }
 
         /// <summary>
@@ -201,10 +202,11 @@ namespace Mooh.Core.Tests.Enemies
             Assert.Equal(TimeSpan.Zero, beetle.SmallBeetleBody!.RemainingImmunity);
 
             Entity second = AddExplosive(world, new GridPosition(5, 1));
-            _ = simulation.Detonate(second.Id);
-            _ = simulation.Advance(TimeSpan.FromMilliseconds(10));
+            List<SimulationEvent> events = [.. simulation.Detonate(second.Id)];
+            events.AddRange(simulation.Advance(TimeSpan.FromMilliseconds(10)));
 
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(beetle.Id));
+            _ = Assert.Single(events, item => item is SmallBeetleKilled);
         }
 
         /// <summary>

@@ -1151,7 +1151,8 @@ namespace Mooh.Core.Simulation
                             events);
                         break;
                     case ScheduledCellKind.CrossArm:
-                        ResolveExplosionCell(scheduled.SourceEntityId, scheduled.Position, events);
+                        ResolveExplosionCell(scheduled.SourceEntityId, scheduled.Position, events,
+                            ExplosionPattern.CrossArm, scheduled.ArmDirection);
                         if (scheduled.Remaining > 1
                             && !CellQuery.HoldsBlastSurvivor(_world, scheduled.Position))
                         {
@@ -1289,6 +1290,7 @@ namespace Mooh.Core.Simulation
                 return;
             }
 
+            events.Add(new MagicActivated(gem.Id, center));
             events.Add(new EntityDestroyed(gem.Id, gem.Id));
             double now = _world.CurrentTimeSeconds;
             for (int y = center.Y - 1; y <= center.Y + 1; y++)
@@ -1395,7 +1397,7 @@ namespace Mooh.Core.Simulation
             List<SimulationEvent> events)
         {
             bool held = _world.GetOccupants(cell).Any(occupant => occupant.IsExplodable);
-            ResolveExplosionCell(bombId, cell, events);
+            ResolveExplosionCell(bombId, cell, events, ExplosionPattern.Flood);
             int remaining = energy - (held ? BigBombHitCost : 1);
             if (remaining <= 0)
             {
@@ -1805,9 +1807,11 @@ namespace Mooh.Core.Simulation
         private void ResolveExplosionCell(
             EntityId sourceEntityId,
             GridPosition position,
-            List<SimulationEvent> events)
+            List<SimulationEvent> events,
+            ExplosionPattern pattern = ExplosionPattern.Area,
+            Direction? direction = null)
         {
-            events.Add(new ExplosionCellReached(sourceEntityId, position));
+            events.Add(new ExplosionCellReached(sourceEntityId, position, pattern, direction));
             _world.LockCell(position, ExplosionCellLockDuration);
             KillExplodables(sourceEntityId, position, events);
         }
@@ -1837,6 +1841,11 @@ namespace Mooh.Core.Simulation
 
                 if (IsMonster(occupant))
                 {
+                    if (occupant.IsFrozenMonster)
+                    {
+                        events.Add(new FrozenMonsterShattered(occupant.Id, occupant.Position));
+                    }
+
                     DestroyMonster(occupant, sourceEntityId, SpawnsBeetleOnDeath(occupant), events);
                     continue;
                 }
@@ -1852,6 +1861,10 @@ namespace Mooh.Core.Simulation
                 if (occupant.ExplosionBody?.Reaction == ExplosionReaction.Destroy)
                 {
                     DestroyEntity(occupant, sourceEntityId, events);
+                    if (occupant.SmallBeetleBody is not null && !_world.Entities.Contains(occupant))
+                    {
+                        events.Add(new SmallBeetleKilled(occupant.Id, occupant.Position));
+                    }
                 }
                 else if (occupant.ExplosionBody?.Reaction == ExplosionReaction.Detonate3x3)
                 {
@@ -2281,7 +2294,11 @@ namespace Mooh.Core.Simulation
                 SmallBeetleSystem.AdvanceTimers(
                     beetle,
                     elapsedSeconds,
-                    expired => DestroyEntity(expired, expired.Id, events));
+                    expired =>
+                    {
+                        DestroyEntity(expired, expired.Id, events);
+                        events.Add(new SmallBeetleKilled(expired.Id, expired.Position));
+                    });
             }
 
             AbsorbBeetles(events);
@@ -2323,6 +2340,7 @@ namespace Mooh.Core.Simulation
             Entity player = _world.Player
                 ?? throw new InvalidOperationException("A hand strike requires a player.");
             DestroyMonster(monster, player.Id, spawnBeetle: false, events);
+            events.Add(new FrozenMonsterShattered(monster.Id, monster.Position));
         }
 
         /// <summary>
@@ -2510,7 +2528,7 @@ namespace Mooh.Core.Simulation
                 direction,
                 _difficultySpeeds.PlayerSpeed * PushSpeedMultiplier);
             entity.Motion!.Progress = progress;
-            events.Add(new PushStarted(entity.Id, direction));
+            events.Add(new PushStarted(entity.Id, direction, IsStrike: true));
             return true;
         }
 
@@ -2860,6 +2878,7 @@ namespace Mooh.Core.Simulation
             if (occupant.IsFrozenMonster)
             {
                 DestroyMonster(occupant, sourceEntityId, spawnBeetle: false, events);
+                events.Add(new FrozenMonsterShattered(occupant.Id, occupant.Position));
                 return true;
             }
 
@@ -3055,6 +3074,7 @@ namespace Mooh.Core.Simulation
             if (arriving.PlayerBody is not null && arriving.HealthBody is not null)
             {
                 DestroyEntity(fire, arriving.Id, events);
+                events.Add(new FireContactResolved(fire.Id, fire.Position, FireContactKind.Player));
                 ApplyDamage(
                     new DamageRequest(
                         fire.Id,
@@ -3069,6 +3089,11 @@ namespace Mooh.Core.Simulation
             if (arriving.FireBody?.Contact == FireContact.MutualDestruction)
             {
                 DestroyEntity(fire, arriving.Id, events);
+                events.Add(new FireContactResolved(fire.Id, fire.Position, FireContactKind.MutualDestruction));
+            }
+            else
+            {
+                events.Add(new FireContactResolved(fire.Id, fire.Position, FireContactKind.Consumed));
             }
 
             return true;

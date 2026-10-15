@@ -41,6 +41,7 @@ namespace Mooh.Presentation.Scene
         ObjectLook? look = null) : EntityAnimator(table, random)
     {
         private bool _started;
+        private int _bigBombTicks = 30;
 
         /// <summary>The original's <c>CNT_WrdShZX</c>: pixels across per unit of depth.</summary>
         private const double DepthShiftX = -80;
@@ -131,7 +132,14 @@ namespace Mooh.Presentation.Scene
         /// <inheritdoc/>
         public override string? ResolveHandler(string handler)
         {
-            return handler == BigBombTickHandler ? "st_work" : null;
+            if (handler != BigBombTickHandler || _bigBombTicks == 0)
+            {
+                return null;
+            }
+
+            _bigBombTicks--;
+            Cue((_bigBombTicks & 1) != 0 ? "BBombTick1" : "BBombTick2");
+            return "st_work";
         }
 
         /// <inheritdoc/>

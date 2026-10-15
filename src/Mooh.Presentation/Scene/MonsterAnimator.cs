@@ -23,6 +23,7 @@ namespace Mooh.Presentation.Scene
     {
         private readonly IReadOnlyList<string> _iceFrames = iceFrames;
         private bool _wasFrozen;
+        private bool _justThawed;
 
         /// <inheritdoc/>
         public override string? Frame => Entity is not null && IsFrozen(Entity)
@@ -30,7 +31,7 @@ namespace Mooh.Presentation.Scene
             : base.Frame;
 
         /// <inheritdoc/>
-        protected override bool IsPaused => Entity is not null && IsFrozen(Entity);
+        protected override bool IsPaused => _justThawed || (Entity is not null && IsFrozen(Entity));
 
         /// <inheritdoc/>
         public override double StartPosition(AnimationClip clip, IReadOnlyList<string> frames)
@@ -44,13 +45,19 @@ namespace Mooh.Presentation.Scene
         protected sealed override string? DesiredState(WorldGrid world, Entity entity)
         {
             bool frozen = IsFrozen(entity);
-            if (_wasFrozen && !frozen)
-            {
-                Animation.Restart();
-            }
-
             _wasFrozen = frozen;
             return frozen && Animation.State is not null ? null : MonsterState(entity);
+        }
+
+        /// <inheritdoc/>
+        protected override void Tick(double seconds)
+        {
+            _justThawed = _wasFrozen && Entity is not null && !IsFrozen(Entity);
+            if (_justThawed)
+            {
+                // The saved phase restarts before advancing, and frozen time cannot charge it.
+                Animation.Restart();
+            }
         }
 
         /// <summary>Gets the state for the monster's simulated phase.</summary>

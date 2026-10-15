@@ -124,6 +124,7 @@ namespace Mooh.Core.Tests.Enemies
             Assert.Contains(events, item => item == new EntityDestroyed(monster.Id, player.Id));
             Assert.DoesNotContain(events, item => item is ExplosionStarted);
             Assert.DoesNotContain(events, item => item is SmallBeetleSpawned);
+            _ = Assert.Single(events, item => item is FrozenMonsterShattered);
         }
 
         /// <summary>Verifies an unfrozen blue monster still detonates on a landing shake.</summary>

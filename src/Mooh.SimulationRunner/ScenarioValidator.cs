@@ -438,7 +438,8 @@ namespace Mooh.SimulationRunner
         {
             EventFields required = expected.Type switch
             {
-                "CellEntered" or "PlayerReturned" => EventFields.Position,
+                "CellEntered" or "PlayerReturned" or "MagicActivated" or "FrozenMonsterShattered"
+                    or "SmallBeetleKilled" or "FireContactResolved" => EventFields.Position,
                 "FallStarted" or "Landed" or "PlayerBlocked" or "PlayerMoveStarted"
                     or "PlayerReversed" or "PlayerRotationCompleted" or "PushStarted"
                     or "SlideStarted" or "StrikePushStopped" => EventFields.Direction,
@@ -503,6 +504,10 @@ namespace Mooh.SimulationRunner
 
         private static readonly string[] SupportedEventTypes =
         [
+            "MagicActivated",
+            "FrozenMonsterShattered",
+            "SmallBeetleKilled",
+            "FireContactResolved",
             "CellEntered",
             "DamageApplied",
             "DamageIgnored",

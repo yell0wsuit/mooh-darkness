@@ -120,7 +120,7 @@ namespace Mooh.Core.Tests.Simulation
                 TimeSpan.FromMilliseconds(200));
 
             Assert.Contains(events, item => item is BalloonFuseLit lit && lit.EntityId == balloon.Id);
-            Assert.Contains(events, item => item == new PushStarted(balloon.Id, Direction.Right));
+            Assert.Contains(events, item => item == new PushStarted(balloon.Id, Direction.Right, IsStrike: true));
             Assert.DoesNotContain(events, item => item is ExplosionStarted);
         }
 

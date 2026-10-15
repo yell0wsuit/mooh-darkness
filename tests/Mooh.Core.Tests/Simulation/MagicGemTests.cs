@@ -41,6 +41,7 @@ namespace Mooh.Core.Tests.Simulation
                 SpawnedCells(events));
             Assert.Contains(events, item => item == new EntityDestroyed(rock.Id, gem.Id));
             Assert.DoesNotContain(events, item => item is ExplosionCellReached);
+            _ = Assert.Single(events, item => item is MagicActivated);
         }
 
         /// <summary>Verifies treasure cells are skipped and still terrain is kept, not filled.</summary>

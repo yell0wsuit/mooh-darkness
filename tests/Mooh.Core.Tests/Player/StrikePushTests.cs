@@ -255,7 +255,7 @@ namespace Mooh.Core.Tests.Player
 
             IReadOnlyList<SimulationEvent> events = level.Simulation.Advance(TimeSpan.FromMilliseconds(150));
 
-            Assert.Contains(events, item => item == new PushStarted(rock.Id, Direction.Right));
+            Assert.Contains(events, item => item == new PushStarted(rock.Id, Direction.Right, IsStrike: true));
             Assert.Equal(new GridPosition(3, 1), rock.Position);
             Assert.Equal(MotionCause.StrikePushed, rock.Motion!.Cause);
             Assert.Equal(0.3775, rock.Motion.Progress, 10);

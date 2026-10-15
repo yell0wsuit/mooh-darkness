@@ -73,7 +73,7 @@ namespace Mooh.Presentation.Scene
             _floating = showFloatingText ? new FloatingTexts(library, strings, random) : null;
             _gameSounds = new GameSounds(library, random);
             _waterDrops = new WaterDrops(library, random);
-            _eventSounds = new EventSounds(library);
+            _eventSounds = new EventSounds(library, random);
         }
 
         /// <summary>Gets the sounds cued this update, in order.</summary>
@@ -205,8 +205,8 @@ namespace Mooh.Presentation.Scene
                     spawned.Position.X, spawned.Position.Y, false, false));
             }
 
-            sounds.AddRange(_eventSounds.For(events, sighted));
-            sounds.AddRange(_gameSounds.For(world, events, bonusSeconds ?? seconds));
+            sounds.AddRange(_eventSounds.For(events, sighted, seconds));
+            sounds.AddRange(_gameSounds.For(world, events, bonusSeconds ?? seconds, seconds));
             if (build is null || build.IsDone)
             {
                 // GameWaterSpawn starts with play, after the fly-in.

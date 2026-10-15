@@ -44,6 +44,12 @@ namespace Mooh.Presentation.Audio
 
         private readonly int[] _ammo = new int[4];
         private bool _started;
+        private readonly HashSet<EntityId> _rockets = [];
+        private bool _drinkingCola;
+        private double _physicsMilliseconds;
+        private double? _teleportLastPulse;
+        private double? _shelterNextBite;
+        private readonly List<double> _shelterChews = [];
         private TimeSpan _cola;
         private TimeSpan _ice;
         private double? _colaAmbientMilliseconds;
@@ -52,12 +58,44 @@ namespace Mooh.Presentation.Audio
         private double? _health;
         private double _sinceHeartbeat = HeartbeatMilliseconds;
 
-        public IEnumerable<SoundCue> For(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds)
+        public IEnumerable<SoundCue> For(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds, double physicsSeconds)
         {
             double milliseconds = seconds * 1000;
+            _physicsMilliseconds += physicsSeconds * 1000;
             List<SoundCue> cues = [];
             Entity? player = world.Player;
             (double x, double y) = player is null ? (0, 0) : DrawnPosition.Of(player);
+            foreach (SimulationEvent item in events)
+            {
+                switch (item)
+                {
+                    case RocketFired rocket:
+                        _ = _rockets.Add(rocket.RocketEntityId);
+                        cues.Add(Placed("SndWeapRockRot", rocket.Position.X, rocket.Position.Y));
+                        break;
+                    case CellEntered entered when _rockets.Contains(entered.EntityId):
+                        cues.Add(Placed("SndWeapRockRot", entered.Position.X, entered.Position.Y));
+                        break;
+                    case EntityDestroyed destroyed:
+                        _ = _rockets.Remove(destroyed.EntityId);
+                        break;
+                    case PlayerTunnelReversed reversed:
+                        cues.Add(Placed("SndTonFlip", reversed.Position.X, reversed.Position.Y));
+                        break;
+                    case PlayerTeleportStarted:
+                        _teleportLastPulse = _physicsMilliseconds;
+                        break;
+                    case PlayerTeleportArrived:
+                        _teleportLastPulse = null;
+                        break;
+                    case PlayerColaDrinkStarted:
+                        _drinkingCola = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
             foreach (LevelOutcomeAnnounced announced in System.Linq.Enumerable.OfType<LevelOutcomeAnnounced>(events))
             {
                 if (announced.Outcome == LevelOutcome.Won || announced.TimedOut)
@@ -70,6 +108,8 @@ namespace Mooh.Presentation.Audio
             {
                 return cues;
             }
+
+            TravelAndShelter(player, x, y, cues);
 
             if (!_started)
             {
@@ -84,6 +124,16 @@ namespace Mooh.Presentation.Audio
                 // OnHelthLost's cola branch: the bonus soaks up the hit.
                 cues.Add(Placed("SndBonColaWork", x, y));
                 cues.Add(Placed("SndBonColaFizz", x, y));
+            }
+
+            if (_drinkingCola && progress.ColaRemaining > _cola)
+            {
+                cues.Add(Placed("SndBonColaFizz", x, y));
+            }
+
+            if (player.PlayerBody.Action?.Kind != PlayerActionKind.ColaDrink)
+            {
+                _drinkingCola = false;
             }
 
             Bonus(progress.ColaRemaining, ref _cola, "SndBonColaOn", "SndBonColaOff", milliseconds, x, y, cues);
@@ -121,6 +171,41 @@ namespace Mooh.Presentation.Audio
 
             Remember(progress, health);
             return cues;
+        }
+
+        private void TravelAndShelter(Entity player, double x, double y, List<SoundCue> cues)
+        {
+            if (player.PlayerBody?.Action?.Kind == PlayerActionKind.TeleportFlight
+                && _teleportLastPulse is double last && _physicsMilliseconds - last > 250)
+            {
+                cues.Add(Placed("SndTPortMove", x, y));
+                _teleportLastPulse = _physicsMilliseconds;
+            }
+
+            if (player.PlayerBody?.Action is not { Kind: PlayerActionKind.ShelterHidden } hidden)
+            {
+                _shelterNextBite = null;
+                _shelterChews.Clear();
+                return;
+            }
+
+            double elapsed = 3000 - (hidden.RemainingSeconds * 1000);
+            _shelterNextBite ??= 750;
+            while (_shelterNextBite.Value < 3000 && elapsed >= _shelterNextBite.Value)
+            {
+                cues.Add(Placed("SndEatEat", x, y));
+                _shelterChews.Add(_shelterNextBite.Value + random.Next(200, 250));
+                _shelterNextBite += random.Next(750, 850);
+            }
+
+            for (int index = _shelterChews.Count - 1; index >= 0; index--)
+            {
+                if (elapsed >= _shelterChews[index])
+                {
+                    cues.Add(Placed("SndEatEat2", x, y));
+                    _shelterChews.RemoveAt(index);
+                }
+            }
         }
 
         /// <summary>

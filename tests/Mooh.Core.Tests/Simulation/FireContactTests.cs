@@ -50,6 +50,8 @@ namespace Mooh.Core.Tests.Simulation
             Assert.Equal(DamageKind.Fire, damage.Kind);
             Assert.Equal(DifficultySpeeds.Standard.FireDamage, damage.Amount);
             Assert.Equal(100 - DifficultySpeeds.Standard.FireDamage, player.HealthBody!.Current);
+            Assert.Equal(new FireContactResolved(fire.Id, fire.Position, FireContactKind.Player),
+                Assert.Single(events, item => item is FireContactResolved));
         }
 
         /// <summary>
@@ -86,6 +88,8 @@ namespace Mooh.Core.Tests.Simulation
             Assert.DoesNotContain(events, item => item is EntityDestroyed destroyed
                 && destroyed.EntityId == fire.Id);
             Assert.Equal(new GridPosition(1, 3), world.GetEntity(fire.Id).Position);
+            Assert.Equal(new FireContactResolved(fire.Id, fire.Position, FireContactKind.Consumed),
+                Assert.Single(events, item => item is FireContactResolved));
         }
 
         /// <summary>
@@ -111,6 +115,8 @@ namespace Mooh.Core.Tests.Simulation
                 && destroyed.EntityId == bubble.Id);
             Assert.Contains(events, item => item is EntityDestroyed destroyed
                 && destroyed.EntityId == fire.Id);
+            Assert.Equal(new FireContactResolved(fire.Id, fire.Position, FireContactKind.MutualDestruction),
+                Assert.Single(events, item => item is FireContactResolved));
         }
 
         /// <summary>

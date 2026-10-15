@@ -30,6 +30,10 @@ namespace Mooh.SimulationRunner
                 string entity = ResolveAlias(simulationEvent.EntityId, aliasesById);
                 result.Add(simulationEvent switch
                 {
+                    MagicActivated value => new ObservedEvent(nameof(MagicActivated), entity, position: value.Position),
+                    FrozenMonsterShattered value => new ObservedEvent(nameof(FrozenMonsterShattered), entity, position: value.Position),
+                    SmallBeetleKilled value => new ObservedEvent(nameof(SmallBeetleKilled), entity, position: value.Position),
+                    FireContactResolved value => new ObservedEvent(nameof(FireContactResolved), entity, position: value.Position),
                     CellEntered value => new ObservedEvent(
                         nameof(CellEntered),
                         entity,

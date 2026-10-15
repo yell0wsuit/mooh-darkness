@@ -32,7 +32,8 @@ namespace Mooh.Presentation.Scene
         private const int AmbientRepeats = 3;
 
         private int _ambientRepeats;
-        private double? _secondStepSeconds;
+        private readonly List<double> _secondSteps = [];
+        private string? _stateAtFrameStart;
 
         /// <summary>Gets the pass: <c>ST_TPortMove</c> carries <c>RPass=2</c>, over everything else.</summary>
         public override int Pass => Animation.State == "st_portmove" ? 2 : 0;
@@ -143,6 +144,18 @@ namespace Mooh.Presentation.Scene
                 return;
             }
 
+            if (Animation.State == _stateAtFrameStart && Animation.Clip is { SoundHandler: "SndStep2" } clip)
+            {
+                foreach (PlayerMoveStarted move in events.OfType<PlayerMoveStarted>())
+                {
+                    if (move.EntityId == Entity!.Id)
+                    {
+                        // Re-entering a walking state sounds its steps while retaining its frame.
+                        CueSound(clip);
+                    }
+                }
+            }
+
             Direction facing = PlayerBody(Entity!).FacingDirection;
             if (Animation.State == Stand(facing)
                 && events.Any(item => item is PlayerBlocked blocked && blocked.Direction == facing))
@@ -167,20 +180,25 @@ namespace Mooh.Presentation.Scene
 
             if (clip.SoundHandler == "SndStep2")
             {
-                _secondStepSeconds = Animation.Frames.Count * Animation.FrameMillisecondsNow / 2000;
+                _secondSteps.Add(Animation.Frames.Count * Animation.FrameMillisecondsNow / 2000);
             }
         }
 
         /// <inheritdoc/>
         protected override void Tick(double seconds)
         {
-            if (_secondStepSeconds is double remaining)
+            _stateAtFrameStart = Animation.State;
+            for (int index = _secondSteps.Count - 1; index >= 0; index--)
             {
-                remaining -= seconds;
-                _secondStepSeconds = remaining > 0 ? remaining : null;
+                double remaining = _secondSteps[index] - seconds;
                 if (remaining <= 0)
                 {
+                    _secondSteps.RemoveAt(index);
                     Step();
+                }
+                else
+                {
+                    _secondSteps[index] = remaining;
                 }
             }
         }
