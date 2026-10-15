@@ -166,7 +166,9 @@ namespace Mooh.Presentation.Scene
             }
 
             PlayerActionKind? action = world.Player?.PlayerBody?.Action?.Kind;
-            return action == PlayerActionKind.LevelEntry
+            return action == PlayerActionKind.LevelExit
+                ? door.IsExitReuse ? "st_dooropen" : "st_doorin"
+                : action == PlayerActionKind.LevelEntry
                 ? "st_doorin"
                 : action is PlayerActionKind.ShelterIn or PlayerActionKind.ShelterOut
                 ? "st_dooropen"

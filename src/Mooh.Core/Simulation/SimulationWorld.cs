@@ -355,6 +355,35 @@ namespace Mooh.Core.Simulation
             return [];
         }
 
+        /// <summary>Starts the winning player's entry into the end door at its current drawn position.</summary>
+        /// <returns>The immediate exit events.</returns>
+        public IReadOnlyList<SimulationEvent> BeginLevelExit()
+        {
+            if (_world.Player is not Entity player || _playerController is null
+                || player.PlayerBody?.Action?.Kind is PlayerActionKind.LevelExit or PlayerActionKind.LevelExited)
+            {
+                return [];
+            }
+
+            (double x, double y) = _playerController.BeginLevelExit();
+            Entity? door = _world.GetOccupants(player.Position).FirstOrDefault(entity => entity.DoorBody is not null);
+            bool reuse = door is not null;
+            if (door is null)
+            {
+                door = new Entity(CreateSpawnedEntityId(player.Id), player.Position,
+                    InteractionMask.BlocksMovement | InteractionMask.OccupancyTransparent | InteractionMask.MonsterTransparent,
+                    doorBody: new DoorBody());
+                _world.Add(door);
+            }
+
+            door.DoorBody!.IsExitReuse = reuse;
+            door.DoorBody.DrawOffset = (x, y);
+            door.DoorBody.RemovalRemainingSeconds = null;
+            door.DoorBody.IsShelter = false;
+            door.Interactions |= InteractionMask.BlocksMovement;
+            return [];
+        }
+
         private double? SecondsUntilNextDoorLeaves()
         {
             double? result = null;
@@ -917,6 +946,10 @@ namespace Mooh.Core.Simulation
                 ResolveWeaponCollisions(events);
 
                 _levelOutcome.Advance(substepSeconds, events);
+                if (_levelOutcome.Outcome == LevelOutcome.Won)
+                {
+                    _ = BeginLevelExit();
+                }
                 ObserveLossDeath(events);
             }
 

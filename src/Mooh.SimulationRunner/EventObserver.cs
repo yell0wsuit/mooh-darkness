@@ -16,7 +16,7 @@ namespace Mooh.SimulationRunner
         /// <exception cref="ArgumentNullException">
         /// <paramref name="events"/> or <paramref name="aliasesById"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="InvalidOperationException">An event or entity identifier is unsupported.</exception>
+        /// <exception cref="InvalidOperationException">An event type is unsupported.</exception>
         public static IReadOnlyList<ObservedEvent> Observe(
             IReadOnlyList<SimulationEvent> events,
             IReadOnlyDictionary<EntityId, string> aliasesById)
@@ -194,13 +194,19 @@ namespace Mooh.SimulationRunner
             return result;
         }
 
-        private static string ResolveAlias(
+        internal static string ResolveAlias(
             EntityId id,
             IReadOnlyDictionary<EntityId, string> aliasesById)
         {
             return aliasesById.TryGetValue(id, out string? alias)
                 ? alias
-                : throw new InvalidOperationException($"Event references unregistered entity '{id}'.");
+                : $"spawned:{id.Value:D}";
+        }
+
+        internal static bool IsSpawnedAlias(string alias)
+        {
+            return alias.StartsWith("spawned:", StringComparison.Ordinal)
+                && Guid.TryParseExact(alias.AsSpan(8), "D", out _);
         }
     }
 }

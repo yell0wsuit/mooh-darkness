@@ -25,6 +25,16 @@ namespace Mooh.Presentation.Scene
         public static (double X, double Y) Of(Entity entity)
         {
             System.ArgumentNullException.ThrowIfNull(entity);
+            if (entity.PlayerBody?.LevelExitOffset is { } stopped)
+            {
+                return (entity.Position.X + stopped.X, entity.Position.Y + stopped.Y);
+            }
+
+            if (entity.DoorBody is { } door)
+            {
+                return (entity.Position.X + door.DrawOffset.X, entity.Position.Y + door.DrawOffset.Y);
+            }
+
             if (entity.PlayerBody is { Action.Kind: PlayerActionKind.TeleportFlight, Teleport: PlayerTeleport flight })
             {
                 return (

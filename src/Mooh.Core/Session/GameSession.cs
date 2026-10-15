@@ -138,6 +138,20 @@ namespace Mooh.Core.Session
             return events;
         }
 
+        /// <summary>Continues updating a decided level while its completion or loss sequence is shown.</summary>
+        /// <param name="elapsed">The elapsed simulation time.</param>
+        /// <returns>The ordered world events.</returns>
+        public IReadOnlyList<SimulationEvent> AdvanceOutcome(TimeSpan elapsed)
+        {
+            if (State == GameSessionState.Playing)
+            {
+                throw new InvalidOperationException("The current level has not been decided.");
+            }
+
+            Simulation.SetPlayerInput(default);
+            return Simulation.Advance(elapsed);
+        }
+
         /// <summary>Enters the next level in the pack, applying the recovered per-level reset.</summary>
         /// <exception cref="InvalidOperationException">
         /// The current level has not been completed, or the pack has no further level.

@@ -14,6 +14,17 @@ namespace Mooh.SimulationRunner.Tests
     /// <summary>Verifies runtime events are normalized into stable scenario values.</summary>
     public sealed class EventObserverTests
     {
+        /// <summary>Runtime creations use the same stable identifier in events and final rosters.</summary>
+        [Fact]
+        public void ObservesRuntimeSpawnWithStableAlias()
+        {
+            EntityId id = new(new Guid("00000000-0000-0000-0000-000000000099"));
+
+            ObservedEvent observed = Assert.Single(EventObserver.Observe([new Landed(id, Direction.Down)], new Dictionary<EntityId, string>()));
+
+            Assert.Equal(new ObservedEvent("Landed", "spawned:00000000-0000-0000-0000-000000000099", direction: Direction.Down), observed);
+        }
+
         /// <summary>Verifies every current event type and secondary entity reference.</summary>
         [Fact]
         public void ObservesEverySimulationEventType()

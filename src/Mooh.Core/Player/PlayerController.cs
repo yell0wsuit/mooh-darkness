@@ -430,6 +430,33 @@ namespace Mooh.Core.Player
             body.Action = new PlayerAction(PlayerActionKind.LevelEntry, Direction.Down, LevelEntrySeconds);
         }
 
+        /// <summary>Stops the player at its current drawn position and begins entering the completion door.</summary>
+        /// <returns>The stopped position relative to the player's committed cell.</returns>
+        public (double X, double Y) BeginLevelExit()
+        {
+            PlayerBody body = _player.PlayerBody!;
+            if (body.LevelExitOffset is { } existing)
+            {
+                return existing;
+            }
+
+            Direction direction = _player.Motion?.SegmentDirection ?? body.Rotation?.From ?? body.FacingDirection;
+            double trailing = _player.Motion is MotionState motion
+                ? 1 - motion.Progress
+                : body.Rotation?.SuspendedProgress is double progress ? 1 - progress : 0;
+            GridPosition shifted = _player.Position.Offset(direction);
+            (double X, double Y) offset = (
+                -((shifted.X - _player.Position.X) * trailing),
+                -((shifted.Y - _player.Position.Y) * trailing));
+            body.LevelExitOffset = offset;
+            body.Reaction.Kind = PlayerReactionKind.Normal;
+            body.Reaction.Remaining = TimeSpan.Zero;
+            KinematicsSystem.Stop(_player);
+            body.Rotation = null;
+            body.Action = new PlayerAction(PlayerActionKind.LevelExit, Direction.Down, ShelterInSeconds);
+            return offset;
+        }
+
         /// <summary>
         /// Applies the first branch of the recovered <c>DoCtrl</c> fire control, <c>DoorGet</c>:
         /// with the start door in the player's own cell, the door opens and the player goes in.
@@ -557,6 +584,16 @@ namespace Mooh.Core.Player
                     body.Teleport = null;
                     body.FacingDirection = Direction.Down;
                     return true;
+                case PlayerActionKind.LevelExited:
+                    return false;
+                case PlayerActionKind.LevelExit:
+                    body.Action = new PlayerAction(PlayerActionKind.LevelExited, Direction.Down, double.PositiveInfinity);
+                    foreach (Entity door in _world.GetOccupants(_player.Position).Where(occupant => occupant.DoorBody is not null))
+                    {
+                        door.DoorBody!.RemovalRemainingSeconds = StartDoorLeaveSeconds;
+                    }
+
+                    return false;
                 case PlayerActionKind.LevelEntry:
                     // The recovered _AEnd_GStartCloseAndStay starts the door's close-and-out,
                     // clears its mask and leaves the player standing, facing down.

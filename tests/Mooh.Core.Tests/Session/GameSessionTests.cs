@@ -20,6 +20,112 @@ namespace Mooh.Core.Tests.Session
     /// </summary>
     public sealed class GameSessionTests
     {
+        /// <summary>A win already settling enters the door even if lethal damage occurs during that settle.</summary>
+        [Fact]
+        public void WinningOverridesALethalReactionDuringTheSettle()
+        {
+            GameSession session = CreateSession();
+            _ = session.Advance(TimeSpan.FromSeconds(3));
+            RemoveMonster(session);
+            _ = session.Advance(TimeSpan.FromMilliseconds(100));
+            Entity player = session.Level.World.Player!;
+            _ = session.Simulation.ApplyDamage(new DamageRequest(player.Id, player.Id, DamageKind.Fire, 1000));
+            Assert.Equal(PlayerReactionKind.Dead, player.PlayerBody!.Reaction.Kind);
+
+            _ = session.Advance(TimeSpan.FromMilliseconds(1900));
+
+            Assert.Equal(GameSessionState.LevelCompleted, session.State);
+            Assert.Equal(PlayerActionKind.LevelExit, player.PlayerBody.Action!.Kind);
+            Assert.Equal(PlayerReactionKind.Normal, player.PlayerBody.Reaction.Kind);
+            Assert.Equal(TimeSpan.Zero, player.PlayerBody.Reaction.Remaining);
+        }
+
+        /// <summary>A long advance consumes the completion walk after the win settle within that same advance.</summary>
+        [Fact]
+        public void ALongAdvanceDoesNotDelayTheCompletionWalk()
+        {
+            GameSession session = CreateSession();
+            _ = session.Advance(TimeSpan.FromSeconds(3));
+            RemoveMonster(session);
+
+            _ = session.Advance(TimeSpan.FromSeconds(3));
+
+            Assert.Equal(PlayerActionKind.LevelExited, session.Level.World.Player!.PlayerBody!.Action!.Kind);
+        }
+
+        /// <summary>Winning begins the door exit instead of leaving the player controllable.</summary>
+        [Fact]
+        public void WinningBeginsTheDoorExit()
+        {
+            GameSession session = CreateSession();
+            _ = session.Advance(TimeSpan.FromSeconds(3));
+            RemoveMonster(session);
+            _ = session.Advance(TimeSpan.FromSeconds(2));
+
+            Assert.Equal(GameSessionState.LevelCompleted, session.State);
+            Assert.Equal("LevelExit", session.Level.World.Player!.PlayerBody!.Action?.Kind.ToString());
+            Assert.Contains(session.Level.World.Entities, entity => entity.DoorBody is not null);
+        }
+
+        /// <summary>The player disappears after the entry walk and the door leaves after its closing animation.</summary>
+        [Fact]
+        public void TheExitDoorClosesAndLeavesWhileThePlayerStaysHidden()
+        {
+            GameSession session = CreateSession();
+            _ = session.Advance(TimeSpan.FromSeconds(3));
+            RemoveMonster(session);
+            _ = session.Advance(TimeSpan.FromSeconds(2));
+            Entity door = Assert.Single(session.Level.World.Entities, entity => entity.DoorBody is not null);
+
+            _ = session.AdvanceOutcome(TimeSpan.FromMilliseconds(874));
+            Assert.Equal(PlayerActionKind.LevelExit, session.Level.World.Player!.PlayerBody!.Action!.Kind);
+            Assert.Null(door.DoorBody!.RemovalRemainingSeconds);
+            _ = session.AdvanceOutcome(TimeSpan.FromMilliseconds(1));
+            Assert.Equal(PlayerActionKind.LevelExited, session.Level.World.Player!.PlayerBody!.Action!.Kind);
+            Assert.Equal(0.9, door.DoorBody.RemovalRemainingSeconds!.Value, 10);
+            _ = session.AdvanceOutcome(TimeSpan.FromMilliseconds(899));
+            Assert.Contains(door, session.Level.World.Entities);
+            _ = session.AdvanceOutcome(TimeSpan.FromMilliseconds(1));
+            Assert.DoesNotContain(door, session.Level.World.Entities);
+            Assert.Equal(PlayerActionKind.LevelExited, session.Level.World.Player!.PlayerBody!.Action!.Kind);
+        }
+
+        /// <summary>Both the completion walk and the hidden player are immune without delaying completion.</summary>
+        [Fact]
+        public void TheCompletionPlayerIsImmuneAndDoesNotHoldTheOutcomeOpen()
+        {
+            GameSession session = CreateSession();
+            _ = session.Advance(TimeSpan.FromSeconds(3));
+            RemoveMonster(session);
+            _ = session.Advance(TimeSpan.FromSeconds(2));
+            Entity player = session.Level.World.Player!;
+            double health = player.HealthBody!.Current;
+
+            Assert.True(player.PlayerBody!.IsImmortal);
+            Assert.False(player.PlayerBody.HoldsLevelEndOpen);
+            _ = session.Simulation.ApplyDamage(new DamageRequest(player.Id, player.Id, DamageKind.Fire, 1000));
+            Assert.Equal(health, player.HealthBody.Current);
+            _ = session.AdvanceOutcome(TimeSpan.FromSeconds(1));
+            Assert.True(player.PlayerBody.IsImmortal);
+            Assert.False(player.PlayerBody.HoldsLevelEndOpen);
+            Assert.Equal(health, player.HealthBody.Current);
+        }
+
+        /// <summary>A final campaign level enters the same completion door as every other level.</summary>
+        [Fact]
+        public void CompletingTheCampaignAlsoEntersTheDoor()
+        {
+            GameSession session = CreateSession(startingLevelIndex: 1);
+            _ = session.Advance(TimeSpan.FromSeconds(3));
+            RemoveMonster(session);
+            _ = session.Advance(TimeSpan.FromSeconds(2));
+
+            Assert.Equal(GameSessionState.CampaignCompleted, session.State);
+            Assert.Equal(PlayerActionKind.LevelExit, session.Level.World.Player!.PlayerBody!.Action!.Kind);
+            _ = session.AdvanceOutcome(TimeSpan.FromSeconds(1));
+            Assert.Equal(PlayerActionKind.LevelExited, session.Level.World.Player.PlayerBody.Action!.Kind);
+        }
+
         /// <summary>Verifies a new session starts on the first level with no banked score.</summary>
         [Fact]
         public void NewSessionStartsOnTheFirstLevel()

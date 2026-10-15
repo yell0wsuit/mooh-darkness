@@ -85,6 +85,10 @@
                 "immunityMilliseconds": 0,
                 "playerReaction": "Normal",
                 "reactionMilliseconds": 0
+            },
+            {
+                "alias": "spawned:02b6ed32-092c-d921-9aa3-47e9cda5dc2d",
+                "position": { "x": 1, "y": 0 }
             }
         ]
     }

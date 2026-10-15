@@ -78,7 +78,7 @@ namespace Mooh.SimulationRunner
             ObservedEntityState[] actual =
             [
                 .. materialized.World.Entities.Select(
-                    entity => ObserveEntity(entity, materialized.AliasesById[entity.Id])),
+                    entity => ObserveEntity(entity, EventObserver.ResolveAlias(entity.Id, materialized.AliasesById))),
             ];
             const string path = "expectFinal.entities";
             if (expected.Entities.Count != actual.Length)

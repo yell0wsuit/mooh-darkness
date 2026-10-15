@@ -1,5 +1,9 @@
 using System;
 
+using Mooh.Core.Entities;
+using Mooh.Core.Grid;
+using Mooh.Core.Interactions;
+
 using Xunit;
 
 namespace Mooh.SimulationRunner.Tests
@@ -7,6 +11,39 @@ namespace Mooh.SimulationRunner.Tests
     /// <summary>Verifies exact final simulation state comparison.</summary>
     public sealed class FinalStateComparerTests
     {
+        /// <summary>Runtime additions remain part of the exact roster and have stable aliases.</summary>
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ComparesRuntimeSpawnedEntities(bool includeSpawn)
+        {
+            ScenarioDocument scenario = ScenarioTestData.CreateValid();
+            MaterializedScenario materialized = ScenarioMaterializer.Materialize(scenario);
+            EntityId id = new(new Guid("00000000-0000-0000-0000-000000000099"));
+            materialized.World.Add(new Entity(id, new GridPosition(2, 2), InteractionMask.None));
+            ExpectedFinalState expected = new()
+            {
+                Entities = includeSpawn
+                    ? [scenario.ExpectFinal.Entities[0], new ExpectedEntityState
+                    {
+                        Alias = "spawned:00000000-0000-0000-0000-000000000099",
+                        Position = new ScenarioPosition { X = 2, Y = 2 },
+                    }]
+                    : scenario.ExpectFinal.Entities,
+            };
+
+            if (includeSpawn)
+            {
+                scenario = ScenarioTestData.WithFinal(scenario, expected.Entities);
+                ScenarioValidator.Validate(scenario, "spawn.json");
+                ScenarioComparer.CompareFinalState(expected, materialized, "spawn.json");
+            }
+            else
+            {
+                _ = Assert.Throws<ScenarioMismatchException>(() => ScenarioComparer.CompareFinalState(expected, materialized, "spawn.json"));
+            }
+        }
+
         /// <summary>Verifies an exact stationary player state passes.</summary>
         [Fact]
         public void AcceptsExactFinalState()

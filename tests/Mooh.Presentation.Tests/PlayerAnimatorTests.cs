@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Mooh.Core.Content;
+using Mooh.Core.Entities;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
+using Mooh.Presentation.Scene;
 
 using Xunit;
 
@@ -15,6 +17,80 @@ namespace Mooh.Presentation.Tests
     /// </summary>
     public sealed class PlayerAnimatorTests
     {
+        /// <summary>The completion animation replaces a lethal reaction once an irrevocable win settles.</summary>
+        [Fact]
+        public void TheCompletionAnimationOverridesDeathDuringTheWinSettle()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("MBlueL", 6, 1)));
+            Entity monster = Assert.Single(harness.Level.World.Entities, entity => entity.BlueMonsterBody is not null);
+            Assert.True(harness.Level.World.Remove(monster.Id));
+            harness.Step(0.100);
+            harness.Damage(1000);
+            harness.Step(1.900);
+
+            Assert.Equal("st_gendoutstart", harness.Animator(harness.Player).Animation.State);
+            Assert.Equal("ODoorOut01", harness.Animator(harness.Player).Frame);
+            harness.Step(0.875);
+            Assert.Equal("st_gendoutlock", harness.Animator(harness.Player).Animation.State);
+            Assert.Null(harness.Animator(harness.Player).Frame);
+        }
+
+        /// <summary>A door already present in the cell opens again instead of creating a duplicate.</summary>
+        [Fact]
+        public void CompletionReusesAnExistingDoor()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1));
+            harness.Begin();
+            harness.Step(0.010);
+            Entity door = Assert.Single(harness.Level.World.Entities, entity => entity.DoorBody is not null);
+
+            _ = harness.Level.Simulation.BeginLevelExit();
+            harness.Step(0.001);
+
+            Assert.Same(door, Assert.Single(harness.Level.World.Entities, entity => entity.DoorBody is not null));
+            Assert.Equal("st_dooropen", harness.Animator(door).Animation.State);
+            Assert.Equal("st_gendoutstart", harness.Animator(harness.Player).Animation.State);
+        }
+
+        /// <summary>The player enters a completion door and stays hidden while that door closes.</summary>
+        [Fact]
+        public void TheCompletionDoorUsesTheRecoveredEntryAndClosingAnimations()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1));
+            _ = harness.Level.Simulation.BeginLevelExit();
+            harness.Step(0.001);
+            Entity door = Assert.Single(harness.Level.World.Entities, entity => entity.DoorBody is not null);
+
+            Assert.Equal("st_gendoutstart", harness.Animator(harness.Player).Animation.State);
+            Assert.Equal("st_doorin", harness.Animator(door).Animation.State);
+            Assert.Equal(-1, harness.Animator(door).Pass);
+            harness.Step(0.500);
+            Assert.Equal("st_gendoutoutwait", harness.Animator(harness.Player).Animation.State);
+            harness.Step(0.374);
+            Assert.Equal("st_gendoutlock", harness.Animator(harness.Player).Animation.State);
+            Assert.Null(harness.Animator(harness.Player).Frame);
+            Assert.Equal("st_doorcloseandout", harness.Animator(door).Animation.State);
+        }
+
+        /// <summary>Finishing while walking preserves the fractional player position and aligns the new door with it.</summary>
+        [Fact]
+        public void TheCompletionDoorPreservesThePlayersMovingPosition()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1));
+            harness.Input(new PlayerInputState(false, false, true, false, false));
+            harness.Step(0.140);
+            Assert.NotNull(harness.Player.Motion);
+            (double x, double y) = DrawnPosition.Of(harness.Player);
+
+            _ = harness.Level.Simulation.BeginLevelExit();
+            Entity door = Assert.Single(harness.Level.World.Entities, entity => entity.DoorBody is not null);
+            Assert.Equal((x, y), DrawnPosition.Of(harness.Player));
+            Assert.Equal((x, y), DrawnPosition.Of(door));
+            harness.Step(0.300);
+            Assert.Equal((x, y), DrawnPosition.Of(harness.Player));
+            Assert.Equal((x, y), DrawnPosition.Of(door));
+        }
+
         /// <summary>Verifies a player standing on the floor shows the single standing frame.</summary>
         [Fact]
         public void AStandingPlayerShowsItsStandingFrame()

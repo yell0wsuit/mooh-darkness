@@ -7,6 +7,18 @@ namespace Mooh.Core.Levels
     /// </summary>
     public sealed class DoorBody
     {
+        /// <summary>Gets whether completion reuses a door already present in the player's cell.</summary>
+        public bool IsExitReuse
+        {
+            get; internal set;
+        }
+
+        /// <summary>Gets the fractional position at which the completion door was created.</summary>
+        public (double X, double Y) DrawOffset
+        {
+            get; internal set;
+        }
+
         /// <summary>
         /// Gets the time left until an unused door is gone, the recovered <c>ST_DoorCloseAndOut</c>
         /// and <c>ST_DoorOut</c>, or <see langword="null"/> while the door is not leaving.

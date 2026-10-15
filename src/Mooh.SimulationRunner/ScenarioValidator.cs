@@ -617,9 +617,9 @@ namespace Mooh.SimulationRunner
                     }
                 }
 
-                ScenarioEntity declaration = scenario.World.Entities.Single(
+                ScenarioEntity? declaration = scenario.World.Entities.SingleOrDefault(
                     candidate => string.Equals(candidate.Alias, entity.Alias, StringComparison.Ordinal));
-                ValidateFinalGameplayState(entity, declaration, source, path);
+                ValidateFinalGameplayState(entity, declaration ?? new ScenarioEntity { Alias = entity.Alias, Position = entity.Position, Interactions = [] }, source, path);
             }
         }
 
@@ -819,7 +819,7 @@ namespace Mooh.SimulationRunner
             string source,
             string path)
         {
-            if (string.IsNullOrWhiteSpace(alias) || !aliases.Contains(alias))
+            if (string.IsNullOrWhiteSpace(alias) || (!aliases.Contains(alias) && !EventObserver.IsSpawnedAlias(alias)))
             {
                 throw Invalid(source, path, $"references unknown entity '{alias}'.");
             }

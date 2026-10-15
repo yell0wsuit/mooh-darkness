@@ -100,5 +100,11 @@ namespace Mooh.Core.Player
         /// (750 ms) and <c>ST_DoorInInWalk</c> (five frames at 75 ms).
         /// </summary>
         ShelterOut,
+
+        /// <summary>The player waits 500 ms and walks into the completion door over 375 ms.</summary>
+        LevelExit,
+
+        /// <summary>The player remains hidden after entering the completion door.</summary>
+        LevelExited,
     }
 }

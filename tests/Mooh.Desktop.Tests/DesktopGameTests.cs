@@ -19,6 +19,56 @@ namespace Mooh.Desktop.Tests
     /// <summary>Verifies the desktop game drives the session, the presenter and the camera.</summary>
     public sealed class DesktopGameTests
     {
+        /// <summary>The host updates the completion walk and waits three seconds before moving on.</summary>
+        [Fact]
+        public void AWinPlaysTheDoorSequenceBeforeMovingOn()
+        {
+            DesktopGame game = Create();
+            game.Update(new PlayerInputState(false, false, false, false, true), [], 0.016);
+            game.Update(default, [], 0.016);
+            for (int frame = 0; frame < 60; frame++)
+            {
+                game.Update(default, [], 0.05);
+            }
+
+            foreach (Core.Entities.Entity entity in game.Session.Level.World.Entities.ToArray())
+            {
+                if (entity.Interactions.HasFlag(Core.Interactions.InteractionMask.LevelEndLock))
+                {
+                    Assert.True(game.Session.Level.World.Remove(entity.Id));
+                }
+            }
+
+            for (int frame = 0; frame < 100 && game.Session.State == GameSessionState.Playing; frame++)
+            {
+                game.Update(default, [], 0.05);
+            }
+
+            Assert.Equal(GameSessionState.LevelCompleted, game.Session.State);
+            Assert.Equal(PlayerActionKind.LevelExit, game.Session.Level.World.Player!.PlayerBody!.Action!.Kind);
+            for (int frame = 0; frame < 20; frame++)
+            {
+                game.Update(default, [], 0.05);
+            }
+
+            Assert.Equal(PlayerActionKind.LevelExited, game.Session.Level.World.Player!.PlayerBody!.Action!.Kind);
+            Assert.DoesNotContain(game.Presenter.Sprites, sprite => sprite.Entity == game.Session.Level.World.Player!.Id);
+            for (int frame = 0; frame < 30; frame++)
+            {
+                game.Update(default, [], 0.05);
+            }
+
+            Assert.Equal(0, game.Session.LevelIndex);
+            Assert.Equal(GameSessionState.LevelCompleted, game.Session.State);
+            for (int frame = 0; frame < 12; frame++)
+            {
+                game.Update(default, [], 0.05);
+            }
+
+            Assert.Equal(1, game.Session.LevelIndex);
+            Assert.Equal(GameSessionState.Playing, game.Session.State);
+        }
+
         /// <summary>Verifies time moves the level and the presenter lists its sprites.</summary>
         [Fact]
         public void TimeMovesTheLevelAndItsSprites()

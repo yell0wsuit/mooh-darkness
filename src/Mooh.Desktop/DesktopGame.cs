@@ -157,10 +157,16 @@ namespace Mooh.Desktop
                 Session.SetPlayerInput(input);
                 events.AddRange(Session.Advance(TimeSpan.FromSeconds(seconds)));
             }
-            else if ((_outcomeSeconds += seconds) >= OutcomeSeconds)
+            else
             {
-                MoveOn();
-                return;
+                events.AddRange(Session.AdvanceOutcome(TimeSpan.FromSeconds(seconds)));
+                double wait = Session.State is GameSessionState.LevelCompleted or GameSessionState.CampaignCompleted
+                    ? 3 : OutcomeSeconds;
+                if ((_outcomeSeconds += seconds) >= wait)
+                {
+                    MoveOn();
+                    return;
+                }
             }
 
             FollowWorldRotation(events, pivot);

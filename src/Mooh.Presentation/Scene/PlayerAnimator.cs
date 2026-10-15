@@ -94,6 +94,8 @@ namespace Mooh.Presentation.Scene
                     PlayerActionKind.TeleportEntry => "st_tportin",
                     PlayerActionKind.TeleportFlight => "st_portmove",
                     PlayerActionKind.TeleportExit => "st_tportout",
+                    PlayerActionKind.LevelExit => "st_gendoutstart",
+                    PlayerActionKind.LevelExited => "st_gendoutlock",
                     PlayerActionKind.LevelEntry => "st_gstartinstart",
                     PlayerActionKind.ShelterIn => "st_dooroutstart",
                     PlayerActionKind.ShelterHidden => "st_doorouthide",

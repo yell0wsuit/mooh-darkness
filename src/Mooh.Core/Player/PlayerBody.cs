@@ -128,15 +128,23 @@ namespace Mooh.Core.Player
                 or PlayerActionKind.LevelEntry
                 or PlayerActionKind.ShelterIn
                 or PlayerActionKind.ShelterHidden
-                or PlayerActionKind.ShelterOut;
+                or PlayerActionKind.ShelterOut
+                or PlayerActionKind.LevelExit
+                or PlayerActionKind.LevelExited;
 
         /// <summary>
         /// Gets whether the player is in a recovered <c>bLockLvlEnd</c> state, which holds the
-        /// win settle open. Among implemented states it is exactly the <c>bImmort</c> set: the
-        /// shock reaction and every tunnel and teleport state carry both flags, and the death
-        /// state carries neither.
+        /// win settle open. Shock, tunnel, teleport, entry and shelter states carry this flag.
+        /// The completion-door states are immortal without holding the outcome open.
         /// </summary>
-        public bool HoldsLevelEndOpen => IsImmortal;
+        public bool HoldsLevelEndOpen => IsImmortal
+            && Action?.Kind is not PlayerActionKind.LevelExit and not PlayerActionKind.LevelExited;
+
+        /// <summary>Gets the stopped fractional position retained while entering the completion door.</summary>
+        public (double X, double Y)? LevelExitOffset
+        {
+            get; internal set;
+        }
 
         /// <summary>
         /// Gets the simulation time at which the player last used the fire control, or
