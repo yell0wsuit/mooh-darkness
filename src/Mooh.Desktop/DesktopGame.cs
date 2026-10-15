@@ -141,6 +141,8 @@ namespace Mooh.Desktop
                 Camera.Follow(x, y, seconds);
             }
 
+            Camera.Shake = Presenter.Shake;
+
             Hud.Update(Session.Level.World, events, Session.TotalScore, seconds, Camera);
         }
 
