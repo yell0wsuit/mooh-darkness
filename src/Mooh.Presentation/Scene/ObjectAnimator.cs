@@ -59,6 +59,21 @@ namespace Mooh.Presentation.Scene
             (depth * DepthShiftX / SceneCamera.CellWidth, depth * DepthShiftY / SceneCamera.CellHeight);
 
         /// <inheritdoc/>
+        public override (string Page, string Frame, bool Additive)? BodyUnderlay
+        {
+            get
+            {
+                if (Frame is null || look?.SynchronizedGlow is not { Frames.Count: > 0 } layer)
+                {
+                    return null;
+                }
+
+                int index = (int)(Animation.Position / Math.Max(Animation.Frames.Count, 1) * layer.Frames.Count);
+                return (layer.Page, layer.Frames[index % layer.Frames.Count], layer.Additive);
+            }
+        }
+
+        /// <inheritdoc/>
         public override IReadOnlyList<(string Page, string Frame)> Underlays(double clockMilliseconds)
         {
             return Frame is not null && look?.Glow is { Frames.Count: > 0 } glow
@@ -66,7 +81,7 @@ namespace Mooh.Presentation.Scene
                 : [];
         }
 
-        /// <summary>Gets the overlay at the object's animation phase.</summary>
+        /// <summary>Gets the overlay at its independent game-clock phase.</summary>
         /// <inheritdoc/>
         public override IReadOnlyList<(string Page, string Frame)> Overlays(double clockMilliseconds)
         {
@@ -75,7 +90,7 @@ namespace Mooh.Presentation.Scene
                 return [];
             }
 
-            int index = (int)(Animation.Position / Math.Max(Animation.Frames.Count, 1) * overlay.Frames.Count);
+            int index = (int)(clockMilliseconds * overlay.FramesPerMillisecond);
             return [(overlay.Page, overlay.Frames[index % overlay.Frames.Count])];
         }
 

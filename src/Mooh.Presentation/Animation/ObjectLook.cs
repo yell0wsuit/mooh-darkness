@@ -32,6 +32,12 @@ namespace Mooh.Presentation.Animation
         LayerAnimation? Glow = null,
         LayerAnimation? Overlay = null)
     {
+        /// <summary>Gets the synchronized layer drawn between the object's shadow and body.</summary>
+        public SynchronizedAnimation? SynchronizedGlow
+        {
+            get; init;
+        }
+
         /// <summary>
         /// Gets the registration's own sound aliases by field: <c>PlStepSnd</c>, <c>SndLand</c>,
         /// <c>SndKill</c>, <c>SndEat</c>, <c>SndMove</c> and <c>SndExpl</c>, where it names one.

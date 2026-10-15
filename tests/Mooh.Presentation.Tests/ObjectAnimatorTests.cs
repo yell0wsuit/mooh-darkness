@@ -124,6 +124,65 @@ namespace Mooh.Presentation.Tests
             }
         }
 
+        /// <summary>Coins and keys draw their synchronized glow between the shadow and body.</summary>
+        [Theory]
+        [InlineData("OCoin01", "Glow1_")]
+        [InlineData("OCoin02", "Glow2_")]
+        [InlineData("OCoin03", "Glow3_")]
+        [InlineData("OKDKey1", "Glow1_")]
+        [InlineData("OKDKey2", "Glow2_")]
+        [InlineData("OKDKey3", "Glow3_")]
+        public void CoinsAndKeysDrawTheirSynchronizedGlow(string type, string prefix)
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, (type, 5, 1)));
+            harness.Step(0.120);
+            Entity pickup = Placed(harness);
+            EntityAnimator animator = harness.Animator(pickup);
+            List<SceneSprite> sprites = [.. harness.Presenter.Sprites.Where(sprite => sprite.Entity == pickup.Id)];
+            SceneSprite glow = Assert.Single(sprites, sprite => sprite.Additive);
+            int frame = (int)animator.Animation.Position % 20;
+            Assert.Equal(prefix + frame.ToString("00", System.Globalization.CultureInfo.InvariantCulture), glow.Frame);
+            SceneSprite body = sprites[^1];
+            Assert.Equal(animator.Frame, body.Frame);
+            Assert.Equal(glow, sprites[^2]);
+            Assert.False(body.Additive);
+            Assert.Equal((body.X, body.Y, body.Pass), (glow.X, glow.Y, glow.Pass));
+            Assert.All(sprites.Where(sprite => sprite.Page == "SpriteParts"),
+                shadow => Assert.True(sprites.IndexOf(shadow) < sprites.IndexOf(glow)));
+            string initial = glow.Frame;
+            harness.Step(0.175);
+            Assert.NotEqual(initial, harness.Presenter.Sprites.Single(sprite => sprite.Entity == pickup.Id && sprite.Additive).Frame);
+        }
+
+        /// <summary>The burger sparkle follows the game clock independently of its random body phase.</summary>
+        [Fact]
+        public void FoodSparklesFollowTheGameClock()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("OEat01", 5, 1)));
+            harness.Step(0.120);
+            Entity pickup = Placed(harness);
+            Assert.Equal("P1_02", harness.Presenter.Sprites.Single(sprite => sprite.Entity == pickup.Id && sprite.Additive).Frame);
+            harness.Step(1.100);
+            Assert.Equal("P1_00", harness.Presenter.Sprites.Single(sprite => sprite.Entity == pickup.Id && sprite.Additive).Frame);
+        }
+
+        /// <summary>Clock-based glows continue during pause while body animations remain stopped.</summary>
+        [Theory]
+        [InlineData("WBomb", "GlowGr04")]
+        [InlineData("OEat01", "P1_04")]
+        public void ClockBasedLayersContinueWhilePhysicsIsPaused(string type, string expected)
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, (type, 5, 1)));
+            harness.Step(0.120);
+            Entity pickup = Placed(harness);
+            string? bodyFrame = harness.Animator(pickup).Frame;
+
+            harness.Presenter.Update(harness.Level.World, [], 0, bonusSeconds: 0.100);
+
+            Assert.Equal(expected, harness.Presenter.Sprites.Single(sprite => sprite.Entity == pickup.Id && sprite.Additive).Frame);
+            Assert.Equal(bodyFrame, harness.Animator(pickup).Frame);
+        }
+
         /// <summary>Verifies a lit balloon plays its fuse chain through the ticks.</summary>
         [Fact]
         public void ALitBalloonPlaysItsFuseChain()

@@ -102,14 +102,14 @@ namespace Mooh.Presentation.Scene
         /// <param name="seconds">The simulated time of this frame.</param>
         /// <param name="spin">The world rotation in flight, which turns every drawn position.</param>
         /// <param name="build">The level's fly-in, which hides and moves what it has not landed yet.</param>
-        /// <param name="bonusSeconds">The bonus clock's elapsed time when physics and animation are paused.</param>
+        /// <param name="bonusSeconds">The elapsed real time for bonuses and clock-based layers when physics and object animation are paused.</param>
         /// <exception cref="ArgumentNullException"><paramref name="world"/> or <paramref name="events"/> is <see langword="null"/>.</exception>
         public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds, WorldSpin? spin = null, LevelBuild? build = null, double? bonusSeconds = null)
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(events);
 
-            _clockMilliseconds += seconds * 1000;
+            _clockMilliseconds += (bonusSeconds ?? seconds) * 1000;
             HashSet<EntityId> present = [];
             Dictionary<EntityId, Sighting> seen = [];
             List<SceneSprite> sprites = [];
@@ -175,6 +175,11 @@ namespace Mooh.Presentation.Scene
                     if (animator.Shadow is (string shadowPage, string shadowFrame) && CastsShadow(world, x, y))
                     {
                         sprites.Add(new SceneSprite(entity.Id, shadowPage, shadowFrame, x + dx, y + dy, pass));
+                    }
+
+                    if (animator.BodyUnderlay is { } layer)
+                    {
+                        sprites.Add(new SceneSprite(entity.Id, layer.Page, layer.Frame, x + dx, y + dy, pass, layer.Additive));
                     }
 
                     sprites.Add(new SceneSprite(entity.Id, animator.Page, frame, x + dx, y + dy, pass));

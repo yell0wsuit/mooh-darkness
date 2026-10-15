@@ -630,6 +630,7 @@ namespace Mooh.Presentation.Animation
                 LayerOf(parameter, "GlowAnm", effects),
                 LayerOf(parameter, "OverAnm", effects))
             {
+                SynchronizedGlow = SynchronizedOf(parameter),
                 Sounds = sounds,
                 StopsParticles = mask is long particleBits && (particleBits & ParticleStopMask) != 0,
                 LocksMotion = mask is long lockBits && (lockBits & LockMotionMask) != 0,
@@ -644,6 +645,23 @@ namespace Mooh.Presentation.Animation
                 EatLine = registration.TryGetProperty("GetTxt", out JsonElement eatLine) ? LineOf(eatLine) : null,
                 KillLine = registration.TryGetProperty("KillTxt", out JsonElement killLine) ? LineOf(killLine) : null,
             };
+        }
+
+        private static SynchronizedAnimation? SynchronizedOf(JsonElement parameter)
+        {
+            if (parameter.ValueKind != JsonValueKind.Object
+                || !parameter.TryGetProperty("SyncAnim", out JsonElement value)
+                || value.ValueKind != JsonValueKind.Array || value.GetArrayLength() != 2
+                || PageOf(parameter) is not string page)
+            {
+                return null;
+            }
+
+            IReadOnlyList<string> frames = AnimMadeFrames(value[0]);
+            bool additive = value[1].ValueKind == JsonValueKind.Object
+                && value[1].TryGetProperty("ref", out JsonElement mode)
+                && mode.GetString() == "DDraw.OModeAdd";
+            return frames.Count == 0 ? null : new SynchronizedAnimation(page, frames, additive);
         }
 
         /// <summary>
