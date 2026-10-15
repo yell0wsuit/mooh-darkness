@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using Mooh.Desktop.Platform.Audio;
 using Mooh.Presentation.Audio;
@@ -19,6 +20,10 @@ namespace Mooh.Desktop
     /// <param name="random">The source of the file, volume and rate choices.</param>
     internal sealed class SoundBoard(SoundCatalog catalog, IAudioOutput output, string soundsDirectory, Random random)
     {
+        private readonly Dictionary<string, string> _paths = Directory.Exists(soundsDirectory)
+            ? Directory.EnumerateFiles(soundsDirectory, "*.ogg").ToDictionary(
+                path => Path.GetFileNameWithoutExtension(path), StringComparer.OrdinalIgnoreCase)
+            : [with(StringComparer.OrdinalIgnoreCase)];
         private readonly Dictionary<string, object?> _loaded = [with(StringComparer.Ordinal)];
         private readonly Dictionary<string, List<IVoice>> _playing = [with(StringComparer.Ordinal)];
 
@@ -67,7 +72,9 @@ namespace Mooh.Desktop
             string file = sound.Files[random.Next(sound.Files.Count)];
             if (!_loaded.TryGetValue(file, out object? loaded))
             {
-                loaded = output.Load(Path.Combine(soundsDirectory, file + ".ogg"));
+                string path = _paths.TryGetValue(file, out string? actual)
+                    ? actual : Path.Combine(soundsDirectory, file + ".ogg");
+                loaded = output.Load(path);
                 _loaded[file] = loaded;
             }
 

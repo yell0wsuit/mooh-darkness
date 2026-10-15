@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using Mooh.Desktop.Platform.Audio;
 using Mooh.Presentation.Audio;
@@ -24,6 +25,18 @@ namespace Mooh.Desktop.Tests
             (string file, float left, float right, float rate) = Assert.Single(output.Plays);
             Assert.StartsWith("KeyDoor", Path.GetFileName(file), StringComparison.Ordinal);
             Assert.Equal((0.5f, 0.25f, 1f), (left, right, rate));
+        }
+
+        /// <summary>INI filenames resolve to the original asset's actual casing on every filesystem.</summary>
+        [Fact]
+        public void TeleportSoundUsesTheActualAssetFilenameCasing()
+        {
+            RecordingOutput output = new();
+            SoundBoard board = Create(output);
+            board.Play("TPortMove", SoundPlacement.Centered);
+            (string file, _, _, _) = Assert.Single(output.Plays);
+            string sounds = Path.Combine(AppContext.BaseDirectory, "assets", "sounds");
+            Assert.Contains(Path.GetFileName(file), Directory.EnumerateFiles(sounds).Select(Path.GetFileName));
         }
 
         /// <summary>Verifies a centered cue plays unplaced, at full gain, as <c>SndPlay</c> does.</summary>
