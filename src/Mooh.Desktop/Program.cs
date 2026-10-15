@@ -62,7 +62,8 @@ namespace Mooh.Desktop
                 levelFont = BitmapFont.Load(HudPresenter.LevelFontName, stream);
             }
 
-            DesktopGame game = new(new GameSession(pack, options.Difficulty, options.LevelIndex), library, new Random(), strings, levelFont);
+            using SpriteMasks masks = new(Path.Combine(assets, "sprites"));
+            DesktopGame game = new(new GameSession(pack, options.Difficulty, options.LevelIndex), library, new Random(), strings, levelFont, masks);
             try
             {
                 // A machine without a playback device still plays the game, silently.

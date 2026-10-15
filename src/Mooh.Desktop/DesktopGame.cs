@@ -14,6 +14,7 @@ using Mooh.Presentation.Animation;
 using Mooh.Presentation.Audio;
 using Mooh.Presentation.Hud;
 using Mooh.Presentation.Scene;
+using Mooh.Presentation.Sprites;
 using Mooh.Presentation.Text;
 
 namespace Mooh.Desktop
@@ -27,7 +28,14 @@ namespace Mooh.Desktop
     /// <param name="random">The source of the presentation's random choices.</param>
     /// <param name="strings">The recovered text table the help panel and level texts read, if loaded.</param>
     /// <param name="levelFont">The font the level texts are laid out in, if loaded.</param>
-    internal sealed class DesktopGame(GameSession session, AnimationLibrary library, Random random, StringTable? strings = null, BitmapFont? levelFont = null)
+    /// <param name="masks">The sprites' solid pixels, which the pickup sparks need, if loaded.</param>
+    internal sealed class DesktopGame(
+        GameSession session,
+        AnimationLibrary library,
+        Random random,
+        StringTable? strings = null,
+        BitmapFont? levelFont = null,
+        ISpriteMask? masks = null)
     {
         /// <summary>
         /// The longest frame the game accepts. A stall — a window drag, a debugger — would otherwise
@@ -45,6 +53,7 @@ namespace Mooh.Desktop
         private readonly Random _random = random;
         private readonly StringTable? _strings = strings;
         private readonly BitmapFont? _levelFont = levelFont;
+        private readonly ISpriteMask? _masks = masks;
         private double _outcomeSeconds;
         private bool _started;
 
@@ -191,7 +200,7 @@ namespace Mooh.Desktop
         private void StartLevelPresentation()
         {
             _outcomeSeconds = 0;
-            Presenter = new ScenePresenter(_library, _random, _strings);
+            Presenter = new ScenePresenter(_library, _random, _strings, _masks);
             Hud = new HudPresenter(Session.Level.World, _strings, _random, _levelFont);
             Hud.ShowLevelTitle(Session.LevelIndex + 1);
             Camera = new SceneCamera();
