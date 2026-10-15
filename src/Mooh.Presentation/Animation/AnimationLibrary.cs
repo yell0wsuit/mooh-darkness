@@ -262,6 +262,8 @@ namespace Mooh.Presentation.Animation
                 },
                 Flash = FramesOf(effects, "SfxWeapMine"),
                 ColaBubbles = FramesOf(effects, "SfxCola"),
+                IceSnow = FramesOf(effects, "_SfxBonIce"),
+                IceFragments = FramesOf(effects, "_SfxBonIceKill"),
             };
         }
 

@@ -135,5 +135,6 @@ namespace Mooh.Presentation.Audio
     /// <param name="Y">The drawn row.</param>
     /// <param name="IsPlayer">Whether it is the player.</param>
     /// <param name="IsBigBomb">Whether it is a placed big bomb.</param>
-    internal readonly record struct Sighting(string? Type, double X, double Y, bool IsPlayer, bool IsBigBomb);
+    /// <param name="IsFrozenMonster">Whether the monster was frozen when last seen.</param>
+    internal readonly record struct Sighting(string? Type, double X, double Y, bool IsPlayer, bool IsBigBomb, bool IsFrozenMonster = false);
 }

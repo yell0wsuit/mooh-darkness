@@ -114,6 +114,12 @@ namespace Mooh.Presentation.Animation
         /// <summary>Gets the cola's bubbles, <c>SfxCola</c>.</summary>
         public ParticleFrames ColaBubbles { get; init; } = ParticleFrames.None;
 
+        /// <summary>Gets the snow glints emitted when monsters freeze, thaw or shatter.</summary>
+        public ParticleFrames IceSnow { get; init; } = ParticleFrames.None;
+
+        /// <summary>Gets the falling fragments emitted when a frozen monster shatters.</summary>
+        public ParticleFrames IceFragments { get; init; } = ParticleFrames.None;
+
         /// <summary>The page the shared particles draw from, <c>PgParts</c>.</summary>
         public const string PartsPage = "SpriteParts";
 

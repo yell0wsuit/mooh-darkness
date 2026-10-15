@@ -193,6 +193,21 @@ namespace Mooh.Presentation.Tests
             Assert.StartsWith("OGlowLand", sprites[^1].Frame);
         }
 
+        /// <summary>Overlay glows draw in emission order after the sorted world.</summary>
+        [Fact]
+        public void LandingGlowsPreserveEmissionOrder()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("ORock01", 4, 0), ("ORock01", 2, 0)));
+            harness.StepUntil(() => harness.LastEvents.OfType<Landed>().Count() >= 2);
+
+            double[] landed = [.. harness.LastEvents.OfType<Landed>()
+                .Select(item => (double)harness.Level.World.GetEntity(item.EntityId).Position.X)];
+            double[] glows = [.. harness.Presenter.Sprites
+                .Where(sprite => sprite.Frame.StartsWith("OGlowLand", StringComparison.Ordinal))
+                .Select(sprite => Math.Round(sprite.X))];
+            Assert.Equal(landed, glows);
+        }
+
         private static int TwinklesIn(SceneHarness harness, double seconds)
         {
             int started = 0;

@@ -119,7 +119,7 @@ namespace Mooh.Presentation.Scene
             {
                 _ = present.Add(entity.Id);
                 (double seenX, double seenY) = DrawnPosition.Of(entity);
-                seen[entity.Id] = new Sighting(TypeOf(entity), seenX, seenY, entity.PlayerBody is not null, entity.BigBombBody is not null);
+                seen[entity.Id] = new Sighting(TypeOf(entity), seenX, seenY, entity.PlayerBody is not null, entity.BigBombBody is not null, entity.IsFrozenMonster);
                 if (build?.IsDone == false && (entity.PlayerBody is not null || entity.DoorBody is not null))
                 {
                     // Their GameInit runs after construction, so neither animation nor its
@@ -238,6 +238,11 @@ namespace Mooh.Presentation.Scene
             _sprites = [.. sprites.OrderBy(sprite => sprite.Pass)
                 .ThenBy(sprite =>
                 {
+                    if (sprite.Pass == int.MaxValue)
+                    {
+                        return 0;
+                    }
+
                     (double x, double y) = sprite.SortAnchor ?? (sprite.X, sprite.Y);
                     return Math.Round((x * SceneCamera.CellWidth) - (y * SceneCamera.CellHeight));
                 })];

@@ -157,6 +157,7 @@ namespace Mooh.Presentation.Scene
             eaten.UnionWith(events.OfType<PickupCollected>().Select(collected => collected.PickupEntityId));
             HashSet<GridPosition> blasted = [.. events.OfType<ExplosionCellReached>().Select(reached => reached.Position)];
             HashSet<EntityId> exploded = [.. events.OfType<ExplosionStarted>().Select(started => started.EntityId)];
+            HashSet<EntityId> frozen = [.. seen.Where(pair => pair.Value.IsFrozenMonster).Select(pair => pair.Key)];
             foreach (SimulationEvent item in events)
             {
                 switch (item)
@@ -176,6 +177,26 @@ namespace Mooh.Presentation.Scene
                         && seen.TryGetValue(collected.PickupEntityId, out Sighting at)
                         && library.Particles.PickupStars is ParticleBurst stars:
                         Sparks(stars, at, drawn(collected.PickupEntityId));
+                        break;
+                    case EnemyFrozen iced:
+                        _ = frozen.Add(iced.EntityId);
+                        if (seen.TryGetValue(iced.EntityId, out Sighting freezing))
+                        {
+                            IceSnow(freezing, 30, 0.4, 0.5);
+                        }
+
+                        break;
+                    case EnemyThawed thawed:
+                        _ = frozen.Remove(thawed.EntityId);
+                        if (seen.TryGetValue(thawed.EntityId, out Sighting thawing))
+                        {
+                            IceSnow(thawing, 30, 0.4, 0.5);
+                        }
+
+                        break;
+                    case EntityDestroyed destroyed when frozen.Contains(destroyed.EntityId)
+                        && seen.TryGetValue(destroyed.EntityId, out Sighting icy):
+                        ShatterIce(icy);
                         break;
                     case EntityDestroyed destroyed when !eaten.Contains(destroyed.EntityId) && seen.TryGetValue(destroyed.EntityId, out Sighting at):
                         Destroyed(at, exploded.Contains(destroyed.EntityId) || blasted.Contains(new GridPosition((int)Math.Round(at.X), (int)Math.Round(at.Y))), drawn(destroyed.EntityId));
@@ -368,6 +389,47 @@ namespace Mooh.Presentation.Scene
                     Additive = true,
                 });
             }
+        }
+
+        /// <summary>Emits additive snow around a freezing, thawing or shattering monster.</summary>
+        private void IceSnow(Sighting at, int count, double spreadX, double spreadY)
+        {
+            ParticleFrames snow = library.Particles.IceSnow;
+            if (snow.Variants.Count == 0)
+            {
+                return;
+            }
+
+            for (int index = 0; index < count; index++)
+            {
+                _world.Add(new Particle(snow.Page, Pick(snow.Variants), Between(0.01, 0.005),
+                    Between(at.X - spreadX, at.X + spreadX), Between(at.Y - spreadY, at.Y + spreadY))
+                {
+                    SpeedX = Between(-0.0005, 0.0005),
+                    SpeedY = Between(-0.0005, 0.0005),
+                    Additive = true
+                });
+            }
+        }
+
+        private void ShatterIce(Sighting at)
+        {
+            ParticleFrames fragments = library.Particles.IceFragments;
+            if (fragments.Variants.Count > 0)
+            {
+                for (int index = 0; index < 20; index++)
+                {
+                    _world.Add(new Particle(fragments.Page, Pick(fragments.Variants), Between(0.01, 0.005),
+                        Between(at.X - 0.3, at.X + 0.3), Between(at.Y - 0.4, at.Y + 0.4))
+                    {
+                        SpeedX = Between(-0.0005, 0.0005),
+                        SpeedY = Between(0, -0.001),
+                        Gravity = BurstGravity
+                    });
+                }
+            }
+
+            IceSnow(at, 10, 0.3, 0.4);
         }
 
         /// <summary>
