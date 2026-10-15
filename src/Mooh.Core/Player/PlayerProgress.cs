@@ -8,6 +8,10 @@ namespace Mooh.Core.Player
     /// <summary>Stores recovered score, treasure, inventory, key, and timed-bonus state.</summary>
     public sealed class PlayerProgress
     {
+        /// <summary>
+        /// CBonInfo.BonOn adds the recovered 45 seconds to any unused duration, rather than
+        /// replacing the timer when the same bonus is collected again.
+        /// </summary>
         private static readonly TimeSpan BonusDuration = TimeSpan.FromSeconds(45);
         /// <summary>The recovered <c>WeapValReset</c> stock: five grenades and nothing else.</summary>
         private readonly int[] _ammo = [5, 0, 0, 0];
@@ -181,7 +185,7 @@ namespace Mooh.Core.Player
                     _ = AddAmmo(WeaponKind.BigBomb, descriptor.Variant);
                     break;
                 case EntityKind.Ice:
-                    IceRemaining = BonusDuration;
+                    IceRemaining += BonusDuration;
                     break;
                 default:
                     break;
@@ -281,7 +285,7 @@ namespace Mooh.Core.Player
         /// </summary>
         internal void StartCola()
         {
-            ColaRemaining = BonusDuration;
+            ColaRemaining += BonusDuration;
         }
 
         internal void ClearIce()

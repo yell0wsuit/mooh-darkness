@@ -131,9 +131,9 @@ namespace Mooh.Core.Tests.Levels
             Assert.Equal(TimeSpan.Zero, player.PlayerBody.Progress.ColaRemaining);
         }
 
-        /// <summary>Verifies a second cola restarts the full window after its own drink ends.</summary>
+        /// <summary>Verifies BonOn adds the second cola's 45 seconds to the remainder after its drink ends.</summary>
         [Fact]
-        public void SecondColaRestartsTheWindowAfterItsOwnDrink()
+        public void SecondColaExtendsTheWindowAfterItsOwnDrink()
         {
             MaterializedLevel level = Materialize(colaCells: [2, 3]);
             Entity player = level.GetEntity(1);
@@ -146,12 +146,15 @@ namespace Mooh.Core.Tests.Levels
                 TimeSpan.FromMilliseconds(43_700));
             Assert.Equal(PlayerActionKind.ColaDrink, player.PlayerBody.Action?.Kind);
 
-            _ = level.Simulation.Advance(TimeSpan.FromMilliseconds(320));
+            TimeSpan remaining = player.PlayerBody.Progress.ColaRemaining;
+            TimeSpan elapsed = TimeSpan.FromMilliseconds(320);
+            _ = level.Simulation.Advance(elapsed);
 
+            TimeSpan expected = remaining + TimeSpan.FromSeconds(45) - elapsed;
             Assert.InRange(
                 player.PlayerBody.Progress.ColaRemaining,
-                TimeSpan.FromMilliseconds(44_980),
-                TimeSpan.FromSeconds(45));
+                expected - TimeSpan.FromMilliseconds(1),
+                expected + TimeSpan.FromMilliseconds(1));
         }
 
         private static PlayerInputState Right()

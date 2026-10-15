@@ -124,7 +124,7 @@ namespace Mooh.Presentation.Audio
         }
 
         /// <summary>
-        /// Plays a bonus's <c>SndOn</c> when it starts or restarts, and its <c>SndOff</c> when it
+        /// Plays a bonus's <c>SndOn</c> when it starts or is extended, and its <c>SndOff</c> when it
         /// runs out within the frame rather than being cut short.
         /// </summary>
         private void Bonus(TimeSpan now, ref TimeSpan before, string on, string off, double milliseconds, double x, double y, List<SoundCue> cues)
