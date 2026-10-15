@@ -111,6 +111,20 @@ namespace Mooh.Core.Grid
         }
 
         /// <summary>
+        /// Tests native sub_49FF30's landing gate: the support cell's deadline has elapsed and
+        /// sub_49D190 finds no moving visible occupant. A vacated-cell lock and a descending
+        /// monster suspend falling without constituting a landing surface.
+        /// </summary>
+        internal static bool AllowsLanding(WorldGrid world, GridPosition cell)
+        {
+            return !world.Contains(cell)
+                || (world.IsCellUnlocked(cell)
+                    && world.GetOccupants(cell).All(occupant =>
+                        (occupant.Interactions & (InteractionMask.OccupancyTransparent | InteractionMask.MonsterTransparent)) != 0
+                        || (occupant.Motion is null && occupant.PlayerBody?.Rotation?.SuspendedProgress is null)));
+        }
+
+        /// <summary>
         /// Reports whether a cell holds an entity moving against a direction, modelling the
         /// recovered <c>CellDirLocked</c> test that selects the <c>CNT_OPrm_AirSlow</c> multiplier.
         /// </summary>

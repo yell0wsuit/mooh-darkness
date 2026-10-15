@@ -524,7 +524,7 @@ namespace Mooh.Core.Simulation
             List<SimulationEvent> events = [];
             StartOwnBlast(source, events);
 
-            _gravity.EvaluateStationary(_world, _gravityDirection, events);
+            EvaluateGravity(events);
             return events;
         }
 
@@ -660,7 +660,7 @@ namespace Mooh.Core.Simulation
             StartBioMasses();
             List<SimulationEvent> events = [];
             SynchronizeMonsterIce(events);
-            _gravity.EvaluateStationary(_world, _gravityDirection, events);
+            EvaluateGravity(events);
             DecideMonsters(events);
             _playerController?.TryStart(events);
             ResolveWeaponCollisions(events);
@@ -895,11 +895,11 @@ namespace Mooh.Core.Simulation
                     && unlockSeconds is double expiringLock
                     && substepSeconds >= expiringLock - TimeTolerance)
                 {
-                    _gravity.EvaluateStationary(_world, _gravityDirection, events);
+                    EvaluateGravity(events);
                 }
                 else if (resolvedExplosion)
                 {
-                    _gravity.EvaluateStationary(_world, _gravityDirection, events);
+                    EvaluateGravity(events);
                 }
 
                 // The original runs DoCtrl once per physics substep, so a repeat time that expires
@@ -914,6 +914,7 @@ namespace Mooh.Core.Simulation
 
                 AdvancePlayerAmbient(substepSeconds, wasStandingStill: ambientSeconds is not null, events);
                 ResolveWeaponCollisions(events);
+                ResolvePendingLandings(events);
 
                 _levelOutcome.Advance(substepSeconds, events);
                 ObserveLossDeath(events);
@@ -1988,7 +1989,7 @@ namespace Mooh.Core.Simulation
             // Gravity never changes direction, so a turn is what moves the level relative to it and
             // everything standing still has to be re-checked. The original gets this for free: the
             // object cycle resumes and re-runs its fall check over every still object.
-            _gravity.EvaluateStationary(_world, _gravityDirection, events);
+            EvaluateGravity(events);
         }
 
         private void FinishMotionBeforeRotation(List<SimulationEvent> events)
@@ -2692,19 +2693,10 @@ namespace Mooh.Core.Simulation
                 if (!_gravity.CanEnter(_world, entity, following))
                 {
                     KinematicsSystem.Stop(entity);
-                    events.Add(new Landed(entity.Id, _gravityDirection));
-                    ResolveFallingImpact(entity, following, events);
-                    if (entity.ExplosionBody?.DetonatesOnLanding == true)
+                    entity.GravityBody!.AwaitingLanding = true;
+                    if (CellQuery.AllowsLanding(_world, following))
                     {
-                        // The recovered ExplWork: the 3x3 blast, then the downward shake again.
-                        StartExplosion(entity, events);
-                        ResolveFallingImpact(entity, following, events);
-                    }
-                    else if (entity.ShakeBody?.ReactsToLanding == true)
-                    {
-                        // The barrel, the magic gem and the arrows name their shake handler as
-                        // OnLand too, so a landing runs it with no repeated shake after it.
-                        ApplyShake(entity, entity.Id, hard: false, events);
+                        CompleteLanding(entity, following, events);
                     }
                 }
                 else
@@ -2714,8 +2706,57 @@ namespace Mooh.Core.Simulation
             }
 
             DecideMonsters(events);
-            _gravity.EvaluateStationary(_world, _gravityDirection, events);
+            EvaluateGravity(events);
             return true;
+        }
+
+        /// <summary>Rechecks deferred landings when a moving support or its cell lock changes.</summary>
+        private void EvaluateGravity(List<SimulationEvent> events)
+        {
+            _gravity.EvaluateStationary(_world, _gravityDirection, events);
+            ResolvePendingLandings(events);
+        }
+
+        private void ResolvePendingLandings(List<SimulationEvent> events)
+        {
+            foreach (Entity entity in _world.Entities.Where(entity => entity.GravityBody?.AwaitingLanding == true))
+            {
+                if (!_world.Entities.Contains(entity) || entity.Motion is not null)
+                {
+                    continue;
+                }
+
+                // A state/timer change can free or stabilize support without a cell boundary.
+                // Re-run the original fall/slide pass before offering its landing callback.
+                if (_gravity.EvaluateStationary(_world, entity, _gravityDirection, events))
+                {
+                    continue;
+                }
+
+                GridPosition following = entity.Position.Offset(_gravityDirection);
+                if (CellQuery.AllowsLanding(_world, following))
+                {
+                    CompleteLanding(entity, following, events);
+                }
+            }
+        }
+
+        private void CompleteLanding(Entity entity, GridPosition following, List<SimulationEvent> events)
+        {
+            entity.GravityBody!.AwaitingLanding = false;
+            events.Add(new Landed(entity.Id, _gravityDirection));
+            ResolveFallingImpact(entity, following, events);
+            if (entity.ExplosionBody?.DetonatesOnLanding == true)
+            {
+                // The recovered ExplWork: the 3x3 blast, then the downward shake again.
+                StartExplosion(entity, events);
+                ResolveFallingImpact(entity, following, events);
+            }
+            else if (entity.ShakeBody?.ReactsToLanding == true)
+            {
+                // The barrel, magic gem and arrows also name their shake handler as OnLand.
+                ApplyShake(entity, entity.Id, hard: false, events);
+            }
         }
 
         private void ResolveFallingImpact(
