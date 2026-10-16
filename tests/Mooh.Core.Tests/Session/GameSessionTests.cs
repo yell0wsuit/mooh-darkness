@@ -20,6 +20,17 @@ namespace Mooh.Core.Tests.Session
     /// </summary>
     public sealed class GameSessionTests
     {
+        /// <summary>Continuing a saved level restores cumulative score before its fresh attempt.</summary>
+        [Fact]
+        public void AContinuedLevelKeepsTheSavedCumulativeScore()
+        {
+            GameSession session = CreateSession(startingScore: 1234);
+            Assert.Equal(1234, session.TotalScore);
+            Assert.Equal(0, session.LevelScore);
+            session.RestartLevel();
+            Assert.Equal(1234, session.TotalScore);
+        }
+
         /// <summary>A win already settling enters the door even if lethal damage occurs during that settle.</summary>
         [Fact]
         public void WinningOverridesALethalReactionDuringTheSettle()
@@ -320,7 +331,7 @@ namespace Mooh.Core.Tests.Session
 
         private const int MonsterObjectId = 3;
 
-        private static GameSession CreateSession(int startingLevelIndex = 0)
+        private static GameSession CreateSession(int startingLevelIndex = 0, int startingScore = 0)
         {
             LoadedLevelPack pack = new(
                 new LevelPackManifest(
@@ -328,7 +339,7 @@ namespace Mooh.Core.Tests.Session
                     null,
                     [new LevelManifestEntry(0, "one", "one.json"), new LevelManifestEntry(1, "two", "two.json")]),
                 [CreateLevel(), CreateLevel()]);
-            return new GameSession(pack, DifficultySpeeds.Standard, startingLevelIndex);
+            return new GameSession(pack, DifficultySpeeds.Standard, startingLevelIndex, startingScore: startingScore);
         }
 
         private static LevelDocument CreateLevel()

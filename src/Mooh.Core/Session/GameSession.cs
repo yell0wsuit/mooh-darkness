@@ -44,6 +44,7 @@ namespace Mooh.Core.Session
         /// <param name="difficultySpeeds">The recovered difficulty profile used for every level.</param>
         /// <param name="startingLevelIndex">The zero-based index of the first level to play.</param>
         /// <param name="gravityDirection">The initial cardinal gravity direction for every level.</param>
+        /// <param name="startingScore">The score already banked before the current level begins.</param>
         /// <exception cref="ArgumentNullException">A required argument is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentException">The pack contains no levels.</exception>
         /// <exception cref="ArgumentOutOfRangeException">
@@ -54,9 +55,11 @@ namespace Mooh.Core.Session
             LoadedLevelPack pack,
             DifficultySpeeds difficultySpeeds,
             int startingLevelIndex = 0,
-            Direction gravityDirection = Direction.Down)
+            Direction gravityDirection = Direction.Down,
+            int startingScore = 0)
         {
             ArgumentNullException.ThrowIfNull(pack);
+            ArgumentOutOfRangeException.ThrowIfNegative(startingScore);
             _difficultySpeeds = difficultySpeeds ?? throw new ArgumentNullException(nameof(difficultySpeeds));
             _levels = pack.Levels ?? throw new ArgumentException("The pack has no levels.", nameof(pack));
             if (_levels.Count == 0)
@@ -71,6 +74,7 @@ namespace Mooh.Core.Session
                 throw new ArgumentOutOfRangeException(nameof(gravityDirection), gravityDirection, null);
             }
 
+            _bankedScore = startingScore;
             _gravityDirection = gravityDirection;
             LevelIndex = startingLevelIndex;
             Level = MaterializeCurrentLevel();
