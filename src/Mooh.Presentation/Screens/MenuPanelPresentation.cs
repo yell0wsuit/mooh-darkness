@@ -132,6 +132,10 @@ namespace Mooh.Presentation.Screens
         private List<ScreenElement> RenderPanel(bool interactive)
         {
             List<ScreenElement> result = [];
+            if (_tiles.Length == 0)
+            {
+                return result;
+            }
             result.AddRange(_tiles.Select(tile => new ScreenSprite("SpriteMenuPrt", tile, 400, Math.Round(PanelY))));
             // Panel contents share the panel's position and stay between its background and controls.
             result.AddRange(Contents.Select(element => Translate(element, 400, PanelY)));
@@ -191,6 +195,18 @@ namespace Mooh.Presentation.Screens
             double y = _pointerY - 45;
             result.AddRange(tiles.Select(tile => new ScreenSprite("SpriteMenuPrt", tile.Frame, x + tile.X, y)));
             result.Add(new ScreenText(text, x, y, "MenuFontToolTip", TextAlignment.Left));
+        }
+
+        /// <summary>Dismisses the panel and its outgoing transitions when leaving menu screens.</summary>
+        public void Clear()
+        {
+            _tiles = [];
+            _title = string.Empty;
+            Contents = [];
+            _buttons.Clear();
+            _outgoing.Clear();
+            _selected = _pressed = _hovered = -1;
+            _elapsed = _tooltipTime = 0;
         }
 
         /// <summary>Starts a panel and centers its complete button group within the background bounds.</summary>

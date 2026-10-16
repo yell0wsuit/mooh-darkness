@@ -79,7 +79,19 @@ namespace Mooh.Desktop
         {
             get;
         }
-        public GameScreen Screen { get; private set; } = GameScreen.Intro;
+        public GameScreen Screen
+        {
+            get;
+            private set
+            {
+                field = value;
+                if (value is GameScreen.Playing or GameScreen.Map or GameScreen.Intro or GameScreen.Outro)
+                {
+                    Menu.Clear();
+                    _extras.Clear();
+                }
+            }
+        } = GameScreen.Intro;
         public DesktopGame? Game
         {
             get; private set;

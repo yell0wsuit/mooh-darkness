@@ -187,8 +187,13 @@ namespace Mooh.Desktop.Tests
             shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
             shell.HandleKey(SDL.Keycode.Escape, true);
             Settle(shell);
+            MenuButton previousButton = Assert.Single(shell.Menu.Buttons, button => button.Id == "end");
             shell.HandleKey(SDL.Keycode.Escape, true);
-            Click(shell, "end");
+            Assert.Empty(shell.Menu.Buttons);
+            Assert.Empty(shell.Menu.Elements);
+            shell.MouseMove((previousButton.Left + previousButton.Right) / 2, (previousButton.Top + previousButton.Bottom) / 2);
+            shell.MouseButton(true);
+            shell.MouseButton(false);
             Assert.Equal(GameScreen.Playing, shell.Screen);
             Assert.Null(shell.Profile.SavedGame);
         }
@@ -299,6 +304,56 @@ namespace Mooh.Desktop.Tests
             Settle(shell);
             shell.HandleKey(key, true);
             Assert.Equal(GameScreen.ScoreEntry, shell.Screen);
+        }
+
+        /// <summary>Opening a gameplay dialog must not animate the dismissed level introduction back onto the screen.</summary>
+        [Theory]
+        [InlineData(SDL.Keycode.F2)]
+        [InlineData(SDL.Keycode.Escape)]
+        public void GameplayDialogsDoNotResurrectTheLevelIntroduction(SDL.Keycode key)
+        {
+            GameShell shell = Create();
+            shell.InspectScreen("prelevel");
+            Settle(shell);
+            string previousTitle = Assert.Single(shell.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntTit").Text;
+            Click(shell, "begin");
+            Assert.Equal(GameScreen.Playing, shell.Screen);
+            shell.Update(default, [], 0.1);
+            shell.HandleKey(key, true);
+            Assert.DoesNotContain(shell.Elements.OfType<ScreenText>(), text => text.Text == previousTitle);
+            _ = Assert.Single(shell.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntTit");
+        }
+
+        /// <summary>Resuming gameplay dismisses the last dialog before another gameplay dialog is opened.</summary>
+        [Theory]
+        [InlineData(SDL.Keycode.F2, SDL.Keycode.Escape)]
+        [InlineData(SDL.Keycode.Escape, SDL.Keycode.F2)]
+        public void ResumedGameplayDoesNotRetainItsPreviousDialog(SDL.Keycode first, SDL.Keycode second)
+        {
+            GameShell shell = Create();
+            shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
+            shell.HandleKey(first, true);
+            Settle(shell);
+            string previousTitle = Assert.Single(shell.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntTit").Text;
+            shell.HandleKey(SDL.Keycode.Escape, true);
+            Assert.Equal(GameScreen.Playing, shell.Screen);
+            shell.HandleKey(second, true);
+            Assert.DoesNotContain(shell.Elements.OfType<ScreenText>(), text => text.Text == previousTitle);
+        }
+
+        /// <summary>The map separates the main menu and level introduction rather than replaying a hidden panel transition.</summary>
+        [Fact]
+        public void StartingFromTheMapDoesNotRestoreTheMainMenu()
+        {
+            GameShell shell = Create();
+            shell.InspectScreen("main");
+            Settle(shell);
+            string previousTitle = Assert.Single(shell.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntTit").Text;
+            shell.HandleKey(SDL.Keycode.F2, true);
+            Assert.Equal(GameScreen.Map, shell.Screen);
+            shell.HandleKey(SDL.Keycode.Return, true);
+            Assert.Equal(GameScreen.PreLevel, shell.Screen);
+            Assert.DoesNotContain(shell.Elements.OfType<ScreenText>(), text => text.Text == previousTitle);
         }
 
         private static void Settle(GameShell shell)
