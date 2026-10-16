@@ -263,6 +263,7 @@ namespace Mooh.Presentation.Animation
                 Flash = FramesOf(effects, "SfxWeapMine"),
                 BeetleCollectionGlow = FramesOf(effects, "_SfxSmall"),
                 ImpactGlow = FramesOf(effects, "SfxGlowStr"),
+                FlightTrail = FramesOf(effects, "SfxFlyTrail"),
                 ColaBubbles = FramesOf(effects, "SfxCola"),
                 IceSnow = FramesOf(effects, "_SfxBonIce"),
                 IceFragments = FramesOf(effects, "_SfxBonIceKill"),

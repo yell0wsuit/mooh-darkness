@@ -117,6 +117,9 @@ namespace Mooh.Presentation.Animation
         /// <summary>Gets the overlay flash emitted when a shake handler receives an impact.</summary>
         public ParticleFrames ImpactGlow { get; init; } = ParticleFrames.None;
 
+        /// <summary>Gets the two five-frame particle sequences emitted behind flying arrows.</summary>
+        public ParticleFrames FlightTrail { get; init; } = ParticleFrames.None;
+
         /// <summary>Gets the cola's bubbles, <c>SfxCola</c>.</summary>
         public ParticleFrames ColaBubbles { get; init; } = ParticleFrames.None;
 

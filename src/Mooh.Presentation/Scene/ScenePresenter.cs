@@ -115,6 +115,7 @@ namespace Mooh.Presentation.Scene
             List<SceneSprite> sprites = [];
             List<SoundCue> sounds = [];
             List<(double X, double Y)> steps = [];
+            List<(double X, double Y, Direction Direction)> trails = [];
             foreach (Entity entity in world.Entities)
             {
                 _ = present.Add(entity.Id);
@@ -145,6 +146,18 @@ namespace Mooh.Presentation.Scene
                     if (!hidden)
                     {
                         steps.Add(DrawnPosition.Of(entity));
+                    }
+                }
+
+                if (animator is ObjectAnimator obj && entity.FlyingArrowBody is { } arrow)
+                {
+                    for (int burst = obj.TakeFlightTrails(); burst > 0; burst--)
+                    {
+                        if (!hidden)
+                        {
+                            (double x, double y) = DrawnPosition.Of(entity);
+                            trails.Add((x, y, arrow.Direction));
+                        }
                     }
                 }
 
@@ -236,7 +249,7 @@ namespace Mooh.Presentation.Scene
             if (build is null || build.IsDone)
             {
                 // The pickup timers are installed by GameInit after construction.
-                _particles.Update(world, events, sighted, blasts, steps, LastDrawn, seconds);
+                _particles.Update(world, events, sighted, blasts, steps, trails, LastDrawn, seconds);
             }
 
             _floating?.Update(world, events, sighted, seconds);

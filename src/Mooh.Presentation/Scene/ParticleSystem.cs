@@ -109,6 +109,7 @@ namespace Mooh.Presentation.Scene
         /// <param name="seen">Where every entity was last drawn, including the ones now gone.</param>
         /// <param name="blasts">The cells a blast was shown in this frame.</param>
         /// <param name="steps">Where the player sounded a step this frame.</param>
+        /// <param name="trails">The positions and flight directions of completed arrow-animation cycles.</param>
         /// <param name="drawn">The frame an entity was last drawn with, if any.</param>
         /// <param name="seconds">The step's length.</param>
         public void Update(
@@ -117,6 +118,7 @@ namespace Mooh.Presentation.Scene
             IReadOnlyDictionary<EntityId, Sighting> seen,
             IReadOnlyList<GridPosition> blasts,
             IReadOnlyList<(double X, double Y)> steps,
+            IReadOnlyList<(double X, double Y, Direction Direction)> trails,
             Func<EntityId, (string Page, string Frame)?> drawn,
             double seconds)
         {
@@ -144,6 +146,10 @@ namespace Mooh.Presentation.Scene
             foreach ((double x, double y) in steps)
             {
                 WalkSmoke(x, y);
+            }
+            foreach ((double x, double y, Direction direction) in trails)
+            {
+                FlightTrail(x, y, direction);
             }
         }
 
@@ -656,6 +662,30 @@ namespace Mooh.Presentation.Scene
                 {
                     Additive = true,
                     Collides = false,
+                });
+            }
+        }
+
+        /// <summary>Emits five short-lived particles drifting opposite to the arrow's flight.</summary>
+        private void FlightTrail(double x, double y, Direction direction)
+        {
+            ParticleFrames trail = library.Particles.FlightTrail;
+            if (trail.Variants.Count == 0)
+            {
+                return;
+            }
+            (int backX, int backY) = Step(Opposite(direction));
+            for (int index = 0; index < 5; index++)
+            {
+                double distance = Between(0.2, 0.4);
+                (double offsetX, double offsetY) = Rotate(backX * distance, backY * distance, Between(-0.3, 0.3));
+                double speed = Between(0.002, 0.003);
+                (double speedX, double speedY) = Rotate(backX * speed, backY * speed, Between(-0.2, 0.2));
+                IReadOnlyList<string> frames = Pick(trail.Variants);
+                _world.Add(new Particle(trail.Page, frames, Between(0.02, 0.01), x + offsetX, y + offsetY)
+                {
+                    SpeedX = speedX,
+                    SpeedY = speedY,
                 });
             }
         }

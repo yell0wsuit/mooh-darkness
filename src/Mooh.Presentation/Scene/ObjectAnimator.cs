@@ -42,6 +42,7 @@ namespace Mooh.Presentation.Scene
     {
         private bool _started;
         private int _bigBombTicks = 30;
+        private int _flightTrailBursts;
 
         /// <summary>The original's <c>CNT_WrdShZX</c>: pixels across per unit of depth.</summary>
         private const double DepthShiftX = -80;
@@ -132,6 +133,16 @@ namespace Mooh.Presentation.Scene
         /// <inheritdoc/>
         public override string? ResolveHandler(string handler)
         {
+            if (handler == "_AEndFArrow")
+            {
+                _flightTrailBursts++;
+                if (Animation.Clip?.Sound is string alias)
+                {
+                    Cue(alias);
+                }
+                return "st_arrowfly";
+            }
+
             if (handler != BigBombTickHandler || _bigBombTicks == 0)
             {
                 return null;
@@ -140,6 +151,24 @@ namespace Mooh.Presentation.Scene
             _bigBombTicks--;
             Cue((_bigBombTicks & 1) != 0 ? "BBombTick1" : "BBombTick2");
             return "st_work";
+        }
+
+        /// <summary>Takes the trail emissions requested by completed flight-animation cycles.</summary>
+        internal int TakeFlightTrails()
+        {
+            int bursts = _flightTrailBursts;
+            _flightTrailBursts = 0;
+            return bursts;
+        }
+
+        /// <inheritdoc/>
+        protected override void CueSound(AnimationClip clip)
+        {
+            if (clip.EndHandler == "_AEndFArrow" && Entity?.Motion?.Cause == Core.Motion.MotionCause.ArrowFlight)
+            {
+                Cue("FlyFly");
+            }
+            base.CueSound(clip);
         }
 
         /// <inheritdoc/>
