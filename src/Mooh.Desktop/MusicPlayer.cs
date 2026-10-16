@@ -33,8 +33,9 @@ namespace Mooh.Desktop
         /// <param name="output">The audio output.</param>
         /// <param name="musicDirectory">The folder holding <c>Music.ini</c> and the modules.</param>
         /// <param name="trackName">The track, such as <c>game</c>.</param>
+        /// <param name="volume">The user's music gain, applied before playback is queued.</param>
         /// <returns>The playing music, or <see langword="null"/> when there is no output or no such track.</returns>
-        public static MusicPlayer? Start(IAudioOutput output, string musicDirectory, string trackName)
+        public static MusicPlayer? Start(IAudioOutput output, string musicDirectory, string trackName, double volume = 1)
         {
             ArgumentNullException.ThrowIfNull(output);
             IReadOnlyDictionary<string, MusicTrack> tracks;
@@ -63,10 +64,10 @@ namespace Mooh.Desktop
                 return null;
             }
 
-            feed.Volume = (float)track.Volume;
             MusicPlayer music = new(feed, new SkalePlayer(module, Rate, track.Position))
             {
-                _trackVolume = track.Volume
+                _trackVolume = track.Volume,
+                Volume = volume,
             };
             music.Pump();
             return music;

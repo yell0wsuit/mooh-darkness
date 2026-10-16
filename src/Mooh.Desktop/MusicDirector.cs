@@ -16,7 +16,7 @@ namespace Mooh.Desktop
             {
                 _playing?.Dispose();
                 _track = track;
-                _playing = track.Length == 0 ? null : MusicPlayer.Start(audio, directory, track);
+                _playing = track.Length == 0 ? null : MusicPlayer.Start(audio, directory, track, volume);
             }
             if (_playing is not null)
             {

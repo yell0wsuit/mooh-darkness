@@ -118,7 +118,7 @@ namespace Mooh.Presentation.Music
         private static (int Start, int End) LoopBounds(SkaleSample sample, int length)
         {
             int start = Math.Max(0, Math.Min(sample.LoopStart, length - 1));
-            int end = Math.Max(start, Math.Min(sample.LoopEnd, length - 1));
+            int end = Math.Max(start, Math.Min(sample.LoopEnd, length));
             return (start, end);
         }
 
@@ -307,6 +307,7 @@ namespace Mooh.Presentation.Music
             channel.Note = final;
             channel.SetPeriod(PeriodOf(final, channel.Finetune));
             channel.Position = 0;
+            channel.SampleReversed = false;
             channel.Fade = FadeFull;
             channel.KeyOff = false;
             channel.On = true;
@@ -911,15 +912,29 @@ namespace Mooh.Presentation.Music
 
             if (sample.LoopType == SkaleSample.PingPongLoop && loopEnd > loopStart)
             {
-                double span = loopEnd - loopStart;
-                double cycle = 2.0 * span;
+                int whole = (int)Math.Floor(channel.Position);
+                double fraction = channel.Position - whole;
                 for (int frame = 0; frame < frames; frame++)
                 {
-                    double unfolded = PositiveModulo(channel.Position + (step * frame) - loopStart, cycle);
-                    positions[frame] = loopStart + (unfolded <= span ? unfolded : cycle - unfolded);
+                    if (channel.SampleReversed && whole <= loopStart)
+                    {
+                        whole = loopStart;
+                        channel.SampleReversed = false;
+                    }
+                    else if (!channel.SampleReversed && whole >= loopEnd)
+                    {
+                        whole = loopEnd - 1;
+                        channel.SampleReversed = true;
+                    }
+
+                    positions[frame] = whole + (channel.SampleReversed ? -fraction : fraction);
+                    double next = fraction + step;
+                    int advance = (int)next;
+                    whole += channel.SampleReversed ? -advance : advance;
+                    fraction = next - advance;
                 }
 
-                channel.Position += step * frames;
+                channel.Position = whole + fraction;
                 return frames;
             }
 
@@ -974,6 +989,11 @@ namespace Mooh.Presentation.Music
             }
 
             public double Position
+            {
+                get; set;
+            }
+
+            public bool SampleReversed
             {
                 get; set;
             }
