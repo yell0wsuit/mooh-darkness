@@ -172,8 +172,8 @@ namespace Mooh.Desktop.Platform.Graphics
             CheckThread();
             Window = SDL.CreateWindow(
                 WindowTitle,
-                LogicalWidth,
-                LogicalHeight,
+                1280,
+                720,
                 flags | SDL.WindowFlags.Resizable | SDL.WindowFlags.HighPixelDensity | SDL.WindowFlags.Hidden);
             if (Window == 0)
             {

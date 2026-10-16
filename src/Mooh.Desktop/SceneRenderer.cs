@@ -18,6 +18,7 @@ namespace Mooh.Desktop
     {
         private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.None);
         private readonly Dictionary<string, Atlas> _atlases = [with(StringComparer.Ordinal)];
+        private readonly SKPaint _backdropPaint = new();
         private readonly SKPaint _additive = new() { BlendMode = SKBlendMode.Plus };
         private readonly string _spritesDirectory = spritesDirectory;
         private SKImage? _backdropImage;
@@ -33,15 +34,49 @@ namespace Mooh.Desktop
             ArgumentNullException.ThrowIfNull(camera);
             (double baseX, double baseY) = camera.Base;
             BackdropLayout layout = backdrop.Layout(baseX, baseY);
-            _backdropImage ??= SKImage.FromEncodedData(Path.Combine(_spritesDirectory, "..", "screens", Backdrop.ImageName + ".jpg"));
+            if (_backdropImage is null)
+            {
+                _backdropImage = SKImage.FromEncodedData(Path.Combine(_spritesDirectory, "..", "screens", Backdrop.ImageName + ".jpg"));
+                if (_backdropImage is not null)
+                {
+                    using SKShader shader = _backdropImage.ToShader(SKShaderTileMode.Mirror, SKShaderTileMode.Clamp, Sampling);
+                    _backdropPaint.Shader = shader;
+                }
+            }
+            float margin = (float)camera.HorizontalMargin;
             if (_backdropImage is not null)
             {
-                canvas.DrawImage(_backdropImage, layout.ImageX, layout.ImageY, Sampling);
+                // Keep source pixels at their original scale, mirroring only beyond the image's edges.
+                int saved = canvas.Save();
+                canvas.Translate(layout.ImageX, layout.ImageY);
+                canvas.DrawRect(SKRect.Create(-margin - layout.ImageX, -layout.ImageY, 800 + (2 * margin), 600), _backdropPaint);
+                canvas.RestoreToCount(saved);
             }
 
+            double firstColumn = layout.Sprites.Count > 0 ? layout.Sprites[0].X : 0;
+            double lastColumn = firstColumn;
+            foreach (BackdropSprite sprite in layout.Sprites)
+            {
+                if (sprite.Page != Backdrop.LampPage)
+                {
+                    lastColumn = Math.Max(lastColumn, sprite.X);
+                }
+            }
             foreach (BackdropSprite sprite in layout.Sprites)
             {
                 DrawFrame(canvas, sprite.Page, sprite.Frame, sprite.X, sprite.Y, sprite.Additive ? _additive : null);
+                if (margin > 0 && sprite.Page != Backdrop.LampPage)
+                {
+                    // One additional 250-pixel column on each side covers the 16:9 overscan.
+                    if (sprite.X == firstColumn)
+                    {
+                        DrawFrame(canvas, sprite.Page, sprite.Frame, sprite.X - 250, sprite.Y, null);
+                    }
+                    if (sprite.X == lastColumn)
+                    {
+                        DrawFrame(canvas, sprite.Page, sprite.Frame, sprite.X + 250, sprite.Y, null);
+                    }
+                }
             }
         }
 
@@ -74,12 +109,12 @@ namespace Mooh.Desktop
         }
 
         /// <summary>Repeats the menu shade texture across the original logical screen.</summary>
-        internal void DrawScreenTile(SKCanvas canvas, string page, string name)
+        internal void DrawScreenTile(SKCanvas canvas, string page, string name, float horizontalMargin = 0)
         {
             SpriteFrame frame = AtlasOf(page).Frames[name];
             for (int y = -frame.Height; y < 600; y += frame.Height)
             {
-                for (int x = -frame.Width; x < 800; x += frame.Width)
+                for (int x = -frame.Width - (int)Math.Ceiling(horizontalMargin); x < 800 + horizontalMargin; x += frame.Width)
                 {
                     DrawFrame(canvas, page, name, x - frame.PivotX, y - frame.PivotY, null);
                 }
@@ -102,6 +137,7 @@ namespace Mooh.Desktop
             _atlases.Clear();
             _backdropImage?.Dispose();
             _additive.Dispose();
+            _backdropPaint.Dispose();
         }
 
         private void DrawFrame(SKCanvas canvas, string page, string name, double x, double y, SKPaint? paint)

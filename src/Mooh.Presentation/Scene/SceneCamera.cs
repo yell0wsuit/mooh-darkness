@@ -31,6 +31,12 @@ namespace Mooh.Presentation.Scene
         /// <summary>The original's <c>CNT_ScrPlFitK</c>, per millisecond.</summary>
         private const double FitPerMillisecond = -0.004;
 
+        /// <summary>Gets or sets the additional visible width on each side of the original screen.</summary>
+        public double HorizontalMargin
+        {
+            get; set;
+        }
+
         private double _baseX;
         private double _baseY;
 

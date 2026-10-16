@@ -36,7 +36,7 @@ namespace Mooh.Desktop
         private bool _quit;
         private int _frames;
         private ScreenRenderer? _screens;
-        private SKSurface? _lowColor;
+        private readonly FramePresentation _presentation = new();
         private bool? _fullscreen;
         private bool _textInput;
 
@@ -74,6 +74,14 @@ namespace Mooh.Desktop
                 PumpEvents();
                 TimeSpan now = _clock.Elapsed;
                 PlayerInputState input = options.Script is null ? _controls.PlayerInput : options.ScriptedInput(shell.Game?.ElapsedSeconds ?? 0);
+                if (shell.Game is DesktopGame currentGame)
+                {
+                    _ = SDL.GetWindowSize(device.Window, out int viewWidth, out int viewHeight);
+                    if (viewWidth > 0 && viewHeight > 0)
+                    {
+                        currentGame.Camera.HorizontalMargin = FramePresentation.HorizontalMargin(viewWidth, viewHeight);
+                    }
+                }
                 shell.Update(input, _controls.TakeCommands(), (now - previous).TotalSeconds, _controls.AnyKeyHeld);
                 sounds.Volume = shell.Profile.Options.SoundVolume;
                 sounds.Play(shell.Sounds, shell.Game?.Camera ?? new Presentation.Scene.SceneCamera());
@@ -100,7 +108,7 @@ namespace Mooh.Desktop
         {
             shell.SaveProgress();
             _screens?.Dispose();
-            _lowColor?.Dispose();
+            _presentation.Dispose();
             _ = SDL.ShowCursor();
             _selection?.Dispose();
             if (_sdlStarted)
@@ -217,37 +225,19 @@ namespace Mooh.Desktop
                 return;
             }
 
-            SKCanvas canvas = device.Canvas;
-            canvas.ResetMatrix();
-            canvas.Clear(SKColors.Black);
-            float scale = Math.Min(device.Width / (float)SdlGraphicsDevice.LogicalWidth, device.Height / (float)SdlGraphicsDevice.LogicalHeight);
-            int saved = canvas.Save();
-            canvas.Translate(
-                (device.Width - (SdlGraphicsDevice.LogicalWidth * scale)) / 2,
-                (device.Height - (SdlGraphicsDevice.LogicalHeight * scale)) / 2);
-            canvas.Scale(scale);
-            canvas.ClipRect(SKRect.Create(0, 0, SdlGraphicsDevice.LogicalWidth, SdlGraphicsDevice.LogicalHeight));
-            canvas.Clear(Backdrop);
-            SKCanvas target = canvas;
-            if (!shell.Profile.Options.FullColor)
-            {
-                _lowColor ??= SKSurface.Create(new SKImageInfo(800, 600, SKColorType.Rgb565, SKAlphaType.Opaque));
-                target = _lowColor.Canvas;
-                target.Clear(Backdrop);
-            }
-            if (shell.ShowsWorld && shell.Game is DesktopGame game)
-            {
-                scene.DrawBackdrop(target, game.Backdrop, game.Camera);
-                scene.Draw(target, game.Presenter.Sprites, game.Camera);
-                hud.Draw(target, game, scene);
-            }
-            _screens!.Draw(target, shell.Elements);
-            if (target != canvas)
-            {
-                using SKImage reduced = _lowColor!.Snapshot();
-                canvas.DrawImage(reduced, 0, 0, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
-            }
-            canvas.RestoreToCount(saved);
+            _presentation.Draw(device.Canvas, device.Width, device.Height, shell.ShowsWorld,
+                shell.Profile.Options.FullColor, (target, margin) =>
+                {
+                    target.Clear(Backdrop);
+                    if (shell.ShowsWorld && shell.Game is DesktopGame game)
+                    {
+                        game.Camera.HorizontalMargin = margin;
+                        scene.DrawBackdrop(target, game.Backdrop, game.Camera);
+                        scene.Draw(target, game.Presenter.Sprites, game.Camera);
+                        hud.Draw(target, game, scene);
+                    }
+                    _screens!.Draw(target, shell.Elements, margin);
+                });
             device.Flush();
             _frames++;
             if ((options.QuitAfterFrames is int limit && _frames >= limit)

@@ -16,6 +16,20 @@ namespace Mooh.Presentation.Tests
     /// </summary>
     public sealed class HudPresenterTests
     {
+        /// <summary>The centered key group stays together when the side panels move outward.</summary>
+        [Fact]
+        public void WidescreenKeepsAllThreeKeysCentered()
+        {
+            HudRun run = new(SceneHarness.BuildLevel(1, ("OKDKey1", 2, 1), ("OKDKey2", 3, 1), ("OKDKey3", 4, 1)))
+            {
+                Camera = new Mooh.Presentation.Scene.SceneCamera { HorizontalMargin = 400.0 / 3 }
+            };
+            run.Step(0.016);
+            Assert.Equal(new HudSprite("PSmKeyBlue", 480, 600), run.Sprite("PSmKeyBlue"));
+            Assert.Equal(new HudSprite("PSmKeyRed", 320, 600), run.Sprite("PSmKeyRed"));
+            Assert.Equal(new HudSprite("PSmKeyYellow", 400, 600), run.Sprite("PSmKeyYellow"));
+        }
+
         /// <summary>
         /// Verifies a level without monsters, keys, bonuses or other weapons shows only the health,
         /// score and grenade panels, each with its value beside it.

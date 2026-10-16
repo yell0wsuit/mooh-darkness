@@ -264,7 +264,10 @@ namespace Mooh.Desktop
             {
                 Hud.ShowLevelTitle(Session.LevelIndex + 1);
             }
-            Camera = new SceneCamera();
+            Camera = new SceneCamera
+            {
+                HorizontalMargin = Camera.HorizontalMargin
+            };
             LevelDocument level = Session.Level.Source;
             Backdrop = new Backdrop(
                 Backdrop.StyleOf(level.Objects?.Select(item => item.Type ?? string.Empty) ?? [], _library),

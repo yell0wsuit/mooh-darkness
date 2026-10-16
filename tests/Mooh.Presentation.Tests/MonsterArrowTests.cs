@@ -56,6 +56,28 @@ namespace Mooh.Presentation.Tests
             Assert.DoesNotContain(run.Hud.Sprites, sprite => sprite.Frame.StartsWith("PA", System.StringComparison.Ordinal));
         }
 
+        /// <summary>A monster visible in the additional world area needs no indicator.</summary>
+        [Fact]
+        public void WidescreenRevealsMonsterAndMovesPanelsToEdges()
+        {
+            HudRun run = Run(("MGrL", 7, 1));
+            run.Camera!.HorizontalMargin = 400.0 / 3;
+            run.Step(0.016);
+            Assert.DoesNotContain(run.Hud.Sprites, sprite => sprite.Frame.StartsWith("PA", System.StringComparison.Ordinal));
+            Assert.Contains(run.Hud.Sprites, sprite => sprite.Frame == "PNrmHealth" && sprite.X < 0);
+        }
+
+        /// <summary>An offscreen monster points to the extended edge.</summary>
+        [Fact]
+        public void WidescreenIndicatorUsesExtendedEdge()
+        {
+            HudRun run = Run(("MGrL", 7, 1));
+            run.Camera!.HorizontalMargin = 400.0 / 3;
+            run.Camera.Snap(0, 1);
+            run.Step(0.016);
+            Assert.Contains(new HudSprite("PAGr_Right", 928, 300), run.Hud.Sprites);
+        }
+
         private static HudRun Run(params (string Type, int X, int Y)[] monsters)
         {
             HudRun run = new(SceneHarness.BuildLevel(1, monsters))

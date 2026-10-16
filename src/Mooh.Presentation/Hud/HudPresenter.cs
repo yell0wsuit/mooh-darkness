@@ -114,6 +114,7 @@ namespace Mooh.Presentation.Hud
         private bool _treasureEarned;
         private double? _lastHealth;
         private double _sinceHeartbeat = HeartbeatMilliseconds;
+        private double _horizontalMargin;
         private List<HudSprite> _sprites = [];
         private List<HudText> _texts = [];
 
@@ -180,6 +181,7 @@ namespace Mooh.Presentation.Hud
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(events);
+            _horizontalMargin = camera?.HorizontalMargin ?? 0;
             double milliseconds = seconds * 1000;
             Entity? player = world.Player;
             HealthBody? health = player?.HealthBody;
@@ -264,13 +266,15 @@ namespace Mooh.Presentation.Hud
                 (double screenX, double screenY) = camera.ToScreen(drawnX, drawnY);
                 int x = (int)Math.Round(screenX);
                 int y = (int)Math.Round(screenY);
-                int column = x < ArrowInset ? 0 : x > 800 - ArrowInset ? 2 : 1;
+                int left = (int)Math.Round(ArrowInset - camera.HorizontalMargin);
+                int right = (int)Math.Round(800 - ArrowInset + camera.HorizontalMargin);
+                int column = x < left ? 0 : x > right ? 2 : 1;
                 int row = y < ArrowInset ? 0 : y > 600 - ArrowInset ? 2 : 1;
                 if (ArrowDirections[row, column] is string direction)
                 {
                     sprites.Add(new HudSprite(
                         kind + direction,
-                        Math.Clamp(x, ArrowInset, 800 - ArrowInset),
+                        Math.Clamp(x, left, right),
                         Math.Clamp(y, ArrowInset, 600 - ArrowInset)));
                 }
             }
@@ -420,16 +424,19 @@ namespace Mooh.Presentation.Hud
                 true => panel.Lit,
                 false => panel.Normal,
             };
+            // Keys form a centered group; other panels attach to their authored side.
+            int horizontalShift = _keys.Contains(panel) ? 0
+                : (int)Math.Round(panel.X < 400 ? -_horizontalMargin : _horizontalMargin);
             sprites.Add(new HudSprite(
                 frame,
-                (int)Math.Floor(panel.X + panel.Spring.X),
+                horizontalShift + (int)Math.Floor(panel.X + panel.Spring.X),
                 (int)Math.Floor(panel.Y + panel.Spring.Y)));
             if (lit is not null && value is int shown)
             {
                 (int x, int y) = panel.TextPoint;
                 texts.Add(new HudText(
                     shown.ToString(CultureInfo.InvariantCulture),
-                    x,
+                    x + horizontalShift,
                     y,
                     panel.TextRight ? TextAlignment.Right : TextAlignment.Left));
             }
