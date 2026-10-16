@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 
 using Mooh.Core.Player;
 using Mooh.Desktop.Platform.Graphics;
@@ -18,12 +19,12 @@ namespace Mooh.Desktop
     /// time, and a draw per frame, paced by vsync.
     /// </summary>
     /// <param name="options">The command line.</param>
-    /// <param name="game">The game to run.</param>
+    /// <param name="shell">The game and screen flow to run.</param>
     /// <param name="scene">The scene renderer.</param>
     /// <param name="sounds">The sound board the game's cues play on.</param>
     /// <param name="music">The music, kept fed every frame, or <see langword="null"/> when silent.</param>
     /// <param name="hud">The panel renderer.</param>
-    internal sealed class SdlApplication(DesktopOptions options, DesktopGame game, SceneRenderer scene, SoundBoard sounds, MusicPlayer? music, HudRenderer hud) : IDisposable
+    internal sealed class SdlApplication(DesktopOptions options, GameShell shell, SceneRenderer scene, SoundBoard sounds, MusicDirector music, HudRenderer hud) : IDisposable
     {
         /// <summary>The level's backdrop until the original's parallax layers are drawn.</summary>
         private static readonly SKColor Backdrop = new(24, 30, 46);
@@ -34,6 +35,10 @@ namespace Mooh.Desktop
         private bool _sdlStarted;
         private bool _quit;
         private int _frames;
+        private ScreenRenderer? _screens;
+        private SKSurface? _lowColor;
+        private bool? _fullscreen;
+        private bool _textInput;
 
         /// <summary>Opens the window and runs until it is closed or the frame limit is reached.</summary>
         /// <exception cref="InvalidOperationException">SDL could not start.</exception>
@@ -60,16 +65,31 @@ namespace Mooh.Desktop
             _ = SDL.SetWindowTitle(device.Window, $"{SdlGraphicsDevice.WindowTitle} | {device.Kind}");
             _ = SDL.SetWindowMinimumSize(device.Window, SdlGraphicsDevice.LogicalWidth / 2, SdlGraphicsDevice.LogicalHeight / 2);
             _ = SDL.ShowWindow(device.Window);
+            _ = SDL.HideCursor();
+            _screens = new ScreenRenderer(Path.Combine(AppContext.BaseDirectory, "assets", "screens"), scene, hud);
             _clock.Start();
             TimeSpan previous = _clock.Elapsed;
             while (!_quit)
             {
                 PumpEvents();
                 TimeSpan now = _clock.Elapsed;
-                PlayerInputState input = options.Script is null ? _controls.PlayerInput : options.ScriptedInput(game.ElapsedSeconds);
-                game.Update(input, _controls.TakeCommands(), (now - previous).TotalSeconds, _controls.AnyKeyHeld);
-                sounds.Play(game.Sounds, game.Camera);
-                music?.Pump();
+                PlayerInputState input = options.Script is null ? _controls.PlayerInput : options.ScriptedInput(shell.Game?.ElapsedSeconds ?? 0);
+                shell.Update(input, _controls.TakeCommands(), (now - previous).TotalSeconds, _controls.AnyKeyHeld);
+                sounds.Volume = shell.Profile.Options.SoundVolume;
+                sounds.Play(shell.Sounds, shell.Game?.Camera ?? new Presentation.Scene.SceneCamera());
+                music.Update(shell.TrackName, shell.Profile.Options.MusicVolume);
+                if (_fullscreen != shell.Profile.Options.Fullscreen)
+                {
+                    _fullscreen = shell.Profile.Options.Fullscreen;
+                    _ = SDL.SetWindowFullscreen(device.Window, _fullscreen.Value);
+                }
+                bool textInput = shell.Screen == GameScreen.ScoreEntry;
+                if (_textInput != textInput)
+                {
+                    _textInput = textInput;
+                    _ = textInput ? SDL.StartTextInput(device.Window) : SDL.StopTextInput(device.Window);
+                }
+                _quit |= shell.ShouldQuit;
                 previous = now;
                 DrawFrame(device);
             }
@@ -78,6 +98,10 @@ namespace Mooh.Desktop
         /// <summary>Releases the atlases' window and SDL.</summary>
         public void Dispose()
         {
+            shell.SaveProgress();
+            _screens?.Dispose();
+            _lowColor?.Dispose();
+            _ = SDL.ShowCursor();
             _selection?.Dispose();
             if (_sdlStarted)
             {
@@ -140,11 +164,44 @@ namespace Mooh.Desktop
                 }
                 else if (type == SDL.EventType.KeyDown)
                 {
-                    _controls.KeyDown(e.Key.Key, e.Key.Repeat);
+                    GameScreen before = shell.Screen;
+                    shell.HandleKey(e.Key.Key, !e.Key.Repeat || shell.Screen == GameScreen.ScoreEntry);
+                    if (before != shell.Screen)
+                    {
+                        _controls.ReleaseAll();
+                    }
+                    else if (shell.Screen == GameScreen.Playing)
+                    {
+                        _controls.KeyDown(e.Key.Key, e.Key.Repeat);
+                    }
                 }
                 else if (type == SDL.EventType.KeyUp)
                 {
-                    _controls.KeyUp(e.Key.Key);
+                    shell.HandleKey(e.Key.Key, false);
+                    if (shell.Screen == GameScreen.Playing)
+                    {
+                        _controls.KeyUp(e.Key.Key);
+                    }
+                }
+                else if (type == SDL.EventType.TextInput)
+                {
+                    shell.HandleText(Marshal.PtrToStringUTF8(e.Text.Text) ?? string.Empty);
+                }
+                else if (type == SDL.EventType.MouseMotion)
+                {
+                    _ = SDL.GetWindowSize(_selection!.Device.Window, out int width, out int height);
+                    double scale = Math.Min(width / 800.0, height / 600.0);
+                    shell.MouseMove((e.Motion.X - ((width - (800 * scale)) / 2)) / scale,
+                        (e.Motion.Y - ((height - (600 * scale)) / 2)) / scale);
+                }
+                else if (type is SDL.EventType.MouseButtonDown or SDL.EventType.MouseButtonUp)
+                {
+                    GameScreen before = shell.Screen;
+                    shell.MouseButton(type == SDL.EventType.MouseButtonDown, e.Button.Button == 3);
+                    if (before != shell.Screen)
+                    {
+                        _controls.ReleaseAll();
+                    }
                 }
                 else if (type == SDL.EventType.WindowFocusLost)
                 {
@@ -171,14 +228,30 @@ namespace Mooh.Desktop
             canvas.Scale(scale);
             canvas.ClipRect(SKRect.Create(0, 0, SdlGraphicsDevice.LogicalWidth, SdlGraphicsDevice.LogicalHeight));
             canvas.Clear(Backdrop);
-            scene.DrawBackdrop(canvas, game.Backdrop, game.Camera);
-            scene.Draw(canvas, game.Presenter.Sprites, game.Camera);
-            hud.Draw(canvas, game, scene);
+            SKCanvas target = canvas;
+            if (!shell.Profile.Options.FullColor)
+            {
+                _lowColor ??= SKSurface.Create(new SKImageInfo(800, 600, SKColorType.Rgb565, SKAlphaType.Opaque));
+                target = _lowColor.Canvas;
+                target.Clear(Backdrop);
+            }
+            if (shell.ShowsWorld && shell.Game is DesktopGame game)
+            {
+                scene.DrawBackdrop(target, game.Backdrop, game.Camera);
+                scene.Draw(target, game.Presenter.Sprites, game.Camera);
+                hud.Draw(target, game, scene);
+            }
+            _screens!.Draw(target, shell.Elements);
+            if (target != canvas)
+            {
+                using SKImage reduced = _lowColor!.Snapshot();
+                canvas.DrawImage(reduced, 0, 0, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
+            }
             canvas.RestoreToCount(saved);
             device.Flush();
             _frames++;
             if ((options.QuitAfterFrames is int limit && _frames >= limit)
-                || (options.QuitAfterSeconds is double seconds && game.ElapsedSeconds >= seconds))
+                || (options.QuitAfterSeconds is double seconds && shell.ElapsedSeconds >= seconds))
             {
                 SaveScreenshot(device);
                 _quit = true;

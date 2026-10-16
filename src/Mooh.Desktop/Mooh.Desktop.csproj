@@ -14,8 +14,11 @@
     <Content Include="../../assets/sprites/*.png;../../assets/sprites/*.seq"
              Link="assets/sprites/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../assets/screens/BackA_1_01.jpg"
-             Link="assets/screens/%(Filename)%(Extension)"
+    <Content Include="../../assets/screens/**/*"
+             Link="assets/screens/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/map/*.waypoints"
+             Link="assets/map/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/sounds/*.ogg;../../assets/sounds/Sound.ini"
              Link="assets/sounds/%(Filename)%(Extension)"

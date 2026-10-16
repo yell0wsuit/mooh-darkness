@@ -2,15 +2,36 @@
 
 Mooh Darkness is a rewrite of the 2007 grid-based puzzle game, Crazy Chicken: Jewel of Darkness. The project targets .NET 10.
 
-The current milestone is deliberately headless. `Mooh.Core` loads and validates the committed 150-level authoritative JSON pack into strongly typed archival models without creating runtime simulation entities. It also simulates a zero-or-one-player world with health, damage immunity, shock and death reactions, plus autonomous green and blue monsters. Green monsters walk forward and turn clockwise around obstacles; blue monsters follow their recovered left-hand navigation rule. Both wind up strikes, recheck targets, and recover. Walking, pushing, gravity, and round-object sliding share deterministic occupancy and continuous-motion rules. Each update returns an ordered typed event trace suitable for tests and a future renderer.
+The desktop port uses SDL3 and SkiaSharp and includes the shipped 150-level pack, gameplay, original sprites and bitmap fonts, sound effects and module music. The original screen flow is connected: intro, main menu, instructions/loading, map, level introduction, gameplay, pause/options/restart, level statistics, high scores, campaign completion and outro. Dormant object types and unreachable editor/registration menus are excluded.
 
-Runtime materialization of archival level objects, MonoGame integration, rendering, keyboard and gamepad input adapters, and complete collision physics are outside the current milestone.
+Run the game with:
+
+```bash
+dotnet run --project src/Mooh.Desktop
+```
+
+Use the arrow keys to move, Space to fire, Enter to cycle weapons, and 1–4 to select a weapon. Escape, P or Pause opens the pause menu; F2 opens restart confirmation and F10 opens options from a menu. Menus support keyboard selection and mouse input. The map makes passed stages and the next unpassed stage available.
+
+Progress, options and high scores use JSON in `MoohDarkness_SaveData/player-profile.json`. The save folder follows the other DX ports: beside the executable when writable (except inside a macOS app bundle), then Documents, then local application data. Continue restarts the saved level with the cumulative score, matching the original save contract. Timed runs do not retain a Continue slot.
+
+For a direct gameplay or screen capture:
+
+```bash
+dotnet run --project src/Mooh.Desktop -- --level 1 --seconds 10 --screenshot gameplay.png
+dotnet run --project src/Mooh.Desktop -- --screen map --renderer software --seconds 1 --screenshot map.png
+```
+
+`--screen` also accepts `intro`, `main`, `instructions`, `options`, `scores`, `prelevel`, `pause`, `statistics`, `complete` and `outro`. Screen inspection uses a temporary in-memory profile. Rendering preserves the original 800×600 layout with letterboxing; the renderer can be selected with `--renderer metal|opengl|software`.
 
 ## Build and test
 
 ```bash
 dotnet build Mooh.slnx
-dotnet test Mooh.slnx
+dotnet tests/Mooh.Core.Tests/bin/Debug/net10.0/Mooh.Core.Tests.dll
+dotnet tests/Mooh.Presentation.Tests/bin/Debug/net10.0/Mooh.Presentation.Tests.dll
+dotnet tests/Mooh.Desktop.Tests/bin/Debug/net10.0/Mooh.Desktop.Tests.dll
+dotnet tests/Mooh.Desktop.Platform.Tests/bin/Debug/net10.0/Mooh.Desktop.Platform.Tests.dll
+dotnet tests/Mooh.SimulationRunner.Tests/bin/Debug/net10.0/Mooh.SimulationRunner.Tests.dll
 ```
 
 ## Deterministic simulation scenarios

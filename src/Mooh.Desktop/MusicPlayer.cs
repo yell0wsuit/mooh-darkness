@@ -20,6 +20,7 @@ namespace Mooh.Desktop
 
         private readonly IAudioFeed _feed;
         private readonly SkalePlayer _player;
+        private double _trackVolume = 1;
         private readonly float[] _chunk = new float[ChunkFrames * 2];
 
         private MusicPlayer(IAudioFeed feed, SkalePlayer player)
@@ -63,7 +64,10 @@ namespace Mooh.Desktop
             }
 
             feed.Volume = (float)track.Volume;
-            MusicPlayer music = new(feed, new SkalePlayer(module, Rate, track.Position));
+            MusicPlayer music = new(feed, new SkalePlayer(module, Rate, track.Position))
+            {
+                _trackVolume = track.Volume
+            };
             music.Pump();
             return music;
         }
@@ -76,6 +80,12 @@ namespace Mooh.Desktop
                 _player.Render(_chunk);
                 _feed.Write(_chunk);
             }
+        }
+
+        /// <summary>Sets the user's music gain without restarting the tracker.</summary>
+        public double Volume
+        {
+            set => _feed.Volume = (float)(_trackVolume * Math.Clamp(value, 0, 1));
         }
 
         /// <summary>Stops the music.</summary>

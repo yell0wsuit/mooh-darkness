@@ -73,6 +73,19 @@ namespace Mooh.Desktop
             DrawFrame(canvas, page, frame, x, y, null);
         }
 
+        /// <summary>Repeats the menu shade texture across the original logical screen.</summary>
+        internal void DrawScreenTile(SKCanvas canvas, string page, string name)
+        {
+            SpriteFrame frame = AtlasOf(page).Frames[name];
+            for (int y = -frame.Height; y < 600; y += frame.Height)
+            {
+                for (int x = -frame.Width; x < 800; x += frame.Width)
+                {
+                    DrawFrame(canvas, page, name, x - frame.PivotX, y - frame.PivotY, null);
+                }
+            }
+        }
+
         /// <summary>Releases every loaded atlas image.</summary>
         public void Dispose()
         {
@@ -129,6 +142,10 @@ namespace Mooh.Desktop
 
             string table = Path.Combine(_spritesDirectory, page + ".seq");
             string image = Path.Combine(_spritesDirectory, page + ".png");
+            if (!File.Exists(image))
+            {
+                image = Path.Combine(_spritesDirectory, "..", "screens", page + ".jpg");
+            }
             using FileStream stream = File.OpenRead(table);
             SpritePage frames = SpritePage.Load(page, stream);
             SKImage pixels = SKImage.FromEncodedData(image)

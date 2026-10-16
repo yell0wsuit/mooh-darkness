@@ -54,3 +54,6 @@ TestResult.xml
 nunit-*.xml
 
 .DS_Store
+
+# Portable player data
+MoohDarkness_SaveData/

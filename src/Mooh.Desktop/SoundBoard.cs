@@ -20,6 +20,8 @@ namespace Mooh.Desktop
     /// <param name="random">The source of the file, volume and rate choices.</param>
     internal sealed class SoundBoard(SoundCatalog catalog, IAudioOutput output, string soundsDirectory, Random random)
     {
+        /// <summary>Gets or sets the user's sound-effect gain.</summary>
+        public double Volume { get; set; } = 1;
         private readonly Dictionary<string, string> _paths = Directory.Exists(soundsDirectory)
             ? Directory.EnumerateFiles(soundsDirectory, "*.ogg").ToDictionary(
                 path => Path.GetFileNameWithoutExtension(path), StringComparer.OrdinalIgnoreCase)
@@ -83,7 +85,7 @@ namespace Mooh.Desktop
                 return;
             }
 
-            float volume = (float)Between(sound.Volume);
+            float volume = (float)(Between(sound.Volume) * Math.Clamp(Volume, 0, 1));
             voices.Add(output.Play(loaded, (float)placement.Left * volume, (float)placement.Right * volume, (float)Between(sound.Frequency)));
         }
 

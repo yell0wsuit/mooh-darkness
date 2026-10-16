@@ -12,14 +12,13 @@ namespace Mooh.Desktop
 {
     /// <summary>
     /// Draws the screen panels, the level texts and the help panel with the recovered bitmap
-    /// fonts. The pause dims the screen.
+    /// fonts.
     /// </summary>
     /// <param name="fontsDirectory">The folder holding the <c>.fnt</c> tables and their atlases.</param>
     internal sealed class HudRenderer(string fontsDirectory) : IDisposable
     {
         private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.None);
         private readonly Dictionary<string, (BitmapFont Font, SKImage Atlas)> _fonts = [with(StringComparer.Ordinal)];
-        private readonly SKPaint _shade = new() { Color = new SKColor(0, 0, 0, 128) };
         private readonly SKPaint _fade = new();
 
         /// <summary>Draws the panels, their values, the help and the outcome.</summary>
@@ -47,11 +46,6 @@ namespace Mooh.Desktop
             {
                 DrawText(canvas, text);
             }
-
-            if (game.IsPaused)
-            {
-                canvas.DrawRect(SKRect.Create(0, 0, 800, 600), _shade);
-            }
         }
 
         /// <summary>Releases the font atlases and the paint.</summary>
@@ -63,11 +57,10 @@ namespace Mooh.Desktop
             }
 
             _fonts.Clear();
-            _shade.Dispose();
             _fade.Dispose();
         }
 
-        private void DrawText(SKCanvas canvas, HudText text, double opacity = 1)
+        internal void DrawText(SKCanvas canvas, HudText text, double opacity = 1)
         {
             (BitmapFont font, SKImage atlas) = FontOf(text.Font);
             _fade.Color = SKColors.White.WithAlpha((byte)Math.Round(255 * Math.Clamp(opacity, 0, 1)));

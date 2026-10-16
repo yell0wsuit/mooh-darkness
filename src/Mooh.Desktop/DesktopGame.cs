@@ -29,13 +29,15 @@ namespace Mooh.Desktop
     /// <param name="strings">The recovered text table the help panel and level texts read, if loaded.</param>
     /// <param name="levelFont">The font the level texts are laid out in, if loaded.</param>
     /// <param name="masks">The sprites' solid pixels, which the pickup sparks need, if loaded.</param>
+    /// <param name="automaticProgression">Whether the standalone gameplay driver advances without shell screens.</param>
     internal sealed class DesktopGame(
         GameSession session,
         AnimationLibrary library,
         Random random,
         StringTable? strings = null,
         BitmapFont? levelFont = null,
-        ISpriteMask? masks = null)
+        ISpriteMask? masks = null,
+        bool automaticProgression = true)
     {
         /// <summary>
         /// The longest frame the game accepts. A stall — a window drag, a debugger — would otherwise
@@ -74,7 +76,13 @@ namespace Mooh.Desktop
         /// <summary>Gets the camera over the current level.</summary>
         public SceneCamera Camera { get; private set; } = new();
 
-        /// <summary>Gets the game time played so far: the clamped frame times while not paused.</summary>
+        /// <summary>Gets active level time, excluding construction, pause and outcome screens.</summary>
+        public double PlaySeconds
+        {
+            get; private set;
+        }
+
+        /// <summary>Gets elapsed presentation time while gameplay is not paused.</summary>
         public double ElapsedSeconds
         {
             get; private set;
@@ -85,6 +93,12 @@ namespace Mooh.Desktop
 
         /// <summary>Gets whether the level is still flying into view before play.</summary>
         public bool IsBuilding => !_started || _build?.IsDone == false;
+
+        /// <summary>Gets whether the outcome sequence has finished and the shell may change screens.</summary>
+        public bool OutcomeReady
+        {
+            get; private set;
+        }
 
         /// <summary>Gets a value indicating whether the game is paused.</summary>
         public bool IsPaused
@@ -154,6 +168,7 @@ namespace Mooh.Desktop
             else if (Session.State == GameSessionState.Playing)
             {
                 _build?.Advance(seconds);
+                PlaySeconds += seconds;
                 Session.SetPlayerInput(input);
                 events.AddRange(Session.Advance(TimeSpan.FromSeconds(seconds)));
             }
@@ -164,8 +179,12 @@ namespace Mooh.Desktop
                     ? 3 : OutcomeSeconds;
                 if ((_outcomeSeconds += seconds) >= wait)
                 {
-                    MoveOn();
-                    return;
+                    OutcomeReady = true;
+                    if (automaticProgression)
+                    {
+                        MoveOn();
+                        return;
+                    }
                 }
             }
 
@@ -235,6 +254,8 @@ namespace Mooh.Desktop
         private void StartLevelPresentation()
         {
             _outcomeSeconds = 0;
+            PlaySeconds = 0;
+            OutcomeReady = false;
             Presenter = new ScenePresenter(_library, _random, _strings, _masks);
             Hud = new HudPresenter(Session.Level.World, _strings, _random, _levelFont);
             _skipBuild = false;

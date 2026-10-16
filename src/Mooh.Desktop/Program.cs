@@ -63,7 +63,17 @@ namespace Mooh.Desktop
             }
 
             using SpriteMasks masks = new(Path.Combine(assets, "sprites"));
-            DesktopGame game = new(new GameSession(pack, options.Difficulty, options.LevelIndex), library, new Random(), strings, levelFont, masks);
+            string data = SaveDataLocation.DefaultDirectory();
+            PlayerProfileStore? store = options.Screen is null ? new(data) : null;
+            GameShell shell = new(assets, pack, library, strings, levelFont, store?.Load() ?? new PlayerProfile(), store, masks);
+            if (options.Screen is null && (options.DirectLaunch || options.Script is not null || options.QuitAfterSeconds is not null))
+            {
+                shell.StartDirect(options.LevelIndex, options.Difficulty);
+            }
+            if (options.Screen is string screen)
+            {
+                shell.InspectScreen(screen);
+            }
             try
             {
                 // A machine without a playback device still plays the game, silently.
@@ -74,10 +84,10 @@ namespace Mooh.Desktop
                 }
 
                 SoundBoard sounds = new(catalog, audio, Path.Combine(assets, "sounds"), new Random());
-                using MusicPlayer? music = MusicPlayer.Start(audio, Path.Combine(assets, "music"), "game");
+                using MusicDirector music = new(audio, Path.Combine(assets, "music"));
                 using SceneRenderer scene = new(Path.Combine(assets, "sprites"));
                 using HudRenderer hud = new(Path.Combine(assets, "fonts"));
-                using SdlApplication application = new(options, game, scene, sounds, music, hud);
+                using SdlApplication application = new(options, shell, scene, sounds, music, hud);
                 application.Run();
                 return 0;
             }
