@@ -2,7 +2,7 @@
 
 Mooh Darkness is a rewrite of the 2007 grid-based puzzle game, Crazy Chicken: Jewel of Darkness. The project targets .NET 10.
 
-The desktop port uses SDL3 and SkiaSharp and includes the shipped 150-level pack, gameplay, original sprites and bitmap fonts, sound effects and module music. The original screen flow is connected: intro, main menu, instructions/loading, map, level introduction, gameplay, pause/options/restart, level statistics, high scores, campaign completion and outro. Dormant object types and unreachable editor/registration menus are excluded.
+The desktop port uses SDL3 and SkiaSharp and includes the shipped 150-level pack, gameplay, original sprites and bitmap fonts, sound effects and module music. The original screen flow is connected: intro, main menu, map, level introduction, gameplay, pause/options/restart, level statistics, high scores, campaign completion and outro. Dormant object types and unreachable editor/registration menus are excluded.
 
 Run the game with:
 
@@ -21,7 +21,7 @@ dotnet run --project src/Mooh.Desktop -- --level 1 --seconds 10 --screenshot gam
 dotnet run --project src/Mooh.Desktop -- --screen map --renderer software --seconds 1 --screenshot map.png
 ```
 
-`--screen` also accepts `intro`, `main`, `instructions`, `options`, `scores`, `prelevel`, `pause`, `statistics`, `complete` and `outro`. Screen inspection uses a temporary in-memory profile. Rendering preserves the original 800×600 layout with letterboxing; the renderer can be selected with `--renderer metal|opengl|software`.
+`--screen` also accepts `intro`, `main`, `options`, `scores`, `prelevel`, `pause`, `statistics`, `complete` and `outro`. Screen inspection uses a temporary in-memory profile. New Game and Continue proceed directly when their data is ready, without a decorative loading timer or keypress gate. Rendering preserves the original 800×600 layout with letterboxing; the renderer can be selected with `--renderer metal|opengl|software`.
 
 ## Build and test
 

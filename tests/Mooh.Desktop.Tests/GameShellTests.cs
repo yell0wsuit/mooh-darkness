@@ -18,9 +18,9 @@ namespace Mooh.Desktop.Tests
     /// <summary>Verifies reachable screens, persistence and pause flow through the desktop shell.</summary>
     public sealed class GameShellTests
     {
-        /// <summary>Startup follows the title, main menu, instructions, map and prelevel sequence.</summary>
+        /// <summary>Startup reaches the map and prelevel screen without a decorative loading delay.</summary>
         [Fact]
-        public void IntroLeadsToMainAndNewGameUsesInstructionAndMapScreens()
+        public void IntroLeadsToMainAndNewGameOpensMapWithoutLoadingDelay()
         {
             GameShell shell = Create();
             Assert.Equal(GameScreen.Intro, shell.Screen);
@@ -36,13 +36,6 @@ namespace Mooh.Desktop.Tests
             }
 
             shell.HandleKey(SDL.Keycode.F2, true);
-            Assert.Equal(GameScreen.Instructions, shell.Screen);
-            for (int i = 0; i < 180; i++)
-            {
-                shell.Update(default, [], 0.03);
-            }
-
-            shell.HandleKey(SDL.Keycode.Return, true);
             Assert.Equal(GameScreen.Map, shell.Screen);
             shell.HandleKey(SDL.Keycode.Return, true);
             Assert.Equal(GameScreen.PreLevel, shell.Screen);
@@ -110,12 +103,6 @@ namespace Mooh.Desktop.Tests
             shell.MouseMove((button.Left + button.Right) / 2, (button.Top + button.Bottom) / 2);
             shell.MouseButton(true);
             shell.MouseButton(false);
-            for (int i = 0; i < 180; i++)
-            {
-                shell.Update(default, [], 0.03);
-            }
-
-            shell.HandleKey(SDL.Keycode.Return, true);
             Assert.Equal(GameScreen.PreLevel, shell.Screen);
             Assert.Equal(17, shell.Game!.Session.LevelIndex);
             Assert.Equal(1234, shell.Game.Session.TotalScore);
@@ -269,6 +256,49 @@ namespace Mooh.Desktop.Tests
             Click(shell, "end");
             Assert.Equal(GameScreen.HighScores, shell.Screen);
             Assert.Contains(shell.Elements, e => e is ScreenText { Font: "MenuFntEncTitSel" });
+        }
+
+        /// <summary>The title and main menu share the original menu-music cue.</summary>
+        [Fact]
+        public void IntroAndMainShareTheMenuTrack()
+        {
+            GameShell shell = Create();
+            Assert.Equal("menu", shell.TrackName);
+            shell.HandleKey(SDL.Keycode.Return, true);
+            Assert.Equal("menu", shell.TrackName);
+            Settle(shell);
+            shell.HandleKey(SDL.Keycode.Escape, true);
+            Assert.Equal(GameScreen.Outro, shell.Screen);
+            Assert.Equal("menu", shell.TrackName);
+        }
+
+        /// <summary>The completion panel provides a visible Continue button instead of a keypress prompt.</summary>
+        [Fact]
+        public void CompletionUsesContinueButtonWithoutAnyKeyPrompt()
+        {
+            GameShell shell = Create();
+            shell.InspectScreen("complete");
+            Settle(shell);
+            Assert.DoesNotContain(shell.Elements, element => element is ScreenText text && text.Text.Contains("Press any key", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(shell.Menu.Buttons, button => button.Id == "finish-run");
+            Click(shell, "finish-run");
+            Assert.Equal(GameScreen.Main, shell.Screen);
+        }
+
+        /// <summary>Both completion shortcuts retain score submission when the keypress gate is removed.</summary>
+        [Theory]
+        [InlineData(SDL.Keycode.Return)]
+        [InlineData(SDL.Keycode.Escape)]
+        public void CompletionShortcutsSubmitTheFinishedRun(SDL.Keycode key)
+        {
+            PlayerProfile profile = new();
+            profile.HighScores[1] = [new("Empty", 0, 0), new("Empty", 0, 0), new("Empty", 0, 0), new("Empty", 0, 0)];
+            GameShell shell = Create(profile);
+            shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
+            shell.InspectScreen("complete");
+            Settle(shell);
+            shell.HandleKey(key, true);
+            Assert.Equal(GameScreen.ScoreEntry, shell.Screen);
         }
 
         private static void Settle(GameShell shell)

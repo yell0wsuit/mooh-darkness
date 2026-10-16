@@ -22,7 +22,7 @@ namespace Mooh.Desktop
     /// <summary>The screens reached by the shipped game.</summary>
     internal enum GameScreen
     {
-        Intro, Main, Instructions, Map, PreLevel, Playing, Pause, Options, Restart, HighScores, ScoreEntry, Statistics, Completion, Outro
+        Intro, Main, Map, PreLevel, Playing, Pause, Options, Restart, HighScores, ScoreEntry, Statistics, Completion, Outro
     }
 
     /// <summary>Coordinates the original menu, map, gameplay and completion flow.</summary>
@@ -38,7 +38,6 @@ namespace Mooh.Desktop
         private readonly Random _random = new();
         private readonly MenuBackground _background;
         private readonly MapPresentation _map;
-        private readonly InstructionsPresentation _instructions;
         private readonly List<SoundCue> _pendingSounds = [];
         private readonly List<ScreenElement> _extras = [];
         private double _screenSeconds;
@@ -49,14 +48,11 @@ namespace Mooh.Desktop
         private bool _fullscreenChoice;
         private bool _fullColorChoice;
         private bool _mapCanChange;
-        private bool _resume;
         private int _difficulty;
         private int _scoreRank;
         private string _playerName = string.Empty;
         private int _namePosition;
         private bool _firstNameCharacter;
-        private GameSession? _preparedSession;
-        private int _loadSteps;
 
         public GameShell(string assets, LoadedLevelPack pack, AnimationLibrary library, StringTable strings,
             BitmapFont levelFont, PlayerProfile profile, PlayerProfileStore? store, ISpriteMask? masks = null)
@@ -77,7 +73,6 @@ namespace Mooh.Desktop
             using FileStream waypoints = File.OpenRead(Path.Combine(assets, "map", "map.waypoints"));
             _map = new MapPresentation(MapWaypoints.Load(waypoints), [.. pack.Manifest.Levels!.Select(l => "map-previews/" + l.Name + ".jpg")], Localize);
             _background = new MenuBackground(_random);
-            _instructions = new InstructionsPresentation(Localize);
         }
 
         public PlayerProfile Profile
@@ -105,7 +100,7 @@ namespace Mooh.Desktop
         public bool ShowsWorld => (Game is not null && Screen is GameScreen.Playing or GameScreen.Pause or GameScreen.Restart or GameScreen.Statistics or GameScreen.PreLevel) || (Game is not null && Screen == GameScreen.Options && _optionsInGame);
         public string TrackName
         {
-            get => Screen == GameScreen.Intro ? string.Empty
+            get => Screen == GameScreen.Intro ? "menu"
             : Screen == GameScreen.Outro ? field
             : ShowsWorld || (Screen == GameScreen.Map && !_mapCanChange) ? "game" : field; private set;
         } = "menu";
@@ -120,11 +115,6 @@ namespace Mooh.Desktop
                     result.Add(new ScreenImage(Screen == GameScreen.Intro ? "Intro.jpg" : "Outro.jpg", 0, 0, 800, 600));
                     return result;
                 }
-                if (Screen == GameScreen.Instructions)
-                {
-                    return _instructions.Elements;
-                }
-
                 if (Screen == GameScreen.Map)
                 {
                     result.AddRange(_map.Elements);
@@ -177,14 +167,9 @@ namespace Mooh.Desktop
             {
                 ShowScores(false);
             }
-            else if (name == "instructions")
-            {
-                BeginInstructions(false);
-            }
             else if (name == "map")
             {
-                BeginInstructions(false);
-                FinishInstructions();
+                BeginGame(false);
             }
             else if (name is "prelevel" or "pause" or "statistics")
             {
@@ -222,7 +207,6 @@ namespace Mooh.Desktop
             _background.Advance(seconds);
             RefreshPanelContents();
             Menu.Advance(seconds);
-            _instructions.Advance(seconds);
             List<SoundCue> sounds = [.. _pendingSounds];
             _pendingSounds.Clear();
             if (Screen == GameScreen.Intro && _screenSeconds >= 5)
@@ -232,11 +216,6 @@ namespace Mooh.Desktop
             else if (Screen == GameScreen.Outro && _screenSeconds >= 5)
             {
                 ShouldQuit = true;
-            }
-            else if (Screen == GameScreen.Instructions && !_instructions.IsReady && _screenSeconds > (_loadSteps + 1) * 0.028)
-            {
-                _loadSteps++;
-                _instructions.SetProgress(_loadSteps / 177.0, _loadSteps >= 177);
             }
             else if (Screen == GameScreen.Playing && Game is not null)
             {
@@ -301,25 +280,11 @@ namespace Mooh.Desktop
                 ShouldQuit = true;
                 return;
             }
-            if (Screen == GameScreen.Instructions)
-            {
-                if (_instructions.IsReady)
-                {
-                    FinishInstructions();
-                }
-
-                return;
-            }
             if (Screen is not GameScreen.Playing and not GameScreen.Map && !Menu.IsReady)
             {
                 return;
             }
 
-            if (Screen == GameScreen.Completion)
-            {
-                EndRun();
-                return;
-            }
             if (Screen == GameScreen.ScoreEntry)
             {
                 if (key == SDL.Keycode.Left)
@@ -402,7 +367,7 @@ namespace Mooh.Desktop
             {
                 if (Screen == GameScreen.Main)
                 {
-                    BeginInstructions(false);
+                    BeginGame(false);
                 }
                 else if (Screen == GameScreen.Pause)
                 {
@@ -415,6 +380,10 @@ namespace Mooh.Desktop
                 else if (Screen == GameScreen.Statistics)
                 {
                     Activate("next");
+                }
+                else if (Screen == GameScreen.Completion)
+                {
+                    EndRun();
                 }
                 else if (Screen == GameScreen.PreLevel)
                 {
@@ -451,6 +420,10 @@ namespace Mooh.Desktop
                 else if (Screen == GameScreen.Statistics)
                 {
                     Activate("next");
+                }
+                else if (Screen == GameScreen.Completion)
+                {
+                    EndRun();
                 }
                 else if (Screen == GameScreen.PreLevel)
                 {
@@ -553,7 +526,7 @@ namespace Mooh.Desktop
                 return;
             }
 
-            if (Screen is GameScreen.Intro or GameScreen.Instructions or GameScreen.Completion)
+            if (Screen == GameScreen.Intro)
             {
                 if (pressed)
                 {
@@ -627,14 +600,17 @@ namespace Mooh.Desktop
             Cue("MenuBtnClick");
             switch (action)
             {
+                case "finish-run":
+                    EndRun();
+                    break;
                 case "begin":
                     Resume();
                     break;
                 case "new":
-                    BeginInstructions(false);
+                    BeginGame(false);
                     break;
                 case "continue":
-                    BeginInstructions(true);
+                    BeginGame(true);
                     break;
                 case "scores":
                     ShowScores(false);
@@ -750,32 +726,15 @@ namespace Mooh.Desktop
             Menu.Show(MenuPanelKind.Main, Localize("MenuTitleMain"), items);
         }
 
-        private void BeginInstructions(bool resume)
+        private void BeginGame(bool resume)
         {
-            _resume = resume;
-            Screen = GameScreen.Instructions;
-            _screenSeconds = 0;
-            _instructions.SetProgress(0);
-            _loadSteps = 0;
             if (resume && Profile.SavedGame is ResumeCheckpoint checkpoint)
             {
                 _difficulty = checkpoint.Difficulty;
-                _preparedSession = new GameSession(_pack, DifficultyOf(checkpoint.Difficulty), Math.Clamp(checkpoint.LevelIndex, 0, _pack.Levels.Count - 1), startingScore: checkpoint.TotalScore);
-            }
-            else
-            {
-                _difficulty = 0;
-                _preparedSession = new GameSession(_pack, DifficultySpeeds.DifficultyZero);
-            }
-        }
-
-        private void FinishInstructions()
-        {
-            if (_resume)
-            {
-                StartSession(_preparedSession!);
+                StartSession(new GameSession(_pack, DifficultyOf(checkpoint.Difficulty), Math.Clamp(checkpoint.LevelIndex, 0, _pack.Levels.Count - 1), startingScore: checkpoint.TotalScore));
                 return;
             }
+            _difficulty = 0;
             _mapCanChange = true;
             _map.Update(0, Profile.PassedLevels.ToHashSet(), true);
             Screen = GameScreen.Map;
@@ -967,9 +926,8 @@ namespace Mooh.Desktop
             TrackName = "gameend";
             _extras.Clear();
             _screenSeconds = 0;
-            Menu.Show(MenuPanelKind.Completion, Localize("MenuTitleCongrat"), []);
+            Menu.Show(MenuPanelKind.Completion, Localize("MenuTitleCongrat"), [Item("finish-run", "MenuLStatBtnNext", 0, 240)], null, null);
             AddLines(Localize("CongratTxtLast"), 293, 214);
-            _extras.Add(new ScreenText(Localize("GameInstrKey"), 400, 565, "MenuFntEncTxt"));
         }
 
         private void EndRun()
