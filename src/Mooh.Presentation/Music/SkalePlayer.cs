@@ -4,14 +4,14 @@ using System.Collections.Generic;
 namespace Mooh.Presentation.Music
 {
     /// <summary>
-    /// Plays a Skale module the way <c>SkalePlayer.dll</c> does: a port of the DLL-verified replay
-    /// engine in <c>skm_render.py</c>, rendering stereo frames on demand so a host can stream it.
+    /// Renders stereo Skale module audio using the recovered player and mixer rules.
     /// </summary>
     /// <remarks>
     /// Timing is <c>rate * 2.5 / bpm</c> frames a tick; pitch is
     /// <c>8363 * 2^((4608 - period) / 768)</c> with <c>period = 7680 - 64 * note - finetune / 2</c>.
     /// A channel's volume is <c>fade * volume * envelope / 0x400000</c>, panned and scaled by
-    /// the instrument. The MultiFX and Mixer chunks are not applied, as in the Python port.
+    /// the instrument. The module mixer gain and output clipping precede host volume.
+    /// External effect plugins are not loaded.
     /// The sequence plays on past the song's end from its first position, so a host can loop it.
     /// </remarks>
     public sealed class SkalePlayer
@@ -23,7 +23,7 @@ namespace Mooh.Presentation.Music
         private const int FadeFull = 0x10000;
         private const double MixScale = 0.003 / 128;
 
-        /// <summary><c>byte_1004F0F4</c>: the 32-entry half sine both vibrato and tremolo use.</summary>
+        /// <summary>The 32-entry half sine both vibrato and tremolo use.</summary>
         private static readonly int[] VibratoTable =
         [
             0x00, 0x18, 0x31, 0x4A, 0x61, 0x78, 0x8D, 0xA1, 0xB4, 0xC5, 0xD4, 0xE0, 0xEB, 0xF4, 0xFA, 0xFD,
@@ -33,6 +33,8 @@ namespace Mooh.Presentation.Music
         private readonly SkaleModule _module;
         private readonly int _rate;
         private readonly Channel[] _channels;
+        private readonly Channel?[] _tails = new Channel?[64];
+        private int _nextTail;
         private readonly int[] _loopRow;
         private readonly int[] _loopCount;
         private float[] _tick = [];
@@ -104,7 +106,7 @@ namespace Mooh.Presentation.Music
 
         private static double FrequencyOf(double period)
         {
-            return PitchReferenceHz * Math.Pow(2, (4608.0 - period) * (1.0 / 768.0));
+            return PitchReferenceHz * Math.Pow(2, (4608.0 - period) * (double)(1f / 768));
         }
 
         /// <summary>Decodes a BCD row number, preserving values with invalid BCD digits.</summary>
@@ -254,9 +256,9 @@ namespace Mooh.Presentation.Music
             if (note == NoteOff)
             {
                 channel.KeyOff = true;
-                if ((channel.Instrument is null || channel.Instrument.Fadeout == 0) && !channel.VolumeEnvelope.Active)
+                if (!channel.VolumeEnvelope.Active)
                 {
-                    channel.On = false;
+                    channel.Stop();
                 }
 
                 return false;
@@ -285,7 +287,7 @@ namespace Mooh.Presentation.Music
         }
 
         /// <summary>Selects and starts a note's sample, optionally restarting its envelopes.</summary>
-        private static void StartNote(Channel channel, SkaleInstrument instrument, int note, int volume, bool restartEnvelopes)
+        private void StartNote(Channel channel, SkaleInstrument instrument, int note, int volume, bool restartEnvelopes)
         {
             int velocity = volume <= 0x7F ? volume : 127;
             SkaleSample? sample = instrument.Select(note + instrument.Transpose, velocity);
@@ -294,6 +296,9 @@ namespace Mooh.Presentation.Music
                 return;
             }
 
+            RetainVoice(channel);
+            channel.CurrentLeft = channel.CurrentRight = 0;
+            channel.Fadeout = instrument.Fadeout;
             channel.Volume = volume >= 0x81 ? sample.Volume : volume;
             int final = instrument.FixedNote[note & 0x7F]
                 ? sample.RelativeNote + instrument.Transpose + 60
@@ -308,6 +313,7 @@ namespace Mooh.Presentation.Music
             channel.SetPeriod(PeriodOf(final, channel.Finetune));
             channel.Position = 0;
             channel.SampleReversed = false;
+            channel.StopFrames = 0;
             channel.Fade = FadeFull;
             channel.KeyOff = false;
             channel.On = true;
@@ -321,6 +327,53 @@ namespace Mooh.Presentation.Music
             if (restartEnvelopes)
             {
                 StartEnvelopes(channel, instrument);
+            }
+        }
+
+        // Detached voices keep their sample position and envelope state when the channel retriggers.
+        private void RetainVoice(Channel channel)
+        {
+            if (channel.Sample is null || (!channel.On && channel.StopFrames == 0))
+            {
+                return;
+            }
+
+            Channel tail = channel.CopyVoice();
+            int slot;
+            if (channel.Instrument?.NewNoteAction == 1)
+            {
+                slot = _nextTail;
+                _nextTail = (_nextTail + 1) % _tails.Length;
+                if (tail.On && tail.VolumeEnvelope.Active)
+                {
+                    tail.KeyOff = true;
+                    tail.Fadeout = Math.Max(tail.Fadeout, 200);
+                }
+                else
+                {
+                    tail.Stop();
+                }
+            }
+            else
+            {
+                slot = Array.IndexOf(_channels, channel);
+                tail.Stop();
+            }
+            _tails[slot] = tail;
+        }
+
+        private IEnumerable<Channel> Voices()
+        {
+            foreach (Channel channel in _channels)
+            {
+                yield return channel;
+            }
+            foreach (Channel? tail in _tails)
+            {
+                if (tail is not null)
+                {
+                    yield return tail;
+                }
             }
         }
 
@@ -362,7 +415,7 @@ namespace Mooh.Presentation.Music
                 int effect = current.Effect;
                 int parameter = current.Param;
 
-                // The per-instrument effect remap, inst+3728.
+                // Apply the instrument-specific effect remap.
                 int instrumentNumber = cellInstrument != 0
                     ? cellInstrument
                     : channel.LastInstrument != 255 ? channel.LastInstrument + 1 : 255;
@@ -797,7 +850,7 @@ namespace Mooh.Presentation.Music
         private void AdvanceEnvelopes()
         {
             double rate = 50.0 / (_bpm * 0.4);
-            foreach (Channel channel in _channels)
+            foreach (Channel channel in Voices())
             {
                 if (!channel.On)
                 {
@@ -823,154 +876,117 @@ namespace Mooh.Presentation.Music
                     channel.Pan = Math.Clamp(channel.PanBase + swing, 0, 255);
                 }
 
+                // The current fade is audible this tick; its decrement belongs to the next tick.
+                channel.AppliedFade = channel.Fade;
                 if (channel.KeyOff)
                 {
-                    int fade = channel.Instrument?.Fadeout ?? 0;
+                    int fade = channel.Fadeout;
                     if (fade != 0)
                     {
                         channel.Fade -= 2 * fade;
                         if (channel.Fade <= 0)
                         {
                             channel.Fade = 0;
-                            channel.On = false;
+                            channel.Stop();
                         }
                     }
                     else if (channel.VolumeEnvelope.Active && channel.EnvelopeValue <= 0)
                     {
-                        channel.On = false;
+                        channel.Stop();
                     }
                 }
             }
         }
 
-        /// <summary>Mixes every playing channel into the tick buffer.</summary>
+        /// <summary>Mixes the voices using fixed-point sample traversal and the original gain ramps.</summary>
         private void Mix(int frames)
         {
-            foreach (Channel channel in _channels)
+            foreach (Channel channel in Voices())
             {
-                if (!channel.On || channel.Sample is not { IsUsable: true } sample)
+                if ((!channel.On && channel.StopFrames == 0) || channel.Sample is not { IsUsable: true } sample)
                 {
                     continue;
                 }
-
                 float[] pcm = sample.Pcm!;
-                double step = FrequencyOf(channel.Period) / _rate;
-                int count = Positions(channel, sample, frames, step, out double[] positions);
-                if (count == 0)
-                {
-                    continue;
-                }
-
+                int frequency = (int)FrequencyOf(channel.Period);
+                double step = ((long)frequency << 18) / _rate / 262144.0;
                 (double targetLeft, double targetRight) = channel.TargetGains();
                 double startLeft = channel.CurrentLeft;
                 double startRight = channel.CurrentRight;
-                channel.CurrentLeft = targetLeft;
-                channel.CurrentRight = targetRight;
-                for (int frame = 0; frame < count; frame++)
-                {
-                    double position = positions[frame];
-                    int whole = (int)position;
-                    whole = Math.Clamp(whole, 0, pcm.Length - 2);
-                    double fraction = position - whole;
-                    double value = (pcm[whole] * (1.0 - fraction)) + (pcm[whole + 1] * fraction);
-                    _tick[frame * 2] += (float)(value * Ramp(startLeft, targetLeft, frame, count));
-                    _tick[(frame * 2) + 1] += (float)(value * Ramp(startRight, targetRight, frame, count));
-                }
-            }
-        }
-
-        /// <summary>
-        /// The mixing gain slews by 1/128 of the gap a frame, for at most 128
-        /// frames, then holds the target.
-        /// </summary>
-        private static double Ramp(double current, double target, int frame, int count)
-        {
-            return current == target || count == 0 || frame >= Math.Min(count, 128)
-                ? target
-                : current + ((target - current) / 128.0 * (frame + 1));
-        }
-
-        /// <summary>A tick's sample positions, with the sample's loop applied.</summary>
-        private static int Positions(Channel channel, SkaleSample sample, int frames, double step, out double[] positions)
-        {
-            int length = sample.Pcm!.Length;
-            (int loopStart, int loopEnd) = LoopBounds(sample, length);
-            positions = new double[frames];
-            if (sample.LoopType == SkaleSample.ForwardLoop && loopEnd > loopStart)
-            {
-                double span = loopEnd - loopStart;
+                (int loopStart, int loopEnd) = LoopBounds(sample, pcm.Length);
+                bool looping = sample.LoopType != SkaleSample.NoLoop && loopEnd > loopStart;
                 for (int frame = 0; frame < frames; frame++)
                 {
-                    double position = channel.Position + (step * frame);
-                    positions[frame] = position >= loopEnd ? loopStart + PositiveModulo(position - loopStart, span) : position;
-                }
-
-                double end = channel.Position + (step * frames);
-                channel.Position = end >= loopEnd ? loopStart + CModulo(end - loopStart, span) : end;
-                return frames;
-            }
-
-            if (sample.LoopType == SkaleSample.PingPongLoop && loopEnd > loopStart)
-            {
-                int whole = (int)Math.Floor(channel.Position);
-                double fraction = channel.Position - whole;
-                for (int frame = 0; frame < frames; frame++)
-                {
-                    if (channel.SampleReversed && whole <= loopStart)
+                    if (!channel.On && channel.StopFrames == 0)
                     {
-                        whole = loopStart;
-                        channel.SampleReversed = false;
+                        break;
                     }
-                    else if (!channel.SampleReversed && whole >= loopEnd)
+                    int whole = (int)Math.Floor(channel.Position);
+                    double fraction = channel.Position - whole;
+                    if (looping && sample.LoopType == SkaleSample.ForwardLoop && whole >= loopEnd)
                     {
-                        whole = loopEnd - 1;
-                        channel.SampleReversed = true;
+                        whole = loopStart + ((whole - loopEnd) % (loopEnd - loopStart));
+                    }
+                    else if (looping && sample.LoopType == SkaleSample.PingPongLoop)
+                    {
+                        if (channel.SampleReversed && whole <= loopStart)
+                        {
+                            whole = loopStart;
+                            channel.SampleReversed = false;
+                        }
+                        else if (!channel.SampleReversed && whole >= loopEnd)
+                        {
+                            whole = loopEnd - 1;
+                            channel.SampleReversed = true;
+                        }
+                    }
+                    else if (!looping && whole >= pcm.Length)
+                    {
+                        whole = pcm.Length;
+                        channel.Stop();
                     }
 
-                    positions[frame] = whole + (channel.SampleReversed ? -fraction : fraction);
-                    double next = fraction + step;
-                    int advance = (int)next;
-                    whole += channel.SampleReversed ? -advance : advance;
-                    fraction = next - advance;
+                    if (channel.StopFrames > 0)
+                    {
+                        channel.CurrentLeft += channel.StopLeftDelta;
+                        channel.CurrentRight += channel.StopRightDelta;
+                        channel.StopFrames--;
+                    }
+                    else
+                    {
+                        double ramp = Math.Min(frame + 1, 128) / 128.0;
+                        channel.CurrentLeft = startLeft + ((targetLeft - startLeft) * ramp);
+                        channel.CurrentRight = startRight + ((targetRight - startRight) * ramp);
+                    }
+
+                    double weight = (int)(fraction * 1024) / 1024.0;
+                    int neighbor = whole + (channel.SampleReversed ? -1 : 1);
+                    // Mono sample validation repeats the penultimate value through the final frame and end guards.
+                    double value = (pcm[Math.Clamp(whole, 0, pcm.Length - 2)] * (1 - weight))
+                        + (pcm[Math.Clamp(neighbor, 0, pcm.Length - 2)] * weight);
+                    _tick[frame * 2] += (float)(value * channel.CurrentLeft);
+                    _tick[(frame * 2) + 1] += (float)(value * channel.CurrentRight);
+
+                    if (!looping && whole >= pcm.Length)
+                    {
+                        channel.Position = pcm.Length;
+                    }
+                    else
+                    {
+                        double next = fraction + step;
+                        int advance = (int)next;
+                        channel.Position = whole + (channel.SampleReversed ? -advance : advance) + next - advance;
+                    }
                 }
-
-                channel.Position = whole + fraction;
-                return frames;
             }
-
-            int count = 0;
-            for (int frame = 0; frame < frames; frame++)
+            const float Clip = 32764f / 32768;
+            for (int frame = 0; frame < frames * 2; frame++)
             {
-                double position = channel.Position + (step * frame);
-                if (position < length - 1)
-                {
-                    positions[count++] = position;
-                }
+                _tick[frame] = Math.Clamp(_tick[frame] * _module.MasterGain, -Clip, Clip);
             }
-
-            if (count < frames)
-            {
-                channel.On = false;
-            }
-
-            channel.Position += step * frames;
-            return count;
         }
 
-        /// <summary>numpy's <c>mod</c>: the result takes the divisor's sign.</summary>
-        private static double PositiveModulo(double value, double divisor)
-        {
-            double result = value % divisor;
-            return result < 0 ? result + divisor : result;
-        }
-
-        /// <summary>Python's <c>math.fmod</c>: the result takes the dividend's sign.</summary>
-        private static double CModulo(double value, double divisor)
-        {
-            return value % divisor;
-        }
-
-        /// <summary>One replay channel; comments in the DLL port name its offsets.</summary>
+        /// <summary>A playback voice with independent sample and envelope state.</summary>
         private sealed class Channel
         {
             public SkaleInstrument? Instrument
@@ -1024,6 +1040,13 @@ namespace Mooh.Presentation.Music
 
             public int Fade { get; set; } = FadeFull;
 
+            public int AppliedFade { get; set; } = FadeFull;
+
+            public int Fadeout
+            {
+                get; set;
+            }
+
             public bool KeyOff
             {
                 get; set;
@@ -1037,9 +1060,9 @@ namespace Mooh.Presentation.Music
 
             public double GainRight { get; set; } = 1;
 
-            public EnvelopeState VolumeEnvelope { get; } = new();
+            public EnvelopeState VolumeEnvelope { get; private set; } = new();
 
-            public EnvelopeState PanEnvelope { get; } = new();
+            public EnvelopeState PanEnvelope { get; private set; } = new();
 
             public int Command
             {
@@ -1152,6 +1175,40 @@ namespace Mooh.Presentation.Music
                 get; set;
             }
 
+            public int StopFrames
+            {
+                get; set;
+            }
+            public double StopLeftDelta
+            {
+                get; private set;
+            }
+            public double StopRightDelta
+            {
+                get; private set;
+            }
+
+            public Channel CopyVoice()
+            {
+                Channel copy = (Channel)MemberwiseClone();
+                copy.VolumeEnvelope = VolumeEnvelope.Copy();
+                copy.PanEnvelope = PanEnvelope.Copy();
+                return copy;
+            }
+
+            /// <summary>Stops the note while retaining its sample for the short output ramp.</summary>
+            public void Stop()
+            {
+                if (!On)
+                {
+                    return;
+                }
+                On = false;
+                StopFrames = 256;
+                StopLeftDelta = -CurrentLeft / 256;
+                StopRightDelta = -CurrentRight / 256;
+            }
+
             /// <summary>Clamps the period, then derives its note number.</summary>
             public void SetPeriod(double period)
             {
@@ -1169,7 +1226,7 @@ namespace Mooh.Presentation.Music
             /// <summary>Computes stereo gains from fade, volume, envelope, pan and instrument scaling.</summary>
             public (double Left, double Right) TargetGains()
             {
-                int volume = (int)((long)Fade * Volume * EnvelopeValue / 0x400000);
+                int volume = (int)((long)AppliedFade * Volume * EnvelopeValue / 0x400000);
                 int left = Math.Min(255 - Pan, 128);
                 int right = Math.Min(Pan, 128);
                 return (volume * left * MixScale * GainLeft, volume * right * MixScale * GainRight);
@@ -1187,6 +1244,11 @@ namespace Mooh.Presentation.Music
             public bool Active
             {
                 get; private set;
+            }
+
+            public EnvelopeState Copy()
+            {
+                return (EnvelopeState)MemberwiseClone();
             }
 
             public void Start(SkaleEnvelope? envelope, int fallback)

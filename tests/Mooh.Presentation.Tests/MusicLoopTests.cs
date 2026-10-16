@@ -40,9 +40,10 @@ namespace Mooh.Presentation.Tests
             reference.Instruments[8].Samples[0].Pcm = [.. Enumerable.Repeat(1f, sample.Length)];
             int note = Math.Clamp(60 + instrument.Transpose + sample.RelativeNote, 0, 126);
             int finetune = sample.Finetune + instrument.Finetune;
-            double step = 8363 * Math.Pow(2, (4608 - (7680 - (64 * note) - (finetune / 2))) / 768.0) / 44100;
+            int frequency = (int)(8363 * Math.Pow(2, (4608 - (7680 - (64 * note) - (finetune / 2))) * (double)(1f / 768)));
+            double step = ((long)frequency << 18) / 44100 / 262144.0;
             int turnFrame = (int)Math.Ceiling(sample.LoopEnd / step);
-            float[] output = new float[(turnFrame + 2) * 2];
+            float[] output = new float[(turnFrame + 4) * 2];
             float[] baseline = new float[output.Length];
             SkalePlayer player = new(module, 44100, 0);
             SkalePlayer oneWrite = new(module, 44100, 0);
@@ -55,9 +56,20 @@ namespace Mooh.Presentation.Tests
             Assert.Equal(continuous, output);
             new SkalePlayer(reference, 44100, 0).Render(baseline);
             double phase = turnFrame * step;
-            double expected = sample.LoopEnd - 1 - (phase - Math.Floor(phase));
-            double actual = (double)output[turnFrame * 2] / baseline[turnFrame * 2] * sample.Length;
-            Assert.InRange(actual, expected - 0.003, expected + 0.003);
+            double fraction = phase - Math.Floor(phase);
+            int whole = sample.LoopEnd - 1;
+            for (int frame = turnFrame; frame < turnFrame + 4; frame++)
+            {
+                double weight = (int)(fraction * 1024) / 1024.0;
+                // Mono validation repeats the penultimate sample at the final frame.
+                double expected = (Math.Min(whole, sample.Length - 2) * (1 - weight))
+                    + (Math.Min(whole - 1, sample.Length - 2) * weight);
+                double actual = (double)output[frame * 2] / baseline[frame * 2] * sample.Length;
+                Assert.InRange(actual, expected - 0.003, expected + 0.003);
+                double next = fraction + step;
+                whole -= (int)next;
+                fraction = next - (int)next;
+            }
         }
 
         private static SkaleModule IsolatedInstrument()

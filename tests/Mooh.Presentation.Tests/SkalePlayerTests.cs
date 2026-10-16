@@ -10,9 +10,7 @@ using Xunit;
 namespace Mooh.Presentation.Tests
 {
     /// <summary>
-    /// Verifies the port of the Skale replay engine. The engine was checked against the
-    /// DLL-faithful <c>skm_render.py</c> to float precision over a minute of the game's track; these
-    /// tests keep what that check established.
+    /// Checks module loading and a regression snapshot of the Skale replay engine.
     /// </summary>
     public sealed class SkalePlayerTests
     {
@@ -66,11 +64,11 @@ namespace Mooh.Presentation.Tests
         }
 
         /// <summary>
-        /// Verifies a render's fingerprint with every sample replaced by the same sine, so the
-        /// engine's sequencing, effects, envelopes and mixing stay as the oracle check found them.
+        /// Records a render snapshot with every sample replaced by the same sine.
+        /// Analytical tests separately verify the source-backed playback rules.
         /// </summary>
         [Fact]
-        public void ARenderKeepsItsFingerprint()
+        public void ARenderKeepsItsRegressionSnapshot()
         {
             SkaleModule module = SkaleModule.Load(File.ReadAllBytes(MusicPath("TrackMenu.skm")));
             float[] sine = [.. Enumerable.Range(0, 20000).Select(index => (float)Math.Sin(index * 0.05))];
@@ -84,10 +82,10 @@ namespace Mooh.Presentation.Tests
             player.Render(frames);
 
             double energy = frames.Sum(value => (double)value * value);
-            Assert.Equal(Fingerprint, energy, 6);
+            Assert.Equal(SnapshotEnergy, energy, 6);
         }
 
         /// <summary>The energy of the first two seconds from order 40 with the sine samples.</summary>
-        private const double Fingerprint = 2605.098477;
+        private const double SnapshotEnergy = 4418.288364;
     }
 }

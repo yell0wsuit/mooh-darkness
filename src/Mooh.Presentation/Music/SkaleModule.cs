@@ -14,7 +14,7 @@ namespace Mooh.Presentation.Music
     /// The file is a header word <c>0xFFFE0000 | version</c>, a 9-byte header block holding the
     /// magic and the tracker version, then a stream of <c>(u32 id, u32 size)</c> chunks ended by
     /// type <c>0xFFFF</c>: 1 Info (v3), 2 Patterns (v1), 3 Instruments (each v6), then MultiFX,
-    /// Mixer and Synth, which the replay does not use.
+    /// Mixer and Synth. The mixer's leading gain scales the final output.
     /// </remarks>
     public sealed class SkaleModule
     {
@@ -30,6 +30,9 @@ namespace Mooh.Presentation.Music
 
         /// <summary>Gets the initial ticks per row.</summary>
         public int Speed { get; private set; } = 6;
+
+        /// <summary>Gets the module's final mixer gain, independent of the user's playback volume.</summary>
+        public float MasterGain { get; private set; } = 1;
 
         /// <summary>Gets the order list: pattern numbers by position.</summary>
         public IReadOnlyList<int> Order { get; private set; } = [];
@@ -99,6 +102,10 @@ namespace Mooh.Presentation.Music
                 else if (type == 3)
                 {
                     ReadInstruments(data, start, start + size, instruments);
+                }
+                else if (type == 5 && version is 1 or 2)
+                {
+                    module.MasterGain = BinaryPrimitives.ReadSingleLittleEndian(reader.Raw(4));
                 }
 
                 reader.Position = start + size;

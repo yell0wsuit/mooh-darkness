@@ -179,37 +179,43 @@ namespace Mooh.Presentation.Music
             get; private set;
         }
 
-        /// <summary>Gets the notes that play at 60 whatever the cell says, <c>inst+3592</c>.</summary>
+        /// <summary>Gets the notes that play at 60 whatever the cell says.</summary>
         public bool[] FixedNote { get; } = new bool[128];
 
         /// <summary>Gets the samples by number.</summary>
         public IReadOnlyDictionary<int, SkaleSample> Samples => _samples;
 
-        /// <summary>Gets the fadeout per tick after key off, <c>inst+3720</c>.</summary>
+        /// <summary>Gets the fadeout per tick after key off.</summary>
         public int Fadeout
         {
             get; private set;
         }
 
-        /// <summary>Gets the instrument's gain, <c>inst+20552</c>.</summary>
+        /// <summary>Gets how a new note treats the previous voice: zero stops it, one releases its envelope.</summary>
+        public int NewNoteAction
+        {
+            get; private set;
+        }
+
+        /// <summary>Gets the instrument's gain.</summary>
         public float Volume { get; private set; } = 1;
 
-        /// <summary>Gets the instrument's panning, 0 to 1, <c>inst+4064</c>.</summary>
+        /// <summary>Gets the instrument's panning, 0 to 1.</summary>
         public float Panning { get; private set; } = 0.5f;
 
-        /// <summary>Gets the transpose, <c>inst+4068</c>.</summary>
+        /// <summary>Gets the transpose.</summary>
         public int Transpose
         {
             get; private set;
         }
 
-        /// <summary>Gets the finetune, <c>inst+4072</c>.</summary>
+        /// <summary>Gets the finetune.</summary>
         public int Finetune
         {
             get; private set;
         }
 
-        /// <summary>Gets the per-instrument effect remap, <c>inst+3728</c>.</summary>
+        /// <summary>Gets the per-instrument effect remap.</summary>
         public int[] EffectMap { get; } = new int[21];
 
         /// <summary>Gets the selected envelope of a kind.</summary>
@@ -273,6 +279,7 @@ namespace Mooh.Presentation.Music
                 instrument._envelopeSelection[kind] = block[2 + kind];
             }
 
+            instrument.NewNoteAction = block[8];
             instrument.Volume = BinaryPrimitives.ReadSingleLittleEndian(block[9..]);
             instrument.Panning = BinaryPrimitives.ReadSingleLittleEndian(block[13..]) + 0.5f;
             instrument.Transpose = BinaryPrimitives.ReadUInt16LittleEndian(block[17..]);
