@@ -18,6 +18,7 @@ namespace Mooh.Core.Tests.Session
             PlayerProfile profile = new();
 
             Assert.Equal(3, profile.HighScores.Count);
+            Assert.All(profile.HighScores.SelectMany(table => table), entry => Assert.Equal("Empty", entry.Name));
             Assert.All(profile.HighScores, table => Assert.Equal(4, table.Count));
             Assert.Equal([20, 15, 10, 5], profile.HighScores[0].Select(entry => entry.Score));
             Assert.Equal([40, 35, 30, 25], profile.HighScores[1].Select(entry => entry.Score));
@@ -124,6 +125,7 @@ namespace Mooh.Core.Tests.Session
             PlayerProfile profile = store.Load();
 
             Assert.Equal(3, profile.HighScores.Count);
+            Assert.All(profile.HighScores.SelectMany(table => table), entry => Assert.Equal("Empty", entry.Name));
             Assert.All(profile.HighScores, table => Assert.Equal(4, table.Count));
             Assert.Empty(profile.PassedLevels);
             Assert.Null(profile.SavedGame);

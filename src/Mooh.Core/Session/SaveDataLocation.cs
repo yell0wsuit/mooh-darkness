@@ -6,7 +6,7 @@ namespace Mooh.Core.Session
     /// <summary>Chooses the same portable, Documents and local-data save-folder order as the other DX ports.</summary>
     public static class SaveDataLocation
     {
-        /// <summary>The save folder and JSON file stem.</summary>
+        /// <summary>The save folder name.</summary>
         public const string Name = "MoohDarkness_SaveData";
 
         /// <summary>Finds and probes the platform's default save directory.</summary>

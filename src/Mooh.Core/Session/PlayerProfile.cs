@@ -154,7 +154,7 @@ namespace Mooh.Core.Session
         private static List<HighScoreEntry> CreateDefaultTable(int difficulty)
         {
             return [.. Enumerable.Range(0, HighScoreCount)
-                .Select(rank => new HighScoreEntry("Player", 5 * ((HighScoreCount * (difficulty + 1)) - rank), 0))];
+                .Select(rank => new HighScoreEntry("Empty", 5 * ((HighScoreCount * (difficulty + 1)) - rank), 0))];
         }
     }
 
