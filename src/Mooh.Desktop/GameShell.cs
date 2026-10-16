@@ -118,12 +118,6 @@ namespace Mooh.Desktop
                 if (Screen is GameScreen.Intro or GameScreen.Outro)
                 {
                     result.Add(new ScreenImage(Screen == GameScreen.Intro ? "Intro.jpg" : "Outro.jpg", 0, 0, 800, 600));
-                    result.Add(new ScreenSprite(Screen == GameScreen.Intro ? "SpriteIntRo" : "SpriteOutRo", "Bk_OLogo_BTO"));
-                    if (Screen == GameScreen.Outro)
-                    {
-                        result.Add(new ScreenSprite("SpriteOutRo", "Bk_OLogo_Int"));
-                        result.Add(new ScreenSprite("SpriteOutRo", "Bk_OTxtDe_Pow"));
-                    }
                     return result;
                 }
                 if (Screen == GameScreen.Instructions)
@@ -142,7 +136,6 @@ namespace Mooh.Desktop
                     if (!ShowsWorld)
                     {
                         result.Add(new ScreenImage("MenuBack.jpg", 0, 0, 800, 600));
-                        result.Add(new ScreenText(Localize("AppBuildTxt").Replace("%s", "1.0 (Internal)", StringComparison.Ordinal), 792, 16, "VersionFont", TextAlignment.Right));
                     }
 
                     if (ShowsWorld)
