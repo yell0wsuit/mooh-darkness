@@ -1,8 +1,8 @@
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 namespace Mooh.Presentation.Screens
 {
@@ -28,36 +28,28 @@ namespace Mooh.Presentation.Screens
             get;
         }
 
-        /// <summary>Reads the recovered waypoint file's magic, count and integer coordinate pairs.</summary>
+        /// <summary>Reads an ordered JSON array of integer coordinate pairs.</summary>
         /// <param name="stream">The waypoint bytes.</param>
         /// <returns>The ordered waypoints.</returns>
-        /// <exception cref="InvalidDataException">The header or coordinate data is invalid.</exception>
+        /// <exception cref="InvalidDataException">The coordinate data is invalid.</exception>
         public static MapWaypoints Load(Stream stream)
         {
             ArgumentNullException.ThrowIfNull(stream);
-            using MemoryStream copy = new();
-            stream.CopyTo(copy);
-            ReadOnlySpan<byte> data = copy.GetBuffer().AsSpan(0, (int)copy.Length);
-            if (data.Length < 8 || !data[..4].SequenceEqual(new byte[] { 0xae, 0xfa, 0, 0 }))
+            try
             {
-                throw new InvalidDataException("The map waypoint header is invalid.");
+                using JsonDocument document = JsonDocument.Parse(stream);
+                List<MapPoint> points = [];
+                foreach (JsonElement point in document.RootElement.EnumerateArray())
+                {
+                    points.Add(new MapPoint(point.GetProperty("x").GetInt32(), point.GetProperty("y").GetInt32()));
+                }
+                return points.Count > 0 ? new MapWaypoints(points)
+                    : throw new InvalidDataException("The map requires at least one waypoint.");
             }
-
-            int count = BinaryPrimitives.ReadInt32LittleEndian(data[4..]);
-            if (count < 1 || 8L + (count * 8L) > data.Length)
+            catch (Exception error) when (error is JsonException or KeyNotFoundException or InvalidOperationException or FormatException)
             {
-                throw new InvalidDataException("The map waypoint count exceeds its coordinate data.");
+                throw new InvalidDataException("The map must be an array of integer x/y coordinates.", error);
             }
-
-            MapPoint[] points = new MapPoint[count];
-            for (int index = 0; index < count; index++)
-            {
-                int offset = 8 + (index * 8);
-                points[index] = new MapPoint(BinaryPrimitives.ReadInt32LittleEndian(data[offset..]),
-                    BinaryPrimitives.ReadInt32LittleEndian(data[(offset + 4)..]));
-            }
-
-            return new MapWaypoints(points);
         }
     }
 }

@@ -69,7 +69,7 @@ namespace Mooh.Desktop
             using FileStream scoreFont = File.OpenRead(Path.Combine(assets, "fonts", "MenuFntEncTitSel.fnt"));
             _scoreFont = BitmapFont.Load("MenuFntEncTitSel", scoreFont);
             Menu = new MenuPanelPresentation(SpritePage.Load("SpriteMenuPrt", page), BitmapFont.Load("MenuFntBtnNrm", font), BitmapFont.Load("MenuFontToolTip", tooltip), _random);
-            using FileStream waypoints = File.OpenRead(Path.Combine(assets, "map", "map.waypoints"));
+            using FileStream waypoints = File.OpenRead(Path.Combine(assets, "map", "map.json"));
             _map = new MapPresentation(MapWaypoints.Load(waypoints), [.. pack.Manifest.Levels!.Select(l => "map-previews/" + l.Name + ".jpg")], Localize);
             _background = new MenuBackground(_random);
         }

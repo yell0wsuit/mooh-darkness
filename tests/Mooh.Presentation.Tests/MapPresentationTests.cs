@@ -20,7 +20,7 @@ namespace Mooh.Presentation.Tests
         public void OriginalCampaignMapReferencesOnlyRecoveredAssets()
         {
             string assets = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../assets"));
-            using FileStream coordinates = File.OpenRead(Path.Combine(assets, "map", "map.waypoints"));
+            using FileStream coordinates = File.OpenRead(Path.Combine(assets, "map", "map.json"));
             using FileStream text = File.OpenRead(Path.Combine(assets, "text", "strings.bin"));
             StringTable strings = StringTable.Load(text);
             using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(assets, "levels", "manifest.json")));
@@ -57,7 +57,7 @@ namespace Mooh.Presentation.Tests
         public void LoadsTheOriginalWaypoints()
         {
             using FileStream stream = File.OpenRead(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
-                "../../../../../assets/map/map.waypoints")));
+                "../../../../../assets/map/map.json")));
             MapWaypoints points = MapWaypoints.Load(stream);
             Assert.Equal(151, points.Points.Count);
             Assert.Equal(new MapPoint(407, 434), points.Points[0]);

@@ -22,7 +22,7 @@
     <Content Include="../../assets/screens/**/*"
              Link="assets/screens/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../assets/map/*.waypoints"
+    <Content Include="../../assets/map/*.json"
              Link="assets/map/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/sounds/*.ogg;../../assets/sounds/Sound.ini"
