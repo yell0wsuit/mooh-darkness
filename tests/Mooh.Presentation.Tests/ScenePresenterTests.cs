@@ -5,9 +5,9 @@ using System.Text.Json;
 
 using Mooh.Core.Content;
 using Mooh.Core.Entities;
-using Mooh.Core.Player;
 using Mooh.Core.Grid;
 using Mooh.Core.Levels;
+using Mooh.Core.Player;
 using Mooh.Presentation.Scene;
 
 using Xunit;
