@@ -52,7 +52,13 @@ namespace Mooh.Presentation.Scene
         private double _clockMilliseconds;
         private readonly AnimationLibrary _library;
         private readonly Random _random;
-        private List<SceneSprite> _sprites = [];
+        private Dictionary<EntityId, Sighting> _currentSeen = [];
+        private readonly Dictionary<EntityId, Sighting> _sighted = [];
+        private readonly List<EntityId> _removedAnimators = [];
+        private readonly List<SceneSprite> _spriteBuffer = [];
+        private readonly List<SpriteOrder> _spriteOrder = [];
+        private readonly List<(double X, double Y)> _steps = [];
+        private readonly List<(double X, double Y, Direction Direction)> _trails = [];
         private List<SoundCue> _sounds = [];
 
         /// <summary>Initializes the presenter.</summary>
@@ -86,7 +92,10 @@ namespace Mooh.Presentation.Scene
         public IReadOnlyList<SceneText> Texts => _texts;
 
         /// <summary>Gets the frames to draw, in draw order.</summary>
-        public IReadOnlyList<SceneSprite> Sprites => _sprites;
+        public IReadOnlyList<SceneSprite> Sprites
+        {
+            get; private set;
+        } = [];
 
         /// <summary>Gets an entity's animator.</summary>
         /// <param name="id">The entity.</param>
@@ -110,15 +119,17 @@ namespace Mooh.Presentation.Scene
             ArgumentNullException.ThrowIfNull(events);
 
             _clockMilliseconds += (bonusSeconds ?? seconds) * 1000;
-            HashSet<EntityId> present = [];
-            Dictionary<EntityId, Sighting> seen = [];
-            List<SceneSprite> sprites = [];
+            Dictionary<EntityId, Sighting> seen = _currentSeen;
+            seen.Clear();
+            List<SceneSprite> sprites = _spriteBuffer;
+            sprites.Clear();
             List<SoundCue> sounds = [];
-            List<(double X, double Y)> steps = [];
-            List<(double X, double Y, Direction Direction)> trails = [];
+            List<(double X, double Y)> steps = _steps;
+            steps.Clear();
+            List<(double X, double Y, Direction Direction)> trails = _trails;
+            trails.Clear();
             foreach (Entity entity in world.Entities)
             {
-                _ = present.Add(entity.Id);
                 (double seenX, double seenY) = DrawnPosition.Of(entity);
                 seen[entity.Id] = new Sighting(TypeOf(entity), seenX, seenY, entity.PlayerBody is not null, entity.BigBombBody is not null, entity.IsFrozenMonster);
                 if (build?.IsDone == false && (entity.PlayerBody is not null || entity.DoorBody is not null))
@@ -204,7 +215,12 @@ namespace Mooh.Presentation.Scene
             }
 
             // An event's entity may be gone by now; it sounds where it was last drawn.
-            Dictionary<EntityId, Sighting> sighted = [with(_seen)];
+            Dictionary<EntityId, Sighting> sighted = _sighted;
+            sighted.Clear();
+            foreach ((EntityId id, Sighting sighting) in _seen)
+            {
+                sighted.Add(id, sighting);
+            }
             foreach ((EntityId id, Sighting sighting) in seen)
             {
                 sighted[id] = sighting;
@@ -241,6 +257,7 @@ namespace Mooh.Presentation.Scene
             }
 
             _shake.Update(world, events, sighted, seconds, _random);
+            _currentSeen = _seen;
             _seen = seen;
             _sounds = sounds;
             IReadOnlyList<GridPosition> blasts = _effects.Update(world, events, seconds);
@@ -254,38 +271,65 @@ namespace Mooh.Presentation.Scene
 
             _floating?.Update(world, events, sighted, seconds);
             _texts = _floating is null ? [] : [.. _floating.Texts];
-            foreach (EntityId gone in _animators.Keys.Where(id => !present.Contains(id)).ToList())
+            _removedAnimators.Clear();
+            foreach (EntityId id in _animators.Keys)
+            {
+                if (!seen.ContainsKey(id))
+                {
+                    _removedAnimators.Add(id);
+                }
+            }
+            foreach (EntityId gone in _removedAnimators)
             {
                 _ = _animators.Remove(gone);
             }
 
-            // World particles sort at their owning cell in the terrain pass; overlay glows
-            // follow the whole world. Objects retain their fractional drawn positions.
-            sprites = [.. _particles.Sprites, .. sprites];
-            if (spin is WorldSpin turning)
+            // Particles precede objects on equal keys, as in the original stable sort.
+            sprites.InsertRange(0, _particles.Sprites);
+            _spriteOrder.Clear();
+            for (int i = 0; i < sprites.Count; i++)
             {
-                sprites = [.. sprites.Select(sprite =>
+                SceneSprite sprite = sprites[i];
+                if (spin is WorldSpin turning)
                 {
                     (double x, double y) = turning.Transform(sprite.X, sprite.Y);
-                    return sprite with
+                    sprite = sprite with
                     {
                         X = x,
                         Y = y
                     };
-                })];
+                    sprites[i] = sprite;
+                }
+
+                (double anchorX, double anchorY) = sprite.SortAnchor ?? (sprite.X, sprite.Y);
+                double depth = sprite.Pass == int.MaxValue ? 0
+                    : Math.Round((anchorX * SceneCamera.CellWidth) - (anchorY * SceneCamera.CellHeight));
+                _spriteOrder.Add(new SpriteOrder(i, sprite.Pass, depth));
             }
 
-            _sprites = [.. sprites.OrderBy(sprite => sprite.Pass)
-                .ThenBy(sprite =>
-                {
-                    if (sprite.Pass == int.MaxValue)
-                    {
-                        return 0;
-                    }
+            _spriteOrder.Sort();
+            SceneSprite[] frameSprites = new SceneSprite[sprites.Count];
+            for (int i = 0; i < frameSprites.Length; i++)
+            {
+                frameSprites[i] = sprites[_spriteOrder[i].Index];
+            }
 
-                    (double x, double y) = sprite.SortAnchor ?? (sprite.X, sprite.Y);
-                    return Math.Round((x * SceneCamera.CellWidth) - (y * SceneCamera.CellHeight));
-                })];
+            // Only the published snapshot escapes this presenter; working buffers stay private.
+            Sprites = Array.AsReadOnly(frameSprites);
+        }
+
+        private readonly record struct SpriteOrder(int Index, int Pass, double Depth) : IComparable<SpriteOrder>
+        {
+            public int CompareTo(SpriteOrder other)
+            {
+                int comparison = Pass.CompareTo(other.Pass);
+                if (comparison == 0)
+                {
+                    comparison = Depth.CompareTo(other.Depth);
+                }
+
+                return comparison == 0 ? Index.CompareTo(other.Index) : comparison;
+            }
         }
 
         /// <summary>

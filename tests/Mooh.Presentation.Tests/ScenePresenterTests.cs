@@ -6,6 +6,8 @@ using System.Text.Json;
 using Mooh.Core.Content;
 using Mooh.Core.Entities;
 using Mooh.Core.Player;
+using Mooh.Core.Grid;
+using Mooh.Core.Levels;
 using Mooh.Presentation.Scene;
 
 using Xunit;
@@ -17,6 +19,77 @@ namespace Mooh.Presentation.Tests
     {
         /// <summary>A teleporter's saved links, <c>CLinkCoordBase</c>: one link to column 6.</summary>
         private static readonly int[][][] FarLink = [[[6, 1]]];
+
+        /// <summary>Settled terrain frames allocate a published sprite snapshot without rebuilding large scratch buffers.</summary>
+        [Fact]
+        public void LargeStaticSceneReusesWorkingBuffers()
+        {
+            LevelDocument source = SceneHarness.BuildLevel(1);
+            List<LevelObject> objects = [.. source.Objects!];
+            for (int i = 0; i < 1000; i++)
+            {
+                objects.Add(new LevelObject(1000 + i, "CellsMetal01", 0,
+                    new LevelPosition(i % 50, 4 + (i / 50)), [], new Dictionary<string, JsonElement>()));
+            }
+
+            MaterializedLevel level = LevelMaterializer.Materialize(source with
+            {
+                Size = new LevelSize(50, 24),
+                Objects = objects
+            });
+            ScenePresenter presenter = new(SceneHarness.Library, new Random(0));
+            for (int i = 0; i < 30; i++)
+            {
+                presenter.Update(level.World, [], 0);
+            }
+
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < 20; i++)
+            {
+                presenter.Update(level.World, [], 0);
+            }
+            long bytesPerFrame = (GC.GetAllocatedBytesForCurrentThread() - before) / 20;
+
+            Assert.True(bytesPerFrame < 250_000, $"Static scene allocated {bytesPerFrame:N0} bytes per frame.");
+        }
+
+        /// <summary>Published frames survive later updates, including removals and world rotation.</summary>
+        [Fact]
+        public void PublishedSpritesRemainStableAcrossUpdates()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("CellsEat01", 5, 0)));
+            harness.Presenter.Update(harness.Level.World, [], 0);
+            IReadOnlyList<SceneSprite> previous = harness.Presenter.Sprites;
+            SceneSprite[] expected = [.. previous];
+            EntityId removed = harness.Level.GetEntity(200).Id;
+            Assert.True(harness.Level.World.Remove(removed));
+            harness.Presenter.Update(harness.Level.World, [], 0,
+                new WorldSpin(new GridPosition(2, 2), 0.5));
+
+            Assert.Equal(expected, previous);
+            Assert.DoesNotContain(harness.Presenter.Sprites, sprite => sprite.Entity == removed);
+        }
+
+        /// <summary>Equal depth keys keep registration order and each object's glow-shadow-body layers.</summary>
+        [Fact]
+        public void EqualKeysKeepRegistrationAndLayerOrder()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1, ("WBomb", 5, 1), ("WBomb", 5, 1)));
+            harness.Presenter.Update(harness.Level.World, [], 0);
+            EntityId first = harness.Level.GetEntity(200).Id;
+            EntityId second = harness.Level.GetEntity(201).Id;
+            SceneSprite[] layers = [.. harness.Presenter.Sprites.Where(sprite => sprite.Entity == first || sprite.Entity == second)];
+
+            Assert.Equal([first, second], layers.Select(sprite => sprite.Entity).Distinct());
+            foreach (EntityId id in new[] { first, second })
+            {
+                SceneSprite[] ownLayers = [.. layers.Where(sprite => sprite.Entity == id)];
+                Assert.Equal(3, ownLayers.Length);
+                Assert.True(ownLayers[0].Additive);
+                Assert.Equal("SpriteParts", ownLayers[1].Page);
+                Assert.False(ownLayers[2].Additive);
+            }
+        }
 
         /// <summary>Verifies a moving player is drawn between its cells, on its page.</summary>
         [Fact]
