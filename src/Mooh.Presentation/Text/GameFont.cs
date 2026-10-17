@@ -13,6 +13,7 @@ namespace Mooh.Presentation.Text
         private GameFont(string name, SKTypeface typeface)
         {
             Name = name;
+            Appearance = FontAppearance.ForStyle(name);
             _typeface = typeface;
             Font = new SKFont(typeface, 100) { Edging = SKFontEdging.Antialias };
             Font.Size = CapHeight(name) * 100 / Font.Metrics.CapHeight;
@@ -38,14 +39,14 @@ namespace Mooh.Presentation.Text
             _ => 0,
         };
 
-        /// <summary>Gets the style's text color.</summary>
-        public SKColor Color => Name switch
+        /// <summary>Gets the original bitmap style's palette, outlines and shadows.</summary>
+        public FontAppearance Appearance
         {
-            "PanelInstrBlackFnt" => SKColors.Black,
-            "PanelDigTextRedFnt" => new SKColor(210, 35, 30),
-            "MenuFntBtnSel" or "MenuFntBtnPrs" or "MenuFntEncTitSel" => new SKColor(255, 220, 85),
-            _ => new SKColor(255, 245, 210),
-        };
+            get;
+        }
+
+        /// <summary>Gets the solid fill or top gradient color.</summary>
+        public SKColor Color => Appearance.Color;
 
         /// <summary>Gets the bundled TrueType filename for a style.</summary>
         public static string FileName(string name)

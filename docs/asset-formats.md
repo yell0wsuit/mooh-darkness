@@ -33,7 +33,13 @@ unchanged.
 `assets/fonts/ComicNeue-Regular.ttf` and `ComicNeue-Bold.ttf` replace all bitmap atlases.
 `GameFont` maps existing style roles to a face, cap height, baseline offset and color. Layout
 and drawing use the same Skia font metrics; the renderer caches faces until disposal, following
-Contre Jour DX's Skia font approach. The original text animation timing is retained.
+Contre Jour DX's Skia font approach. `FontAppearance` preserves each original bitmap role's
+sampled fill colors and edge treatment: black outlines where present, plain black story/help
+text, gold title gradients with a gray bevel and black shadow, white tooltips with orange-red
+edges, and green/purple edging on floating scores. Normal, selected and pressed buttons keep
+separate gold, yellow and dark-gold fills. Edge widths and offsets use logical screen pixels.
+Fades apply to the complete composed glyph so overlapping outlines do not accumulate opacity.
+The original text animation timing is retained.
 
 ## Sound, music cues and tracker modules
 
