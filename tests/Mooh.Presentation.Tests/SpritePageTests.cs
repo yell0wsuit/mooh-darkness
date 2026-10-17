@@ -47,7 +47,7 @@ namespace Mooh.Presentation.Tests
         {
             string directory = Path.Combine(AppContext.BaseDirectory, "assets", "sprites");
             List<string> outside = [];
-            foreach (string table in Directory.EnumerateFiles(directory, "*.seq"))
+            foreach (string table in Directory.EnumerateFiles(directory, "*.json"))
             {
                 string atlas = Path.ChangeExtension(table, ".png");
                 if (!File.Exists(atlas))
@@ -95,7 +95,7 @@ namespace Mooh.Presentation.Tests
 
         private static SpritePage Load(string name)
         {
-            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", name + ".seq"));
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", name + ".json"));
             return SpritePage.Load(name, stream);
         }
     }

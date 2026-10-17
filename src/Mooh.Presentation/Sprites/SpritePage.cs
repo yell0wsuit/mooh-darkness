@@ -1,27 +1,13 @@
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Text.Json;
 
 namespace Mooh.Presentation.Sprites
 {
-    /// <summary>
-    /// Reads a recovered sprite page frame table, the <c>.seq</c> file beside each <c>Sprite*.png</c>
-    /// atlas.
-    /// </summary>
-    /// <remarks>
-    /// The format is <c>anm2</c>, a version and the frame count, then one 20-byte record per frame:
-    /// the name's offset and length, then the frame's left, top, right and bottom edges relative to
-    /// its anchor and its atlas position, each a little-endian 16-bit value after the two 32-bit
-    /// name fields. A <c>cst1</c> chunk and the name table follow. A frame whose four edges are all
-    /// zero is empty and draws nothing.
-    /// </remarks>
+    /// <summary>Reads TexturePacker JSON Hash or Array atlases using Contre Jour DX's trim and pivot conventions.</summary>
     public sealed class SpritePage
     {
-        private const int HeaderSize = 12;
-        private const int RecordSize = 20;
-
         private readonly Dictionary<string, SpriteFrame> _frames;
 
         private SpritePage(string name, Dictionary<string, SpriteFrame> frames)
@@ -58,55 +44,87 @@ namespace Mooh.Presentation.Sprites
 
         /// <summary>Reads a page's frame table.</summary>
         /// <param name="name">The page name.</param>
-        /// <param name="stream">The <c>.seq</c> bytes.</param>
+        /// <param name="stream">The TexturePacker JSON bytes.</param>
         /// <returns>The page.</returns>
         /// <exception cref="ArgumentNullException">An argument is <see langword="null"/>.</exception>
-        /// <exception cref="InvalidDataException">The data is not a recovered frame table.</exception>
+        /// <exception cref="InvalidDataException">The atlas is malformed or uses unsupported rotation.</exception>
         public static SpritePage Load(string name, Stream stream)
         {
             ArgumentNullException.ThrowIfNull(name);
             ArgumentNullException.ThrowIfNull(stream);
-            using MemoryStream copy = new();
-            stream.CopyTo(copy);
-            ReadOnlySpan<byte> data = copy.GetBuffer().AsSpan(0, (int)copy.Length);
-            if (data.Length < HeaderSize || !data[..4].SequenceEqual("anm2"u8))
+            try
             {
-                throw new InvalidDataException($"Sprite page '{name}' is not an anm2 frame table.");
-            }
-
-            int count = BinaryPrimitives.ReadInt32LittleEndian(data[8..]);
-            if (count < 0 || HeaderSize + ((long)count * RecordSize) > data.Length)
-            {
-                throw new InvalidDataException($"Sprite page '{name}' declares more frames than it holds.");
-            }
-
-            Dictionary<string, SpriteFrame> frames = new(count, StringComparer.Ordinal);
-            for (int index = 0; index < count; index++)
-            {
-                ReadOnlySpan<byte> record = data.Slice(HeaderSize + (index * RecordSize), RecordSize);
-                int nameOffset = BinaryPrimitives.ReadInt32LittleEndian(record);
-                int nameLength = BinaryPrimitives.ReadInt32LittleEndian(record[4..]);
-                if (nameOffset < 0 || nameLength < 0 || (long)nameOffset + nameLength > data.Length)
+                using JsonDocument document = JsonDocument.Parse(stream);
+                JsonElement entries = document.RootElement.GetProperty("frames");
+                Dictionary<string, SpriteFrame> frames = new(StringComparer.Ordinal);
+                if (entries.ValueKind == JsonValueKind.Object)
                 {
-                    throw new InvalidDataException($"Sprite page '{name}' has a frame name outside its data.");
+                    foreach (JsonProperty entry in entries.EnumerateObject())
+                    {
+                        Add(entry.Name, entry.Value);
+                    }
                 }
+                else if (entries.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (JsonElement entry in entries.EnumerateArray())
+                    {
+                        Add(entry.GetProperty("filename").GetString()!, entry);
+                    }
+                }
+                else
+                {
+                    throw new InvalidDataException("Atlas frames must be an object or array.");
+                }
+                return new SpritePage(name, frames);
 
-                string frameName = Encoding.Latin1.GetString(data.Slice(nameOffset, nameLength));
-                int left = BinaryPrimitives.ReadInt16LittleEndian(record[8..]);
-                int top = BinaryPrimitives.ReadInt16LittleEndian(record[10..]);
-                int right = BinaryPrimitives.ReadInt16LittleEndian(record[12..]);
-                int bottom = BinaryPrimitives.ReadInt16LittleEndian(record[14..]);
-                frames[frameName] = new SpriteFrame(
-                    frameName,
-                    BinaryPrimitives.ReadInt16LittleEndian(record[16..]),
-                    BinaryPrimitives.ReadInt16LittleEndian(record[18..]),
-                    right - left,
-                    bottom - top,
-                    left,
-                    top);
+                void Add(string key, JsonElement entry)
+                {
+                    if (entry.TryGetProperty("rotated", out JsonElement rotated) && rotated.GetBoolean())
+                    {
+                        throw new InvalidDataException($"Atlas '{name}' frame '{key}' is rotated; disable rotation in TexturePacker.");
+                    }
+                    string frameName = key.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? key[..^4] : key;
+                    JsonElement rect = entry.GetProperty("frame");
+                    int x = rect.GetProperty("x").GetInt32();
+                    int y = rect.GetProperty("y").GetInt32();
+                    int width = rect.GetProperty("w").GetInt32();
+                    int height = rect.GetProperty("h").GetInt32();
+                    int offsetX = 0, offsetY = 0;
+                    if (entry.TryGetProperty("spriteSourceSize", out JsonElement offset))
+                    {
+                        offsetX = offset.GetProperty("x").GetInt32();
+                        offsetY = offset.GetProperty("y").GetInt32();
+                    }
+                    int sourceWidth = width, sourceHeight = height;
+                    if (entry.TryGetProperty("sourceSize", out JsonElement source))
+                    {
+                        sourceWidth = source.GetProperty("w").GetInt32();
+                        sourceHeight = source.GetProperty("h").GetInt32();
+                    }
+                    double pivotX = 0.5, pivotY = 0.5;
+                    if (entry.TryGetProperty("pivot", out JsonElement pivot))
+                    {
+                        pivotX = pivot.GetProperty("x").GetDouble();
+                        pivotY = pivot.GetProperty("y").GetDouble();
+                    }
+                    if (x < 0 || y < 0 || width < 0 || height < 0 || sourceWidth < 0 || sourceHeight < 0
+                        || !double.IsFinite(pivotX) || !double.IsFinite(pivotY))
+                    {
+                        throw new InvalidDataException($"Atlas '{name}' frame '{key}' has invalid geometry.");
+                    }
+                    SpriteFrame frame = new(frameName, x, y, width, height,
+                        checked((int)Math.Round(offsetX - (pivotX * sourceWidth))),
+                        checked((int)Math.Round(offsetY - (pivotY * sourceHeight))));
+                    if (!frames.TryAdd(frameName, frame))
+                    {
+                        throw new InvalidDataException($"Atlas '{name}' repeats frame '{frameName}'.");
+                    }
+                }
             }
-
-            return new SpritePage(name, frames);
+            catch (Exception error) when (error is JsonException or KeyNotFoundException or InvalidOperationException or FormatException or OverflowException)
+            {
+                throw new InvalidDataException($"Atlas '{name}' contains invalid TexturePacker JSON.", error);
+            }
         }
     }
 }

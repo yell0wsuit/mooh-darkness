@@ -13,7 +13,7 @@ namespace Mooh.Desktop
     /// Draws the presenter's sprites from the recovered atlases. A frame's anchor is its object's
     /// screen position; the frame spans its recovered edges around it.
     /// </summary>
-    /// <param name="spritesDirectory">The folder holding the <c>Sprite*.png</c> atlases and their <c>.seq</c> tables.</param>
+    /// <param name="spritesDirectory">The folder holding the <c>Sprite*.png</c> atlases and their <c>.json</c> tables.</param>
     internal sealed class SceneRenderer(string spritesDirectory) : IDisposable
     {
         private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.None);
@@ -204,7 +204,7 @@ namespace Mooh.Desktop
                 return atlas;
             }
 
-            string table = Path.Combine(_spritesDirectory, page + ".seq");
+            string table = Path.Combine(_spritesDirectory, page + ".json");
             string image = Path.Combine(_spritesDirectory, page + ".png");
             if (!File.Exists(image))
             {

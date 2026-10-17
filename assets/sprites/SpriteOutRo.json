@@ -1,0 +1,369 @@
+{
+  "frames": {
+    "Bk_OLogo_DS": {
+      "frame": {
+        "x": 0,
+        "y": 222,
+        "w": 127,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 127,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 127,
+        "h": 60
+      },
+      "pivot": {
+        "x": -0.14960629921259844,
+        "y": -0.31666666666666665
+      }
+    },
+    "Bk_OLogo_GH": {
+      "frame": {
+        "x": 0,
+        "y": 53,
+        "w": 87,
+        "h": 91
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 87,
+        "h": 91
+      },
+      "sourceSize": {
+        "w": 87,
+        "h": 91
+      },
+      "pivot": {
+        "x": -0.40229885057471265,
+        "y": -0.2857142857142857
+      }
+    },
+    "Bk_OLogo_Aol": {
+      "frame": {
+        "x": 0,
+        "y": 370,
+        "w": 130,
+        "h": 50
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 50
+      },
+      "sourceSize": {
+        "w": 130,
+        "h": 50
+      },
+      "pivot": {
+        "x": -0.17692307692307693,
+        "y": -0.7
+      }
+    },
+    "Bk_OLogo_BTO": {
+      "frame": {
+        "x": 87,
+        "y": 94,
+        "w": 91,
+        "h": 84
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 91,
+        "h": 84
+      },
+      "sourceSize": {
+        "w": 91,
+        "h": 84
+      },
+      "pivot": {
+        "x": -0.17582417582417584,
+        "y": -0.23809523809523808
+      }
+    },
+    "Bk_OLogo_Int": {
+      "frame": {
+        "x": 178,
+        "y": 94,
+        "w": 75,
+        "h": 87
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 75,
+        "h": 87
+      },
+      "sourceSize": {
+        "w": 75,
+        "h": 87
+      },
+      "pivot": {
+        "x": -9.306666666666667,
+        "y": -5.862068965517241
+      }
+    },
+    "Bk_OLogo_Phen": {
+      "frame": {
+        "x": 0,
+        "y": 333,
+        "w": 177,
+        "h": 37
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 177,
+        "h": 37
+      },
+      "sourceSize": {
+        "w": 177,
+        "h": 37
+      },
+      "pivot": {
+        "x": -0.03389830508474576,
+        "y": -14.756756756756756
+      }
+    },
+    "Bk_OLogo_Real": {
+      "frame": {
+        "x": 0,
+        "y": 420,
+        "w": 135,
+        "h": 47
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 135,
+        "h": 47
+      },
+      "sourceSize": {
+        "w": 135,
+        "h": 47
+      },
+      "pivot": {
+        "x": -0.11851851851851852,
+        "y": -0.5319148936170213
+      }
+    },
+    "Bk_OTxtDe_Pow": {
+      "frame": {
+        "x": 127,
+        "y": 262,
+        "w": 97,
+        "h": 12
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 12
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 12
+      },
+      "pivot": {
+        "x": -7.082474226804123,
+        "y": -40.75
+      }
+    },
+    "Bk_OLogo_BFish": {
+      "frame": {
+        "x": 157,
+        "y": 0,
+        "w": 86,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 86,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 86,
+        "h": 94
+      },
+      "pivot": {
+        "x": -0.3372093023255814,
+        "y": -0.2127659574468085
+      }
+    },
+    "Bk_OLogo_SWave": {
+      "frame": {
+        "x": 0,
+        "y": 178,
+        "w": 178,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 178,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 178,
+        "h": 44
+      },
+      "pivot": {
+        "x": -0.06741573033707865,
+        "y": -0.5681818181818182
+      }
+    },
+    "Bk_OLogo_Yahoo": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 157,
+        "h": 53
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 157,
+        "h": 53
+      },
+      "sourceSize": {
+        "w": 157,
+        "h": 53
+      },
+      "pivot": {
+        "x": -0.1464968152866242,
+        "y": -0.4716981132075472
+      }
+    },
+    "Bk_OTxtDe_2Pow": {
+      "frame": {
+        "x": 127,
+        "y": 250,
+        "w": 97,
+        "h": 12
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 12
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 12
+      },
+      "pivot": {
+        "x": -0.4329896907216495,
+        "y": -44.25
+      }
+    },
+    "Bk_OTxtEng_Dev": {
+      "frame": {
+        "x": 127,
+        "y": 236,
+        "w": 91,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 91,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 91,
+        "h": 14
+      },
+      "pivot": {
+        "x": -7.593406593406593,
+        "y": -34.92857142857143
+      }
+    },
+    "Bk_OLogo_Oberon": {
+      "frame": {
+        "x": 0,
+        "y": 282,
+        "w": 134,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 134,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 134,
+        "h": 51
+      },
+      "pivot": {
+        "x": -0.14925373134328357,
+        "y": -0.49019607843137253
+      }
+    },
+    "Bk_OTxtEng_2Dev": {
+      "frame": {
+        "x": 127,
+        "y": 222,
+        "w": 91,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 91,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 91,
+        "h": 14
+      },
+      "pivot": {
+        "x": -0.5054945054945055,
+        "y": -37.92857142857143
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "../screens/SpriteOutRo.jpg",
+    "scale": "1"
+  }
+}

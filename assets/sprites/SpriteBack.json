@@ -1,0 +1,153 @@
+{
+  "frames": {
+    "BackNrm_2_01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackNrm_2_02": {
+      "frame": {
+        "x": 250,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackNrm_2_03": {
+      "frame": {
+        "x": 0,
+        "y": 220,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackNrm_2_04": {
+      "frame": {
+        "x": 250,
+        "y": 220,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackNrm_2_05": {
+      "frame": {
+        "x": 0,
+        "y": 440,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackNrm_2_06": {
+      "frame": {
+        "x": 250,
+        "y": 440,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteBack.png",
+    "scale": "1"
+  }
+}

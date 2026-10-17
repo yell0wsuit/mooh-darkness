@@ -55,7 +55,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void EveryCursorFrameExistsInTheRecoveredPage()
         {
-            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", "SpriteMenuPrt.seq"));
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", "SpriteMenuPrt.json"));
             SpritePage page = SpritePage.Load("SpriteMenuPrt", stream);
             MenuBackground background = new(new Random(1));
             for (int frame = 0; frame < 20; frame++)

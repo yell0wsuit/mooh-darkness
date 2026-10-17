@@ -14,7 +14,7 @@
     <Content Include="../../assets/sprites/*.png"
              Link="assets/sprites/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../assets/sprites/*.seq"
+    <Content Include="../../assets/sprites/*.json"
              Link="assets/sprites/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/fonts/*.fnt"

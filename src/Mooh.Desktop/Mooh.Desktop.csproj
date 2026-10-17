@@ -16,7 +16,7 @@
     <InternalsVisibleTo Include="Mooh.Desktop.Tests" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="../../assets/sprites/*.png;../../assets/sprites/*.seq"
+    <Content Include="../../assets/sprites/*.png;../../assets/sprites/*.json"
              Link="assets/sprites/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/screens/**/*"

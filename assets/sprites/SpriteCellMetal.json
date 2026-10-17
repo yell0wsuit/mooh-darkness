@@ -1,0 +1,177 @@
+{
+  "frames": {
+    "OCellM01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 90
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 90
+      },
+      "pivot": {
+        "x": 0.4020618556701031,
+        "y": 0.6111111111111112
+      }
+    },
+    "OCellM02": {
+      "frame": {
+        "x": 97,
+        "y": 0,
+        "w": 97,
+        "h": 90
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 90
+      },
+      "pivot": {
+        "x": 0.4020618556701031,
+        "y": 0.6111111111111112
+      }
+    },
+    "OCellM03": {
+      "frame": {
+        "x": 0,
+        "y": 90,
+        "w": 97,
+        "h": 90
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 90
+      },
+      "pivot": {
+        "x": 0.4020618556701031,
+        "y": 0.6111111111111112
+      }
+    },
+    "OCellMTop": {
+      "frame": {
+        "x": 0,
+        "y": 270,
+        "w": 97,
+        "h": 90
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 90
+      },
+      "pivot": {
+        "x": 0.4020618556701031,
+        "y": 0.6111111111111112
+      }
+    },
+    "OCellMLeft": {
+      "frame": {
+        "x": 0,
+        "y": 180,
+        "w": 97,
+        "h": 90
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 90
+      },
+      "pivot": {
+        "x": 0.4020618556701031,
+        "y": 0.6111111111111112
+      }
+    },
+    "OCellMRight": {
+      "frame": {
+        "x": 97,
+        "y": 180,
+        "w": 97,
+        "h": 90
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 90
+      },
+      "pivot": {
+        "x": 0.3917525773195876,
+        "y": 0.6111111111111112
+      }
+    },
+    "OCellMBottom": {
+      "frame": {
+        "x": 97,
+        "y": 90,
+        "w": 97,
+        "h": 90
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 90
+      },
+      "pivot": {
+        "x": 0.4020618556701031,
+        "y": 0.6111111111111112
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteCellMetal.png",
+    "scale": "1"
+  }
+}

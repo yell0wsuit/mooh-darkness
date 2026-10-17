@@ -201,7 +201,7 @@ namespace Mooh.Presentation.Tests
                     string pageName = clip.Page ?? table.Page;
                     if (!pages.TryGetValue(pageName, out SpritePage? page))
                     {
-                        using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", pageName + ".seq"));
+                        using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", pageName + ".json"));
                         page = SpritePage.Load(pageName, stream);
                         pages[pageName] = page;
                     }
@@ -225,7 +225,7 @@ namespace Mooh.Presentation.Tests
         {
             if (!pages.TryGetValue(name, out SpritePage? page))
             {
-                using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", name + ".seq"));
+                using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", name + ".json"));
                 page = SpritePage.Load(name, stream);
                 pages[name] = page;
             }

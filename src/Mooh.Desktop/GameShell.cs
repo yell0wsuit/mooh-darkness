@@ -63,7 +63,7 @@ namespace Mooh.Desktop
             Profile = profile;
             _store = store;
             _masks = masks;
-            using FileStream page = File.OpenRead(Path.Combine(assets, "sprites", "SpriteMenuPrt.seq"));
+            using FileStream page = File.OpenRead(Path.Combine(assets, "sprites", "SpriteMenuPrt.json"));
             using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", "MenuFntBtnNrm.fnt"));
             using FileStream tooltip = File.OpenRead(Path.Combine(assets, "fonts", "MenuFontToolTip.fnt"));
             using FileStream scoreFont = File.OpenRead(Path.Combine(assets, "fonts", "MenuFntEncTitSel.fnt"));

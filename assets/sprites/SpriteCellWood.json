@@ -1,0 +1,153 @@
+{
+  "frames": {
+    "OCellWoodNrm01": {
+      "frame": {
+        "x": 114,
+        "y": 0,
+        "w": 114,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 114,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 114,
+        "h": 94
+      },
+      "pivot": {
+        "x": 0.4298245614035088,
+        "y": 0.5957446808510638
+      }
+    },
+    "OCellWoodNrm02": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 114,
+        "h": 102
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 114,
+        "h": 102
+      },
+      "sourceSize": {
+        "w": 114,
+        "h": 102
+      },
+      "pivot": {
+        "x": 0.42105263157894735,
+        "y": 0.6274509803921569
+      }
+    },
+    "OCellWoodTop01": {
+      "frame": {
+        "x": 0,
+        "y": 195,
+        "w": 107,
+        "h": 93
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 107,
+        "h": 93
+      },
+      "sourceSize": {
+        "w": 107,
+        "h": 93
+      },
+      "pivot": {
+        "x": 0.411214953271028,
+        "y": 0.6021505376344086
+      }
+    },
+    "OCellWoodLeft01": {
+      "frame": {
+        "x": 0,
+        "y": 102,
+        "w": 107,
+        "h": 93
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 107,
+        "h": 93
+      },
+      "sourceSize": {
+        "w": 107,
+        "h": 93
+      },
+      "pivot": {
+        "x": 0.411214953271028,
+        "y": 0.6021505376344086
+      }
+    },
+    "OCellWoodRight01": {
+      "frame": {
+        "x": 107,
+        "y": 187,
+        "w": 107,
+        "h": 93
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 107,
+        "h": 93
+      },
+      "sourceSize": {
+        "w": 107,
+        "h": 93
+      },
+      "pivot": {
+        "x": 0.411214953271028,
+        "y": 0.6021505376344086
+      }
+    },
+    "OCellWoodBottom01": {
+      "frame": {
+        "x": 114,
+        "y": 94,
+        "w": 107,
+        "h": 93
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 107,
+        "h": 93
+      },
+      "sourceSize": {
+        "w": 107,
+        "h": 93
+      },
+      "pivot": {
+        "x": 0.411214953271028,
+        "y": 0.6021505376344086
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteCellWood.png",
+    "scale": "1"
+  }
+}

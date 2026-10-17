@@ -27,7 +27,7 @@ namespace Mooh.Presentation.Tests
             string[] previews = [.. manifest.RootElement.GetProperty("levels").EnumerateArray()
                 .Select(level => "map-previews/" + level.GetProperty("name").GetString() + ".jpg")];
             MapPresentation map = new(MapWaypoints.Load(coordinates), previews, key => strings[key]);
-            using FileStream frames = File.OpenRead(Path.Combine(assets, "sprites", "SpriteMapPath.seq"));
+            using FileStream frames = File.OpenRead(Path.Combine(assets, "sprites", "SpriteMapPath.json"));
             SpritePage page = SpritePage.Load("SpriteMapPath", frames);
             foreach (int index in Enumerable.Range(0, 30).Select(stage => stage * 5))
             {

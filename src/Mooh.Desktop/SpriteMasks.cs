@@ -12,7 +12,7 @@ namespace Mooh.Desktop
     /// The solid pixels of the recovered atlases, for the pickup sparks. A pixel counts as solid
     /// from half opacity up, standing in for the 1-bit mask the original builds at load time.
     /// </summary>
-    /// <param name="spritesDirectory">The folder holding the <c>Sprite*.png</c> atlases and their <c>.seq</c> tables.</param>
+    /// <param name="spritesDirectory">The folder holding the <c>Sprite*.png</c> atlases and their <c>.json</c> tables.</param>
     internal sealed class SpriteMasks(string spritesDirectory) : ISpriteMask, IDisposable
     {
         private const byte SolidAlpha = 128;
@@ -51,7 +51,7 @@ namespace Mooh.Desktop
                 return loaded;
             }
 
-            string table = Path.Combine(spritesDirectory, page + ".seq");
+            string table = Path.Combine(spritesDirectory, page + ".json");
             string image = Path.Combine(spritesDirectory, page + ".png");
             (SpritePage, SKBitmap)? found = null;
             if (File.Exists(table) && File.Exists(image) && SKBitmap.Decode(image) is SKBitmap pixels)

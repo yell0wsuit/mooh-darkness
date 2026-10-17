@@ -1,0 +1,177 @@
+{
+  "frames": {
+    "BackTropical_2_01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackTropical_2_02": {
+      "frame": {
+        "x": 250,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackTropical_2_03": {
+      "frame": {
+        "x": 0,
+        "y": 220,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackTropical_2_04": {
+      "frame": {
+        "x": 250,
+        "y": 220,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackTropical_2_05": {
+      "frame": {
+        "x": 0,
+        "y": 440,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackTropical_2_06": {
+      "frame": {
+        "x": 250,
+        "y": 440,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "BackTropical_2_07": {
+      "frame": {
+        "x": 0,
+        "y": 660,
+        "w": 250,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 250,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 250,
+        "h": 220
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteBackTrop.png",
+    "scale": "1"
+  }
+}

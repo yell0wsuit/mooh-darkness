@@ -185,7 +185,7 @@ namespace Mooh.Presentation.Tests
 
         private static MenuPanelPresentation Create()
         {
-            using FileStream page = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", "SpriteMenuPrt.seq"));
+            using FileStream page = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", "SpriteMenuPrt.json"));
             using FileStream font = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "fonts", "MenuFntBtnNrm.fnt"));
             using FileStream tooltip = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "fonts", "MenuFontToolTip.fnt"));
             return new MenuPanelPresentation(SpritePage.Load("SpriteMenuPrt", page), BitmapFont.Load("MenuFntBtnNrm", font), BitmapFont.Load("MenuFontToolTip", tooltip), new Random(1));

@@ -1,0 +1,33 @@
+{
+  "frames": {
+    "LLogo_Oberon": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 142,
+        "h": 54
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 142,
+        "h": 54
+      },
+      "sourceSize": {
+        "w": 142,
+        "h": 54
+      },
+      "pivot": {
+        "x": -0.11267605633802817,
+        "y": -9.907407407407407
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteMenuPrt2.png",
+    "scale": "1"
+  }
+}

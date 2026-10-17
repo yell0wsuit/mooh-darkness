@@ -26,7 +26,7 @@ namespace Mooh.Desktop.Tests
         public void ScaledSpritesMatchAnIsolatedFrame(string page, string name, float scale)
         {
             string directory = Path.Combine(AppContext.BaseDirectory, "assets", "sprites");
-            using FileStream stream = File.OpenRead(Path.Combine(directory, page + ".seq"));
+            using FileStream stream = File.OpenRead(Path.Combine(directory, page + ".json"));
             SpriteFrame frame = SpritePage.Load(page, stream)[name];
             using SKImage atlas = SKImage.FromEncodedData(Path.Combine(directory, page + ".png"));
             using SKImage isolated = atlas.Subset(SKRectI.Create(frame.X, frame.Y, frame.Width, frame.Height));

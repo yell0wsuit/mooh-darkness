@@ -34,7 +34,7 @@ def fixture(root):
         "levels/shipped.json": b'{"game":"level"}',
         "levels/research-only.json": b'{"archival":"not shipped"}',
         "sprites/SpritePlayer.png": b"original-pixels",
-        "sprites/SpritePlayer.seq": b"original-table",
+        "sprites/SpritePlayer.json": b"original-table",
         "music/TrackMenu.skm": b"original-module",
         "music/Music.ini": b"original-catalog",
         "screens/.DS_Store": b"finder-metadata",
@@ -75,8 +75,8 @@ def test_pack_uses_authoritative_level_manifest_and_original_paths(tmp_path):
             == files["sprites/SpritePlayer.png"]
         )
         assert (
-            bundle.read("assets/sprites/SpritePlayer.seq")
-            == files["sprites/SpritePlayer.seq"]
+            bundle.read("assets/sprites/SpritePlayer.json")
+            == files["sprites/SpritePlayer.json"]
         )
         assert "assets/music/TrackMenu.skm" not in names
         assert "assets/music/Music.ini" not in names
