@@ -216,6 +216,7 @@ namespace Mooh.Desktop
                 else if (type == SDL.EventType.WindowFocusLost)
                 {
                     _controls.ReleaseAll();
+                    shell.CancelPointer();
                 }
             }
         }
@@ -228,7 +229,7 @@ namespace Mooh.Desktop
             }
 
             _presentation.Draw(device.Canvas, device.Width, device.Height, shell.ShowsWorld,
-                shell.Profile.Options.FullColor, (target, margin) =>
+                true, (target, margin) =>
                 {
                     float verticalMargin = shell.ShowsWorld ? FramePresentation.VerticalMargin(device.Width, device.Height) : 0;
                     target.Clear(Backdrop);

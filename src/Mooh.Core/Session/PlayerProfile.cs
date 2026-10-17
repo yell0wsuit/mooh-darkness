@@ -167,7 +167,7 @@ namespace Mooh.Core.Session
         /// <summary>Gets or sets music volume, from zero to one.</summary>
         public double MusicVolume { get; set; } = 1;
 
-        /// <summary>Gets or sets whether full-color output is preferred over the original 16-bit mode.</summary>
+        /// <summary>Gets or sets the legacy color-depth field retained for save compatibility.</summary>
         public bool FullColor { get; set; } = true;
 
         /// <summary>Gets or sets whether the game should open fullscreen.</summary>

@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Mooh.Browser/Mooh.Browser.csproj" />
     <Project Path="src/Mooh.Core/Mooh.Core.csproj" />
     <Project Path="src/Mooh.Desktop.Platform/Mooh.Desktop.Platform.csproj" />
     <Project Path="src/Mooh.Desktop/Mooh.Desktop.csproj" />

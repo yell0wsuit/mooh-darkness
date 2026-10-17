@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net10.0-browser</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Mooh.Browser</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <WasmEnableThreads>true</WasmEnableThreads>
+    <WasmEnableThreads Condition="'$(MoohSingleThreaded)' == 'true'">false</WasmEnableThreads>
+    <DefineConstants Condition="'$(WasmEnableThreads)' == 'true'">$(DefineConstants);WASM_THREADS</DefineConstants>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <MoohContentCopy>PreserveNewest</MoohContentCopy>
+    <MoohContentCopy Condition="'$(MoohSkipContent)' == 'true'">Never</MoohContentCopy>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Mooh.Core/Mooh.Core.csproj" />
+    <ProjectReference Include="../Mooh.Presentation/Mooh.Presentation.csproj" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" />
+    <!-- Only the portable keycode enum is used; no SDL native function enters the browser build. -->
+    <PackageReference Include="SDL3-CS" />
+    <EmccExportedRuntimeMethod Include="GL" />
+    <EmccExportedRuntimeMethod Include="PThread" Condition="'$(WasmEnableThreads)' == 'true'" />
+    <NativeFileReference Include="Native/moohhost.cpp" />
+    <!-- Share the exact shell, simulation driver, renderer and tracker player with desktop. -->
+    <Compile Include="../Mooh.Desktop/*.cs" Exclude="../Mooh.Desktop/Program.cs;../Mooh.Desktop/SdlApplication.cs;../Mooh.Desktop/DesktopOptions.cs;../Mooh.Desktop/MusicPlayer.cs;../Mooh.Desktop/MusicDirector.cs" Link="Shared/%(Filename)%(Extension)" />
+    <Compile Include="../Mooh.Desktop.Platform/Input/*.cs" Link="Shared/Input/%(Filename)%(Extension)" />
+    <Compile Include="../Mooh.Desktop.Platform/Audio/IAudioOutput.cs" Link="Shared/IAudioOutput.cs" />
+    <Content Update="wwwroot/content/**" CopyToPublishDirectory="$(MoohContentCopy)" />
+    <ServiceWorker Include="wwwroot/coi-sw.js" PublishedContent="wwwroot/service-worker.published.js" />
+  </ItemGroup>
+</Project>

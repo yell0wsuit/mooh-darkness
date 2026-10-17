@@ -14,6 +14,7 @@
     <PackageVersion Include="SDL3-CS.Windows.Mixer" Version="$(SDL3MixerVersion)" />
     <PackageVersion Include="SDL3-CS.Linux.Mixer" Version="$(SDL3MixerVersion)" />
     <PackageVersion Include="SDL3-CS.MacOS.Mixer" Version="$(SDL3MixerVersion)" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.WebAssembly" Version="$(SkiaSharpVersion)" />
     <PackageVersion Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
     <PackageVersion Include="SkiaSharp.NativeAssets.macOS" Version="$(SkiaSharpVersion)" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="$(SkiaSharpVersion)" />

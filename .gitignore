@@ -57,3 +57,13 @@ nunit-*.xml
 
 # Portable player data
 MoohDarkness_SaveData/
+
+# Generated browser content and publish output
+src/Mooh.Browser/wwwroot/content/
+dist/
+__pycache__/
+
+# Python tool/test caches
+__pycache__/
+.pytest_cache/
+*.pyc

@@ -34,7 +34,7 @@ namespace Mooh.Desktop
         private readonly BitmapFont _levelFont;
         private readonly BitmapFont _scoreFont;
         private readonly ISpriteMask? _masks;
-        private readonly PlayerProfileStore? _store;
+        private readonly IPlayerProfileStore? _store;
         private readonly Random _random = new();
         private readonly MenuBackground _background;
         private readonly MapPresentation _map;
@@ -46,7 +46,6 @@ namespace Mooh.Desktop
         private bool _mouseDown;
         private bool _optionsInGame;
         private bool _fullscreenChoice;
-        private bool _fullColorChoice;
         private bool _mapCanChange;
         private int _difficulty;
         private int _scoreRank;
@@ -55,7 +54,7 @@ namespace Mooh.Desktop
         private bool _firstNameCharacter;
 
         public GameShell(string assets, LoadedLevelPack pack, AnimationLibrary library, StringTable strings,
-            BitmapFont levelFont, PlayerProfile profile, PlayerProfileStore? store, ISpriteMask? masks = null)
+            BitmapFont levelFont, PlayerProfile profile, IPlayerProfileStore? store, ISpriteMask? masks = null)
         {
             _pack = pack;
             _library = library;
@@ -592,6 +591,13 @@ namespace Mooh.Desktop
             }
         }
 
+        /// <summary>Cancels a pointer press without invoking its selected action.</summary>
+        public void CancelPointer()
+        {
+            _mouseDown = false;
+            Menu.CancelPress();
+        }
+
         public void SaveProgress()
         {
             if (Game is not null && Game.Session.State != GameSessionState.CampaignCompleted)
@@ -696,11 +702,6 @@ namespace Mooh.Desktop
                 case "fullscreen":
                     _fullscreenChoice = !_fullscreenChoice;
                     Menu.SetButtonLabel("fullscreen-check", _fullscreenChoice ? "\u0001" : "\u0002");
-                    break;
-                case "color-check":
-                case "color":
-                    _fullColorChoice = !_fullColorChoice;
-                    Menu.SetButtonLabel("color-check", _fullColorChoice ? "\u0001" : "\u0002");
                     break;
                 case "clear-scores":
                     ShowScores(true);
@@ -860,7 +861,6 @@ namespace Mooh.Desktop
             _optionsInGame = Screen == GameScreen.Pause || (Screen == GameScreen.Options && _optionsInGame);
             Screen = GameScreen.Options;
             _fullscreenChoice = Profile.Options.Fullscreen;
-            _fullColorChoice = Profile.Options.FullColor;
             _extras.Clear();
             List<MenuItem> items = [
                 Item("sound-cycle", "BtnOptSndVol", -70, 0),
@@ -873,11 +873,9 @@ namespace Mooh.Desktop
             {
                 items.Add(Item("fullscreen", "BtnOptFullScr", -20, 130));
                 items.Add(new("fullscreen-check", Profile.Options.Fullscreen ? "\u0001" : "\u0002", Localize("BtnOptFullScrTTip"), 150, 130));
-                items.Add(Item("color", "BtnOptFullColor", -20, 190));
-                items.Add(new("color-check", Profile.Options.FullColor ? "\u0001" : "\u0002", Localize("BtnOptFullColorTTip"), 150, 190));
-                items.Add(Item("clear-scores", "BtnOptClearScore", 0, 250));
+                items.Add(Item("clear-scores", "BtnOptClearScore", 0, 190));
             }
-            items.Add(Item("back", "BtnOptBack", 0, _optionsInGame ? 130 : 310));
+            items.Add(Item("back", "BtnOptBack", 0, _optionsInGame ? 130 : 250));
             Menu.Show(MenuPanelKind.Main, Localize("MenuTitleOpt"), items, -10, 10);
         }
 
@@ -886,7 +884,6 @@ namespace Mooh.Desktop
             if (!_optionsInGame)
             {
                 Profile.Options.Fullscreen = _fullscreenChoice;
-                Profile.Options.FullColor = _fullColorChoice;
             }
             Persist();
         }

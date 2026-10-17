@@ -164,6 +164,32 @@ namespace Mooh.Desktop.Tests
             Assert.Contains(shell.Elements, e => e is ScreenText { Text: "88" });
         }
 
+        /// <summary>A canceled gesture or focus loss cannot activate a pending menu click.</summary>
+        [Fact]
+        public void CancelingPointerDoesNotStartNewGame()
+        {
+            GameShell shell = Create();
+            shell.InspectScreen("main");
+            Settle(shell);
+            MenuButton button = Enumerable.Single(shell.Menu.Buttons, button => button.Id == "new");
+            shell.MouseMove((button.Left + button.Right) / 2, (button.Top + button.Bottom) / 2);
+            shell.MouseButton(true);
+            shell.CancelPointer();
+            shell.MouseButton(false);
+            Assert.Equal(GameScreen.Main, shell.Screen);
+        }
+
+        /// <summary>The legacy RGB565 toggle is no longer exposed in options.</summary>
+        [Fact]
+        public void OptionsDoNotOfferLegacyColorDepth()
+        {
+            GameShell shell = Create();
+            shell.Profile.Options.FullColor = false;
+            shell.InspectScreen("options");
+            Settle(shell);
+            Assert.DoesNotContain(shell.Menu.Buttons, button => button.Id is "color" or "color-check");
+        }
+
         /// <summary>Display checkboxes take effect when leaving options, as in the original menu.</summary>
         [Fact]
         public void DisplayOptionsApplyWhenReturningFromThePanel()
@@ -171,12 +197,12 @@ namespace Mooh.Desktop.Tests
             GameShell shell = Create();
             shell.InspectScreen("options");
             Settle(shell);
-            Click(shell, "color-check");
-            Assert.True(shell.Profile.Options.FullColor);
+            Click(shell, "fullscreen-check");
+            Assert.False(shell.Profile.Options.Fullscreen);
             Assert.True(shell.Menu.IsReady);
             shell.HandleKey(SDL.Keycode.Escape, true);
             Assert.Equal(GameScreen.Main, shell.Screen);
-            Assert.False(shell.Profile.Options.FullColor);
+            Assert.True(shell.Profile.Options.Fullscreen);
         }
 
         /// <summary>A previous pause panel cannot receive clicks once gameplay resumes.</summary>

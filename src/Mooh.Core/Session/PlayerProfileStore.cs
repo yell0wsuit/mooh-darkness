@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Mooh.Core.Session
 {
     /// <summary>Loads profile data and replaces its JSON file atomically within the user's data directory.</summary>
-    public sealed class PlayerProfileStore
+    public sealed class PlayerProfileStore : IPlayerProfileStore
     {
         /// <summary>Creates a store in the supplied user-data directory.</summary>
         /// <param name="userDataDirectory">The directory reserved for this user's game data.</param>

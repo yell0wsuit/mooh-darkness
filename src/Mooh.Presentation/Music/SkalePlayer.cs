@@ -50,6 +50,10 @@ namespace Mooh.Presentation.Music
         private int? _jumpOrder;
         private int? _breakRow;
         private int? _loopTarget;
+        private long _renderedFrames;
+
+        /// <summary>Reports an order's first stereo frame for offline export seek points.</summary>
+        public event Action<int, long>? OrderStarted;
 
         /// <summary>Initializes a player at an order position.</summary>
         /// <param name="module">The module, with its samples decoded.</param>
@@ -95,6 +99,7 @@ namespace Mooh.Presentation.Music
 
                 _tick.AsSpan(_tickOffset * 2, frames * 2).CopyTo(interleaved[written..]);
                 _tickOffset += frames;
+                _renderedFrames += frames;
                 written += frames * 2;
             }
         }
@@ -214,6 +219,7 @@ namespace Mooh.Presentation.Music
                     _pattern = pattern;
                     _row = 0;
                     _tickIndex = 0;
+                    OrderStarted?.Invoke(_order, _renderedFrames);
                     return;
                 }
 

@@ -393,6 +393,12 @@ namespace Mooh.Presentation.Screens
             }
         }
 
+        /// <summary>Disarms a canceled gesture without activating the selected button.</summary>
+        public void CancelPress()
+        {
+            _pressed = -1;
+        }
+
         /// <summary>Invokes a button only when pointer release still selects the pressed button.</summary>
         /// <returns>The action identifier, or null.</returns>
         public string? Release()

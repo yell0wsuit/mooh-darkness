@@ -25,10 +25,28 @@ dotnet run --project src/Mooh.Desktop -- --screen map --renderer software --seco
 
 Desktop rendering automatically tries Vulkan before OpenGL/software on Windows and Linux. Vulkan requires a Vulkan 1.1 loader and driver; `--renderer vulkan` forces it. macOS retains Metal/OpenGL/software because its Skia native package does not provide Vulkan.
 
+The legacy “Highest tone” color-depth option is removed; current hosts always render in full color.
+
+## Browser version
+
+Install ffmpeg and the .NET 10 `wasm-tools` workload, then package the original game assets and publish:
+
+```bash
+dotnet workload install wasm-tools
+python3 tools/build_browser_content.py
+python3 tools/publish_browser.py --serve
+```
+
+The AOT release runs at `http://127.0.0.1:8080/`. Use `--no-aot` for a quicker interpreter build. Deploy the contents of `dist/browser/wwwroot` to a static HTTPS host. The publisher builds a worker-owned WebGL2 runtime and a single-threaded fallback; the page selects the supported mode before transferring its canvas. COOP/COEP headers enable threading, with a cross-origin isolation service worker for hosts such as GitHub Pages. Use `?mode=single` to select the fallback explicitly.
+
+The browser shares desktop gameplay, menus, rendering, and bitmap fonts. Its music is rendered offline to 256 kbps MP3 during content packaging, then played as a continuous browser audio buffer with the original menu/game/ending start positions and gains; desktop retains Skale playback. Progress, options and high scores persist in localStorage. The PWA caches the selected runtime and game assets for subsequent offline launches. Keyboard controls match desktop; touch can operate menus, with mobile gameplay controls reserved for later. `?screen=main` or `?level=1` supports direct inspection after pressing Play.
+
 ## Build and test
 
 ```bash
 dotnet build Mooh.slnx
+# Desktop-only build (no browser workload needed):
+dotnet build src/Mooh.Desktop
 dotnet tests/Mooh.Core.Tests/bin/Debug/net10.0/Mooh.Core.Tests.dll
 dotnet tests/Mooh.Presentation.Tests/bin/Debug/net10.0/Mooh.Presentation.Tests.dll
 dotnet tests/Mooh.Desktop.Tests/bin/Debug/net10.0/Mooh.Desktop.Tests.dll
