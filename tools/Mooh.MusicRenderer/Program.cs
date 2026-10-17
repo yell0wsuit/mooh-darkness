@@ -103,8 +103,8 @@ try
                 }
             }
         }
-        string file = track.Name + ".mp3";
-        Ffmpeg("-f", "f32le", "-ar", "44100", "-ac", "2", "-i", rendered, "-c:a", "libmp3lame", "-b:a", "256k", Path.Combine(output, file));
+        string file = track.Name + ".ogg";
+        Ffmpeg("-f", "f32le", "-ar", "44100", "-ac", "2", "-i", rendered, "-map_metadata", "-1", "-c:a", "libopus", "-b:a", "192k", "-vbr", "on", "-ar", "48000", "-fflags", "+bitexact", "-flags:a", "+bitexact", Path.Combine(output, file));
         entries.Add(track.Name, new
         {
             file,
@@ -118,8 +118,11 @@ try
     byte[] source = [.. encoded, .. File.ReadAllBytes(Path.Combine(musicDirectory, "Music.ini"))];
     File.WriteAllText(Path.Combine(output, "tracks.json"), JsonSerializer.Serialize(new
     {
-        formatVersion = 3,
-        sampleRate = Rate,
+        formatVersion = 4,
+        codec = "opus",
+        bitRate = 192000,
+        sampleRate = 48000,
+        renderSampleRate = Rate,
         sourceSha256 = Convert.ToHexString(SHA256.HashData(source)),
         tracks = entries,
     }, new JsonSerializerOptions { WriteIndented = true }) + "\n");

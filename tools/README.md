@@ -20,7 +20,7 @@ python3 -I tools/normalize_animations.py /tmp/animations-raw.json assets/animati
 
 ## Browser publishing
 
-Install ffmpeg with the libmp3lame encoder, build the browser content bundle, then publish both runtime modes:
+Install ffmpeg with the libopus encoder, build the browser content bundle, then publish both runtime modes:
 
 ```bash
 python3 tools/build_browser_content.py
@@ -46,7 +46,7 @@ node --test tests/browser/*.test.mjs
 ```
 
 The content builder bundles only levels named by the authoritative manifest and preserves
-original asset paths and pixels. It also renders `TrackMenu.skm` offline through `Mooh.MusicRenderer` and ffmpeg, exporting stereo MP3 recordings and exact loop boundaries from `Music.ini`. It keeps the original start and waits until consecutive loop cycles match before selecting the repeated audio section. Browser assets exclude the SKM module and its embedded samples. The recording regenerates when the module/catalog hash changes; delete `wwwroot/content/music` to force a new render. Its generated `wwwroot/content` folder is ignored; regenerate
+original asset paths and pixels. It also renders `TrackMenu.skm` offline through `Mooh.MusicRenderer` and ffmpeg, exporting 192 kbps stereo Opus recordings in Ogg and exact loop boundaries from `Music.ini`. It keeps the original start and waits until consecutive loop cycles match before selecting the repeated audio section. Browser assets exclude the SKM module and its embedded samples. Sound effects are converted to 96 kbps mono Opus at 48 kHz while retaining their original `.ogg` paths in the ZIP; desktop source files remain unchanged. Converted effects are cached by source hash and encoder settings under `artifacts/browser-audio/sfx`. The recording regenerates when its encoding format or module/catalog hash changes; delete `wwwroot/content/music` to force a new render. Its generated `wwwroot/content` folder is ignored; regenerate
 it after changing game assets. Python tooling tests require `pytest`, and JavaScript tests
 use Node's built-in test runner.
 
@@ -60,6 +60,7 @@ node tools/browser_smoke.mjs 'http://127.0.0.1:8080/?mode=multi&screen=main' 922
 The smoke test uses Node 22 or newer (built-in WebSocket), navigates through menus and gameplay,
 checks pause/resume, update-dialog suspension, and resized rendering, and samples actual Web Audio PCM energy. Optional
 `MOOH_STORAGE_TEST=1` and `MOOH_OFFLINE_TEST=1` verify saved options and a normal offline reload.
+`MOOH_OPUS_TEST=1` checks that Web Audio decodes all 418 mono Opus effects and three stereo Opus music tracks.
 `MOOH_DISABLE_COI=1` disables isolation-worker registration for testing automatic fallback on a plain
 HTTP server. Use an isolated browser profile so its save/cache checks stay separate from normal
 browsing data.

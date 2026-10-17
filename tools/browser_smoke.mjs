@@ -100,6 +100,19 @@ await send("Page.addScriptToEvaluateOnNewDocument", { source: `
         return connect.call(this, destination, ...rest);
     };
     globalThis.AudioContext = class extends OriginalAudioContext {
+        decodeAudioData(data, ...args) {
+            const bytes = new Uint8Array(data);
+            const signature = [79, 112, 117, 115, 72, 101, 97, 100]; // OpusHead
+            let offset = -1;
+            for (let i = 0; i < Math.min(128, bytes.length - signature.length); i++) {
+                if (signature.every((value, at) => bytes[i + at] === value)) { offset = i; break; }
+            }
+            const counts = globalThis.moohSmokeCodecs ??= { monoOpus: 0, stereoOpus: 0, other: 0 };
+            if (offset >= 0 && bytes[offset + 9] === 1) counts.monoOpus++;
+            else if (offset >= 0 && bytes[offset + 9] === 2) counts.stereoOpus++;
+            else counts.other++;
+            return super.decodeAudioData(data, ...args);
+        }
         constructor(options) {
             super(options);
             this.moohMonitor = this.createAnalyser();
@@ -129,6 +142,11 @@ try {
     await until("document.getElementById('start') && !document.getElementById('start').hidden");
     const ready = await evaluate("({isolated:crossOriginIsolated,progress:document.getElementById('splash-progress').textContent})");
     console.log("ready", ready);
+    if (process.env.MOOH_OPUS_TEST === "1") {
+        const codecs = await evaluate("globalThis.moohSmokeCodecs");
+        assert.deepEqual(codecs, { monoOpus: 418, stereoOpus: 3, other: 0 });
+        console.log("PASS: Web Audio decoded all 418 mono Opus SFX and 3 stereo Opus tracks");
+    }
     if (process.env.MOOH_DISABLE_COI === "1") assert.equal(ready.isolated, false);
     await evaluate("document.getElementById('start').click()");
     await until("document.getElementById('game')?.dataset.screen === 'Main'");
@@ -211,8 +229,14 @@ try {
         await until("document.getElementById('game')?.dataset.screen === 'Options'");
         await new Promise(resolve => setTimeout(resolve, 1000));
         const beforeMusic = await evaluate("JSON.parse(localStorage.getItem('MoohDarkness.player-profile.v1'))?.options.musicVolume ?? 1");
-        await key("ArrowDown", "ArrowDown", 40);
-        await key("Enter", "Enter", 13);
+        // The fixed-step panel may still be entering under software-renderer load.
+        // Click the music label until its real activation changes the saved gain.
+        for (let attempt = 0; attempt < 20; attempt++) {
+            await send("Input.dispatchMouseEvent", { type: "mousePressed", x: 530, y: 360, button: "left", buttons: 1, clickCount: 1 });
+            await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: 530, y: 360, button: "left", buttons: 0, clickCount: 1 });
+            await new Promise(resolve => setTimeout(resolve, 250));
+            if (await evaluate(`JSON.parse(localStorage.getItem('MoohDarkness.player-profile.v1'))?.options.musicVolume !== ${beforeMusic}`)) break;
+        }
         await until(`JSON.parse(localStorage.getItem('MoohDarkness.player-profile.v1'))?.options.musicVolume !== ${beforeMusic}`);
         const saved = await evaluate("localStorage.getItem('MoohDarkness.player-profile.v1')");
         await send("Page.reload", { ignoreCache: false });
