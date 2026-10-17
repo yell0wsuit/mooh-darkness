@@ -20,7 +20,7 @@
     <Content Include="../../assets/fonts/*.fnt"
              Link="assets/fonts/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../assets/text/strings.bin"
+    <Content Include="../../assets/text/strings.json"
              Link="assets/text/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/music/TrackMenu.skm;../../assets/music/Music.ini"

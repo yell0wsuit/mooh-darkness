@@ -80,7 +80,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void PickupsDoNotFloatTextByDefault()
         {
-            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.json"));
             SceneHarness harness = new(SceneHarness.BuildLevel(1, ("OCoin01", 2, 1)), strings: StringTable.Load(stream));
             harness.Input(new PlayerInputState(false, false, true, false));
 
@@ -94,7 +94,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void DamageDoesNotFloatTextByDefault()
         {
-            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.json"));
             SceneHarness harness = new(SceneHarness.BuildLevel(1), strings: StringTable.Load(stream));
             harness.Step(0.016);
 
@@ -107,7 +107,7 @@ namespace Mooh.Presentation.Tests
 
         private static SceneHarness Harness(params (string Type, int X, int Y)[] extra)
         {
-            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.json"));
             return new SceneHarness(SceneHarness.BuildLevel(1, extra), strings: StringTable.Load(stream), showFloatingText: true);
         }
 

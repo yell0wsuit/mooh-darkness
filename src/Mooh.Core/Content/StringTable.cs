@@ -1,26 +1,13 @@
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Text.Json;
 
 namespace Mooh.Core.Content
 {
-    /// <summary>
-    /// Reads the recovered localized string table, <c>strings.bin</c>, which <c>StrHost.StrGet</c>
-    /// resolves every text id against — the help texts of the message tables among them.
-    /// </summary>
-    /// <remarks>
-    /// The format is <c>str2</c>, a version, the entry count and the offset of the value index,
-    /// then the language name's <c>(length, offset)</c>, the key index and, at that offset, the
-    /// value index. Each index entry is a little-endian <c>(offset, length)</c> pair into Windows-1252
-    /// text.
-    /// </remarks>
+    /// <summary>Reads a UTF-8 JSON language and string dictionary.</summary>
     public sealed class StringTable
     {
-        private const int HeaderSize = 16;
-        private const int EntrySize = 8;
-
         /// <summary>
         /// The Windows-1252 characters for bytes 0x80 to 0x9F, the only range where it differs from
         /// Latin-1. Unassigned bytes keep their Latin-1 control character.
@@ -102,64 +89,31 @@ namespace Mooh.Core.Content
         /// <param name="stream">The table's bytes.</param>
         /// <returns>The table.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="stream"/> is <see langword="null"/>.</exception>
-        /// <exception cref="InvalidDataException">The data is not a recovered string table.</exception>
+        /// <exception cref="InvalidDataException">The JSON string table is malformed.</exception>
         public static StringTable Load(Stream stream)
         {
             ArgumentNullException.ThrowIfNull(stream);
-            using MemoryStream copy = new();
-            stream.CopyTo(copy);
-            ReadOnlySpan<byte> data = copy.GetBuffer().AsSpan(0, (int)copy.Length);
-            if (data.Length < HeaderSize + EntrySize || !data[..4].SequenceEqual("str2"u8))
+            try
             {
-                throw new InvalidDataException("The data is not a str2 string table.");
+                using JsonDocument document = JsonDocument.Parse(stream);
+                JsonElement root = document.RootElement;
+                string language = root.GetProperty("language").GetString()
+                    ?? throw new InvalidDataException("The string table requires a language.");
+                Dictionary<string, string> texts = new(StringComparer.Ordinal);
+                foreach (JsonProperty entry in root.GetProperty("strings").EnumerateObject())
+                {
+                    if (!texts.TryAdd(entry.Name, entry.Value.GetString()
+                        ?? throw new InvalidDataException($"String '{entry.Name}' is null.")))
+                    {
+                        throw new InvalidDataException($"String '{entry.Name}' is duplicated.");
+                    }
+                }
+                return new StringTable(language, texts);
             }
-
-            int count = ReadInt(data, 8);
-            int valueIndex = ReadInt(data, 12);
-            int keyIndex = HeaderSize + EntrySize;
-            if (count < 0
-                || keyIndex + ((long)count * EntrySize) > data.Length
-                || valueIndex < 0
-                || valueIndex + ((long)count * EntrySize) > data.Length)
+            catch (Exception error) when (error is JsonException or KeyNotFoundException or InvalidOperationException)
             {
-                throw new InvalidDataException("The string table's indexes lie outside its data.");
+                throw new InvalidDataException("The string table contains invalid JSON.", error);
             }
-
-            string language = ReadText(data, ReadInt(data, HeaderSize + 4), ReadInt(data, HeaderSize));
-            Dictionary<string, string> texts = new(count, StringComparer.Ordinal);
-            for (int index = 0; index < count; index++)
-            {
-                string key = ReadText(data, keyIndex + (index * EntrySize));
-                texts[key] = ReadText(data, valueIndex + (index * EntrySize));
-            }
-
-            return new StringTable(language, texts);
-        }
-
-        private static int ReadInt(ReadOnlySpan<byte> data, int offset)
-        {
-            return BinaryPrimitives.ReadInt32LittleEndian(data[offset..]);
-        }
-
-        private static string ReadText(ReadOnlySpan<byte> data, int entryOffset)
-        {
-            return ReadText(data, ReadInt(data, entryOffset), ReadInt(data, entryOffset + 4));
-        }
-
-        private static string ReadText(ReadOnlySpan<byte> data, int offset, int length)
-        {
-            if (offset < 0 || length < 0 || (long)offset + length > data.Length)
-            {
-                throw new InvalidDataException("A string table entry lies outside its data.");
-            }
-
-            StringBuilder text = new(length);
-            foreach (byte value in data.Slice(offset, length))
-            {
-                _ = text.Append(value is >= 0x80 and <= 0x9F ? Windows1252High[value - 0x80] : (char)value);
-            }
-
-            return text.ToString();
         }
     }
 }

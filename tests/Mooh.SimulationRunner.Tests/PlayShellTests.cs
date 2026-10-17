@@ -483,7 +483,7 @@ namespace Mooh.SimulationRunner.Tests
         {
             FakeTimeProvider time = new();
             using System.IO.FileStream strings = System.IO.File.OpenRead(
-                System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
+                System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.json"));
             PlaySession session = new(CreateTablePack(), 0, time, strings: StringTable.Load(strings));
             Emerge(session, time);
             PlayerInputState down = new(Left: false, Up: false, Right: false, Down: true);

@@ -200,11 +200,11 @@ namespace Mooh.SimulationRunner
 
         /// <summary>
         /// Loads the recovered string table that sits beside the level pack, at
-        /// <c>assets/text/strings.bin</c>, or nothing when it is absent.
+        /// <c>assets/text/strings.json</c>, or nothing when it is absent.
         /// </summary>
         private static StringTable? LoadStrings(string manifestPath)
         {
-            string path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(manifestPath)) ?? ".", "..", "text", "strings.bin");
+            string path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(manifestPath)) ?? ".", "..", "text", "strings.json");
             if (!File.Exists(path))
             {
                 return null;

@@ -40,7 +40,7 @@
     <Content Include="../../assets/fonts/*.fnt;../../assets/fonts/*.png"
              Link="assets/fonts/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../assets/text/*.bin"
+    <Content Include="../../assets/text/*.json"
              Link="assets/text/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

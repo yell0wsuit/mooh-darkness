@@ -17,7 +17,7 @@ namespace Mooh.Presentation.Tests
     {
         private static readonly Lazy<StringTable> Strings = new(() =>
         {
-            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.json"));
             return StringTable.Load(stream);
         });
 

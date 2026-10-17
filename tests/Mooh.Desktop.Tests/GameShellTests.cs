@@ -402,7 +402,7 @@ namespace Mooh.Desktop.Tests
         {
             string assets = Path.Combine(AppContext.BaseDirectory, "assets");
             using FileStream animation = File.OpenRead(Path.Combine(assets, "animations", "animations.json"));
-            using FileStream text = File.OpenRead(Path.Combine(assets, "text", "strings.bin"));
+            using FileStream text = File.OpenRead(Path.Combine(assets, "text", "strings.json"));
             using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", HudPresenter.LevelFontName + ".fnt"));
             return new GameShell(assets, JsonLevelPackLoader.Load(Path.Combine(assets, "levels", "manifest.json")),
                 AnimationLibrary.Load(animation), StringTable.Load(text), BitmapFont.Load(HudPresenter.LevelFontName, font),

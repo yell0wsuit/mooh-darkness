@@ -7,14 +7,14 @@ using Xunit;
 
 namespace Mooh.Core.Tests.Content
 {
-    /// <summary>Verifies the recovered localized string table, <c>strings.bin</c>.</summary>
+    /// <summary>Verifies the recovered localized string table, <c>strings.json</c>.</summary>
     public sealed class StringTableTests
     {
         /// <summary>Verifies the committed table yields its language and every recovered text.</summary>
         [Fact]
         public void TheCommittedTableYieldsTheRecoveredTexts()
         {
-            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.bin"));
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "text", "strings.json"));
 
             StringTable table = StringTable.Load(stream);
 

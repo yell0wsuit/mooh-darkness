@@ -51,7 +51,7 @@ namespace Mooh.Desktop
             }
 
             StringTable strings;
-            using (FileStream stream = File.OpenRead(Path.Combine(assets, "text", "strings.bin")))
+            using (FileStream stream = File.OpenRead(Path.Combine(assets, "text", "strings.json")))
             {
                 strings = StringTable.Load(stream);
             }
