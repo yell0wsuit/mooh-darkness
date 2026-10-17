@@ -26,6 +26,7 @@ namespace Mooh.Desktop.Tests
         [InlineData(3840, 1080, "game")]
         [InlineData(2750, 600, "game")]
         [InlineData(2520, 1080, "main")]
+        [InlineData(2560, 1496, "main")]
         [InlineData(3840, 1080, "main")]
         [InlineData(2750, 600, "main")]
         [InlineData(2520, 1080, "pause")]

@@ -41,7 +41,7 @@ namespace Mooh.Desktop
             return (int)Math.Round(Math.Max(width * 720.0 / height, 960));
         }
 
-        /// <summary>Draws the native world view or a reusable legacy frame with optional blurred borders.</summary>
+        /// <summary>Draws native-resolution world or menu content with optional blurred menu borders.</summary>
         public void Draw(SKCanvas canvas, int width, int height, bool world, bool fullColor, Action<SKCanvas, float> draw)
         {
             if (width <= 0 || height <= 0)
@@ -69,7 +69,10 @@ namespace Mooh.Desktop
                 return;
             }
 
-            SKImageInfo info = new(world ? WorldWidth(width, height) : 800, world ? WorldHeight(width, height) : 600,
+            float menuScale = Math.Min(width / 800f, height / 600f);
+            int menuWidth = fullColor ? Math.Max(1, (int)Math.Round(800 * menuScale)) : 800;
+            int menuHeight = fullColor ? Math.Max(1, (int)Math.Round(600 * menuScale)) : 600;
+            SKImageInfo info = new(world ? WorldWidth(width, height) : menuWidth, world ? WorldHeight(width, height) : menuHeight,
                 fullColor ? SKColorType.Rgba8888 : SKColorType.Rgb565, SKAlphaType.Opaque);
             // Borrow the destination's context; its owner controls its lifetime. A GPU
             // render target avoids rasterizing and uploading the entire menu every frame.
@@ -96,6 +99,12 @@ namespace Mooh.Desktop
                 target.Scale(info.Width / (800 + (2 * margin)), info.Height / (600 + (2 * verticalMargin)));
                 target.Translate(margin, verticalMargin);
             }
+            else if (fullColor)
+            {
+                // Keep the 800x600 layout, but rasterize glyphs, outlines and shadows at
+                // their final display size, just like the direct gameplay path.
+                target.Scale(info.Width / 800f, info.Height / 600f);
+            }
 
             draw(target, margin);
             target.RestoreToCount(frameSaved);
@@ -110,7 +119,7 @@ namespace Mooh.Desktop
                 _ = canvas.Save();
                 canvas.Translate((width - (800 * cover)) / 2, (height - (600 * cover)) / 2);
                 canvas.Scale(cover);
-                canvas.DrawImage(image, 0, 0, Sampling, _blurPaint);
+                canvas.DrawImage(image, SKRect.Create(0, 0, 800, 600), Sampling, _blurPaint);
                 canvas.Restore();
             }
 
@@ -119,6 +128,12 @@ namespace Mooh.Desktop
             float fit = Math.Min(width / logicalWidth, height / logicalHeight);
             SKRect destination = SKRect.Create((width - (logicalWidth * fit)) / 2,
                 (height - (logicalHeight * fit)) / 2, logicalWidth * fit, logicalHeight * fit);
+            if (!world && fullColor)
+            {
+                // Present the fitted surface one-to-one on whole display pixels. A second
+                // fractional resize or half-pixel translation would soften the text again.
+                destination = SKRect.Create((width - info.Width) / 2, (height - info.Height) / 2, info.Width, info.Height);
+            }
             canvas.DrawImage(image, destination, Sampling);
             canvas.RestoreToCount(saved);
         }

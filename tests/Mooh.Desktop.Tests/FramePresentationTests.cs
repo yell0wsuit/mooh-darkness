@@ -32,9 +32,9 @@ namespace Mooh.Desktop.Tests
             Assert.Equal(SKColors.Blue, bitmap.GetPixel(0, 0));
         }
 
-        /// <summary>Scaled fixed screens retain the original 800x600 composition and filtering.</summary>
+        /// <summary>Scaled fixed screens keep logical coordinates while rasterizing at display resolution.</summary>
         [Fact]
-        public void ScaledFourByThreeMenuRetainsLogicalPixelFiltering()
+        public void ScaledFourByThreeMenuKeepsNativePixelEdges()
         {
             using FramePresentation presentation = new();
             using SKBitmap bitmap = new(1600, 1200);
@@ -49,9 +49,9 @@ namespace Mooh.Desktop.Tests
                 target.DrawRect(400, 300, 1, 1, paint);
             });
 
-            // The logical pixel is linearly upscaled, preserving its soft edges.
+            // An aligned logical pixel covers four solid display pixels at 2x.
             SKColor edge = bitmap.GetPixel(800, 600);
-            Assert.InRange(edge.Red, (byte)100, (byte)200);
+            Assert.Equal(255, edge.Red);
             Assert.Equal(0, edge.Blue);
             Assert.Equal(255, edge.Alpha);
         }
