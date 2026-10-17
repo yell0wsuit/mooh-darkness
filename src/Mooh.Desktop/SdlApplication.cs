@@ -80,6 +80,7 @@ namespace Mooh.Desktop
                     if (viewWidth > 0 && viewHeight > 0)
                     {
                         currentGame.Camera.HorizontalMargin = FramePresentation.HorizontalMargin(viewWidth, viewHeight);
+                        currentGame.Camera.VerticalMargin = FramePresentation.VerticalMargin(viewWidth, viewHeight);
                     }
                 }
                 shell.Update(input, _controls.TakeCommands(), (now - previous).TotalSeconds, _controls.AnyKeyHeld);
@@ -228,15 +229,17 @@ namespace Mooh.Desktop
             _presentation.Draw(device.Canvas, device.Width, device.Height, shell.ShowsWorld,
                 shell.Profile.Options.FullColor, (target, margin) =>
                 {
+                    float verticalMargin = shell.ShowsWorld ? FramePresentation.VerticalMargin(device.Width, device.Height) : 0;
                     target.Clear(Backdrop);
                     if (shell.ShowsWorld && shell.Game is DesktopGame game)
                     {
                         game.Camera.HorizontalMargin = margin;
+                        game.Camera.VerticalMargin = verticalMargin;
                         scene.DrawBackdrop(target, game.Backdrop, game.Camera);
                         scene.Draw(target, game.Presenter.Sprites, game.Camera);
                         hud.Draw(target, game, scene);
                     }
-                    _screens!.Draw(target, shell.Elements, margin);
+                    _screens!.Draw(target, shell.Elements, margin, verticalMargin);
                 });
             device.Flush();
             _frames++;

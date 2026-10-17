@@ -181,7 +181,8 @@ namespace Mooh.Presentation.Hud
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(events);
-            _horizontalMargin = camera?.HorizontalMargin ?? 0;
+            // Keep side panels within a centered 16:9 area on ultrawide displays.
+            _horizontalMargin = Math.Min(camera?.HorizontalMargin ?? 0, 400.0 / 3);
             double milliseconds = seconds * 1000;
             Entity? player = world.Player;
             HealthBody? health = player?.HealthBody;
@@ -269,13 +270,15 @@ namespace Mooh.Presentation.Hud
                 int left = (int)Math.Round(ArrowInset - camera.HorizontalMargin);
                 int right = (int)Math.Round(800 - ArrowInset + camera.HorizontalMargin);
                 int column = x < left ? 0 : x > right ? 2 : 1;
-                int row = y < ArrowInset ? 0 : y > 600 - ArrowInset ? 2 : 1;
+                int top = (int)Math.Round(ArrowInset - camera.VerticalMargin);
+                int bottom = (int)Math.Round(600 - ArrowInset + camera.VerticalMargin);
+                int row = y < top ? 0 : y > bottom ? 2 : 1;
                 if (ArrowDirections[row, column] is string direction)
                 {
                     sprites.Add(new HudSprite(
                         kind + direction,
                         Math.Clamp(x, left, right),
-                        Math.Clamp(y, ArrowInset, 600 - ArrowInset)));
+                        Math.Clamp(y, top, bottom)));
                 }
             }
         }

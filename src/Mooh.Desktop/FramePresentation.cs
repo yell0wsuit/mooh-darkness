@@ -18,15 +18,26 @@ namespace Mooh.Desktop
             _blurPaint = new SKPaint { ImageFilter = _blur };
         }
 
-        /// <summary>Gets additional world space on each side, capped at 16:9.</summary>
+        /// <summary>Gets additional world space on each side at the original vertical scale.</summary>
         public static float HorizontalMargin(int width, int height)
         {
-            return (WorldWidth(width, height) - 960) / 2.4f;
+            return (float)((Math.Max(800, width * 600.0 / height) - 800) / 2);
+        }
+
+        /// <summary>Gets additional world space above and below at the original horizontal scale.</summary>
+        public static float VerticalMargin(int width, int height)
+        {
+            return (float)((Math.Max(600, height * 800.0 / width) - 600) / 2);
+        }
+
+        private static int WorldHeight(int width, int height)
+        {
+            return (int)Math.Round(Math.Max(height * 960.0 / width, 720));
         }
 
         private static int WorldWidth(int width, int height)
         {
-            return (int)Math.Round(Math.Clamp(width * 720.0 / height, 960, 1280));
+            return (int)Math.Round(Math.Max(width * 720.0 / height, 960));
         }
 
         /// <summary>Draws the native world view or a reusable legacy frame with optional blurred borders.</summary>
@@ -40,20 +51,22 @@ namespace Mooh.Desktop
             if (world && fullColor)
             {
                 // Keep gameplay on the selected device at native resolution.
-                float scale = Math.Min(width / (float)WorldWidth(width, height), height / 720f) * 1.2f;
+                float scale = Math.Min(width / 800f, height / 600f);
                 int worldSaved = canvas.Save();
                 canvas.ResetMatrix();
                 canvas.Clear(SKColors.Black);
                 canvas.Translate((width - (800 * scale)) / 2, (height - (600 * scale)) / 2);
                 canvas.Scale(scale);
                 float worldMargin = HorizontalMargin(width, height);
-                canvas.ClipRect(SKRect.Create(-worldMargin, 0, 800 + (2 * worldMargin), 600));
+                float worldVerticalMargin = VerticalMargin(width, height);
+                canvas.ClipRect(SKRect.Create(-worldMargin, -worldVerticalMargin,
+                    800 + (2 * worldMargin), 600 + (2 * worldVerticalMargin)));
                 draw(canvas, worldMargin);
                 canvas.RestoreToCount(worldSaved);
                 return;
             }
 
-            SKImageInfo info = new(world ? WorldWidth(width, height) : 800, world ? 720 : 600,
+            SKImageInfo info = new(world ? WorldWidth(width, height) : 800, world ? WorldHeight(width, height) : 600,
                 fullColor ? SKColorType.Rgba8888 : SKColorType.Rgb565, SKAlphaType.Opaque);
             if (_frame is null || _info != info)
             {
@@ -67,10 +80,12 @@ namespace Mooh.Desktop
             target.Clear(SKColors.Black);
             int frameSaved = target.Save();
             float margin = world ? HorizontalMargin(width, height) : 0;
+            float verticalMargin = world ? VerticalMargin(width, height) : 0;
             if (world)
             {
-                target.Scale(1.2f);
-                target.Translate(margin, 0);
+                // Match the exact viewport ratio despite rounding the raster surface dimensions.
+                target.Scale(info.Width / (800 + (2 * margin)), info.Height / (600 + (2 * verticalMargin)));
+                target.Translate(margin, verticalMargin);
             }
 
             draw(target, margin);
@@ -90,9 +105,11 @@ namespace Mooh.Desktop
                 canvas.Restore();
             }
 
-            float fit = Math.Min(width / (float)info.Width, height / (float)info.Height);
-            SKRect destination = SKRect.Create((width - (info.Width * fit)) / 2,
-                (height - (info.Height * fit)) / 2, info.Width * fit, info.Height * fit);
+            float logicalWidth = world ? 800 + (2 * margin) : 800;
+            float logicalHeight = world ? 600 + (2 * verticalMargin) : 600;
+            float fit = Math.Min(width / logicalWidth, height / logicalHeight);
+            SKRect destination = SKRect.Create((width - (logicalWidth * fit)) / 2,
+                (height - (logicalHeight * fit)) / 2, logicalWidth * fit, logicalHeight * fit);
             canvas.DrawImage(image, destination, Sampling);
             canvas.RestoreToCount(saved);
         }

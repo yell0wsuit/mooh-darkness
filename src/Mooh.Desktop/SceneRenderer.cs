@@ -39,27 +39,32 @@ namespace Mooh.Desktop
                 _backdropImage = SKImage.FromEncodedData(Path.Combine(_spritesDirectory, "..", "screens", Backdrop.ImageName + ".jpg"));
                 if (_backdropImage is not null)
                 {
-                    using SKShader shader = _backdropImage.ToShader(SKShaderTileMode.Mirror, SKShaderTileMode.Clamp, Sampling);
+                    using SKShader shader = _backdropImage.ToShader(SKShaderTileMode.Mirror, SKShaderTileMode.Mirror, Sampling);
                     _backdropPaint.Shader = shader;
                 }
             }
             float margin = (float)camera.HorizontalMargin;
+            float verticalMargin = (float)camera.VerticalMargin;
             if (_backdropImage is not null)
             {
                 // Keep source pixels at their original scale, mirroring only beyond the image's edges.
                 int saved = canvas.Save();
                 canvas.Translate(layout.ImageX, layout.ImageY);
-                canvas.DrawRect(SKRect.Create(-margin - layout.ImageX, -layout.ImageY, 800 + (2 * margin), 600), _backdropPaint);
+                canvas.DrawRect(SKRect.Create(-margin - layout.ImageX, -verticalMargin - layout.ImageY,
+                    800 + (2 * margin), 600 + (2 * verticalMargin)), _backdropPaint);
                 canvas.RestoreToCount(saved);
             }
 
             double firstColumn = layout.Sprites.Count > 0 ? layout.Sprites[0].X : 0;
             double lastColumn = firstColumn;
+            double firstRow = layout.Sprites.Count > 0 ? layout.Sprites[0].Y : 0;
+            double lastRow = firstRow;
             foreach (BackdropSprite sprite in layout.Sprites)
             {
                 if (sprite.Page != Backdrop.LampPage)
                 {
                     lastColumn = Math.Max(lastColumn, sprite.X);
+                    lastRow = Math.Max(lastRow, sprite.Y);
                 }
             }
             foreach (BackdropSprite sprite in layout.Sprites)
@@ -67,14 +72,37 @@ namespace Mooh.Desktop
                 DrawFrame(canvas, sprite.Page, sprite.Frame, sprite.X, sprite.Y, sprite.Additive ? _additive : null);
                 if (margin > 0 && sprite.Page != Backdrop.LampPage)
                 {
-                    // One additional 250-pixel column on each side covers the 16:9 overscan.
+                    // Continue the edge columns across the additional visible world area.
                     if (sprite.X == firstColumn)
                     {
-                        DrawFrame(canvas, sprite.Page, sprite.Frame, sprite.X - 250, sprite.Y, null);
+                        for (double x = sprite.X - 250; x > -margin - 250; x -= 250)
+                        {
+                            DrawFrame(canvas, sprite.Page, sprite.Frame, x, sprite.Y, null);
+                        }
                     }
                     if (sprite.X == lastColumn)
                     {
-                        DrawFrame(canvas, sprite.Page, sprite.Frame, sprite.X + 250, sprite.Y, null);
+                        for (double x = sprite.X + 250; x < 800 + margin + 250; x += 250)
+                        {
+                            DrawFrame(canvas, sprite.Page, sprite.Frame, x, sprite.Y, null);
+                        }
+                    }
+                }
+                if (verticalMargin > 0 && sprite.Page != Backdrop.LampPage)
+                {
+                    if (sprite.Y == firstRow)
+                    {
+                        for (double y = sprite.Y - 220; y > -verticalMargin - 220; y -= 220)
+                        {
+                            DrawFrame(canvas, sprite.Page, sprite.Frame, sprite.X, y, null);
+                        }
+                    }
+                    if (sprite.Y == lastRow)
+                    {
+                        for (double y = sprite.Y + 220; y < 600 + verticalMargin + 220; y += 220)
+                        {
+                            DrawFrame(canvas, sprite.Page, sprite.Frame, sprite.X, y, null);
+                        }
                     }
                 }
             }
@@ -109,10 +137,10 @@ namespace Mooh.Desktop
         }
 
         /// <summary>Repeats the menu shade texture across the original logical screen.</summary>
-        internal void DrawScreenTile(SKCanvas canvas, string page, string name, float horizontalMargin = 0)
+        internal void DrawScreenTile(SKCanvas canvas, string page, string name, float horizontalMargin = 0, float verticalMargin = 0)
         {
             SpriteFrame frame = AtlasOf(page).Frames[name];
-            for (int y = -frame.Height; y < 600; y += frame.Height)
+            for (int y = -frame.Height - (int)Math.Ceiling(verticalMargin); y < 600 + verticalMargin; y += frame.Height)
             {
                 for (int x = -frame.Width - (int)Math.Ceiling(horizontalMargin); x < 800 + horizontalMargin; x += frame.Width)
                 {

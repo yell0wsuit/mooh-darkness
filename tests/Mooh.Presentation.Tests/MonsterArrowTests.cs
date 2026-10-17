@@ -78,6 +78,56 @@ namespace Mooh.Presentation.Tests
             Assert.Contains(new HudSprite("PAGr_Right", 928, 300), run.Hud.Sprites);
         }
 
+        /// <summary>Ultrawide panels retain their 16:9 positions while additional monsters stay visible.</summary>
+        [Fact]
+        public void UltrawideKeepsPanelsInsideCenteredSafeArea()
+        {
+            HudRun wide = Run(("MGrL", 7, 1));
+            wide.Camera!.HorizontalMargin = 400.0 / 3;
+            wide.Step(0.016);
+            HudRun ultra = Run(("MGrL", 7, 1));
+            ultra.Camera!.HorizontalMargin = 975;
+            ultra.Step(0.016);
+            Assert.Equal(wide.Hud.Sprites, ultra.Hud.Sprites);
+            Assert.Equal(wide.Hud.Texts, ultra.Hud.Texts);
+        }
+
+        /// <summary>World indicators point to the actual viewport edge beyond the panel safe area.</summary>
+        [Fact]
+        public void UltrawideIndicatorUsesFullViewportEdge()
+        {
+            HudRun run = Run(("MGrL", 7, 1));
+            run.Camera!.HorizontalMargin = 975;
+            run.Camera.Snap(-15, 1);
+            run.Step(0.016);
+            Assert.Contains(new HudSprite("PAGr_Right", 1770, 300), run.Hud.Sprites);
+        }
+
+        /// <summary>A monster visible above the old screen needs no portrait indicator.</summary>
+        [Fact]
+        public void TallScreenRevealsMonsterAboveOriginalScreen()
+        {
+            HudRun run = Run(("MGrL", 4, 1));
+            run.Camera!.VerticalMargin = 410;
+            run.Camera.Snap(4, 7);
+            run.Step(0.016);
+            Assert.DoesNotContain(run.Hud.Sprites, sprite => sprite.Frame.StartsWith("PA", System.StringComparison.Ordinal));
+        }
+
+        /// <summary>Vertical indicators follow the expanded edges while HUD panels stay in the centered area.</summary>
+        [Theory]
+        [InlineData(12, "PAGr_Top", -405)]
+        [InlineData(-12, "PAGr_Bottom", 1005)]
+        public void TallScreenIndicatorsUseFullViewportEdges(int cameraRow, string frame, int y)
+        {
+            HudRun run = Run(("MGrL", 4, 1));
+            run.Camera!.VerticalMargin = 410;
+            run.Camera.Snap(4, cameraRow);
+            run.Step(0.016);
+            Assert.Contains(run.Hud.Sprites, sprite => sprite.Frame == frame && sprite.Y == y);
+            Assert.Equal(51, run.Sprite("PNrmHealth").Y);
+        }
+
         private static HudRun Run(params (string Type, int X, int Y)[] monsters)
         {
             HudRun run = new(SceneHarness.BuildLevel(1, monsters))

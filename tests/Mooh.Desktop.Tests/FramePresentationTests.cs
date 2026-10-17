@@ -1,3 +1,5 @@
+using System;
+
 using SkiaSharp;
 
 using Xunit;
@@ -31,13 +33,17 @@ namespace Mooh.Desktop.Tests
         }
 
         /// <summary>The original stays crisp while its borders contain a softened copy.</summary>
-        [Fact]
-        public void FixedScreensGetGaussianBlurredBorders()
+        [Theory]
+        [InlineData(1280, 720)]
+        [InlineData(2520, 1080)]
+        [InlineData(3840, 1080)]
+        [InlineData(2750, 600)]
+        public void FixedScreensGetGaussianBlurredBorders(int width, int height)
         {
             using FramePresentation presentation = new();
-            using SKBitmap bitmap = new(1280, 720);
+            using SKBitmap bitmap = new(width, height);
             using SKCanvas canvas = new(bitmap);
-            presentation.Draw(canvas, 1280, 720, false, true, (target, margin) =>
+            presentation.Draw(canvas, width, height, false, true, (target, margin) =>
             {
                 Assert.Equal(0, margin);
                 target.Clear(SKColors.Blue);
@@ -47,12 +53,65 @@ namespace Mooh.Desktop.Tests
                 };
                 target.DrawRect(0, 0, 800, 300, paint);
             });
-            Assert.Equal(SKColors.Red, bitmap.GetPixel(640, 350));
-            Assert.Equal(SKColors.Blue, bitmap.GetPixel(640, 370));
-            SKColor blurred = bitmap.GetPixel(40, 360);
+            Assert.Equal(SKColors.Red, bitmap.GetPixel(width / 2, (height / 2) - 10));
+            Assert.Equal(SKColors.Blue, bitmap.GetPixel(width / 2, (height / 2) + 10));
+            SKColor blurred = bitmap.GetPixel(0, height / 2);
             Assert.InRange(blurred.Red, (byte)20, (byte)235);
             Assert.InRange(blurred.Blue, (byte)20, (byte)235);
             Assert.Equal(255, blurred.Alpha);
+        }
+
+        /// <summary>Portrait views expose sharp world content above and below the original screen.</summary>
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TallScreenRevealsWorldAtOriginalScale(bool fullColor)
+        {
+            using FramePresentation presentation = new();
+            using SKBitmap bitmap = new(800, 1420);
+            using SKCanvas canvas = new(bitmap);
+            presentation.Draw(canvas, 800, 1420, true, fullColor, (target, margin) =>
+            {
+                Assert.Equal(0, margin);
+                target.Clear(SKColors.Blue);
+                using SKPaint paint = new()
+                {
+                    Color = SKColors.Red
+                };
+                target.DrawRect(380, -390, 40, 40, paint);
+                target.DrawRect(380, 950, 40, 40, paint);
+            });
+            Assert.Equal(SKColors.Red, bitmap.GetPixel(400, 40));
+            Assert.Equal(SKColors.Blue, bitmap.GetPixel(400, 80));
+            Assert.Equal(SKColors.Red, bitmap.GetPixel(400, 1380));
+            Assert.Equal(SKColors.Blue, bitmap.GetPixel(400, 1340));
+        }
+
+        /// <summary>Fixed portrait screens retain sharp central content with blurred top and bottom borders.</summary>
+        [Fact]
+        public void TallFixedScreenGetsBlurAboveAndBelow()
+        {
+            using FramePresentation presentation = new();
+            using SKBitmap bitmap = new(800, 1420);
+            using SKCanvas canvas = new(bitmap);
+            presentation.Draw(canvas, 800, 1420, false, true, (target, margin) =>
+            {
+                target.Clear(SKColors.Blue);
+                using SKPaint paint = new()
+                {
+                    Color = SKColors.Red
+                };
+                target.DrawRect(0, 0, 400, 600, paint);
+            });
+            Assert.Equal(SKColors.Red, bitmap.GetPixel(390, 710));
+            Assert.Equal(SKColors.Blue, bitmap.GetPixel(410, 710));
+            foreach (int y in new[] { 0, 1419 })
+            {
+                SKColor blurred = bitmap.GetPixel(400, y);
+                Assert.InRange(blurred.Red, (byte)20, (byte)235);
+                Assert.InRange(blurred.Blue, (byte)20, (byte)235);
+                Assert.Equal(255, blurred.Alpha);
+            }
         }
 
         /// <summary>A 4:3 window still shows the complete original frame.</summary>
@@ -74,7 +133,7 @@ namespace Mooh.Desktop.Tests
             Assert.Equal(SKColors.Blue, bitmap.GetPixel(0, 0));
             Assert.Equal(SKColors.Blue, bitmap.GetPixel(799, 599));
         }
-        /// <summary>Resizing keeps the center fixed and caps the world at 16:9 in both color modes.</summary>
+        /// <summary>Resizing keeps the center fixed and fills the wider world in both color modes.</summary>
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -83,7 +142,7 @@ namespace Mooh.Desktop.Tests
             using FramePresentation presentation = new();
             foreach ((int width, int height, float expectedMargin) in new[]
             {
-                (600, 900, 0f), (2560, 1080, 400f / 3), (800, 600, 0f)
+                (600, 900, 0f), (2520, 1080, 300f), (3840, 1080, 2000f / 3), (2750, 600, 975f), (800, 600, 0f)
             })
             {
                 using SKBitmap bitmap = new(width, height);
@@ -99,14 +158,16 @@ namespace Mooh.Desktop.Tests
                     target.DrawRect(395, 295, 10, 10, paint);
                 });
                 Assert.Equal(SKColors.Red, bitmap.GetPixel(width / 2, height / 2));
-                if (width == 600)
+                float scale = Math.Min(width / 800f, height / 600f);
+                // Sample inside the solid body, away from linear filtering at its boundary.
+                Assert.Equal(SKColors.Red, bitmap.GetPixel(width / 2, (height / 2) + (int)(3 * scale)));
+                Assert.Equal(SKColors.Blue, bitmap.GetPixel(width / 2, (height / 2) + (int)(6 * scale)));
+                if (width != 800 || height != 600)
                 {
-                    Assert.Equal(SKColors.Black, bitmap.GetPixel(300, 0));
-                }
-                else if (width == 2560)
-                {
-                    Assert.Equal(SKColors.Black, bitmap.GetPixel(0, 540));
-                    Assert.Equal(SKColors.Blue, bitmap.GetPixel(325, 540));
+                    Assert.Equal(SKColors.Blue, bitmap.GetPixel(0, height / 2));
+                    Assert.Equal(SKColors.Blue, bitmap.GetPixel(width - 1, height / 2));
+                    Assert.Equal(SKColors.Blue, bitmap.GetPixel(width / 2, 0));
+                    Assert.Equal(SKColors.Blue, bitmap.GetPixel(width / 2, height - 1));
                 }
             }
         }

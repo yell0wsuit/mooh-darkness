@@ -16,7 +16,7 @@ namespace Mooh.Desktop
         private readonly Dictionary<string, SKImage> _images = [with(StringComparer.Ordinal)];
         private readonly SKPaint _opacity = new();
 
-        public void Draw(SKCanvas canvas, IReadOnlyList<ScreenElement> elements, float horizontalMargin = 0)
+        public void Draw(SKCanvas canvas, IReadOnlyList<ScreenElement> elements, float horizontalMargin = 0, float verticalMargin = 0)
         {
             foreach (ScreenElement element in elements)
             {
@@ -33,7 +33,7 @@ namespace Mooh.Desktop
                 }
                 else if (element is ScreenTile tile)
                 {
-                    scene.DrawScreenTile(canvas, tile.Page, tile.Frame, horizontalMargin);
+                    scene.DrawScreenTile(canvas, tile.Page, tile.Frame, horizontalMargin, verticalMargin);
                 }
                 else if (element is ScreenSprite sprite)
                 {
@@ -47,7 +47,7 @@ namespace Mooh.Desktop
                 {
                     int saved = canvas.Save();
                     canvas.ClipRect(SKRect.Create((float)clip.X, (float)clip.Y, (float)clip.Width, (float)clip.Height));
-                    Draw(canvas, clip.Elements, horizontalMargin);
+                    Draw(canvas, clip.Elements, horizontalMargin, verticalMargin);
                     canvas.RestoreToCount(saved);
                 }
             }

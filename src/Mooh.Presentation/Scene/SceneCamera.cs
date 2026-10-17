@@ -37,6 +37,12 @@ namespace Mooh.Presentation.Scene
             get; set;
         }
 
+        /// <summary>Gets or sets the additional visible height above and below the original screen.</summary>
+        public double VerticalMargin
+        {
+            get; set;
+        }
+
         private double _baseX;
         private double _baseY;
 

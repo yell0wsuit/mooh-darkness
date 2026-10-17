@@ -266,7 +266,8 @@ namespace Mooh.Desktop
             }
             Camera = new SceneCamera
             {
-                HorizontalMargin = Camera.HorizontalMargin
+                HorizontalMargin = Camera.HorizontalMargin,
+                VerticalMargin = Camera.VerticalMargin
             };
             LevelDocument level = Session.Level.Source;
             Backdrop = new Backdrop(
