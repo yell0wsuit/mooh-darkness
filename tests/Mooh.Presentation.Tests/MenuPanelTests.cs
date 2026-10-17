@@ -45,16 +45,16 @@ namespace Mooh.Presentation.Tests
             Assert.True(tooltip.X < button.Right + 9);
         }
 
-        /// <summary>Highlighted and pressed lettering retains the normal font composited above it.</summary>
+        /// <summary>TrueType text uses only the current state so its highlight color stays visible.</summary>
         [Fact]
-        public void SelectedAndPressedTextRetainTheNormalFontOverlay()
+        public void SelectedAndPressedTextUsesOneVisibleStyle()
         {
             MenuPanelPresentation menu = Create();
             menu.Show(MenuPanelKind.Main, "Menu", [new MenuItem("start", "Start", "", 0, 0)]);
             menu.Advance(0.35);
-            Assert.Equal(["MenuFntBtnSel", "MenuFntBtnNrm"], menu.Elements.OfType<ScreenText>().Where(text => text.Text == "Start").Select(text => text.Font));
+            Assert.Equal(["MenuFntBtnSel"], menu.Elements.OfType<ScreenText>().Where(text => text.Text == "Start").Select(text => text.Font));
             menu.Press();
-            Assert.Equal(["MenuFntBtnPrs", "MenuFntBtnNrm"], menu.Elements.OfType<ScreenText>().Where(text => text.Text == "Start").Select(text => text.Font));
+            Assert.Equal(["MenuFntBtnPrs"], menu.Elements.OfType<ScreenText>().Where(text => text.Text == "Start").Select(text => text.Font));
         }
 
         /// <summary>The previous panel remains visible throughout its original exit slide.</summary>
@@ -186,9 +186,9 @@ namespace Mooh.Presentation.Tests
         private static MenuPanelPresentation Create()
         {
             using FileStream page = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sprites", "SpriteMenuPrt.json"));
-            using FileStream font = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "fonts", "MenuFntBtnNrm.fnt"));
-            using FileStream tooltip = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "fonts", "MenuFontToolTip.fnt"));
-            return new MenuPanelPresentation(SpritePage.Load("SpriteMenuPrt", page), BitmapFont.Load("MenuFntBtnNrm", font), BitmapFont.Load("MenuFontToolTip", tooltip), new Random(1));
+            using FileStream font = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "fonts", GameFont.FileName("MenuFntBtnNrm")));
+            using FileStream tooltip = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "fonts", GameFont.FileName("MenuFontToolTip")));
+            return new MenuPanelPresentation(SpritePage.Load("SpriteMenuPrt", page), GameFont.Load("MenuFntBtnNrm", font), GameFont.Load("MenuFontToolTip", tooltip), new Random(1));
         }
     }
 }

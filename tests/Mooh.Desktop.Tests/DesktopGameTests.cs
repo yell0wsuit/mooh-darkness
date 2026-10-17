@@ -323,13 +323,13 @@ namespace Mooh.Desktop.Tests
 
             using FileStream stream = File.OpenRead(Path.Combine(assets, "animations", "animations.json"));
             using FileStream strings = File.OpenRead(Path.Combine(assets, "text", "strings.json"));
-            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", HudPresenter.LevelFontName + ".fnt"));
+            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", GameFont.FileName(HudPresenter.LevelFontName)));
             return new DesktopGame(
                 new GameSession(pack, DifficultySpeeds.Standard),
                 AnimationLibrary.Load(stream),
                 new Random(1),
                 StringTable.Load(strings),
-                BitmapFont.Load(HudPresenter.LevelFontName, font));
+                GameFont.Load(HudPresenter.LevelFontName, font));
         }
     }
 }

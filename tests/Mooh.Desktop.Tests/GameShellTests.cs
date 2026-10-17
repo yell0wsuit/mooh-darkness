@@ -197,7 +197,9 @@ namespace Mooh.Desktop.Tests
             GameShell shell = Create();
             shell.InspectScreen("options");
             Settle(shell);
+            Assert.Contains(shell.Elements.OfType<ScreenText>(), text => text.Text == "[ ]");
             Click(shell, "fullscreen-check");
+            Assert.Contains(shell.Elements.OfType<ScreenText>(), text => text.Text == "[x]");
             Assert.False(shell.Profile.Options.Fullscreen);
             Assert.True(shell.Menu.IsReady);
             shell.HandleKey(SDL.Keycode.Escape, true);
@@ -403,9 +405,9 @@ namespace Mooh.Desktop.Tests
             string assets = Path.Combine(AppContext.BaseDirectory, "assets");
             using FileStream animation = File.OpenRead(Path.Combine(assets, "animations", "animations.json"));
             using FileStream text = File.OpenRead(Path.Combine(assets, "text", "strings.json"));
-            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", HudPresenter.LevelFontName + ".fnt"));
+            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", GameFont.FileName(HudPresenter.LevelFontName)));
             return new GameShell(assets, JsonLevelPackLoader.Load(Path.Combine(assets, "levels", "manifest.json")),
-                AnimationLibrary.Load(animation), StringTable.Load(text), BitmapFont.Load(HudPresenter.LevelFontName, font),
+                AnimationLibrary.Load(animation), StringTable.Load(text), GameFont.Load(HudPresenter.LevelFontName, font),
                 profile ?? new PlayerProfile(), null);
         }
     }

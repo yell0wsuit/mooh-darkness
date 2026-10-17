@@ -21,10 +21,10 @@ namespace Mooh.Presentation.Tests
             return StringTable.Load(stream);
         });
 
-        private static readonly Lazy<BitmapFont> LevelFont = new(() =>
+        private static readonly Lazy<GameFont> LevelFont = new(() =>
         {
-            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "fonts", HudPresenter.LevelFontName + ".fnt"));
-            return BitmapFont.Load(HudPresenter.LevelFontName, stream);
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "fonts", GameFont.FileName(HudPresenter.LevelFontName)));
+            return GameFont.Load(HudPresenter.LevelFontName, stream);
         });
 
         public HudRun(LevelDocument level, DifficultySpeeds? speeds = null)

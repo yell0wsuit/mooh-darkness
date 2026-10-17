@@ -41,7 +41,7 @@ namespace Mooh.Presentation.Screens
     /// <param name="Text">The text to draw.</param>
     /// <param name="X">The horizontal anchor.</param>
     /// <param name="Y">The text baseline.</param>
-    /// <param name="Font">The bitmap font name.</param>
+    /// <param name="Font">The Comic Neue style name.</param>
     /// <param name="Alignment">The horizontal alignment.</param>
     /// <param name="Opacity">The opacity between zero and one.</param>
     public sealed record ScreenText(string Text, double X, double Y, string Font = "MenuFntBtnNrm", TextAlignment Alignment = TextAlignment.Center, double Opacity = 1) : ScreenElement;

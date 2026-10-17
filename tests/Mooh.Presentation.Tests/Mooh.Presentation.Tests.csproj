@@ -4,6 +4,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
@@ -17,7 +20,7 @@
     <Content Include="../../assets/sprites/*.json"
              Link="assets/sprites/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../assets/fonts/*.fnt"
+    <Content Include="../../assets/fonts/*.ttf;../../assets/fonts/OFL.txt"
              Link="assets/fonts/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/text/strings.json"

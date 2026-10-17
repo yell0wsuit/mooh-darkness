@@ -47,9 +47,9 @@ namespace Mooh.Presentation.Screens
     /// <param name="font">The normal button font.</param>
     /// <param name="tooltipFont">The tooltip font, defaulting to the normal font when omitted.</param>
     /// <param name="random">The source of the original entry-bounce speeds.</param>
-    public sealed class MenuPanelPresentation(SpritePage page, BitmapFont font, BitmapFont? tooltipFont = null, Random? random = null)
+    public sealed class MenuPanelPresentation(SpritePage page, GameFont font, GameFont? tooltipFont = null, Random? random = null)
     {
-        private readonly BitmapFont _tooltipFont = tooltipFont ?? font;
+        private readonly GameFont _tooltipFont = tooltipFont ?? font;
         private readonly Random _random = random ?? Random.Shared;
         private readonly List<PlacedButton> _buttons = [];
         private readonly List<OutgoingPanel> _outgoing = [];
@@ -150,12 +150,7 @@ namespace Mooh.Presentation.Screens
                 double y = Math.Round(PanelY + button.Y + button.Spring.Y + shift);
                 double textX = Math.Round(400 + button.TextX + button.Spring.X + shift);
                 result.Add(new ScreenSprite("SpriteMenuPrt", button.Frame + "_" + state, x, y));
-                if (state != "Nrm")
-                {
-                    result.Add(new ScreenText(button.Item.Label, textX, y, "MenuFntBtn" + state, TextAlignment.Left));
-                }
-
-                result.Add(new ScreenText(button.Item.Label, textX, y, "MenuFntBtnNrm", TextAlignment.Left));
+                result.Add(new ScreenText(button.Item.Label, textX, y, "MenuFntBtn" + state, TextAlignment.Left));
             }
 
             return result;

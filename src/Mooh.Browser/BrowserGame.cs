@@ -17,6 +17,7 @@ namespace Mooh.Browser
     internal sealed class BrowserGame : IDisposable
     {
         private readonly GameShell _shell;
+        private readonly GameFont _levelFont;
         private readonly KeyboardControls _controls = new();
         private readonly SceneRenderer _scene;
         private readonly HudRenderer _hud;
@@ -39,13 +40,14 @@ namespace Mooh.Browser
             _audio = audio;
             using FileStream animations = File.OpenRead(Path.Combine(assets, "animations", "animations.json"));
             using FileStream strings = File.OpenRead(Path.Combine(assets, "text", "strings.json"));
-            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", HudPresenter.LevelFontName + ".fnt"));
+            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", GameFont.FileName(HudPresenter.LevelFontName)));
             using FileStream catalog = File.OpenRead(Path.Combine(assets, "sounds", "Sound.ini"));
             TextProfileStore store = new(() => StorageInterop.Read("MoohDarkness.player-profile.v1"),
                 json => StorageInterop.Write("MoohDarkness.player-profile.v1", json));
             _masks = new SpriteMasks(Path.Combine(assets, "sprites"));
+            _levelFont = GameFont.Load(HudPresenter.LevelFontName, font);
             _shell = new GameShell(assets, JsonLevelPackLoader.Load(Path.Combine(assets, "levels", "manifest.json")),
-                AnimationLibrary.Load(animations), StringTable.Load(strings), BitmapFont.Load(HudPresenter.LevelFontName, font),
+                AnimationLibrary.Load(animations), StringTable.Load(strings), _levelFont,
                 store.Load(), store, _masks);
             foreach (string pair in PageInterop.Query().TrimStart('?').Split('&'))
             {
@@ -221,6 +223,8 @@ namespace Mooh.Browser
             _hud.Dispose();
             _scene.Dispose();
             _masks.Dispose();
+            _shell.Dispose();
+            _levelFont.Dispose();
             _audio.Dispose();
         }
     }

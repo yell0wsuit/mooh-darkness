@@ -37,7 +37,7 @@
     <Content Include="../../assets/levels/*.json"
              Link="assets/levels/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../assets/fonts/*.fnt;../../assets/fonts/*.png"
+    <Content Include="../../assets/fonts/*.ttf;../../assets/fonts/OFL.txt"
              Link="assets/fonts/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/text/*.json"

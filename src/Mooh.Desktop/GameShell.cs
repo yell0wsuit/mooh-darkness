@@ -26,13 +26,15 @@ namespace Mooh.Desktop
     }
 
     /// <summary>Coordinates the original menu, map, gameplay and completion flow.</summary>
-    internal sealed class GameShell
+    internal sealed class GameShell : IDisposable
     {
         private readonly LoadedLevelPack _pack;
         private readonly AnimationLibrary _library;
         private readonly StringTable _strings;
-        private readonly BitmapFont _levelFont;
-        private readonly BitmapFont _scoreFont;
+        private readonly GameFont _levelFont;
+        private readonly GameFont _scoreFont;
+        private readonly GameFont _menuFont;
+        private readonly GameFont _tooltipFont;
         private readonly ISpriteMask? _masks;
         private readonly IPlayerProfileStore? _store;
         private readonly Random _random = new();
@@ -54,7 +56,7 @@ namespace Mooh.Desktop
         private bool _firstNameCharacter;
 
         public GameShell(string assets, LoadedLevelPack pack, AnimationLibrary library, StringTable strings,
-            BitmapFont levelFont, PlayerProfile profile, IPlayerProfileStore? store, ISpriteMask? masks = null)
+            GameFont levelFont, PlayerProfile profile, IPlayerProfileStore? store, ISpriteMask? masks = null)
         {
             _pack = pack;
             _library = library;
@@ -64,14 +66,23 @@ namespace Mooh.Desktop
             _store = store;
             _masks = masks;
             using FileStream page = File.OpenRead(Path.Combine(assets, "sprites", "SpriteMenuPrt.json"));
-            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", "MenuFntBtnNrm.fnt"));
-            using FileStream tooltip = File.OpenRead(Path.Combine(assets, "fonts", "MenuFontToolTip.fnt"));
-            using FileStream scoreFont = File.OpenRead(Path.Combine(assets, "fonts", "MenuFntEncTitSel.fnt"));
-            _scoreFont = BitmapFont.Load("MenuFntEncTitSel", scoreFont);
-            Menu = new MenuPanelPresentation(SpritePage.Load("SpriteMenuPrt", page), BitmapFont.Load("MenuFntBtnNrm", font), BitmapFont.Load("MenuFontToolTip", tooltip), _random);
+            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", GameFont.FileName("MenuFntBtnNrm")));
+            using FileStream tooltip = File.OpenRead(Path.Combine(assets, "fonts", GameFont.FileName("MenuFontToolTip")));
+            using FileStream scoreFont = File.OpenRead(Path.Combine(assets, "fonts", GameFont.FileName("MenuFntEncTitSel")));
+            _menuFont = GameFont.Load("MenuFntBtnNrm", font);
+            _tooltipFont = GameFont.Load("MenuFontToolTip", tooltip);
+            _scoreFont = GameFont.Load("MenuFntEncTitSel", scoreFont);
+            Menu = new MenuPanelPresentation(SpritePage.Load("SpriteMenuPrt", page), _menuFont, _tooltipFont, _random);
             using FileStream waypoints = File.OpenRead(Path.Combine(assets, "map", "map.json"));
             _map = new MapPresentation(MapWaypoints.Load(waypoints), [.. pack.Manifest.Levels!.Select(l => "map-previews/" + l.Name + ".jpg")], Localize);
             _background = new MenuBackground(_random);
+        }
+
+        public void Dispose()
+        {
+            _menuFont.Dispose();
+            _tooltipFont.Dispose();
+            _scoreFont.Dispose();
         }
 
         public PlayerProfile Profile
@@ -701,7 +712,7 @@ namespace Mooh.Desktop
                 case "fullscreen-check":
                 case "fullscreen":
                     _fullscreenChoice = !_fullscreenChoice;
-                    Menu.SetButtonLabel("fullscreen-check", _fullscreenChoice ? "\u0001" : "\u0002");
+                    Menu.SetButtonLabel("fullscreen-check", _fullscreenChoice ? "[x]" : "[ ]");
                     break;
                 case "clear-scores":
                     ShowScores(true);
@@ -872,7 +883,7 @@ namespace Mooh.Desktop
             if (!_optionsInGame)
             {
                 items.Add(Item("fullscreen", "BtnOptFullScr", -20, 130));
-                items.Add(new("fullscreen-check", Profile.Options.Fullscreen ? "\u0001" : "\u0002", Localize("BtnOptFullScrTTip"), 150, 130));
+                items.Add(new("fullscreen-check", Profile.Options.Fullscreen ? "[x]" : "[ ]", Localize("BtnOptFullScrTTip"), 150, 130));
                 items.Add(Item("clear-scores", "BtnOptClearScore", 0, 190));
             }
             items.Add(Item("back", "BtnOptBack", 0, _optionsInGame ? 130 : 250));

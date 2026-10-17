@@ -9,7 +9,7 @@ using SkiaSharp;
 
 namespace Mooh.Desktop
 {
-    /// <summary>Draws ordered shell commands with the original screen images, atlases and bitmap fonts.</summary>
+    /// <summary>Draws ordered shell commands with the original screen images, atlases and Comic Neue fonts.</summary>
     internal sealed class ScreenRenderer(string screensDirectory, SceneRenderer scene, HudRenderer text) : IDisposable
     {
         private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.None);

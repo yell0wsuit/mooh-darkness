@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,9 +18,17 @@ namespace Mooh.Presentation.Tests
     /// </summary>
     public sealed class LevelTextTests
     {
+        private static double TitleStartX()
+        {
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "fonts", GameFont.FileName(HudPresenter.LevelFontName)));
+            using GameFont font = GameFont.Load(HudPresenter.LevelFontName, stream);
+            (int left, _, int right, _) = font.Bounds("Level 3");
+            return Math.Floor(400 - ((right - left) / 2.0));
+        }
+
         /// <summary>
         /// Verifies the title's first character appears at once at y −20, at the start of a line
-        /// centered on its glyph box: "Level 3" spans 208 px, so it starts at x 296.
+        /// centered using the bundled Comic Neue glyph bounds.
         /// </summary>
         [Fact]
         public void TheTitleStartsAboveTheScreen()
@@ -28,7 +38,7 @@ namespace Mooh.Presentation.Tests
             run.Hud.ShowLevelTitle(3);
             run.Step(0.016);
 
-            Assert.Equal([new HudText("L", 296, -20, TextAlignment.Left, HudPresenter.LevelFontName)], run.LevelCharacters);
+            Assert.Equal([new HudText("L", TitleStartX(), -20, TextAlignment.Left, HudPresenter.LevelFontName)], run.LevelCharacters);
         }
 
         /// <summary>
@@ -46,7 +56,7 @@ namespace Mooh.Presentation.Tests
             IReadOnlyList<HudText> characters = run.LevelCharacters;
             Assert.Equal("Level3", string.Concat(characters.Select(character => character.Text)));
             Assert.All(characters, character => Assert.InRange(character.Y, 245, 254));
-            Assert.InRange(characters[0].X, 291, 300);
+            Assert.InRange(characters[0].X, TitleStartX() - 5, TitleStartX() + 4);
         }
 
         /// <summary>Verifies the title falls off the screen once its two seconds are up.</summary>

@@ -56,16 +56,17 @@ namespace Mooh.Desktop
                 strings = StringTable.Load(stream);
             }
 
-            BitmapFont levelFont;
-            using (FileStream stream = File.OpenRead(Path.Combine(assets, "fonts", HudPresenter.LevelFontName + ".fnt")))
+            GameFont levelFont;
+            using (FileStream stream = File.OpenRead(Path.Combine(assets, "fonts", GameFont.FileName(HudPresenter.LevelFontName))))
             {
-                levelFont = BitmapFont.Load(HudPresenter.LevelFontName, stream);
+                levelFont = GameFont.Load(HudPresenter.LevelFontName, stream);
             }
 
+            using GameFont ownedLevelFont = levelFont;
             using SpriteMasks masks = new(Path.Combine(assets, "sprites"));
             string data = SaveDataLocation.DefaultDirectory();
             PlayerProfileStore? store = options.Screen is null ? new(data) : null;
-            GameShell shell = new(assets, pack, library, strings, levelFont, store?.Load() ?? new PlayerProfile(), store, masks);
+            using GameShell shell = new(assets, pack, library, strings, levelFont, store?.Load() ?? new PlayerProfile(), store, masks);
             if (options.Screen is null && (options.DirectLaunch || options.Script is not null || options.QuitAfterSeconds is not null))
             {
                 shell.StartDirect(options.LevelIndex, options.Difficulty);

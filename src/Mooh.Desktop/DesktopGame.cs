@@ -35,7 +35,7 @@ namespace Mooh.Desktop
         AnimationLibrary library,
         Random random,
         StringTable? strings = null,
-        BitmapFont? levelFont = null,
+        GameFont? levelFont = null,
         ISpriteMask? masks = null,
         bool automaticProgression = true)
     {
@@ -54,7 +54,7 @@ namespace Mooh.Desktop
         private readonly AnimationLibrary _library = library;
         private readonly Random _random = random;
         private readonly StringTable? _strings = strings;
-        private readonly BitmapFont? _levelFont = levelFont;
+        private readonly GameFont? _levelFont = levelFont;
         private readonly ISpriteMask? _masks = masks;
         private double _outcomeSeconds;
         private bool _started;

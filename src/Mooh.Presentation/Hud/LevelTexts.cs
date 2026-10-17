@@ -16,7 +16,7 @@ namespace Mooh.Presentation.Hud
     /// and spreads the characters' arrivals over 500 ms. The timer service, <c>TSrvTxt</c>, runs
     /// after the characters move, as <c>ModCycle</c> orders them.
     /// </remarks>
-    internal sealed partial class LevelTexts(BitmapFont font)
+    internal sealed partial class LevelTexts(GameFont font)
     {
         private const double CenterX = 400;
         private const int CenterY = 250;

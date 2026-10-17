@@ -11,14 +11,13 @@ using SkiaSharp;
 namespace Mooh.Desktop
 {
     /// <summary>
-    /// Draws the screen panels, the level texts and the help panel with the recovered bitmap
+    /// Draws the screen panels, the level texts and the help panel with the bundled Comic Neue TrueType
     /// fonts.
     /// </summary>
-    /// <param name="fontsDirectory">The folder holding the <c>.fnt</c> tables and their atlases.</param>
+    /// <param name="fontsDirectory">The folder holding the Comic Neue TrueType fonts.</param>
     internal sealed class HudRenderer(string fontsDirectory) : IDisposable
     {
-        private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.None);
-        private readonly Dictionary<string, (BitmapFont Font, SKImage Atlas)> _fonts = [with(StringComparer.Ordinal)];
+        private readonly Dictionary<string, GameFont> _fonts = [with(StringComparer.Ordinal)];
         private readonly SKPaint _fade = new();
 
         /// <summary>Draws the panels, their values, the help and the outcome.</summary>
@@ -51,9 +50,9 @@ namespace Mooh.Desktop
         /// <summary>Releases the font atlases and the paint.</summary>
         public void Dispose()
         {
-            foreach ((BitmapFont _, SKImage atlas) in _fonts.Values)
+            foreach (GameFont font in _fonts.Values)
             {
-                atlas.Dispose();
+                font.Dispose();
             }
 
             _fonts.Clear();
@@ -62,37 +61,30 @@ namespace Mooh.Desktop
 
         internal void DrawText(SKCanvas canvas, HudText text, double opacity = 1)
         {
-            (BitmapFont font, SKImage atlas) = FontOf(text.Font);
-            _fade.Color = SKColors.White.WithAlpha((byte)Math.Round(255 * Math.Clamp(opacity, 0, 1)));
-            foreach (GlyphPlacement glyph in font.Layout(text.Text, text.X, text.Y, text.Alignment))
-            {
-                canvas.DrawImage(
-                    atlas,
-                    SKRect.Create(glyph.SourceX, glyph.SourceY, glyph.Width, glyph.Height),
-                    SKRect.Create((float)glyph.X, (float)glyph.Y, glyph.Width, glyph.Height),
-                    Sampling,
-                    opacity < 1 ? _fade : null);
-            }
+            GameFont font = FontOf(text.Font);
+            byte alpha = (byte)Math.Round(255 * Math.Clamp(opacity, 0, 1));
+            float x = (float)font.AlignedX(text.Text, text.X, text.Alignment);
+            float y = (float)text.Y + font.BaselineOffset;
+            _fade.IsAntialias = true;
+            _fade.Style = SKPaintStyle.Stroke;
+            _fade.StrokeWidth = 2;
+            _fade.Color = SKColors.Black.WithAlpha(alpha);
+            canvas.DrawText(text.Text, x, y, SKTextAlign.Left, font.Font, _fade);
+            _fade.Style = SKPaintStyle.Fill;
+            _fade.Color = font.Color.WithAlpha(alpha);
+            canvas.DrawText(text.Text, x, y, SKTextAlign.Left, font.Font, _fade);
         }
 
-        private (BitmapFont Font, SKImage Atlas) FontOf(string name)
+        private GameFont FontOf(string name)
         {
-            if (_fonts.TryGetValue(name, out (BitmapFont Font, SKImage Atlas) loaded))
+            if (_fonts.TryGetValue(name, out GameFont? loaded))
             {
                 return loaded;
             }
-
-            BitmapFont font;
-            using (FileStream stream = File.OpenRead(Path.Combine(fontsDirectory, name + ".fnt")))
-            {
-                font = BitmapFont.Load(name, stream);
-            }
-
-            string image = Path.Combine(fontsDirectory, name + ".png");
-            SKImage atlas = SKImage.FromEncodedData(image)
-                ?? throw new InvalidDataException($"The font atlas '{image}' could not be decoded.");
-            _fonts[name] = (font, atlas);
-            return (font, atlas);
+            using FileStream stream = File.OpenRead(Path.Combine(fontsDirectory, GameFont.FileName(name)));
+            GameFont font = GameFont.Load(name, stream);
+            _fonts[name] = font;
+            return font;
         }
     }
 }

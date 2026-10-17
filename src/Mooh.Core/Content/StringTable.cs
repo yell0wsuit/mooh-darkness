@@ -8,18 +8,6 @@ namespace Mooh.Core.Content
     /// <summary>Reads a UTF-8 JSON language and string dictionary.</summary>
     public sealed class StringTable
     {
-        /// <summary>
-        /// The Windows-1252 characters for bytes 0x80 to 0x9F, the only range where it differs from
-        /// Latin-1. Unassigned bytes keep their Latin-1 control character.
-        /// </summary>
-        private static readonly char[] Windows1252High =
-        [
-            '€', '\u0081', '‚', 'ƒ', '„', '…', '†', '‡',
-            'ˆ', '‰', 'Š', '‹', 'Œ', '\u008D', 'Ž', '\u008F',
-            '\u0090', '‘', '’', '“', '”', '•', '–', '—',
-            '˜', '™', 'š', '›', 'œ', '\u009D', 'ž', 'Ÿ',
-        ];
-
         private readonly Dictionary<string, string> _texts;
 
         private StringTable(string language, Dictionary<string, string> texts)
@@ -56,32 +44,6 @@ namespace Mooh.Core.Content
             }
 
             text = string.Empty;
-            return false;
-        }
-
-        /// <summary>
-        /// Maps a text character back to its Windows-1252 byte, the code the recovered bitmap fonts
-        /// index their glyphs by.
-        /// </summary>
-        /// <param name="character">The character.</param>
-        /// <param name="value">The byte, when the code page has the character.</param>
-        /// <returns><see langword="true"/> when the code page has the character.</returns>
-        public static bool TryEncode(char character, out byte value)
-        {
-            int high = Array.IndexOf(Windows1252High, character);
-            if (high >= 0)
-            {
-                value = (byte)(0x80 + high);
-                return true;
-            }
-
-            if (character is <= (char)0xFF and not (>= '\u0080' and <= '\u009F'))
-            {
-                value = (byte)character;
-                return true;
-            }
-
-            value = 0;
             return false;
         }
 

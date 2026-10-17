@@ -124,7 +124,7 @@ namespace Mooh.Presentation.Hud
         /// <param name="random">The source of the jerks' directions and the level texts' jiggles.</param>
         /// <param name="levelFont">The <see cref="LevelFontName"/> font the level texts are laid out in; without it none show.</param>
         /// <exception cref="ArgumentNullException"><paramref name="world"/> or <paramref name="random"/> is <see langword="null"/>.</exception>
-        public HudPresenter(WorldGrid world, StringTable? strings, Random random, BitmapFont? levelFont = null)
+        public HudPresenter(WorldGrid world, StringTable? strings, Random random, GameFont? levelFont = null)
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(random);

@@ -49,10 +49,10 @@ namespace Mooh.Desktop.Tests
             string assets = Path.Combine(AppContext.BaseDirectory, "assets");
             using FileStream animation = File.OpenRead(Path.Combine(assets, "animations", "animations.json"));
             using FileStream text = File.OpenRead(Path.Combine(assets, "text", "strings.json"));
-            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", HudPresenter.LevelFontName + ".fnt"));
+            using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", GameFont.FileName(HudPresenter.LevelFontName)));
             AnimationLibrary library = AnimationLibrary.Load(animation);
             GameShell shell = new(assets, JsonLevelPackLoader.Load(Path.Combine(assets, "levels", "manifest.json")),
-                library, StringTable.Load(text), BitmapFont.Load(HudPresenter.LevelFontName, font),
+                library, StringTable.Load(text), GameFont.Load(HudPresenter.LevelFontName, font),
                 new PlayerProfile(), null);
             if (screen == "main")
             {
