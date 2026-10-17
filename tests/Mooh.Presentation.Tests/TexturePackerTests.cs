@@ -7,8 +7,10 @@ using Xunit;
 
 namespace Mooh.Presentation.Tests
 {
+    /// <summary>Checks TexturePacker Array and Hash frame geometry.</summary>
     public sealed class TexturePackerTests
     {
+        /// <summary>Checks that trimmed frame offsets and normalized pivots preserve the logical anchor.</summary>
         [Theory]
         [InlineData(false)]
         [InlineData(true)]

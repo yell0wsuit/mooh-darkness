@@ -7,8 +7,10 @@ using Xunit;
 
 namespace Mooh.Presentation.Tests
 {
+    /// <summary>Checks the bundled TrueType font metrics used by presentation.</summary>
     public sealed class ComicNeueTests
     {
+        /// <summary>Checks visible glyph coverage, space advances and bounds relative to the baseline.</summary>
         [Fact]
         public void TrueTypeFontMeasuresGlyphsAndKeepsBaselineBounds()
         {

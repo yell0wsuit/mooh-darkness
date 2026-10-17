@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using System.Linq;
+using System.Text.Json;
 
 namespace Mooh.Presentation.Music
 {
@@ -53,11 +53,9 @@ namespace Mooh.Presentation.Music
             return Load(File.ReadAllBytes(path), file =>
             {
                 string sample = Path.GetFullPath(Path.Combine(directory, file));
-                if (!sample.StartsWith(directory + Path.DirectorySeparatorChar, StringComparison.Ordinal))
-                {
-                    throw new InvalidDataException("A module sample must stay inside its music directory.");
-                }
-                return File.ReadAllBytes(sample);
+                return !sample.StartsWith(directory + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                    ? throw new InvalidDataException("A module sample must stay inside its music directory.")
+                    : File.ReadAllBytes(sample);
             });
         }
 

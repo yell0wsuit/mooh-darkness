@@ -127,7 +127,7 @@ try
         bitRate = 192000,
         sampleRate = 48000,
         renderSampleRate = Rate,
-        sourceSha256 = Convert.ToHexString(SHA256.HashData(source.ToArray())),
+        sourceSha256 = Convert.ToHexString(SHA256.HashData([.. source])),
         tracks = entries,
     }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
 }

@@ -8,29 +8,33 @@ using Xunit;
 
 namespace Mooh.Presentation.Tests
 {
+    /// <summary>Checks the editable JSON contracts for sound aliases, music cues and tracker data.</summary>
     public sealed class JsonAudioTests
     {
+        /// <summary>Checks that silent sound aliases retain their gain and pitch ranges.</summary>
         [Fact]
         public void SoundJsonPreservesRangesAndSilentAliases()
         {
-            using MemoryStream stream = new(Encoding.UTF8.GetBytes("{\"silent\":{\"files\":[],\"buffers\":2,\"volume\":[0.5,1.4],\"frequency\":[0.8,1.2]}}"));
+            using MemoryStream stream = new(Encoding.UTF8.GetBytes(/*lang=json,strict*/ "{\"silent\":{\"files\":[],\"buffers\":2,\"volume\":[0.5,1.4],\"frequency\":[0.8,1.2]}}"));
             SoundDefinition sound = SoundCatalog.Load(stream)["silent"];
             Assert.Empty(sound.Files);
             Assert.Equal((0.5, 1.4), sound.Volume);
             Assert.Equal((0.8, 1.2), sound.Frequency);
         }
 
+        /// <summary>Checks that a named music cue retains its module, order position and gain.</summary>
         [Fact]
         public void MusicJsonPreservesCuePositions()
         {
-            using MemoryStream stream = new(Encoding.UTF8.GetBytes("{\"game\":{\"file\":\"TrackMenu\",\"position\":40,\"volume\":0.6}}"));
+            using MemoryStream stream = new(Encoding.UTF8.GetBytes(/*lang=json,strict*/ "{\"game\":{\"file\":\"TrackMenu\",\"position\":40,\"volume\":0.6}}"));
             Assert.Equal(new MusicTrack("game", "TrackMenu", 40, 0.6), MusicCatalog.Load(stream)["game"]);
         }
 
+        /// <summary>Checks that JSON pattern cells preserve notes, instruments, volume and effects.</summary>
         [Fact]
         public void ModuleJsonContainsEditableTrackerData()
         {
-            byte[] json = Encoding.UTF8.GetBytes("{\"formatVersion\":1,\"title\":\"test\",\"bpm\":145,\"speed\":3,\"masterGain\":0.75,\"order\":[0],\"songLength\":1,\"channelCount\":1,\"patterns\":[{\"index\":0,\"rows\":1,\"channels\":[{\"index\":0,\"cells\":[{\"note\":48,\"instrument\":0,\"volume\":20,\"effect\":15,\"param\":3}]}]}],\"instruments\":[]}");
+            byte[] json = Encoding.UTF8.GetBytes(/*lang=json,strict*/ "{\"formatVersion\":1,\"title\":\"test\",\"bpm\":145,\"speed\":3,\"masterGain\":0.75,\"order\":[0],\"songLength\":1,\"channelCount\":1,\"patterns\":[{\"index\":0,\"rows\":1,\"channels\":[{\"index\":0,\"cells\":[{\"note\":48,\"instrument\":0,\"volume\":20,\"effect\":15,\"param\":3}]}]}],\"instruments\":[]}");
             SkaleModule module = SkaleModule.Load(json);
             Assert.Equal(145, module.Bpm);
             Assert.Equal(0.75f, module.MasterGain);

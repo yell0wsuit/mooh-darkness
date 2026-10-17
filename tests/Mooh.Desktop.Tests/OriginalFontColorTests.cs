@@ -13,6 +13,7 @@ namespace Mooh.Desktop.Tests
     /// <summary>Palette values sampled from the original bitmap atlases before the TrueType migration.</summary>
     public sealed class OriginalFontColorTests
     {
+        /// <summary>Checks rendered glyph interiors against colors sampled from the original bitmap font.</summary>
         [Theory]
         [InlineData("AppFont", 0xFFFFFFFFu)]
         [InlineData("EditFntSelTit", 0xFFFFFFBBu)]
@@ -49,6 +50,7 @@ namespace Mooh.Desktop.Tests
             Assert.True(matches >= 10, $"{style} must contain the original fill #{color:X8}.");
         }
 
+        /// <summary>Checks that story and help styles contain only black glyph pixels.</summary>
         [Theory]
         [InlineData("MapStoryFont")]
         [InlineData("PanelInstrBlackFnt")]
@@ -59,6 +61,7 @@ namespace Mooh.Desktop.Tests
             Assert.All(bitmap.Pixels, pixel => Assert.True(pixel.Alpha == 0 || (pixel.Red == 0 && pixel.Green == 0 && pixel.Blue == 0)));
         }
 
+        /// <summary>Checks that white tooltip glyphs retain their orange-red edge.</summary>
         [Fact]
         public void TooltipRetainsItsOrangeRedEdge()
         {
@@ -66,6 +69,7 @@ namespace Mooh.Desktop.Tests
             Assert.Contains(bitmap.Pixels, pixel => pixel.Alpha > 20 && pixel.Red > 200 && pixel.Green < 150 && pixel.Blue < 100);
         }
 
+        /// <summary>Checks that title glyphs retain light and dark gold fills with a gray bevel.</summary>
         [Fact]
         public void MenuTitleRetainsGoldGradientAndGrayBevel()
         {
@@ -75,6 +79,7 @@ namespace Mooh.Desktop.Tests
             Assert.Contains(bitmap.Pixels, pixel => pixel.Alpha > 100 && pixel.Red is > 80 and < 200 && pixel.Red == pixel.Green && pixel.Green == pixel.Blue);
         }
 
+        /// <summary>Checks that floating scores retain both colored edge treatments from the source atlas.</summary>
         [Fact]
         public void FloatingScoreRetainsGreenAndPurpleEdging()
         {
@@ -83,6 +88,7 @@ namespace Mooh.Desktop.Tests
             Assert.Contains(bitmap.Pixels, pixel => pixel.Alpha > 150 && pixel.Blue > 150 && pixel.Red > 100 && pixel.Green < 130);
         }
 
+        /// <summary>Checks that outlines and fills share one opacity when floating scores fade.</summary>
         [Fact]
         public void FadingTextFadesAllEdgeLayersTogether()
         {

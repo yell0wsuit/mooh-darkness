@@ -56,7 +56,7 @@ namespace Mooh.Presentation.Sprites
             {
                 using JsonDocument document = JsonDocument.Parse(stream);
                 JsonElement entries = document.RootElement.GetProperty("frames");
-                Dictionary<string, SpriteFrame> frames = new(StringComparer.Ordinal);
+                Dictionary<string, SpriteFrame> frames = [with(StringComparer.Ordinal)];
                 if (entries.ValueKind == JsonValueKind.Object)
                 {
                     foreach (JsonProperty entry in entries.EnumerateObject())

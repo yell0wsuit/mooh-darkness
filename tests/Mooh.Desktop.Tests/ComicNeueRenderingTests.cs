@@ -10,8 +10,10 @@ using Xunit;
 
 namespace Mooh.Desktop.Tests
 {
+    /// <summary>Checks rendered Comic Neue glyph placement against the measured layout.</summary>
     public sealed class ComicNeueRenderingTests
     {
+        /// <summary>Checks that left, centered and right alignment use the same metrics for layout and drawing.</summary>
         [Theory]
         [InlineData(TextAlignment.Left, 200)]
         [InlineData(TextAlignment.Center, 400)]

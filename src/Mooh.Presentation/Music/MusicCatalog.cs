@@ -25,7 +25,7 @@ namespace Mooh.Presentation.Music
             try
             {
                 using JsonDocument document = JsonDocument.Parse(stream);
-                Dictionary<string, MusicTrack> tracks = new(StringComparer.Ordinal);
+                Dictionary<string, MusicTrack> tracks = [with(StringComparer.Ordinal)];
                 foreach (JsonProperty entry in document.RootElement.EnumerateObject())
                 {
                     JsonElement track = entry.Value;

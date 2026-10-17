@@ -61,7 +61,7 @@ namespace Mooh.Core.Content
                 JsonElement root = document.RootElement;
                 string language = root.GetProperty("language").GetString()
                     ?? throw new InvalidDataException("The string table requires a language.");
-                Dictionary<string, string> texts = new(StringComparer.Ordinal);
+                Dictionary<string, string> texts = [with(StringComparer.Ordinal)];
                 foreach (JsonProperty entry in root.GetProperty("strings").EnumerateObject())
                 {
                     if (!texts.TryAdd(entry.Name, entry.Value.GetString()

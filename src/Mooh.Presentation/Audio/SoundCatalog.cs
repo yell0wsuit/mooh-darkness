@@ -44,7 +44,7 @@ namespace Mooh.Presentation.Audio
             try
             {
                 using JsonDocument document = JsonDocument.Parse(stream);
-                Dictionary<string, SoundDefinition> sounds = new(StringComparer.Ordinal);
+                Dictionary<string, SoundDefinition> sounds = [with(StringComparer.Ordinal)];
                 foreach (JsonProperty entry in document.RootElement.EnumerateObject())
                 {
                     JsonElement sound = entry.Value;
