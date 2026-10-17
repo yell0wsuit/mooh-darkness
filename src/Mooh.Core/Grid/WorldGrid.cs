@@ -19,6 +19,10 @@ namespace Mooh.Core.Grid
         private readonly List<EntityId> _entityOrder = [];
         private readonly Dictionary<GridPosition, List<EntityId>> _occupancy = [];
         private EntityId? _playerId;
+        private IReadOnlyList<Entity>? EntitySnapshot
+        {
+            get; set;
+        }
 
         /// <summary>
         /// Initializes a world grid with the specified positive dimensions.
@@ -49,7 +53,26 @@ namespace Mooh.Core.Grid
         }
 
         /// <summary>Gets all entities registered in the world.</summary>
-        public IReadOnlyList<Entity> Entities => [.. _entityOrder.Select(GetEntity)];
+        public IReadOnlyList<Entity> Entities
+        {
+            get
+            {
+                if (EntitySnapshot is null)
+                {
+                    Entity[] entities = new Entity[_entityOrder.Count];
+                    for (int i = 0; i < entities.Length; i++)
+                    {
+                        entities[i] = _entities[_entityOrder[i]];
+                    }
+
+                    // Replace rather than mutate the snapshot: callers can remove entities
+                    // while enumerating an earlier registration list.
+                    EntitySnapshot = Array.AsReadOnly(entities);
+                }
+
+                return EntitySnapshot;
+            }
+        }
 
         /// <summary>Gets the world's player entity, if one is registered.</summary>
         public Entity? Player => _playerId is EntityId id ? GetEntity(id) : null;
@@ -103,6 +126,7 @@ namespace Mooh.Core.Grid
             }
 
             _entityOrder.Add(entity.Id);
+            EntitySnapshot = null;
 
             if (!_occupancy.TryGetValue(entity.Position, out List<EntityId>? occupants))
             {
@@ -137,6 +161,7 @@ namespace Mooh.Core.Grid
             }
 
             _ = _entityOrder.Remove(id);
+            EntitySnapshot = null;
             List<EntityId> occupants = _occupancy[entity.Position];
             _ = occupants.Remove(id);
             if (occupants.Count == 0)
