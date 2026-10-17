@@ -135,7 +135,7 @@ namespace Mooh.Presentation.Animation
 
         /// <summary>Gets one of the game module's sound aliases, such as <c>SndStepEarth</c>.</summary>
         /// <param name="name">The sound's name in the game module.</param>
-        /// <returns>The <c>Sound.ini</c> alias.</returns>
+        /// <returns>The <c>Sound.json</c> alias.</returns>
         /// <exception cref="KeyNotFoundException">There is no such sound.</exception>
         public string Sound(string name)
         {

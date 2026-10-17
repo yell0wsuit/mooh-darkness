@@ -23,7 +23,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void TheModuleReadsItsLayout()
         {
-            SkaleModule module = SkaleModule.Load(File.ReadAllBytes(MusicPath("TrackMenu.skm")));
+            SkaleModule module = SkaleModule.Load(MusicPath("TrackMenu.json"));
 
             Assert.Equal("moorhuhn", module.Title);
             Assert.Equal((145, 3), (module.Bpm, module.Speed));
@@ -42,7 +42,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void DecodedSamplesFitTheirDeclaredLength()
         {
-            SkaleModule module = SkaleModule.Load(File.ReadAllBytes(MusicPath("TrackMenu.skm")));
+            SkaleModule module = SkaleModule.Load(MusicPath("TrackMenu.json"));
             SkaleSample sample = module.Instruments[0].Samples[0];
 
             sample.SetDecoded(new float[15563 + 128]);
@@ -55,7 +55,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void TheTrackListNamesWhereEachTrackStarts()
         {
-            using FileStream stream = File.OpenRead(MusicPath("Music.ini"));
+            using FileStream stream = File.OpenRead(MusicPath("Music.json"));
             IReadOnlyDictionary<string, MusicTrack> tracks = MusicCatalog.Load(stream);
 
             Assert.Equal(new MusicTrack("game", "TrackMenu", 40, 0.6), tracks["game"]);
@@ -70,7 +70,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void ARenderKeepsItsRegressionSnapshot()
         {
-            SkaleModule module = SkaleModule.Load(File.ReadAllBytes(MusicPath("TrackMenu.skm")));
+            SkaleModule module = SkaleModule.Load(MusicPath("TrackMenu.json"));
             float[] sine = [.. Enumerable.Range(0, 20000).Select(index => (float)Math.Sin(index * 0.05))];
             foreach (SkaleSample sample in module.Instruments.Values.SelectMany(instrument => instrument.Samples.Values))
             {

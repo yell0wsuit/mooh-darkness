@@ -206,7 +206,7 @@ namespace Mooh.Presentation.Scene
         }
 
         /// <summary>Cues a sound where the entity is.</summary>
-        /// <param name="alias">The <c>Sound.ini</c> alias.</param>
+        /// <param name="alias">The <c>Sound.json</c> alias.</param>
         protected void Cue(string alias)
         {
             _sounds.Add(alias);

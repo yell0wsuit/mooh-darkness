@@ -2,7 +2,7 @@
 
 Mooh Darkness is a rewrite of the 2007 grid-based puzzle game, Crazy Chicken: Jewel of Darkness. The project targets .NET 10.
 
-The desktop port uses SDL3 and SkiaSharp and includes the shipped 150-level pack, gameplay, original sprites and bitmap fonts, sound effects and module music. The original screen flow is connected: intro, main menu, map, level introduction, gameplay, pause/options/restart, level statistics, high scores, campaign completion and outro. Dormant object types and unreachable editor/registration menus are excluded.
+The desktop port uses SDL3 and SkiaSharp and includes the shipped 150-level pack, gameplay, original sprites and Comic Neue text, sound effects and module music. The original screen flow is connected: intro, main menu, map, level introduction, gameplay, pause/options/restart, level statistics, high scores, campaign completion and outro. Dormant object types and unreachable editor/registration menus are excluded.
 
 Run the game with:
 
@@ -41,7 +41,7 @@ python3 tools/publish_browser.py --serve
 
 The AOT release runs at `http://127.0.0.1:8080/`. Use `--no-aot` for a quicker interpreter build. Deploy the contents of `dist/browser/wwwroot` to a static HTTPS host. The publisher builds a worker-owned WebGL2 runtime and a single-threaded fallback; the page selects the supported mode before transferring its canvas. COOP/COEP headers enable threading, with a cross-origin isolation service worker for hosts such as GitHub Pages. Use `?mode=single` to select the fallback explicitly.
 
-The browser shares desktop gameplay, menus, rendering, and bitmap fonts. Its music is rendered offline to 192 kbps stereo Opus in Ogg during content packaging, then played as a continuous browser audio buffer with the original menu/game/ending start positions and gains; browser sound effects are converted to 96 kbps mono Opus in Ogg. Desktop retains its original Skale playback and Vorbis effects. Progress, options and high scores persist in localStorage. The PWA caches the selected runtime and game assets for subsequent offline launches. Keyboard controls match desktop; touch can operate menus, with mobile gameplay controls reserved for later. `?screen=main` or `?level=1` supports direct inspection after pressing Play.
+The browser shares desktop gameplay, menus, rendering, and Comic Neue fonts. Its music is rendered offline to 192 kbps stereo Opus in Ogg during content packaging, then played as a continuous browser audio buffer with the original menu/game/ending start positions and gains; browser sound effects are converted to 96 kbps mono Opus in Ogg. Desktop replays JSON tracker data with the original Skale engine and Vorbis effects. Progress, options and high scores persist in localStorage. The PWA caches the selected runtime and game assets for subsequent offline launches. Keyboard controls match desktop; touch can operate menus, with mobile gameplay controls reserved for later. `?screen=main` or `?level=1` supports direct inspection after pressing Play.
 
 ## Build and test
 
@@ -107,3 +107,9 @@ object types. This is an observational content tool; it does not create runtime 
 entities or assign gameplay behavior to legacy object types.
 
 The recovered Python 2.3 source is research material only; the new implementation does not execute or depend on it.
+
+
+Runtime metadata uses JSON: TexturePacker sprite atlases, ordered map waypoints, UTF-8 strings,
+scripted animations, sound aliases, music cues and tracker modules. Comic Neue regular/bold are
+bundled under the SIL Open Font License in `assets/fonts/OFL.txt`. See
+[asset formats](docs/asset-formats.md) for editing and packing conventions.

@@ -14,7 +14,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void ShippedStringsRetainTheirPreviousVoiceOnANewNote()
         {
-            SkaleModule module = SkaleModule.Load(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "assets", "music", "TrackMenu.skm")));
+            SkaleModule module = SkaleModule.Load(Path.Combine(AppContext.BaseDirectory, "assets", "music", "TrackMenu.json"));
             foreach (SkaleInstrument instrument in module.Instruments.Values)
             {
                 Assert.Equal(instrument.Index == 8 ? 1 : 0, instrument.NewNoteAction);

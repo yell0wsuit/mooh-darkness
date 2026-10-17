@@ -58,7 +58,7 @@ namespace Mooh.Presentation.Music
         /// <summary>Initializes a player at an order position.</summary>
         /// <param name="module">The module, with its samples decoded.</param>
         /// <param name="rate">The output rate in frames a second.</param>
-        /// <param name="startOrder">The order position to start at, <c>Music.ini</c>'s <c>Pos</c>.</param>
+        /// <param name="startOrder">The order position to start at, <c>Music.json</c>'s <c>Pos</c>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="module"/> is <see langword="null"/>.</exception>
         public SkalePlayer(SkaleModule module, int rate, int startOrder)
         {

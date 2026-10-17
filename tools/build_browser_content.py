@@ -42,8 +42,9 @@ def ensure_music(root: Path, destination: Path) -> None:
     source = root / "assets/music"
     digest = (
         hashlib.sha256(
-            (source / "TrackMenu.skm").read_bytes()
-            + (source / "Music.ini").read_bytes()
+            (source / "TrackMenu.json").read_bytes()
+            + (source / "Music.json").read_bytes()
+            + b"".join(path.read_bytes() for path in sorted((source / "samples").glob("*.ogg")))
         )
         .hexdigest()
         .upper()
@@ -74,18 +75,16 @@ def ensure_music(root: Path, destination: Path) -> None:
         raise RuntimeError(
             "Install ffmpeg to render browser music offline before packaging."
         )
+    project = str(root / "tools/Mooh.MusicRenderer")
+    # Serialize MSBuild to avoid macOS task-host stalls; run exactly the freshly built tool.
     subprocess.run(
-        [
-            "dotnet",
-            "run",
-            "--disable-build-servers",
-            "-p:NuGetAudit=false",
-            "--project",
-            str(root / "tools/Mooh.MusicRenderer"),
-            "--",
-            str(source),
-            str(destination),
-        ],
+        ["dotnet", "build", project, "-c", "Release", "--disable-build-servers",
+         "-m:1", "-p:NuGetAudit=false"],
+        check=True,
+    )
+    subprocess.run(
+        ["dotnet", "run", "--no-build", "--no-restore", "-c", "Release",
+         "--project", project, "--", str(source), str(destination)],
         check=True,
     )
     if not ready():

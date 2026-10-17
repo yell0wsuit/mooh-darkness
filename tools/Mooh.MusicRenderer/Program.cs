@@ -21,14 +21,14 @@ string temporary = Path.Combine(Path.GetTempPath(), "mooh-music-" + Guid.NewGuid
 Directory.CreateDirectory(temporary);
 try
 {
-    using FileStream catalog = File.OpenRead(Path.Combine(musicDirectory, "Music.ini"));
+    using FileStream catalog = File.OpenRead(Path.Combine(musicDirectory, "Music.json"));
     IReadOnlyDictionary<string, MusicTrack> tracks = MusicCatalog.Load(catalog);
     if (tracks.Values.Select(track => track.File).Distinct().Count() != 1)
     {
         throw new InvalidDataException("This exporter expects the original single-module music catalog.");
     }
-    byte[] encoded = File.ReadAllBytes(Path.Combine(musicDirectory, tracks.Values.First().File + ".skm"));
-    SkaleModule module = SkaleModule.Load(encoded);
+    byte[] encoded = File.ReadAllBytes(Path.Combine(musicDirectory, tracks.Values.First().File + ".json"));
+    SkaleModule module = SkaleModule.Load(Path.Combine(musicDirectory, tracks.Values.First().File + ".json"));
     foreach (SkaleSample sample in module.Instruments.Values.SelectMany(instrument => instrument.Samples.Values))
     {
         if (sample.Ogg.Length == 0)
@@ -115,7 +115,11 @@ try
         });
         Console.WriteLine($"Rendered {track.Name}: {written / (double)Rate:F2}s, loop starts at {loopStart / (double)Rate:F2}s");
     }
-    byte[] source = [.. encoded, .. File.ReadAllBytes(Path.Combine(musicDirectory, "Music.ini"))];
+    List<byte> source = [.. encoded, .. File.ReadAllBytes(Path.Combine(musicDirectory, "Music.json"))];
+    foreach (string sample in Directory.EnumerateFiles(Path.Combine(musicDirectory, "samples"), "*.ogg").Order(StringComparer.Ordinal))
+    {
+        source.AddRange(File.ReadAllBytes(sample));
+    }
     File.WriteAllText(Path.Combine(output, "tracks.json"), JsonSerializer.Serialize(new
     {
         formatVersion = 4,
@@ -123,7 +127,7 @@ try
         bitRate = 192000,
         sampleRate = 48000,
         renderSampleRate = Rate,
-        sourceSha256 = Convert.ToHexString(SHA256.HashData(source)),
+        sourceSha256 = Convert.ToHexString(SHA256.HashData(source.ToArray())),
         tracks = entries,
     }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
 }

@@ -14,7 +14,7 @@ namespace Mooh.Desktop
     /// of the alias's files at a volume and rate inside its ranges, panned by where it happens on
     /// screen, with no more of the alias at once than its buffer count.
     /// </summary>
-    /// <param name="catalog">The <c>Sound.ini</c> catalog.</param>
+    /// <param name="catalog">The <c>Sound.json</c> catalog.</param>
     /// <param name="output">The audio output.</param>
     /// <param name="soundsDirectory">The folder holding the <c>.ogg</c> files.</param>
     /// <param name="random">The source of the file, volume and rate choices.</param>

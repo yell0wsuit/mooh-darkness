@@ -6,7 +6,7 @@ using Mooh.Presentation.Music;
 namespace Mooh.Desktop
 {
     /// <summary>
-    /// Plays a <c>Music.ini</c> track: the tracker module rendered by the ported Skale replay engine
+    /// Plays a <c>Music.json</c> track: the tracker module rendered by the ported Skale replay engine
     /// into an audio feed kept a little ahead of playback.
     /// </summary>
     internal sealed class MusicPlayer : IDisposable

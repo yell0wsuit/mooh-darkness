@@ -7,12 +7,12 @@ using Xunit;
 
 namespace Mooh.Presentation.Tests
 {
-    /// <summary>Verifies the recovered <c>Sound.ini</c> catalog and the original's sound placement.</summary>
+    /// <summary>Verifies the recovered <c>Sound.json</c> catalog and the original's sound placement.</summary>
     public sealed class SoundTests
     {
         private static readonly Lazy<SoundCatalog> Catalog = new(() =>
         {
-            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "Sound.ini"));
+            using FileStream stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "Sound.json"));
             return SoundCatalog.Load(stream);
         });
 

@@ -88,7 +88,7 @@ namespace Mooh.Desktop.Tests
         private static SoundBoard Create(IAudioOutput output)
         {
             string sounds = Path.Combine(AppContext.BaseDirectory, "assets", "sounds");
-            using FileStream stream = File.OpenRead(Path.Combine(sounds, "Sound.ini"));
+            using FileStream stream = File.OpenRead(Path.Combine(sounds, "Sound.json"));
             return new SoundBoard(SoundCatalog.Load(stream), output, sounds, new Random(1));
         }
 

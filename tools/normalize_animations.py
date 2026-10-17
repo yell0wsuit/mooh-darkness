@@ -157,7 +157,7 @@ class Normalizer:
 
     def sounds(self):
         """The game module's sound aliases: every `self.Snd*` string that `CGameType.ModInit`
-        stores, such as `SndKeyDoor = 'KeyDoor'`, which `Sound.ini` resolves to files."""
+        stores, such as `SndKeyDoor = 'KeyDoor'`, which `Sound.json` resolves to files."""
         stores = self.raw["Game"]["functions"]["CGameType.ModInit"]["stores"]
         return {target[len("self."):]: value for target, value in stores.items()
                 if target.startswith("self.Snd") and isinstance(value, str)}

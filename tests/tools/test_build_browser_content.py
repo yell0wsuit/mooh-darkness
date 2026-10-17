@@ -35,11 +35,17 @@ def fixture(root):
         "levels/research-only.json": b'{"archival":"not shipped"}',
         "sprites/SpritePlayer.png": b"original-pixels",
         "sprites/SpritePlayer.json": b"original-table",
-        "music/TrackMenu.skm": b"original-module",
-        "music/Music.ini": b"original-catalog",
+        "music/TrackMenu.json": b"original-module",
+        "music/Music.json": b"original-catalog",
+        "music/samples/instrument_00_00.ogg": b"tracker-sample",
+        "fonts/ComicNeue-Regular.ttf": b"truetype-font",
+        "text/strings.json": b"unicode-strings",
+        "map/map.json": b"ordered-waypoints",
+        "sounds/Sound.json": b"sound-aliases",
         "screens/.DS_Store": b"finder-metadata",
     }
     for name, data in files.items():
+        (assets / name).parent.mkdir(parents=True, exist_ok=True)
         (assets / name).write_bytes(data)
     music = root / "src/Mooh.Browser/wwwroot/content/music"
     music.mkdir(parents=True)
@@ -52,7 +58,8 @@ def fixture(root):
                 "bitRate": 192000,
                 "tracks": {"menu": {"file": "TrackMenu.ogg"}},
                 "sourceSha256": hashlib.sha256(
-                    files["music/TrackMenu.skm"] + files["music/Music.ini"]
+                    files["music/TrackMenu.json"] + files["music/Music.json"]
+                    + files["music/samples/instrument_00_00.ogg"]
                 )
                 .hexdigest()
                 .upper(),
@@ -78,8 +85,11 @@ def test_pack_uses_authoritative_level_manifest_and_original_paths(tmp_path):
             bundle.read("assets/sprites/SpritePlayer.json")
             == files["sprites/SpritePlayer.json"]
         )
-        assert "assets/music/TrackMenu.skm" not in names
-        assert "assets/music/Music.ini" not in names
+        assert "assets/music/TrackMenu.json" not in names
+        assert "assets/music/Music.json" not in names
+        assert "assets/music/samples/instrument_00_00.ogg" not in names
+        for name in ("fonts/ComicNeue-Regular.ttf", "text/strings.json", "map/map.json", "sounds/Sound.json"):
+            assert bundle.read("assets/" + name) == files[name]
         assert (
             archive.parent / "music/TrackMenu.ogg"
         ).read_bytes() == b"offline-recording"
@@ -207,3 +217,14 @@ def test_real_opus_sfx_encoding_preserves_duration_and_is_reproducible(tmp_path,
     output.unlink()
     assert content.ensure_sfx(tmp_path)[source].read_bytes() == first
     assert source.read_bytes() == original
+
+
+def test_music_sample_changes_invalidate_offline_recording(tmp_path, monkeypatch):
+    fixture(tmp_path)
+    (tmp_path / "assets/music/samples/instrument_00_00.ogg").write_bytes(b"changed-sample")
+    calls = []
+    monkeypatch.setattr(content.shutil, "which", lambda _: "/test/ffmpeg")
+    monkeypatch.setattr(content.subprocess, "run", lambda *args, **kwargs: calls.append(args))
+    with pytest.raises(RuntimeError, match="complete matching catalog"):
+        content.ensure_music(tmp_path, tmp_path / "src/Mooh.Browser/wwwroot/content/music")
+    assert len(calls) == 2

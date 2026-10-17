@@ -28,7 +28,7 @@ namespace Mooh.Presentation.Audio
     /// <para>
     /// The ambient loops of <c>AmbSndList</c> are left out on purpose: every alias they name
     /// (<c>BioAmb01</c>, <c>FireAmb01</c> and the rest) is missing from the shipped
-    /// <c>Sound.ini</c>, so <c>ObjSoundPlay</c> never played them. The timed warning ticks are
+    /// <c>Sound.json</c>, so <c>ObjSoundPlay</c> never played them. The timed warning ticks are
     /// silent for the same reason: <c>SndPlay(SndClockWrn[x % len(SndClockWrn)])</c> indexes the
     /// string <c>ClockWarning</c> and names a single letter.
     /// </para>

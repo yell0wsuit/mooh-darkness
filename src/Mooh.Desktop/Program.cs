@@ -45,7 +45,7 @@ namespace Mooh.Desktop
             }
 
             SoundCatalog catalog;
-            using (FileStream stream = File.OpenRead(Path.Combine(assets, "sounds", "Sound.ini")))
+            using (FileStream stream = File.OpenRead(Path.Combine(assets, "sounds", "Sound.json")))
             {
                 catalog = SoundCatalog.Load(stream);
             }

@@ -51,7 +51,7 @@ namespace Mooh.Presentation.Tests
         [InlineData(56)]
         public void RepeatedNotesRenderIdenticallyAcrossBufferBoundaries(int order)
         {
-            SkaleModule module = SkaleModule.Load(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "assets", "music", "TrackMenu.skm")));
+            SkaleModule module = SkaleModule.Load(Path.Combine(AppContext.BaseDirectory, "assets", "music", "TrackMenu.json"));
             foreach (SkaleSample sample in module.Instruments.Values.SelectMany(instrument => instrument.Samples.Values))
             {
                 sample.Pcm = [.. Enumerable.Range(0, sample.Length).Select(i => (float)Math.Sin(i * 0.05))];
@@ -77,7 +77,7 @@ namespace Mooh.Presentation.Tests
 
         private static SkaleModule Instrument(int index, bool retrigger)
         {
-            SkaleModule module = SkaleModule.Load(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "assets", "music", "TrackMenu.skm")));
+            SkaleModule module = SkaleModule.Load(Path.Combine(AppContext.BaseDirectory, "assets", "music", "TrackMenu.json"));
             foreach (SkalePattern pattern in module.Patterns.Values)
             {
                 foreach (SkaleCell[] cells in pattern.Channels.Values)

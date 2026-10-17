@@ -36,7 +36,7 @@ namespace Mooh.Desktop
             ArgumentNullException.ThrowIfNull(audio);
             if (_tracks is null)
             {
-                using FileStream stream = File.OpenRead(Path.Combine(directory, "Music.ini"));
+                using FileStream stream = File.OpenRead(Path.Combine(directory, "Music.json"));
                 _tracks = MusicCatalog.Load(stream);
             }
 
@@ -47,7 +47,7 @@ namespace Mooh.Desktop
 
             if (!_modules.TryGetValue(track.File, out SkaleModule? module))
             {
-                module = SkaleModule.Load(File.ReadAllBytes(Path.Combine(directory, track.File + ".skm")));
+                module = SkaleModule.Load(Path.Combine(directory, track.File + ".json"));
                 foreach (SkaleSample sample in module.Instruments.Values.SelectMany(instrument => instrument.Samples.Values))
                 {
                     if (audio.DecodeMono(sample.Ogg) is (float[] decoded, _))

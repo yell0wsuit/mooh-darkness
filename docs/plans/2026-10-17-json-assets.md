@@ -17,3 +17,14 @@
 ## Verification
 
 Use serialized Release builds (`dotnet build Mooh.slnx -c Release --no-restore --disable-build-servers -m:1`) and executable xUnit assemblies; require a nonzero passing total. Run Python packaging tests and `git diff --check`. Verify final build from content directories without old binary/INI assets so stale copies cannot mask missing content. Do not claim interactive visual/audio acceptance from headless checks.
+
+
+## Completed verification
+
+- Compared all 62 converted atlases (6,623 effective frames) with the old reader's name, rectangle and signed-anchor output.
+- Preserved 151 ordered waypoints and 457 localized string values, including embedded newlines.
+- Compared the JSON tracker reader's complete semantic export with the old binary reader: all 49 patterns, 14 instruments and mappings matched, as did SHA-256 hashes of all 15 Ogg payloads.
+- Full Release solution build passed, including native WebAssembly linking. Compiler/analyzer style and documentation warnings remain; no build errors.
+- Fresh asset copies: 1,384 C# tests passed across all five suites. Python tooling: 21 passed. Browser JavaScript: 23 passed.
+- Actual uncached offline rendering generated all three cues and the browser packager produced 747 files (19.8 MiB); recording hashes included the JSON and sample files.
+- Inspected software-rendered main menu and options screenshots. Review caught bitmap-specific text overlay and checkbox-slot behavior; both were reproduced with failing tests, fixed, and included in the font checkpoint. GPU/browser interactive and audible playback acceptance were not performed.

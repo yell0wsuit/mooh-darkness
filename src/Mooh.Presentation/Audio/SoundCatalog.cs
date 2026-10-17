@@ -1,18 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Text.Json;
 
 namespace Mooh.Presentation.Audio
 {
-    /// <summary>
-    /// Reads the recovered <c>Sound.ini</c>, which the original's <c>soundCash.Load</c> reads: one
-    /// line per alias, <c>Alias,File1;File2;...,Buffers,Volume,Frequency</c>, where a volume or a
-    /// frequency is a value, a <c>from-to</c> range or empty for 1. Lines starting with <c>;</c> are
-    /// comments and with <c>#</c> are disabled.
-    /// </summary>
+    /// <summary>Reads JSON sound aliases with file choices, buffer counts, gain and pitch ranges.</summary>
     public sealed class SoundCatalog
     {
         private readonly Dictionary<string, SoundDefinition> _sounds;
@@ -40,54 +34,46 @@ namespace Mooh.Presentation.Audio
         }
 
         /// <summary>Reads a catalog.</summary>
-        /// <param name="stream">The <c>Sound.ini</c> bytes.</param>
+        /// <param name="stream">The <c>Sound.json</c> bytes.</param>
         /// <returns>The catalog.</returns>
         /// <exception cref="InvalidDataException">A line is malformed.</exception>
         public static SoundCatalog Load(Stream stream)
         {
             ArgumentNullException.ThrowIfNull(stream);
 
-            // The comments are Windows-1251 Russian; the entries themselves are ASCII.
-            using StreamReader reader = new(stream, Encoding.Latin1);
-            Dictionary<string, SoundDefinition> sounds = [with(StringComparer.Ordinal)];
-            while (reader.ReadLine() is string line)
+            try
             {
-                string entry = line.Trim();
-                if (entry.Length == 0 || entry[0] is ';' or '#')
+                using JsonDocument document = JsonDocument.Parse(stream);
+                Dictionary<string, SoundDefinition> sounds = new(StringComparer.Ordinal);
+                foreach (JsonProperty entry in document.RootElement.EnumerateObject())
                 {
-                    continue;
+                    JsonElement sound = entry.Value;
+                    string[] files = [.. sound.GetProperty("files").EnumerateArray().Select(file => file.GetString()
+                        ?? throw new InvalidDataException("A sound filename is null."))];
+                    int buffers = sound.GetProperty("buffers").GetInt32();
+                    if (buffers < 1 || !sounds.TryAdd(entry.Name, new SoundDefinition(entry.Name, files, buffers,
+                        Range(sound.GetProperty("volume")), Range(sound.GetProperty("frequency")))))
+                    {
+                        throw new InvalidDataException($"Sound '{entry.Name}' has invalid buffers or is duplicated.");
+                    }
                 }
-
-                string[] fields = entry.Split(',');
-                if (fields.Length < 3)
-                {
-                    throw new InvalidDataException($"The sound line '{entry}' has too few fields.");
-                }
-
-                string[] files = [.. fields[1].Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
-                int buffers = int.TryParse(fields[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int count) ? count : 1;
-                sounds[fields[0].Trim()] = new SoundDefinition(
-                    fields[0].Trim(),
-                    files,
-                    Math.Max(buffers, 1),
-                    Range(fields.ElementAtOrDefault(3)),
-                    Range(fields.ElementAtOrDefault(4)));
+                return new SoundCatalog(sounds);
             }
-
-            return new SoundCatalog(sounds);
+            catch (Exception error) when (error is JsonException or KeyNotFoundException or InvalidOperationException or FormatException)
+            {
+                throw new InvalidDataException("The sound catalog contains invalid JSON.", error);
+            }
         }
 
-        private static (double, double) Range(string? field)
+        private static (double, double) Range(JsonElement range)
         {
-            if (string.IsNullOrWhiteSpace(field))
+            if (range.GetArrayLength() != 2)
             {
-                return (1, 1);
+                throw new InvalidDataException("A sound range requires two values.");
             }
-
-            string[] ends = field.Split('-', StringSplitOptions.TrimEntries);
-            double from = double.Parse(ends[0], CultureInfo.InvariantCulture);
-            double to = ends.Length > 1 ? double.Parse(ends[1], CultureInfo.InvariantCulture) : from;
-            return (from, to);
+            double min = range[0].GetDouble(), max = range[1].GetDouble();
+            return double.IsFinite(min) && double.IsFinite(max) && min >= 0 && max >= min
+                ? (min, max) : throw new InvalidDataException("A sound range must be finite, ordered and nonnegative.");
         }
     }
 }

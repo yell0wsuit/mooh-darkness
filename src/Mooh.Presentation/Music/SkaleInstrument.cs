@@ -1,10 +1,12 @@
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
 
 namespace Mooh.Presentation.Music
 {
-    /// <summary>An instrument sample with its Ogg payload.</summary>
+    /// <summary>An instrument sample with its external Ogg payload.</summary>
     public sealed class SkaleSample
     {
         /// <summary>No loop.</summary>
@@ -157,7 +159,7 @@ namespace Mooh.Presentation.Music
         }
     }
 
-    /// <summary>An instrument stored in the version 6 format.</summary>
+    /// <summary>An instrument with note mappings, samples and envelopes loaded from JSON.</summary>
     public sealed class SkaleInstrument
     {
         private readonly List<(byte[] Samples, int Low, int High)>[] _groups = new List<(byte[], int, int)>[128];
@@ -248,150 +250,97 @@ namespace Mooh.Presentation.Music
             return null;
         }
 
-        internal static SkaleInstrument Read(byte[] data, int start, int end)
+        internal static SkaleInstrument Read(JsonElement data, Func<string, byte[]>? loadSample)
         {
-            SkaleModule.Reader reader = new(data, start);
             SkaleInstrument instrument = new()
             {
-                Index = reader.U8(),
+                Index = data.GetProperty("index").GetInt32(),
+                Fadeout = data.GetProperty("fadeout").GetInt32(),
+                NewNoteAction = data.GetProperty("newNoteAction").GetInt32(),
+                Volume = data.GetProperty("volume").GetSingle(),
+                Panning = data.GetProperty("panning").GetSingle(),
+                Transpose = data.GetProperty("transpose").GetInt32(),
+                Finetune = data.GetProperty("finetune").GetInt32(),
             };
-            _ = reader.CString();
+            if (instrument.Index is < 0 or > 255 || !float.IsFinite(instrument.Volume) || !float.IsFinite(instrument.Panning))
+            {
+                throw new InvalidDataException("Invalid tracker instrument index, gain or panning.");
+            }
+            JsonElement fixedNote = data.GetProperty("fixedNote"), groups = data.GetProperty("groups"),
+                selection = data.GetProperty("envelopeSelection"), effects = data.GetProperty("effectMap");
+            if (fixedNote.GetArrayLength() != 128 || groups.GetArrayLength() != 128
+                || selection.GetArrayLength() != 4 || effects.GetArrayLength() != 21)
+            {
+                throw new InvalidDataException("Tracker instrument mappings have incorrect lengths.");
+            }
             for (int note = 0; note < 128; note++)
             {
-                int groups = reader.U8();
-                for (int group = 0; group < groups; group++)
+                instrument.FixedNote[note] = fixedNote[note].GetBoolean();
+                foreach (JsonElement group in groups[note].EnumerateArray())
                 {
-                    int count = reader.U8();
-                    byte[] samples = reader.Raw(count);
-                    int low = reader.U8();
-                    int high = reader.U8();
+                    byte[] samples = [.. group.GetProperty("samples").EnumerateArray().Select(sample => sample.GetByte())];
+                    int low = group.GetProperty("low").GetInt32(), high = group.GetProperty("high").GetInt32();
+                    if (low < 0 || high < low || high > 255)
+                    {
+                        throw new InvalidDataException("Invalid sample velocity range.");
+                    }
                     instrument._groups[note].Add((samples, low, high));
                 }
-
-                instrument.FixedNote[note] = reader.U8() != 0;
             }
-
-            ReadOnlySpan<byte> block = data.AsSpan(reader.Position, 288);
-            reader.Position += 288;
-            instrument.Fadeout = BinaryPrimitives.ReadUInt16LittleEndian(block);
             for (int kind = 0; kind < 4; kind++)
             {
-                instrument._envelopeSelection[kind] = block[2 + kind];
+                instrument._envelopeSelection[kind] = selection[kind].GetInt32();
             }
-
-            instrument.NewNoteAction = block[8];
-            instrument.Volume = BinaryPrimitives.ReadSingleLittleEndian(block[9..]);
-            instrument.Panning = BinaryPrimitives.ReadSingleLittleEndian(block[13..]) + 0.5f;
-            instrument.Transpose = BinaryPrimitives.ReadUInt16LittleEndian(block[17..]);
-            instrument.Finetune = BinaryPrimitives.ReadUInt16LittleEndian(block[19..]);
             for (int effect = 0; effect < 21; effect++)
             {
-                instrument.EffectMap[effect] = block[25 + effect];
+                instrument.EffectMap[effect] = effects[effect].GetInt32();
             }
-
-            while (reader.Position + 8 <= end)
+            foreach (JsonElement item in data.GetProperty("envelopes").EnumerateArray())
             {
-                uint id = reader.U32();
-                int size = (int)reader.U32();
-                int type = (int)(id >> 16);
-                if (type == 0xFFFF)
+                SkaleEnvelope envelope = new()
                 {
-                    break;
-                }
-
-                int at = reader.Position;
-                if (type == 1)
+                    Kind = item.GetProperty("kind").GetInt32(),
+                    Slot = item.GetProperty("slot").GetInt32(),
+                    Enabled = item.GetProperty("enabled").GetBoolean(),
+                    SustainOn = item.GetProperty("sustainOn").GetBoolean(),
+                    SustainPoint = item.GetProperty("sustainPoint").GetInt32(),
+                    LoopOn = item.GetProperty("loopOn").GetBoolean(),
+                    LoopStart = item.GetProperty("loopStart").GetInt32(),
+                    LoopEnd = item.GetProperty("loopEnd").GetInt32(),
+                    TempoScaled = item.GetProperty("tempoScaled").GetBoolean(),
+                };
+                foreach (JsonElement point in item.GetProperty("points").EnumerateArray())
                 {
-                    SkaleSample sample = ReadSample(data, at, at + size);
-                    instrument._samples[sample.Index] = sample;
+                    envelope.Points.Add((point.GetProperty("x").GetInt32(), point.GetProperty("y").GetInt32()));
                 }
-                else if (type == 2)
+                if (envelope.Kind is < 1 or > 4 || !instrument._envelopes.TryAdd((envelope.Kind, envelope.Slot), envelope))
                 {
-                    SkaleEnvelope envelope = ReadEnvelope(data, at, at + size);
-                    if (envelope.Kind is >= 1 and <= 4)
-                    {
-                        instrument._envelopes[(envelope.Kind, envelope.Slot)] = envelope;
-                    }
+                    throw new InvalidDataException("Invalid or duplicated instrument envelope.");
                 }
-
-                reader.Position = at + size;
             }
-
+            foreach (JsonElement item in data.GetProperty("samples").EnumerateArray())
+            {
+                SkaleSample sample = new()
+                {
+                    Index = item.GetProperty("index").GetInt32(),
+                    Volume = item.GetProperty("volume").GetInt32(),
+                    Panning = item.GetProperty("panning").GetInt32(),
+                    Finetune = item.GetProperty("finetune").GetInt32(),
+                    RelativeNote = item.GetProperty("relativeNote").GetInt32(),
+                    LoopStart = item.GetProperty("loopStart").GetInt32(),
+                    LoopEnd = item.GetProperty("loopEnd").GetInt32(),
+                    LoopType = item.GetProperty("loopType").GetInt32(),
+                    Length = item.GetProperty("length").GetInt32(),
+                };
+                string? file = item.GetProperty("file").GetString();
+                sample.Ogg = file is null ? [] : (loadSample ?? throw new InvalidDataException("External samples require a file resolver."))(file);
+                if (sample.Length < 0 || sample.LoopStart < 0 || sample.LoopEnd < sample.LoopStart
+                    || sample.LoopType is < 0 or > 2 || !instrument._samples.TryAdd(sample.Index, sample))
+                {
+                    throw new InvalidDataException("Invalid or duplicated tracker sample.");
+                }
+            }
             return instrument;
-        }
-
-        private static SkaleEnvelope ReadEnvelope(byte[] data, int start, int end)
-        {
-            SkaleModule.Reader reader = new(data, start);
-            SkaleEnvelope envelope = new()
-            {
-                Slot = reader.U8(),
-                Kind = reader.U8(),
-                Enabled = reader.U8() != 0,
-            };
-            int count = reader.U8();
-            for (int point = 0; point < count; point++)
-            {
-                int x = reader.U16();
-                int y = reader.S16();
-                envelope.Points.Add((x, y));
-            }
-
-            if (reader.Position + 5 <= end)
-            {
-                envelope.SustainOn = reader.U8() != 0;
-                envelope.SustainPoint = reader.U8();
-                envelope.LoopOn = reader.U8() != 0;
-                envelope.LoopStart = reader.U8();
-                envelope.LoopEnd = reader.U8();
-            }
-
-            if (reader.Position < end)
-            {
-                envelope.TempoScaled = reader.U8() == 1;
-            }
-
-            return envelope;
-        }
-
-        private static SkaleSample ReadSample(byte[] data, int start, int end)
-        {
-            SkaleModule.Reader reader = new(data, start);
-            SkaleSample sample = new()
-            {
-                Index = reader.U8(),
-            };
-            _ = reader.CString();
-            sample.Volume = reader.U8();
-            sample.Panning = reader.U8();
-            sample.Finetune = (sbyte)reader.U8();
-            sample.RelativeNote = (sbyte)reader.U8();
-            _ = reader.U8();
-            sample.LoopStart = (int)reader.U32();
-            sample.LoopEnd = (int)reader.U32();
-            sample.LoopType = reader.U8();
-            while (reader.Position + 8 <= end)
-            {
-                uint id = reader.U32();
-                int size = (int)reader.U32();
-                if (id >> 16 == 0xFFFF)
-                {
-                    break;
-                }
-
-                int at = reader.Position;
-                if (id >> 16 == 1 && (id & 0xFFFF) == 4)
-                {
-                    // The sample subchunk stores the frame count, a byte, the payload size, then the payload.
-                    sample.Length = (int)BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(at));
-                    int payload = (int)BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(at + 5));
-                    sample.Ogg = data[(at + 9)..(at + 9 + payload)];
-                }
-
-                reader.Position = at + size;
-            }
-
-            return sample;
         }
     }
 }

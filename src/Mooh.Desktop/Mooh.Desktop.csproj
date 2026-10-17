@@ -25,11 +25,14 @@
     <Content Include="../../assets/map/*.json"
              Link="assets/map/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../assets/sounds/*.ogg;../../assets/sounds/Sound.ini"
+    <Content Include="../../assets/sounds/*.ogg;../../assets/sounds/Sound.json"
              Link="assets/sounds/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../assets/music/TrackMenu.skm;../../assets/music/Music.ini"
-             Link="assets/music/%(Filename)%(Extension)"
+    <Content Include="../../assets/music/TrackMenu.json;../../assets/music/Music.json"
+             Link="assets/music/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/music/samples/*.ogg"
+             Link="assets/music/samples/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../assets/animations/*.json"
              Link="assets/animations/%(Filename)%(Extension)"

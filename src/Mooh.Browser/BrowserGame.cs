@@ -41,7 +41,7 @@ namespace Mooh.Browser
             using FileStream animations = File.OpenRead(Path.Combine(assets, "animations", "animations.json"));
             using FileStream strings = File.OpenRead(Path.Combine(assets, "text", "strings.json"));
             using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", GameFont.FileName(HudPresenter.LevelFontName)));
-            using FileStream catalog = File.OpenRead(Path.Combine(assets, "sounds", "Sound.ini"));
+            using FileStream catalog = File.OpenRead(Path.Combine(assets, "sounds", "Sound.json"));
             TextProfileStore store = new(() => StorageInterop.Read("MoohDarkness.player-profile.v1"),
                 json => StorageInterop.Write("MoohDarkness.player-profile.v1", json));
             _masks = new SpriteMasks(Path.Combine(assets, "sprites"));

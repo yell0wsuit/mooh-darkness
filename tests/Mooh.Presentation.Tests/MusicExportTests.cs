@@ -15,7 +15,7 @@ namespace Mooh.Presentation.Tests
         [Fact]
         public void OrderTimestampsDoNotDependOnRenderBlockSize()
         {
-            SkaleModule module = SkaleModule.Load(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "assets", "music", "TrackMenu.skm")));
+            SkaleModule module = SkaleModule.Load(Path.Combine(AppContext.BaseDirectory, "assets", "music", "TrackMenu.json"));
             List<(int Order, long Frame)> Render(int chunk)
             {
                 SkalePlayer player = new(module, 44100, 0);

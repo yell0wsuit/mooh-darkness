@@ -74,7 +74,7 @@ namespace Mooh.Presentation.Tests
 
         private static SkaleModule IsolatedInstrument()
         {
-            SkaleModule module = SkaleModule.Load(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "assets", "music", "TrackMenu.skm")));
+            SkaleModule module = SkaleModule.Load(Path.Combine(AppContext.BaseDirectory, "assets", "music", "TrackMenu.json"));
             foreach (SkalePattern pattern in module.Patterns.Values)
             {
                 foreach (SkaleCell[] cells in pattern.Channels.Values)
