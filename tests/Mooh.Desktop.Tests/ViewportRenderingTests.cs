@@ -40,6 +40,8 @@ namespace Mooh.Desktop.Tests
         [InlineData(2520, 1080, "exterior")]
         [InlineData(600, 900, "exterior")]
         [InlineData(800, 600, "exterior")]
+        [InlineData(2520, 1080, "building")]
+        [InlineData(600, 900, "building")]
         [InlineData(2520, 1080, "scenery")]
         [InlineData(600, 900, "scenery")]
         public void ActualScreensFillWindowEdges(int width, int height, string screen)
@@ -60,7 +62,7 @@ namespace Mooh.Desktop.Tests
             {
                 shell.StartDirect(0, DifficultySpeeds.Standard);
             }
-            for (int frame = 0; frame < 120; frame++)
+            for (int frame = 0; frame < (screen == "building" ? 18 : 120); frame++)
             {
                 if (shell.Game is DesktopGame game)
                 {
@@ -92,6 +94,14 @@ namespace Mooh.Desktop.Tests
                     Assert.Contains(exteriorGame.Presenter.Sprites, sprite => sprite.Page == "SpriteCellWoodPipes");
                 }
             }
+            if (screen == "building" && shell.Game is DesktopGame buildingGame)
+            {
+                Assert.True(buildingGame.IsBuilding);
+                Assert.NotEmpty(buildingGame.Presenter.Sprites);
+                Assert.Contains(buildingGame.Presenter.Sprites, sprite => sprite.Entity == default);
+                Assert.Contains(buildingGame.Presenter.Sprites, sprite => sprite.Entity != default);
+            }
+
             using SceneRenderer scene = new(Path.Combine(assets, "sprites"));
             using HudRenderer hud = new(Path.Combine(assets, "fonts"));
             using ScreenRenderer screens = new(Path.Combine(assets, "screens"), scene, hud);

@@ -121,6 +121,10 @@ namespace Mooh.Desktop
                 StartLevelPresentation();
             }
 
+            // Include a resized viewport before advancing the last original flight, so
+            // newly exposed scenery cannot miss construction on its finishing frame.
+            _build?.IncludeView(Camera, Presenter.Scenery);
+
             List<SimulationEvent> events = [];
             foreach (ControlCommand command in commands)
             {
@@ -261,17 +265,22 @@ namespace Mooh.Desktop
                 Scenery = new ExteriorScenery(Session.Level.World, _library, Random.Shared.Next())
             };
             Hud = new HudPresenter(Session.Level.World, _strings, _random, _levelFont);
-            _skipBuild = false;
-            _build = new LevelBuild(Session.Level.World, _library, _random);
-            if (_build.IsDone)
-            {
-                Hud.ShowLevelTitle(Session.LevelIndex + 1);
-            }
             Camera = new SceneCamera
             {
                 HorizontalMargin = Camera.HorizontalMargin,
                 VerticalMargin = Camera.VerticalMargin
             };
+            if (Session.Level.World.Player is Entity player)
+            {
+                (double x, double y) = DrawnPosition.Of(player);
+                Camera.Snap(x, y);
+            }
+            _skipBuild = false;
+            _build = new LevelBuild(Session.Level.World, _library, _random, Camera, Presenter.Scenery);
+            if (_build.IsDone)
+            {
+                Hud.ShowLevelTitle(Session.LevelIndex + 1);
+            }
             LevelDocument level = Session.Level.Source;
             Backdrop = new Backdrop(
                 Backdrop.StyleOf(level.Objects?.Select(item => item.Type ?? string.Empty) ?? [], _library),
@@ -279,12 +288,6 @@ namespace Mooh.Desktop
                 level.Size.Height,
                 BackdropImageSize,
                 _random);
-            if (Session.Level.World.Player is Entity player)
-            {
-                (double x, double y) = DrawnPosition.Of(player);
-                Camera.Snap(x, y);
-            }
-
             Presenter.Update(Session.Level.World, [], 0, build: _build, camera: Camera);
             Hud.Update(Session.Level.World, [], Session.TotalScore, 0, Camera);
         }

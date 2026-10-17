@@ -77,6 +77,12 @@ namespace Mooh.Desktop.Tests
 
             game.Update(default, [], 0.5);
 
+            Assert.Empty(game.Presenter.Sprites);
+            for (int frame = 0; frame < 60 && game.IsBuilding; frame++)
+            {
+                game.Update(default, [], 0.05);
+            }
+
             Assert.NotEmpty(game.Presenter.Sprites);
             Assert.True(game.Session.Level.World.Entities.Any());
         }

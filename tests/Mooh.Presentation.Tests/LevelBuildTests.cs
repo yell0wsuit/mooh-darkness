@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Mooh.Core.Content;
 using Mooh.Core.Entities;
 using Mooh.Presentation.Scene;
 
@@ -14,6 +15,138 @@ namespace Mooh.Presentation.Tests
     /// </summary>
     public sealed class LevelBuildTests
     {
+        /// <summary>Thousands of exterior tiles share the launch window rather than adding a long queue.</summary>
+        [Fact]
+        public void ExpandedViewKeepsConstructionTimeBounded()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1));
+            ExteriorScenery scenery = new(harness.Level.World, SceneHarness.Library, 42);
+            SceneCamera camera = new()
+            {
+                HorizontalMargin = 1600,
+                VerticalMargin = 1600
+            };
+            camera.Snap(1, 1);
+            LevelBuild build = new(harness.Level.World, SceneHarness.Library, new System.Random(3), camera, scenery);
+            build.Advance(8);
+            Assert.True(build.IsDone);
+        }
+
+        /// <summary>The final scenery landing keeps the same settling spring after construction as authored objects.</summary>
+        [Fact]
+        public void SceneryKeepsItsLandingSpringAfterConstruction()
+        {
+            SceneHarness harness = new(SceneHarness.BuildLevel(1));
+            ExteriorScenery scenery = new(harness.Level.World, SceneHarness.Library, 42);
+            harness.Presenter.Scenery = scenery;
+            SceneCamera camera = new();
+            camera.Snap(1, 1);
+            LevelBuild build = new(harness.Level.World, SceneHarness.Library, new System.Random(3), camera, scenery);
+            build.Advance(10);
+            harness.Presenter.Update(harness.Level.World, [], 0, build: build, camera: camera);
+            Assert.True(build.IsDone);
+            Assert.Contains(harness.Presenter.Sprites, sprite => sprite.Entity == default && sprite.Page == "SpriteCellMetal"
+                && (System.Math.Abs(sprite.X - System.Math.Round(sprite.X)) > 0.001
+                    || System.Math.Abs(sprite.Y - System.Math.Round(sprite.Y)) > 0.001));
+
+            build.Advance(2);
+            harness.Presenter.Update(harness.Level.World, [], 0, build: build, camera: camera);
+            Assert.All(scenery.Layout(camera), sprite => Assert.Contains(sprite, harness.Presenter.Sprites));
+        }
+
+        /// <summary>Authored objects and scenery across the expanded view participate in the same shuffle.</summary>
+        [Theory]
+        [InlineData(1600, 0)]
+        [InlineData(0, 1600)]
+        public void ExpandedViewObjectsAndSceneryFlyIn(double horizontal, double vertical)
+        {
+            LevelDocument source = SceneHarness.BuildLevel(1, ("CellsEat01", 20, 1), ("CellsEat01", 1, 20));
+            SceneHarness harness = new(source with
+            {
+                Size = new LevelSize(24, 24)
+            });
+            harness.Presenter.Scenery = new ExteriorScenery(harness.Level.World, SceneHarness.Library, 42);
+            SceneCamera camera = new()
+            {
+                HorizontalMargin = horizontal,
+                VerticalMargin = vertical
+            };
+            camera.Snap(1, 1);
+            LevelBuild build = new(harness.Level.World, SceneHarness.Library, new System.Random(3), camera, harness.Presenter.Scenery);
+
+            harness.Presenter.Update(harness.Level.World, [], 0, build: build, camera: camera);
+            Assert.Empty(harness.Presenter.Sprites);
+
+            Entity extra = harness.Level.GetEntity(horizontal > 0 ? 200 : 201);
+            bool sawExtraFlight = false;
+            bool sawSceneryFlight = false;
+            for (int frame = 0; frame < 1000 && !build.IsDone; frame++)
+            {
+                build.Advance(0.016);
+                harness.Presenter.Update(harness.Level.World, [], 0, build: build, camera: camera);
+                if (!build.IsDone)
+                {
+                    sawExtraFlight |= harness.Presenter.Sprites.Any(sprite => sprite.Entity == extra.Id
+                        && (System.Math.Abs(sprite.X - extra.Position.X) > 0.1 || System.Math.Abs(sprite.Y - extra.Position.Y) > 0.1));
+                    sawSceneryFlight |= harness.Presenter.Sprites.Any(sprite => sprite.Entity == default
+                        && (System.Math.Abs(sprite.X - System.Math.Round(sprite.X)) > 0.1
+                            || System.Math.Abs(sprite.Y - System.Math.Round(sprite.Y)) > 0.1));
+                }
+            }
+            Assert.True(sawExtraFlight);
+            Assert.True(sawSceneryFlight);
+            Assert.True(build.IsDone);
+
+            build.Finish();
+            harness.Presenter.Update(harness.Level.World, [], 0, build: build, camera: camera);
+            Assert.Contains(harness.Presenter.Sprites, sprite => sprite.Entity == harness.Level.GetEntity(200).Id);
+            Assert.Contains(harness.Presenter.Sprites, sprite => sprite.Entity == harness.Level.GetEntity(201).Id);
+            Assert.Contains(harness.Presenter.Sprites, sprite => sprite.Entity == default);
+        }
+
+        /// <summary>Growing the viewport during construction schedules new flights without restarting old ones.</summary>
+        [Fact]
+        public void ResizingAddsFlightsAndSkipPlacesEverything()
+        {
+            LevelDocument source = SceneHarness.BuildLevel(1, ("CellsEat01", 20, 1));
+            SceneHarness harness = new(source with
+            {
+                Size = new LevelSize(24, 24)
+            });
+            ExteriorScenery scenery = new(harness.Level.World, SceneHarness.Library, 42);
+            harness.Presenter.Scenery = scenery;
+            SceneCamera camera = new();
+            camera.Snap(1, 1);
+            LevelBuild build = new(harness.Level.World, SceneHarness.Library, new System.Random(3), camera, scenery);
+            build.Advance(0.8);
+            harness.Presenter.Update(harness.Level.World, [], 0, build: build, camera: camera);
+            SceneSprite[] before = [.. harness.Presenter.Sprites];
+            camera.HorizontalMargin = 1600;
+            camera.VerticalMargin = 1600;
+            harness.Presenter.Update(harness.Level.World, [], 0, build: build, camera: camera);
+            Assert.All(before, sprite => Assert.Contains(sprite, harness.Presenter.Sprites));
+            Assert.DoesNotContain(harness.Presenter.Sprites, sprite => sprite.Entity == harness.Level.GetEntity(200).Id);
+
+            bool sawNewFlight = false;
+            for (int frame = 0; frame < 1000 && !build.IsDone; frame++)
+            {
+                build.Advance(0.016);
+                harness.Presenter.Update(harness.Level.World, [], 0, build: build, camera: camera);
+                sawNewFlight |= !build.IsDone && harness.Presenter.Sprites.Any(sprite => sprite.Entity == harness.Level.GetEntity(200).Id
+                    && (System.Math.Abs(sprite.X - 20) > 0.1 || System.Math.Abs(sprite.Y - 1) > 0.1));
+                if (sawNewFlight)
+                {
+                    break;
+                }
+            }
+            Assert.True(sawNewFlight);
+            build.Finish();
+            harness.Presenter.Update(harness.Level.World, [], 0, build: build, camera: camera);
+            Assert.True(build.IsDone);
+            Assert.Contains(harness.Presenter.Sprites, sprite => sprite.Entity == harness.Level.GetEntity(200).Id);
+            Assert.All(scenery.Layout(camera), sprite => Assert.Contains(sprite, harness.Presenter.Sprites));
+        }
+
         /// <summary>Verifies nothing in view, nor the player, shows for the first 750 ms.</summary>
         [Fact]
         public void TheViewStartsEmpty()

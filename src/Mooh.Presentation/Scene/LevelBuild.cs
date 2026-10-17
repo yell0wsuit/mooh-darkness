@@ -15,10 +15,12 @@ namespace Mooh.Presentation.Scene
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The objects within 6 columns and 5 rows of the player (the screen's cells around
-    /// <c>CNT_WrdBase</c>) are ordered by their distance in steps from the player. Each picks at
-    /// random a side it lies toward, starts on the opposite edge of the view (clipped to the
-    /// level) and flies straight to its cell. The first launches at <c>CNT_LvlBldDTime</c> =
+    /// The original view covers 6 columns and 5 rows around the player. An expanded camera
+    /// includes its full visible area and generated scenery, sharing the original launch
+    /// window. Objects are ordered by their distance in steps from the player. Each picks at
+    /// random a side it lies toward, starts on the opposite edge of the view and flies straight
+    /// to its cell. The original view clips its starting edges to the level; an expanded view
+    /// includes the exterior. The first launches at <c>CNT_LvlBldDTime</c> =
     /// 750 ms and the rest follow 40 ms apart, the gap closing toward 15 ms and the speed rising
     /// from 0.02 toward 0.06 cells/ms over the list. On landing an object jerks 3 to 5 px along
     /// its flight on the <c>CNT_GPrmFallThisStiffK</c> spring and plays <c>SndLvlBld</c>. The
@@ -40,6 +42,14 @@ namespace Mooh.Presentation.Scene
         private const int RowsAround = 5;
 
         private readonly Dictionary<EntityId, Flight> _flights = [];
+        private readonly Dictionary<GridPosition, Flight> _sceneryFlights = [];
+        private readonly List<Flight> _allFlights = [];
+        private readonly WorldGrid _world;
+        private readonly GridPosition _center;
+        private readonly int _referenceCount;
+        private readonly Random _sceneryRandom = new(0);
+        private (int Left, int Top, int Right, int Bottom)? _plannedBounds;
+        private ExteriorScenery? _plannedScenery;
         private readonly EntityId? _player;
         private readonly HashSet<EntityId> _entryDoors = [];
         private readonly string _landingSound;
@@ -51,23 +61,63 @@ namespace Mooh.Presentation.Scene
         /// <param name="world">The level's world.</param>
         /// <param name="library">The recovered sound names.</param>
         /// <param name="random">The source of the sides and the jerks.</param>
+        /// <param name="camera">The expanded view to construct, or the original view when omitted.</param>
+        /// <param name="scenery">The generated exterior to include in the fly-in.</param>
         /// <exception cref="ArgumentNullException">An argument is <see langword="null"/>.</exception>
-        public LevelBuild(WorldGrid world, AnimationLibrary library, Random random)
+        public LevelBuild(WorldGrid world, AnimationLibrary library, Random random, SceneCamera? camera = null, ExteriorScenery? scenery = null)
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(library);
             ArgumentNullException.ThrowIfNull(random);
             _random = random;
+            _world = world;
             _landingSound = library.Sound("SndLvlBld");
             if (world.Player is not Entity player)
             {
+                IsDone = true;
                 return;
             }
 
             _player = player.Id;
-            GridPosition center = player.Position;
-            List<(int Distance, Entity Entity)> inView = [];
-            foreach (Entity entity in world.Entities)
+            _center = player.Position;
+            _referenceCount = world.Entities.Count(entity => entity.Id != player.Id && entity.DoorBody is null
+                && Math.Abs(entity.Position.X - _center.X) <= ColumnsAround
+                && Math.Abs(entity.Position.Y - _center.Y) <= RowsAround);
+            IncludeView(camera, scenery);
+            IsDone = _allFlights.Count == 0;
+        }
+
+        /// <summary>Schedules newly exposed cells during a resize, preserving all existing flights.</summary>
+        /// <param name="camera">The current expanded view, or the original view when omitted.</param>
+        /// <param name="scenery">The exterior to construct alongside authored objects.</param>
+        public void IncludeView(SceneCamera? camera, ExteriorScenery? scenery)
+        {
+            if (IsDone || _player is null)
+            {
+                return;
+            }
+            GridPosition center = _center;
+            int left = center.X - ColumnsAround;
+            int top = center.Y - RowsAround;
+            int right = center.X + ColumnsAround;
+            int bottom = center.Y + RowsAround;
+            if (camera is not null)
+            {
+                (double baseX, double baseY) = camera.Base;
+                left = Math.Min(left, (int)Math.Floor((-camera.HorizontalMargin - baseX) / SceneCamera.CellWidth) - 2);
+                top = Math.Min(top, (int)Math.Floor((-camera.VerticalMargin - baseY) / SceneCamera.CellHeight) - 2);
+                right = Math.Max(right, (int)Math.Ceiling((800 + camera.HorizontalMargin - baseX) / SceneCamera.CellWidth) + 2);
+                bottom = Math.Max(bottom, (int)Math.Ceiling((600 + camera.VerticalMargin - baseY) / SceneCamera.CellHeight) + 2);
+            }
+            (int Left, int Top, int Right, int Bottom) bounds = (left, top, right, bottom);
+            if (_plannedBounds is { } planned && planned == bounds && ReferenceEquals(_plannedScenery, scenery))
+            {
+                return;
+            }
+            _plannedBounds = bounds;
+            _plannedScenery = scenery;
+            List<(EntityId? Id, GridPosition Cell)> inView = [];
+            foreach (Entity entity in _world.Entities)
             {
                 // The session creates this door eagerly; the original creates it in GameInit,
                 // after construction. Keep it out of the flights and hidden until then.
@@ -77,13 +127,23 @@ namespace Mooh.Presentation.Scene
                     continue;
                 }
 
-                int dx = entity.Position.X - center.X;
-                int dy = entity.Position.Y - center.Y;
-                if (entity.Id != player.Id
-                    && dx >= -ColumnsAround && dx < ColumnsAround + 1
-                    && dy >= -RowsAround && dy < RowsAround + 1)
+                if (entity.Id != _player && !_flights.ContainsKey(entity.Id)
+                    && entity.Position.X >= left && entity.Position.X <= right
+                    && entity.Position.Y >= top && entity.Position.Y <= bottom)
                 {
-                    inView.Add((Math.Abs(dx) + Math.Abs(dy), entity));
+                    inView.Add((entity.Id, entity.Position));
+                }
+            }
+
+            if (camera is not null && scenery is not null)
+            {
+                foreach (SceneSprite sprite in scenery.Layout(camera))
+                {
+                    GridPosition cell = new((int)sprite.X, (int)sprite.Y);
+                    if (!_sceneryFlights.ContainsKey(cell))
+                    {
+                        inView.Add((null, cell));
+                    }
                 }
             }
 
@@ -92,19 +152,23 @@ namespace Mooh.Presentation.Scene
                 return;
             }
 
-            (int left, int top, int right, int bottom) = (
-                Math.Max(0, center.X - ColumnsAround),
-                Math.Max(0, center.Y - RowsAround),
-                Math.Min(world.Width - 1, center.X + ColumnsAround),
-                Math.Min(world.Height - 1, center.Y + RowsAround));
-            double launch = FirstLaunchMilliseconds;
-            double gap = FirstGapMilliseconds;
-            double speed = FirstSpeed;
-            double gapStep = (LastGapMilliseconds - FirstGapMilliseconds) / inView.Count;
-            double speedStep = (LastSpeed - FirstSpeed) / inView.Count;
-            foreach ((_, Entity entity) in inView.OrderBy(item => item.Distance))
+            if (camera is null)
             {
-                GridPosition cell = entity.Position;
+                left = Math.Max(0, left);
+                top = Math.Max(0, top);
+                right = Math.Min(_world.Width - 1, right);
+                bottom = Math.Min(_world.Height - 1, bottom);
+            }
+            double launch = Math.Max(FirstLaunchMilliseconds, _milliseconds + FirstGapMilliseconds);
+            // More visible cells share the original view's launch window instead of
+            // multiplying the wait on ultrawide and tall screens.
+            double scale = camera is null ? 1 : Math.Min(1, Math.Max(1, _referenceCount) / (double)inView.Count);
+            double gap = FirstGapMilliseconds * scale;
+            double speed = FirstSpeed;
+            double gapStep = (LastGapMilliseconds - FirstGapMilliseconds) * scale / inView.Count;
+            double speedStep = (LastSpeed - FirstSpeed) / inView.Count;
+            foreach ((EntityId? id, GridPosition cell) in inView.OrderBy(item => Math.Abs(item.Cell.X - center.X) + Math.Abs(item.Cell.Y - center.Y)))
+            {
                 List<Direction> sides = [];
                 if (cell.X <= center.X)
                 {
@@ -126,6 +190,7 @@ namespace Mooh.Presentation.Scene
                     sides.Add(Direction.Down);
                 }
 
+                Random random = id is null ? _sceneryRandom : _random;
                 Direction side = sides[random.Next(sides.Count)];
                 (double startX, double startY) = side switch
                 {
@@ -135,7 +200,16 @@ namespace Mooh.Presentation.Scene
                     Direction.Down => (cell.X, top),
                     _ => (cell.X, cell.Y),
                 };
-                _flights[entity.Id] = new Flight(cell, side, Math.Round(launch), speed, startX, startY);
+                Flight flight = new(cell, side, Math.Round(launch), speed, startX, startY, random, id is not null);
+                if (id is EntityId entityId)
+                {
+                    _flights[entityId] = flight;
+                }
+                else
+                {
+                    _sceneryFlights[cell] = flight;
+                }
+                _allFlights.Add(flight);
                 launch += gap;
                 gap += gapStep;
                 speed += speedStep;
@@ -143,7 +217,10 @@ namespace Mooh.Presentation.Scene
         }
 
         /// <summary>Gets whether every object has landed, so play can start.</summary>
-        public bool IsDone => _flights.Values.All(flight => flight.Landed);
+        public bool IsDone
+        {
+            get; private set;
+        }
 
         /// <summary>Gets the landings' sounds of the last step.</summary>
         public IReadOnlyList<SoundCue> Sounds => _sounds;
@@ -155,7 +232,7 @@ namespace Mooh.Presentation.Scene
             double milliseconds = seconds * 1000;
             _milliseconds += milliseconds;
             List<SoundCue> sounds = [];
-            foreach (Flight flight in _flights.Values)
+            foreach (Flight flight in _allFlights)
             {
                 if (flight.Landed)
                 {
@@ -180,28 +257,60 @@ namespace Mooh.Presentation.Scene
                 }
 
                 Land(flight);
-                double jerk = 3 + (_random.NextDouble() * 2);
+                double jerk = 3 + (flight.Random.NextDouble() * 2);
                 flight.Jerk.Push(step.X * jerk, step.Y * jerk);
-                sounds.Add(new SoundCue(_landingSound, flight.Cell.X, flight.Cell.Y));
+                if (flight.PlaySound)
+                {
+                    sounds.Add(new SoundCue(_landingSound, flight.Cell.X, flight.Cell.Y));
+                }
             }
 
             _sounds = sounds;
+            IsDone = _allFlights.All(flight => flight.Landed);
         }
 
         /// <summary>Puts every object in place at once, as a key press does, <c>LvlBldObjFit</c>.</summary>
         public void Finish()
         {
             _sounds = [];
-            foreach (Flight flight in _flights.Values.Where(flight => !flight.Landed))
+            foreach (Flight flight in _allFlights)
             {
                 Land(flight);
+                flight.Jerk = new DampedSpring(0.01, -0.02);
             }
+            IsDone = true;
         }
 
-        /// <summary>Gets whether an entity is not drawn yet: the player until the end, an object until it launches.</summary>
+        /// <summary>Places or hides one generated tile using the same flight and landing spring as authored objects.</summary>
+        internal SceneSprite? PresentScenery(SceneSprite sprite)
+        {
+            return !_sceneryFlights.TryGetValue(new GridPosition((int)sprite.X, (int)sprite.Y), out Flight? flight)
+                ? IsDone ? sprite : null
+                : !flight.Shown ? null : flight.Landed
+                ? sprite with
+                {
+                    X = sprite.X + (flight.Jerk.X / SceneCamera.CellWidth),
+                    Y = sprite.Y + (flight.Jerk.Y / SceneCamera.CellHeight)
+                }
+                : sprite with
+                {
+                    X = flight.X,
+                    Y = flight.Y,
+                    Pass = 1
+                };
+        }
+
+        /// <summary>Drops completed scenery's cell keys once world rotation remaps the exterior.</summary>
+        internal void ForgetSceneryFlights()
+        {
+            _sceneryFlights.Clear();
+        }
+
+        /// <summary>Hides planned objects until launch and unplanned offscreen objects until construction finishes.</summary>
         internal bool Hides(EntityId id)
         {
-            return id == _player || _entryDoors.Contains(id) ? !IsDone : _flights.TryGetValue(id, out Flight? flight) && !flight.Shown;
+            return id == _player || _entryDoors.Contains(id) ? !IsDone
+                : _flights.TryGetValue(id, out Flight? flight) ? !flight.Shown : !IsDone;
         }
 
         /// <summary>Gets where an object is drawn during the fly-in, or <see langword="null"/> where it rests.</summary>
@@ -230,8 +339,11 @@ namespace Mooh.Presentation.Scene
             (flight.X, flight.Y) = (flight.Cell.X, flight.Cell.Y);
         }
 
-        private sealed class Flight(GridPosition cell, Direction side, double launch, double speed, double startX, double startY)
+        private sealed class Flight(GridPosition cell, Direction side, double launch, double speed, double startX, double startY, Random random, bool playSound)
         {
+            public Random Random { get; } = random;
+
+            public bool PlaySound { get; } = playSound;
             public GridPosition Cell { get; } = cell;
 
             public Direction Side { get; } = side;
@@ -259,7 +371,7 @@ namespace Mooh.Presentation.Scene
             }
 
             /// <summary>The landing jerk, <c>CNT_GPrmFallThisStiffK</c>: ω 0.01 and λ −0.02 per millisecond.</summary>
-            public DampedSpring Jerk { get; } = new(0.01, -0.02);
+            public DampedSpring Jerk { get; set; } = new(0.01, -0.02);
         }
     }
 }

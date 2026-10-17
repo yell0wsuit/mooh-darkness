@@ -125,6 +125,8 @@ namespace Mooh.Presentation.Scene
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(events);
 
+            build?.IncludeView(camera, Scenery);
+
             _clockMilliseconds += (bonusSeconds ?? seconds) * 1000;
             Dictionary<EntityId, Sighting> seen = _currentSeen;
             seen.Clear();
@@ -135,11 +137,26 @@ namespace Mooh.Presentation.Scene
                 foreach (WorldRotationCompleted turn in events.OfType<WorldRotationCompleted>())
                 {
                     scenery.Rotate(turn.Direction);
+                    build?.ForgetSceneryFlights();
                 }
 
-                if (camera is not null && build?.IsDone != false)
+                if (camera is not null)
                 {
-                    sprites.AddRange(scenery.Layout(camera, spin));
+                    IReadOnlyList<SceneSprite> exterior = scenery.Layout(camera, spin);
+                    if (build is null)
+                    {
+                        sprites.AddRange(exterior);
+                    }
+                    else
+                    {
+                        foreach (SceneSprite sprite in exterior)
+                        {
+                            if (build.PresentScenery(sprite) is SceneSprite shown)
+                            {
+                                sprites.Add(shown);
+                            }
+                        }
+                    }
                 }
             }
             List<SoundCue> sounds = [];
