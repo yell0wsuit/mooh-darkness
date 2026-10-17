@@ -9,6 +9,81 @@ namespace Mooh.Desktop.Tests
     /// <summary>Exercises the actual compositor with readable synthetic frames.</summary>
     public sealed class FramePresentationTests
     {
+        /// <summary>A full-color native-size menu draws directly on the supplied canvas.</summary>
+        [Fact]
+        public void FourByThreeMenuDoesNotNeedAnIntermediateSurface()
+        {
+            using FramePresentation presentation = new();
+            using SKBitmap bitmap = new(800, 600);
+            using SKCanvas canvas = new(bitmap);
+            presentation.Draw(canvas, 800, 600, false, true, (target, margin) =>
+            {
+                Assert.Same(canvas, target);
+                Assert.Equal(0, margin);
+                target.Clear(SKColors.Blue);
+                using SKPaint paint = new()
+                {
+                    Color = SKColors.Red
+                };
+                target.DrawRect(395, 295, 10, 10, paint);
+            });
+
+            Assert.Equal(SKColors.Red, bitmap.GetPixel(400, 300));
+            Assert.Equal(SKColors.Blue, bitmap.GetPixel(0, 0));
+        }
+
+        /// <summary>Scaled fixed screens retain the original 800x600 composition and filtering.</summary>
+        [Fact]
+        public void ScaledFourByThreeMenuRetainsLogicalPixelFiltering()
+        {
+            using FramePresentation presentation = new();
+            using SKBitmap bitmap = new(1600, 1200);
+            using SKCanvas canvas = new(bitmap);
+            presentation.Draw(canvas, 1600, 1200, false, true, (target, _) =>
+            {
+                target.Clear(SKColors.Black);
+                using SKPaint paint = new()
+                {
+                    Color = SKColors.Red
+                };
+                target.DrawRect(400, 300, 1, 1, paint);
+            });
+
+            // The logical pixel is linearly upscaled, preserving its soft edges.
+            SKColor edge = bitmap.GetPixel(800, 600);
+            Assert.InRange(edge.Red, (byte)100, (byte)200);
+            Assert.Equal(0, edge.Blue);
+            Assert.Equal(255, edge.Alpha);
+        }
+
+        /// <summary>Repeated menu frames and aspect changes must never reuse stale content.</summary>
+        [Fact]
+        public void MenuFramesRefreshAcrossAspectAndColorChanges()
+        {
+            using FramePresentation presentation = new();
+            foreach ((int width, int height, bool fullColor, SKColor color) in new[]
+            {
+                (1280, 720, true, SKColors.Red),
+                (800, 1420, true, SKColors.Blue),
+                (1600, 1200, true, SKColors.Green),
+                (1280, 720, false, SKColors.Red),
+                (1280, 720, true, SKColors.Blue)
+            })
+            {
+                using SKBitmap bitmap = new(width, height);
+                using SKCanvas canvas = new(bitmap);
+                int calls = 0;
+                presentation.Draw(canvas, width, height, false, fullColor, (target, _) =>
+                {
+                    calls++;
+                    target.Clear(color);
+                });
+                Assert.Equal(1, calls);
+                Assert.Equal(color, bitmap.GetPixel(width / 2, height / 2));
+                Assert.Equal(color, bitmap.GetPixel(0, 0));
+            }
+        }
+
         /// <summary>The wider view reveals sharp world content outside the old screen.</summary>
         [Theory]
         [InlineData(true)]

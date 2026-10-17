@@ -12,6 +12,7 @@ namespace Mooh.Desktop
         private readonly SKPaint _blurPaint;
         private SKSurface? _frame;
         private SKImageInfo _info;
+        private GRRecordingContext? _frameContext;
 
         public FramePresentation()
         {
@@ -48,17 +49,19 @@ namespace Mooh.Desktop
                 return;
             }
 
-            if (world && fullColor)
+            bool expandedWorld = world && fullColor;
+            bool directMenu = !world && fullColor && width == 800 && height == 600;
+            if (expandedWorld || directMenu)
             {
-                // Keep gameplay on the selected device at native resolution.
+                // Gameplay and native-size menus need no intermediate image or blurred borders.
                 float scale = Math.Min(width / 800f, height / 600f);
                 int worldSaved = canvas.Save();
                 canvas.ResetMatrix();
                 canvas.Clear(SKColors.Black);
                 canvas.Translate((width - (800 * scale)) / 2, (height - (600 * scale)) / 2);
                 canvas.Scale(scale);
-                float worldMargin = HorizontalMargin(width, height);
-                float worldVerticalMargin = VerticalMargin(width, height);
+                float worldMargin = world ? HorizontalMargin(width, height) : 0;
+                float worldVerticalMargin = world ? VerticalMargin(width, height) : 0;
                 canvas.ClipRect(SKRect.Create(-worldMargin, -worldVerticalMargin,
                     800 + (2 * worldMargin), 600 + (2 * worldVerticalMargin)));
                 draw(canvas, worldMargin);
@@ -68,11 +71,17 @@ namespace Mooh.Desktop
 
             SKImageInfo info = new(world ? WorldWidth(width, height) : 800, world ? WorldHeight(width, height) : 600,
                 fullColor ? SKColorType.Rgba8888 : SKColorType.Rgb565, SKAlphaType.Opaque);
-            if (_frame is null || _info != info)
+            // Borrow the destination's context; its owner controls its lifetime. A GPU
+            // render target avoids rasterizing and uploading the entire menu every frame.
+            GRRecordingContext? context = fullColor ? canvas.Context : null;
+            if (_frame is null || _info != info || _frameContext?.Handle != context?.Handle)
             {
                 _frame?.Dispose();
-                _frame = SKSurface.Create(info) ?? throw new InvalidOperationException("Cannot create the presentation surface.");
+                _frame = (context is null ? SKSurface.Create(info)
+                    : SKSurface.Create(context, true, info) ?? SKSurface.Create(info))
+                    ?? throw new InvalidOperationException("Cannot create the presentation surface.");
                 _info = info;
+                _frameContext = context;
             }
 
             SKCanvas target = _frame.Canvas;
