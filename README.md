@@ -25,6 +25,8 @@ dotnet run --project src/Mooh.Desktop -- --screen map --renderer software --seco
 
 Desktop rendering automatically tries Vulkan before OpenGL/software on Windows and Linux. Vulkan requires a Vulkan 1.1 loader and driver; `--renderer vulkan` forces it. macOS retains Metal/OpenGL/software because its Skia native package does not provide Vulkan.
 
+Visible space beyond the level boundary is filled with generated terrain matching the level, small patches of solid wood, stone and plant-covered blocks, connected pipe runs, and scattered decorative rocks. Rocks rest directly on dirt or ordinary solid terrain; on rounded supports such as metal and pipes, both roll-off routes must be blocked by side walls or a shelf below. Unsafe placements use matching dirt instead. The scenery stays fixed while moving or resizing the window and follows world rotations; placement rules are rechecked after each turn. Scenery exists only in memory and has no collisions; level JSON and its existing `size` remain unchanged.
+
 The legacy “Highest tone” color-depth option is removed; current hosts always render in full color.
 
 ## Browser version

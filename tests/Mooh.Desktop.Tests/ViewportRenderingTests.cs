@@ -6,6 +6,7 @@ using Mooh.Core.Session;
 using Mooh.Core.Simulation;
 using Mooh.Presentation.Animation;
 using Mooh.Presentation.Hud;
+using Mooh.Presentation.Scene;
 using Mooh.Presentation.Text;
 
 using SDL3;
@@ -36,14 +37,20 @@ namespace Mooh.Desktop.Tests
         [InlineData(800, 1420, "main")]
         [InlineData(600, 900, "pause")]
         [InlineData(800, 1420, "pause")]
+        [InlineData(2520, 1080, "exterior")]
+        [InlineData(600, 900, "exterior")]
+        [InlineData(800, 600, "exterior")]
+        [InlineData(2520, 1080, "scenery")]
+        [InlineData(600, 900, "scenery")]
         public void ActualScreensFillWindowEdges(int width, int height, string screen)
         {
             string assets = Path.Combine(AppContext.BaseDirectory, "assets");
             using FileStream animation = File.OpenRead(Path.Combine(assets, "animations", "animations.json"));
             using FileStream text = File.OpenRead(Path.Combine(assets, "text", "strings.bin"));
             using FileStream font = File.OpenRead(Path.Combine(assets, "fonts", HudPresenter.LevelFontName + ".fnt"));
+            AnimationLibrary library = AnimationLibrary.Load(animation);
             GameShell shell = new(assets, JsonLevelPackLoader.Load(Path.Combine(assets, "levels", "manifest.json")),
-                AnimationLibrary.Load(animation), StringTable.Load(text), BitmapFont.Load(HudPresenter.LevelFontName, font),
+                library, StringTable.Load(text), BitmapFont.Load(HudPresenter.LevelFontName, font),
                 new PlayerProfile(), null);
             if (screen == "main")
             {
@@ -70,7 +77,21 @@ namespace Mooh.Desktop.Tests
                     shell.Update(default, [], 0.1);
                 }
             }
-
+            if ((screen == "exterior" || screen == "scenery") && shell.Game is DesktopGame exteriorGame)
+            {
+                if (screen == "scenery")
+                {
+                    exteriorGame.Presenter.Scenery = new ExteriorScenery(exteriorGame.Session.Level.World, library, 42);
+                }
+                exteriorGame.Camera.Snap(screen == "scenery" ? -2 : 0, screen == "scenery" ? -12 : 0);
+                exteriorGame.Presenter.Update(exteriorGame.Session.Level.World, [], 0, camera: exteriorGame.Camera);
+                Assert.Contains(exteriorGame.Presenter.Sprites,
+                    sprite => sprite.X < 0 || sprite.Y < 0);
+                if (screen == "scenery")
+                {
+                    Assert.Contains(exteriorGame.Presenter.Sprites, sprite => sprite.Page == "SpriteCellWoodPipes");
+                }
+            }
             using SceneRenderer scene = new(Path.Combine(assets, "sprites"));
             using HudRenderer hud = new(Path.Combine(assets, "fonts"));
             using ScreenRenderer screens = new(Path.Combine(assets, "screens"), scene, hud);

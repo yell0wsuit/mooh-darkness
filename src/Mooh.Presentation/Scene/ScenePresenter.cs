@@ -97,6 +97,12 @@ namespace Mooh.Presentation.Scene
             get; private set;
         } = [];
 
+        /// <summary>Gets or sets the optional, purely visual terrain outside the level.</summary>
+        public ExteriorScenery? Scenery
+        {
+            get; set;
+        }
+
         /// <summary>Gets an entity's animator.</summary>
         /// <param name="id">The entity.</param>
         /// <returns>The animator, or <see langword="null"/> when the entity has none.</returns>
@@ -112,8 +118,9 @@ namespace Mooh.Presentation.Scene
         /// <param name="spin">The world rotation in flight, which turns every drawn position.</param>
         /// <param name="build">The level's fly-in, which hides and moves what it has not landed yet.</param>
         /// <param name="bonusSeconds">The elapsed real time for bonuses and clock-based layers when physics and object animation are paused.</param>
+        /// <param name="camera">The visible region to fill with exterior scenery.</param>
         /// <exception cref="ArgumentNullException"><paramref name="world"/> or <paramref name="events"/> is <see langword="null"/>.</exception>
-        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds, WorldSpin? spin = null, LevelBuild? build = null, double? bonusSeconds = null)
+        public void Update(WorldGrid world, IReadOnlyList<SimulationEvent> events, double seconds, WorldSpin? spin = null, LevelBuild? build = null, double? bonusSeconds = null, SceneCamera? camera = null)
         {
             ArgumentNullException.ThrowIfNull(world);
             ArgumentNullException.ThrowIfNull(events);
@@ -123,6 +130,18 @@ namespace Mooh.Presentation.Scene
             seen.Clear();
             List<SceneSprite> sprites = _spriteBuffer;
             sprites.Clear();
+            if (Scenery is ExteriorScenery scenery)
+            {
+                foreach (WorldRotationCompleted turn in events.OfType<WorldRotationCompleted>())
+                {
+                    scenery.Rotate(turn.Direction);
+                }
+
+                if (camera is not null && build?.IsDone != false)
+                {
+                    sprites.AddRange(scenery.Layout(camera, spin));
+                }
+            }
             List<SoundCue> sounds = [];
             List<(double X, double Y)> steps = _steps;
             steps.Clear();

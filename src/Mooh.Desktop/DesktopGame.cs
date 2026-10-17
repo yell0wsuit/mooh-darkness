@@ -141,7 +141,7 @@ namespace Mooh.Desktop
             {
                 events.AddRange(Session.Simulation.AdvanceBonusTimers(TimeSpan.FromSeconds(seconds)));
                 _build?.Advance(0);
-                Presenter.Update(Session.Level.World, events, 0, CurrentSpin, _build, bonusSeconds: seconds);
+                Presenter.Update(Session.Level.World, events, 0, CurrentSpin, _build, bonusSeconds: seconds, camera: Camera);
                 Sounds = Presenter.Sounds;
                 Backdrop.Advance(seconds);
                 Hud.Update(Session.Level.World, events, Session.TotalScore, seconds, Camera);
@@ -189,7 +189,7 @@ namespace Mooh.Desktop
             }
 
             FollowWorldRotation(events, pivot);
-            Presenter.Update(Session.Level.World, events, seconds, CurrentSpin, _build);
+            Presenter.Update(Session.Level.World, events, seconds, CurrentSpin, _build, camera: Camera);
             Sounds = Presenter.Sounds;
             Backdrop.Advance(seconds);
             if (Session.Level.World.Player is Entity player)
@@ -256,7 +256,10 @@ namespace Mooh.Desktop
             _outcomeSeconds = 0;
             PlaySeconds = 0;
             OutcomeReady = false;
-            Presenter = new ScenePresenter(_library, _random, _strings, _masks);
+            Presenter = new ScenePresenter(_library, _random, _strings, _masks)
+            {
+                Scenery = new ExteriorScenery(Session.Level.World, _library, Random.Shared.Next())
+            };
             Hud = new HudPresenter(Session.Level.World, _strings, _random, _levelFont);
             _skipBuild = false;
             _build = new LevelBuild(Session.Level.World, _library, _random);
@@ -282,7 +285,7 @@ namespace Mooh.Desktop
                 Camera.Snap(x, y);
             }
 
-            Presenter.Update(Session.Level.World, [], 0, build: _build);
+            Presenter.Update(Session.Level.World, [], 0, build: _build, camera: Camera);
             Hud.Update(Session.Level.World, [], Session.TotalScore, 0, Camera);
         }
     }
