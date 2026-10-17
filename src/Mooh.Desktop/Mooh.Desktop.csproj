@@ -4,6 +4,11 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>Mooh</AssemblyName>
     <RootNamespace>Mooh.Desktop</RootNamespace>
+    <IncludeSourceRevisionInInformationalVersion Condition="'$(VersionSuffix)' == ''">false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <PublishSingleFile Condition="'$(PublishAot)' != 'true'">true</PublishSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Mooh.Desktop.Platform/Mooh.Desktop.Platform.csproj" />
@@ -38,5 +43,8 @@
     <Content Include="../../assets/text/*.bin"
              Link="assets/text/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="@(Content)" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 </Project>

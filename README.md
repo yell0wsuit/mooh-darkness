@@ -54,6 +54,24 @@ dotnet tests/Mooh.Desktop.Platform.Tests/bin/Debug/net10.0/Mooh.Desktop.Platform
 dotnet tests/Mooh.SimulationRunner.Tests/bin/Debug/net10.0/Mooh.SimulationRunner.Tests.dll
 ```
 
+## GitHub Actions and releases
+
+The workflows follow Contre Jour DX: PRs and pushes to `main` check formatting, build the solution, and run the five managed test suites plus desktop packaging tests. Browser/web test suites remain local and are not run in CI.
+
+Run **Deploy Browser to GitHub Pages** manually after selecting GitHub Actions as the repository's Pages source. It installs ffmpeg as a build dependency, caches converted Opus content and SFX, publishes both AOT browser runtimes, and deploys `wwwroot`. No ffmpeg binary ships with the site or desktop game.
+
+Pushing a `vX.Y.Z` tag or manually running **Release** creates Windows x64 `.7z`, macOS arm64 `.dmg`, and Linux x64 `.AppImage` bundles. A `feat:` or `fix:` commit pushed to `main` creates a `0.1.0-prerelease+<run number>` through the same release workflow. Linux packages retain a bundled .NET runtime rather than NativeAOT for compatibility. Cache Cleanup removes closed-PR caches daily and when same-repository PRs close.
+
+Local packaging commands:
+
+```bash
+python3 distribution/release_windows.py 0.1.0
+USE_AOT=true ./distribution/bundle_macos.sh 0.1.0
+./distribution/build_appimage.sh 0.1.0
+```
+
+Artifacts are written to `src/Mooh.Desktop/bin/release_github`. Windows packaging requires 7-Zip; Linux downloads appimagetool. Desktop packages use the original raw assets, and macOS keeps them under the app's Resources directory with an executable-relative symlink.
+
 ## Deterministic simulation scenarios
 
 `Mooh.SimulationRunner` executes self-verifying headless simulation scenarios. Each JSON

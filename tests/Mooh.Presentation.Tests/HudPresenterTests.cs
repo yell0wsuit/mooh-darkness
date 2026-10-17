@@ -22,7 +22,7 @@ namespace Mooh.Presentation.Tests
         {
             HudRun run = new(SceneHarness.BuildLevel(1, ("OKDKey1", 2, 1), ("OKDKey2", 3, 1), ("OKDKey3", 4, 1)))
             {
-                Camera = new Mooh.Presentation.Scene.SceneCamera { HorizontalMargin = 400.0 / 3 }
+                Camera = new Scene.SceneCamera { HorizontalMargin = 400.0 / 3 }
             };
             run.Step(0.016);
             Assert.Equal(new HudSprite("PSmKeyBlue", 480, 600), run.Sprite("PSmKeyBlue"));

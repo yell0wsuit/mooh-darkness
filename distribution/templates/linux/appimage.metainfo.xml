@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>{{APP_ID}}</id>
+  <name>{{APP_DISPLAY_NAME}}</name>
+  <summary>A desktop port of Mooh: The Jewel of Darkness</summary>
+  <metadata_license>CC-BY-SA-4.0</metadata_license>
+  <developer id="{{APP_ID}}">
+    <name>yell0wsuit</name>
+  </developer>
+  <description>
+    <p>Mooh Darkness is a desktop port of Mooh: The Jewel of Darkness, built with .NET and SDL.</p>
+  </description>
+  <launchable type="desktop-id">{{APP_NAME}}.desktop</launchable>
+  <url type="homepage">https://github.com/yell0wsuit/mooh-darkness</url>
+  <provides>
+    <binary>{{EXEC_NAME}}</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="{{VERSION}}" date="{{RELEASE_DATE}}"/>
+  </releases>
+</component>

@@ -1,0 +1,68 @@
+name: PR Code Quality
+
+# Main populates the caches that PR jobs restore without saving PR-only copies.
+on:
+    push:
+        branches: [main]
+        paths: &quality-paths
+            - "**/*.cs"
+            - "**/*.csproj"
+            - "**/*.props"
+            - "**/*.targets"
+            - "**/*.slnx"
+            - ".editorconfig"
+            - "global.json"
+            - "nuget.config"
+            - ".github/**"
+            - "distribution/**"
+            - "tools/**"
+            - "assets/**"
+    pull_request:
+        branches: [main]
+        paths: *quality-paths
+
+permissions:
+    contents: read
+
+jobs:
+    code-quality:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: ./.github/actions/setup-dotnet
+
+            # Compile the browser project in the solution; browser/web tests stay local.
+            - name: Install WebAssembly workload
+              run: dotnet workload install wasm-tools
+            - name: Restore dependencies
+              run: dotnet restore Mooh.slnx
+            - name: Check formatting
+              run: dotnet format Mooh.slnx --verify-no-changes --no-restore --verbosity diagnostic
+            - name: Build
+              run: dotnet build Mooh.slnx --no-restore -c Release
+
+            # Run the xUnit executables directly so the SDK's test-runner selection
+            # cannot turn these into a successful wrapper run that executes no tests.
+            - name: Test core
+              run: dotnet tests/Mooh.Core.Tests/bin/Release/net10.0/Mooh.Core.Tests.dll
+            - name: Test presentation
+              run: dotnet tests/Mooh.Presentation.Tests/bin/Release/net10.0/Mooh.Presentation.Tests.dll
+            - name: Test desktop
+              run: dotnet tests/Mooh.Desktop.Tests/bin/Release/net10.0/Mooh.Desktop.Tests.dll
+            - name: Test desktop platform
+              run: dotnet tests/Mooh.Desktop.Platform.Tests/bin/Release/net10.0/Mooh.Desktop.Platform.Tests.dll
+            - name: Test simulation runner
+              run: dotnet tests/Mooh.SimulationRunner.Tests/bin/Release/net10.0/Mooh.SimulationRunner.Tests.dll
+
+    distribution-quality:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-python@v7
+              with:
+                  python-version: "3.14"
+            - run: python -m pip install pytest
+            - name: Test desktop packaging
+              run: python -m pytest distribution/tests -q
+            - name: Check shell scripts
+              run: shellcheck distribution/*.sh

@@ -29,7 +29,7 @@ namespace Mooh.Core.Tests.Session
         [InlineData(null)]
         [InlineData("{broken")]
         [InlineData("null")]
-        [InlineData("{\"version\":99}")]
+        [InlineData(/*lang=json,strict*/ "{\"version\":99}")]
         public void InvalidSaveReturnsDefaults(string? saved)
         {
             PlayerProfile profile = new TextProfileStore(() => saved, _ => { }).Load();
