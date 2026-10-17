@@ -40,9 +40,58 @@ namespace Mooh.Desktop.Tests
             Assert.Equal(0.325f, output.Feeds[1].Volume);
         }
 
+        /// <summary>Screen cues sharing a module reuse its decoded samples, even after playback stops.</summary>
+        [Fact]
+        public void CueChangesDecodeTheSharedModuleOnlyOnce()
+        {
+            TestAudio output = new();
+            using MusicDirector director = new(output, Path.Combine(AppContext.BaseDirectory, "assets", "music"));
+            director.Update("menu", 1);
+            int decoded = output.DecodeCalls;
+            Assert.True(decoded > 0);
+
+            director.Update("game", 1);
+            director.Update("gameend", 1);
+            director.Update(string.Empty, 1);
+            director.Update("menu", 1);
+
+            Assert.Equal(decoded, output.DecodeCalls);
+            Assert.Equal(4, output.Feeds.Count);
+            Assert.All(output.Feeds.GetRange(0, 3), feed => Assert.True(feed.Disposed));
+            Assert.False(output.Feeds[3].Disposed);
+        }
+
+        /// <summary>A fresh tracker restarts a cue identically without inheriting another cue's state.</summary>
+        [Fact]
+        public void CachedSamplesPreserveRestartedCueOutput()
+        {
+            TestAudio output = new()
+            {
+                DecodeSamples = true
+            };
+            using MusicDirector director = new(output, Path.Combine(AppContext.BaseDirectory, "assets", "music"));
+            director.Update("menu", 1);
+            float[] original = [.. output.Feeds[0].Samples];
+            Assert.Contains(original, value => value != 0);
+            int decoded = output.DecodeCalls;
+            director.Update("game", 1);
+            director.Update("menu", 1);
+
+            Assert.Equal(original, output.Feeds[2].Samples);
+            Assert.Equal(decoded, output.DecodeCalls);
+        }
+
         private sealed class TestAudio : IAudioOutput
         {
             public List<TestFeed> Feeds { get; } = [];
+            public bool DecodeSamples
+            {
+                get; init;
+            }
+            public int DecodeCalls
+            {
+                get; private set;
+            }
             public object? Load(string path)
             {
                 return null;
@@ -53,7 +102,18 @@ namespace Mooh.Desktop.Tests
             }
             public (float[] Samples, int Rate)? DecodeMono(byte[] encoded)
             {
-                return null;
+                DecodeCalls++;
+                if (!DecodeSamples)
+                {
+                    return null;
+                }
+
+                float[] pcm = new float[128];
+                for (int i = 0; i < pcm.Length; i++)
+                {
+                    pcm[i] = MathF.Sin(i * 0.1f);
+                }
+                return (pcm, 44100);
             }
             public IAudioFeed OpenFeed(int rate)
             {
@@ -69,6 +129,7 @@ namespace Mooh.Desktop.Tests
         private sealed class TestFeed : IAudioFeed
         {
             public List<float> WriteVolumes { get; } = [];
+            public List<float> Samples { get; } = [];
             public int QueuedFrames
             {
                 get; private set;
@@ -84,6 +145,7 @@ namespace Mooh.Desktop.Tests
             public void Write(ReadOnlySpan<float> interleaved)
             {
                 WriteVolumes.Add(Volume);
+                Samples.AddRange(interleaved.ToArray());
                 QueuedFrames += interleaved.Length / 2;
             }
             public void Dispose()

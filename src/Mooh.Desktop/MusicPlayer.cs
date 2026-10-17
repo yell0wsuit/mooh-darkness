@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 using Mooh.Desktop.Platform.Audio;
 using Mooh.Presentation.Music;
@@ -31,33 +28,15 @@ namespace Mooh.Desktop
 
         /// <summary>Starts a track.</summary>
         /// <param name="output">The audio output.</param>
-        /// <param name="musicDirectory">The folder holding <c>Music.ini</c> and the modules.</param>
-        /// <param name="trackName">The track, such as <c>game</c>.</param>
+        /// <param name="module">The cached module with decoded samples.</param>
+        /// <param name="track">The cue's start position and gain.</param>
         /// <param name="volume">The user's music gain, applied before playback is queued.</param>
-        /// <returns>The playing music, or <see langword="null"/> when there is no output or no such track.</returns>
-        public static MusicPlayer? Start(IAudioOutput output, string musicDirectory, string trackName, double volume = 1)
+        /// <returns>The playing music, or <see langword="null"/> when there is no output.</returns>
+        public static MusicPlayer? Start(IAudioOutput output, SkaleModule module, MusicTrack track, double volume = 1)
         {
             ArgumentNullException.ThrowIfNull(output);
-            IReadOnlyDictionary<string, MusicTrack> tracks;
-            using (FileStream stream = File.OpenRead(Path.Combine(musicDirectory, "Music.ini")))
-            {
-                tracks = MusicCatalog.Load(stream);
-            }
-
-            if (!tracks.TryGetValue(trackName, out MusicTrack? track))
-            {
-                return null;
-            }
-
-            SkaleModule module = SkaleModule.Load(File.ReadAllBytes(Path.Combine(musicDirectory, track.File + ".skm")));
-            foreach (SkaleSample sample in module.Instruments.Values.SelectMany(instrument => instrument.Samples.Values))
-            {
-                if (output.DecodeMono(sample.Ogg) is (float[] decoded, _))
-                {
-                    sample.SetDecoded(decoded);
-                }
-            }
-
+            ArgumentNullException.ThrowIfNull(module);
+            ArgumentNullException.ThrowIfNull(track);
             IAudioFeed? feed = output.OpenFeed(Rate);
             if (feed is null)
             {
