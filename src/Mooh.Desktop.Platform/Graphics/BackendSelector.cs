@@ -35,7 +35,7 @@ namespace Mooh.Desktop.Platform.Graphics
                 : platform switch
                 {
                     "macos" => [GraphicsBackendKind.Metal, GraphicsBackendKind.OpenGL, GraphicsBackendKind.Software],
-                    "windows" or "linux" => [GraphicsBackendKind.OpenGL, GraphicsBackendKind.Software],
+                    "windows" or "linux" => [GraphicsBackendKind.Vulkan, GraphicsBackendKind.OpenGL, GraphicsBackendKind.Software],
                     _ => throw new PlatformNotSupportedException(platform),
                 };
         }

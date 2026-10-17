@@ -5,6 +5,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Mooh.Desktop.Platform.Tests" />
     <PackageReference Include="SDL3-CS" />
     <PackageReference Include="SDL3-CS.Windows" />
     <PackageReference Include="SDL3-CS.Linux" />

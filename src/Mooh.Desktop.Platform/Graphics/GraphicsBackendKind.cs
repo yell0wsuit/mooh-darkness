@@ -11,5 +11,8 @@ namespace Mooh.Desktop.Platform.Graphics
 
         /// <summary>Skia drawing on the CPU, presented through SDL's software renderer.</summary>
         Software,
+
+        /// <summary>Skia on Vulkan 1.1, presented through SDL (Windows and Linux).</summary>
+        Vulkan,
     }
 }

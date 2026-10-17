@@ -21,7 +21,9 @@ dotnet run --project src/Mooh.Desktop -- --level 1 --seconds 10 --screenshot gam
 dotnet run --project src/Mooh.Desktop -- --screen map --renderer software --seconds 1 --screenshot map.png
 ```
 
-`--screen` also accepts `intro`, `main`, `options`, `scores`, `prelevel`, `pause`, `statistics`, `complete` and `outro`. Screen inspection uses a temporary in-memory profile. New Game and Continue proceed directly when their data is ready, without a decorative loading timer or keypress gate. The default window is 1280×720. Gameplay expands horizontally on wide windows and vertically on tall windows at the original sprite scale. HUD panels stay within a centered 16:9 area on wide windows and the original 800×600 area on tall windows; fixed 800×600 screens stay centered over a Gaussian-blurred backdrop. Resizing to 4:3 preserves the original gameplay view; the renderer can be selected with `--renderer metal|opengl|software`.
+`--screen` also accepts `intro`, `main`, `options`, `scores`, `prelevel`, `pause`, `statistics`, `complete` and `outro`. Screen inspection uses a temporary in-memory profile. New Game and Continue proceed directly when their data is ready, without a decorative loading timer or keypress gate. The default window is 1280×720. Gameplay expands horizontally on wide windows and vertically on tall windows at the original sprite scale. HUD panels stay within a centered 16:9 area on wide windows and the original 800×600 area on tall windows; fixed 800×600 screens stay centered over a Gaussian-blurred backdrop. Resizing to 4:3 preserves the original gameplay view; the renderer can be selected with `--renderer metal|vulkan|opengl|software`.
+
+Desktop rendering automatically tries Vulkan before OpenGL/software on Windows and Linux. Vulkan requires a Vulkan 1.1 loader and driver; `--renderer vulkan` forces it. macOS retains Metal/OpenGL/software because its Skia native package does not provide Vulkan.
 
 ## Build and test
 

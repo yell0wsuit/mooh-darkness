@@ -124,6 +124,7 @@ namespace Mooh.Desktop
             {
                 GraphicsBackendKind.Metal => new MetalDevice(),
                 GraphicsBackendKind.OpenGL => new SdlGlDevice(),
+                GraphicsBackendKind.Vulkan => new VulkanDevice(),
                 GraphicsBackendKind.Software => new SdlSoftwareDevice(),
                 _ => throw new PlatformNotSupportedException($"The {kind} renderer is not available."),
             };

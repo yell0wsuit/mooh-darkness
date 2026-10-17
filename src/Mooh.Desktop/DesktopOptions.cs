@@ -34,11 +34,12 @@ namespace Mooh.Desktop
     {
         /// <summary>The usage line.</summary>
         internal const string Usage =
-            "Mooh [--level N] [--difficulty 0|1|2] [--renderer metal|opengl|software] [--frames N | --seconds S] [--screenshot file.png] [--input 2=r,3.5=rf,4=] [--screen intro|main|map|options|scores|prelevel|pause|statistics|complete|outro]";
+            "Mooh [--level N] [--difficulty 0|1|2] [--renderer metal|vulkan|opengl|software] [--frames N | --seconds S] [--screenshot file.png] [--input 2=r,3.5=rf,4=] [--screen intro|main|map|options|scores|prelevel|pause|statistics|complete|outro]";
 
         private static readonly Dictionary<string, GraphicsBackendKind> Renderers = new(StringComparer.Ordinal)
         {
             ["metal"] = GraphicsBackendKind.Metal,
+            ["vulkan"] = GraphicsBackendKind.Vulkan,
             ["opengl"] = GraphicsBackendKind.OpenGL,
             ["software"] = GraphicsBackendKind.Software,
         };

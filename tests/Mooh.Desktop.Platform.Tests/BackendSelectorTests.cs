@@ -13,31 +13,35 @@ namespace Mooh.Desktop.Platform.Tests
         /// <summary>Verifies each platform's preference order, ending in the software renderer.</summary>
         [Theory]
         [InlineData("macos", new[] { GraphicsBackendKind.Metal, GraphicsBackendKind.OpenGL, GraphicsBackendKind.Software })]
-        [InlineData("windows", new[] { GraphicsBackendKind.OpenGL, GraphicsBackendKind.Software })]
-        [InlineData("linux", new[] { GraphicsBackendKind.OpenGL, GraphicsBackendKind.Software })]
+        [InlineData("windows", new[] { GraphicsBackendKind.Vulkan, GraphicsBackendKind.OpenGL, GraphicsBackendKind.Software })]
+        [InlineData("linux", new[] { GraphicsBackendKind.Vulkan, GraphicsBackendKind.OpenGL, GraphicsBackendKind.Software })]
         public void EachPlatformTriesItsBestRendererFirst(string platform, GraphicsBackendKind[] expected)
         {
             Assert.Equal(expected, BackendSelector.PreferenceOrder(platform, forced: null));
         }
 
         /// <summary>Verifies a forced renderer is the only candidate.</summary>
-        [Fact]
-        public void AForcedRendererIsTheOnlyCandidate()
+        [Theory]
+        [InlineData(GraphicsBackendKind.Software)]
+        [InlineData(GraphicsBackendKind.Vulkan)]
+        public void AForcedRendererIsTheOnlyCandidate(GraphicsBackendKind kind)
         {
-            Assert.Equal([GraphicsBackendKind.Software], BackendSelector.PreferenceOrder("macos", GraphicsBackendKind.Software));
+            Assert.Equal([kind], BackendSelector.PreferenceOrder("macos", kind));
         }
 
         /// <summary>
         /// Verifies a candidate that fails validation is released, with everything it acquired,
         /// and the next one is kept.
         /// </summary>
-        [Fact]
-        public void AFailedCandidateIsReleasedAndTheNextKept()
+        [Theory]
+        [InlineData(GraphicsBackendKind.Metal)]
+        [InlineData(GraphicsBackendKind.Vulkan)]
+        public void AFailedCandidateIsReleasedAndTheNextKept(GraphicsBackendKind failing)
         {
             List<string> released = [];
 
             using GraphicsSelection<Probe> selection = BackendSelector.Attempt(
-                [GraphicsBackendKind.Metal, GraphicsBackendKind.Software],
+                [failing, GraphicsBackendKind.Software],
                 (kind, lifetime) =>
                 {
                     _ = lifetime.Own(new Release(() => released.Add($"{kind} resource")));
@@ -45,16 +49,16 @@ namespace Mooh.Desktop.Platform.Tests
                 },
                 probe =>
                 {
-                    if (probe.Kind == GraphicsBackendKind.Metal)
+                    if (probe.Kind == failing)
                     {
                         throw new InvalidOperationException("no drawable");
                     }
                 });
 
             Assert.Equal(GraphicsBackendKind.Software, selection.Kind);
-            Assert.Equal(["Metal device", "Metal resource"], released);
+            Assert.Equal([$"{failing} device", $"{failing} resource"], released);
             RendererFailure failure = Assert.Single(selection.Failures);
-            Assert.Equal(GraphicsBackendKind.Metal, failure.Kind);
+            Assert.Equal(failing, failure.Kind);
         }
 
         /// <summary>Verifies running out of candidates names every one that was passed over.</summary>

@@ -24,6 +24,15 @@ namespace Mooh.Desktop.Tests
             Assert.Null(options.ScreenshotPath);
         }
 
+        /// <summary>Verifies Vulkan can be explicitly selected without enabling fallback.</summary>
+        [Fact]
+        public void VulkanCanBeSelected()
+        {
+            DesktopOptions options = DesktopOptions.Parse(["--renderer", "vulkan"]);
+
+            Assert.Equal(GraphicsBackendKind.Vulkan, options.Renderer);
+        }
+
         /// <summary>Verifies every option is read.</summary>
         [Fact]
         public void EveryOptionIsRead()
@@ -63,7 +72,7 @@ namespace Mooh.Desktop.Tests
         [Theory]
         [InlineData("--level")]
         [InlineData("--level", "0")]
-        [InlineData("--renderer", "vulkan")]
+        [InlineData("--renderer", "unknown")]
         [InlineData("--bogus")]
         [InlineData("--input", "2=x")]
         public void ABadOptionIsRefused(params string[] arguments)
