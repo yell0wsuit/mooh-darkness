@@ -191,6 +191,29 @@ namespace Mooh.Core.Grid
                 : !_occupancy.TryGetValue(position, out List<EntityId>? occupants) ? [] : [.. occupants.Select(GetEntity)];
         }
 
+        // For non-mutating predicates only. Destruction/movement paths must keep using
+        // GetOccupants snapshots so callbacks cannot change the list being traversed.
+        internal bool AnyOccupant<TState>(GridPosition position, TState state, Func<Entity, TState, bool> predicate)
+        {
+            if (!Contains(position))
+            {
+                throw new ArgumentOutOfRangeException(nameof(position), position, "Position is outside the world.");
+            }
+
+            if (_occupancy.TryGetValue(position, out List<EntityId>? occupants))
+            {
+                foreach (EntityId id in occupants)
+                {
+                    if (predicate(_entities[id], state))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Prevents gravity from using a cell for at least the specified simulation duration.
         /// </summary>

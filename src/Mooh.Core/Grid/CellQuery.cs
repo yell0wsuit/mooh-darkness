@@ -27,7 +27,7 @@ namespace Mooh.Core.Grid
         internal static IEnumerable<Entity> VisibleOccupants(WorldGrid world, GridPosition cell)
         {
             return world.GetOccupants(cell)
-                .Where(occupant => !occupant.Interactions.HasFlag(InteractionMask.OccupancyTransparent));
+                .Where(occupant => (occupant.Interactions & InteractionMask.OccupancyTransparent) == 0);
         }
 
         /// <summary>
@@ -44,7 +44,8 @@ namespace Mooh.Core.Grid
         /// <returns><see langword="true"/> when the cell holds a visible occupant.</returns>
         internal static bool IsOccupied(WorldGrid world, GridPosition cell)
         {
-            return VisibleOccupants(world, cell).Any();
+            return world.AnyOccupant(cell, 0, static (occupant, _) =>
+                (occupant.Interactions & InteractionMask.OccupancyTransparent) == 0);
         }
 
         /// <summary>
@@ -64,7 +65,7 @@ namespace Mooh.Core.Grid
         internal static IEnumerable<Entity> CrushableOccupants(WorldGrid world, GridPosition cell)
         {
             return world.GetOccupants(cell)
-                .Where(occupant => occupant.Interactions.HasFlag(InteractionMask.CanBePushedThrough));
+                .Where(occupant => (occupant.Interactions & InteractionMask.CanBePushedThrough) != 0);
         }
 
         /// <summary>
@@ -83,10 +84,10 @@ namespace Mooh.Core.Grid
         /// <returns><see langword="true"/> when the monster may enter.</returns>
         internal static bool CanMonsterEnter(WorldGrid world, Entity monster, GridPosition destination)
         {
-            return !monster.Interactions.HasFlag(InteractionMask.MovementLocked)
+            return (monster.Interactions & InteractionMask.MovementLocked) == 0
                 && world.Contains(destination)
-                && world.GetOccupants(destination)
-                    .All(occupant => occupant.Interactions.HasFlag(InteractionMask.MonsterTransparent));
+                && !world.AnyOccupant(destination, 0, static (occupant, _) =>
+                    (occupant.Interactions & InteractionMask.MonsterTransparent) == 0);
         }
 
         /// <summary>
@@ -100,8 +101,7 @@ namespace Mooh.Core.Grid
         internal static bool HoldsBlastSurvivor(WorldGrid world, GridPosition cell)
         {
             return world.Contains(cell)
-                && world.GetOccupants(cell).Any(
-                    occupant => occupant.Motion is null
+                && world.AnyOccupant(cell, 0, static (occupant, _) => occupant.Motion is null
                         && (occupant.Interactions
                             & (InteractionMask.OccupancyTransparent | InteractionMask.MonsterTransparent)) == 0);
         }
@@ -117,9 +117,8 @@ namespace Mooh.Core.Grid
         internal static bool HasCounterMotion(WorldGrid world, GridPosition cell, Direction direction)
         {
             return world.Contains(cell)
-                && world.GetOccupants(cell).Any(
-                    occupant => occupant.Motion is not null
-                        && occupant.Motion.TravelDirection != direction);
+                && world.AnyOccupant(cell, direction, static (occupant, travelDirection) =>
+                    occupant.Motion is not null && occupant.Motion.TravelDirection != travelDirection);
         }
     }
 }
