@@ -530,6 +530,62 @@ namespace Mooh.Desktop.Tests
             Assert.Equal("Al ice", profile.HighScores[1][0].Name);
         }
 
+        /// <summary>The map uses text-only menu controls with the original anchors and initial Start selection.</summary>
+        [Fact]
+        public void MapControlsUseSharedSelectionWithoutButtonPanels()
+        {
+            using GameShell shell = Create();
+            shell.InspectScreen("map");
+            Assert.True(shell.Menu.IsReady);
+            Assert.Equal("map-start", shell.Menu.Activate());
+            Assert.Equal(2, shell.Menu.Buttons.Count);
+            Assert.DoesNotContain(shell.Menu.Elements.OfType<ScreenSprite>(), sprite => sprite.Frame.StartsWith("OBtn", StringComparison.Ordinal));
+            Assert.DoesNotContain(shell.Menu.Elements.OfType<ScreenSprite>(), sprite => sprite.Frame.StartsWith("c_", StringComparison.Ordinal));
+            Assert.InRange(shell.Menu.Buttons.Single(button => button.Id == "map-menu").Left, 54, 61);
+            Assert.InRange(shell.Menu.Buttons.Single(button => button.Id == "map-start").Right, 739, 746);
+        }
+
+        /// <summary>The map's activation shortcuts show pressed text and wait for release.</summary>
+        [Theory]
+        [InlineData(SDL.Keycode.Return, nameof(GameScreen.PreLevel))]
+        [InlineData(SDL.Keycode.F2, nameof(GameScreen.PreLevel))]
+        [InlineData(SDL.Keycode.Escape, nameof(GameScreen.Main))]
+        public void MapShortcutsShowPressedTextUntilRelease(SDL.Keycode key, string destination)
+        {
+            using GameShell shell = Create();
+            shell.InspectScreen("map");
+            shell.HandleKey(key, true);
+            Assert.Equal(GameScreen.Map, shell.Screen);
+            Assert.Contains(shell.Menu.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntBtnPrs");
+            shell.HandleKey(key, false);
+            Assert.Equal(destination, shell.Screen.ToString());
+        }
+
+        /// <summary>Map labels support hover, tooltips and canceling a release outside their hit rectangles.</summary>
+        [Fact]
+        public void MapLabelsSupportHoverTooltipAndCanceledPress()
+        {
+            using GameShell shell = Create();
+            shell.InspectScreen("map");
+            MenuButton button = shell.Menu.Buttons.Single(button => button.Id == "map-menu");
+            shell.MouseMove((button.Left + button.Right) / 2, (button.Top + button.Bottom) / 2);
+            Assert.Equal("map-menu", shell.Menu.Activate());
+            for (int i = 0; i < 8; i++)
+            {
+                shell.Update(default, [], 0.1);
+            }
+            Assert.Contains(shell.Elements.OfType<ScreenText>(), text => text.Font == "MenuFontToolTip");
+            shell.MouseButton(true);
+            Assert.Equal(GameScreen.Map, shell.Screen);
+            shell.MouseMove(400, 570);
+            shell.MouseButton(false);
+            Assert.Equal(GameScreen.Map, shell.Screen);
+            PressKey(shell, SDL.Keycode.End);
+            Assert.Equal("map-menu", shell.Menu.Activate());
+            Click(shell, "map-menu");
+            Assert.Equal(GameScreen.Main, shell.Screen);
+        }
+
         private static void PressKey(GameShell shell, SDL.Keycode key)
         {
             shell.HandleKey(key, true);

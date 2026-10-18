@@ -149,8 +149,7 @@ namespace Mooh.Desktop
                 if (Screen == GameScreen.Map)
                 {
                     result.AddRange(_map.Elements);
-                    result.Add(new ScreenText(Localize("Map2MainMenu"), 60, 570, "MapButtonFont", Alignment: TextAlignment.Left));
-                    result.Add(new ScreenText(Localize("MapLvlStart"), 740, 570, "MapButtonFont", Alignment: TextAlignment.Right));
+                    result.AddRange(Menu.Elements);
                 }
                 else if (Screen != GameScreen.Playing)
                 {
@@ -317,7 +316,7 @@ namespace Mooh.Desktop
                 }
                 return;
             }
-            if (Screen is not (GameScreen.Intro or GameScreen.Outro or GameScreen.Playing or GameScreen.Map or GameScreen.ScoreEntry))
+            if (Screen is not (GameScreen.Intro or GameScreen.Outro or GameScreen.Playing or GameScreen.ScoreEntry))
             {
                 if (!Menu.IsReady)
                 {
@@ -402,18 +401,6 @@ namespace Mooh.Desktop
 
                 return;
             }
-            if (Screen == GameScreen.Map)
-            {
-                if (key is SDL.Keycode.Return or SDL.Keycode.F2)
-                {
-                    StartMapLevel();
-                }
-                else if (key == SDL.Keycode.Escape)
-                {
-                    LeaveMap();
-                }
-                return;
-            }
         }
 
         private void HandleMenuKey(SDL.Keycode key, bool pressed)
@@ -453,6 +440,8 @@ namespace Mooh.Desktop
             string? action = key is SDL.Keycode.Return or SDL.Keycode.Space ? Menu.Activate()
                 : (Screen, key) switch
                 {
+                    (GameScreen.Map, SDL.Keycode.F2) => "map-start",
+                    (GameScreen.Map, SDL.Keycode.Escape) => "map-menu",
                     (GameScreen.ScoreEntry, SDL.Keycode.Escape) => "save-name",
                     (GameScreen.Main, SDL.Keycode.F2) => "new",
                     (GameScreen.Main or GameScreen.Pause, SDL.Keycode.F10) => "options",
@@ -594,28 +583,6 @@ namespace Mooh.Desktop
                 return;
             }
 
-            if (Screen == GameScreen.Map)
-            {
-                if (!pressed)
-                {
-                    return;
-                }
-
-                if (_mouseY >= 540 && _mouseX < 150)
-                {
-                    LeaveMap();
-                }
-                else if (_mouseY >= 540 && _mouseX > 650)
-                {
-                    StartMapLevel();
-                }
-                else if (_map.SelectNearest(_mouseX, _mouseY))
-                {
-                    Cue("MenuClick");
-                }
-
-                return;
-            }
             if (_menuKey is not null)
             {
                 return;
@@ -626,6 +593,10 @@ namespace Mooh.Desktop
                 if (Menu.Buttons.Any(button => _mouseX >= button.Left && _mouseX <= button.Right && _mouseY >= button.Top && _mouseY <= button.Bottom))
                 {
                     Menu.Press();
+                }
+                else if (Screen == GameScreen.Map && _map.SelectNearest(_mouseX, _mouseY))
+                {
+                    Cue("MenuClick");
                 }
             }
             else
@@ -664,6 +635,12 @@ namespace Mooh.Desktop
             Cue("MenuBtnClick");
             switch (action)
             {
+                case "map-start":
+                    StartMapLevel();
+                    break;
+                case "map-menu":
+                    LeaveMap();
+                    break;
                 case "finish-run":
                     EndRun();
                     break;
@@ -722,8 +699,7 @@ namespace Mooh.Desktop
                     Game!.Session.AdvanceToNextLevel();
                     _mapCanChange = false;
                     _map.Update(Game.Session.LevelIndex, Profile.PassedLevels.ToHashSet(), false);
-                    Screen = GameScreen.Map;
-                    _screenSeconds = 0;
+                    ShowMap();
                     Persist();
                     break;
                 case "sound-cycle":
@@ -796,8 +772,18 @@ namespace Mooh.Desktop
             _difficulty = 0;
             _mapCanChange = true;
             _map.Update(0, Profile.PassedLevels.ToHashSet(), true);
+            ShowMap();
+        }
+
+        private void ShowMap()
+        {
             Screen = GameScreen.Map;
             _screenSeconds = 0;
+            Menu.Show(MenuPanelKind.Map, string.Empty,
+                [new MenuItem("map-start", Localize("MapLvlStart"), Localize("MapLvlStartTTip"), 340, 570,
+                    TextOnly: true, Alignment: TextAlignment.Right),
+                 new MenuItem("map-menu", Localize("Map2MainMenu"), Localize("Map2MainMenuTTip"), -340, 570,
+                    TextOnly: true, Alignment: TextAlignment.Left)], null, null);
         }
 
         private void LeaveMap()

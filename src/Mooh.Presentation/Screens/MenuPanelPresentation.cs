@@ -21,7 +21,9 @@ namespace Mooh.Presentation.Screens
         /// <summary>The campaign completion background.</summary>
         Completion,
         /// <summary>The level introduction background.</summary>
-        PreLevel
+        PreLevel,
+        /// <summary>The map's text-only navigation controls.</summary>
+        Map
     }
 
     /// <summary>A button at a panel-relative point before group centering.</summary>
@@ -32,7 +34,10 @@ namespace Mooh.Presentation.Screens
     /// <param name="Y">The vertical anchor.</param>
     /// <param name="Small">Whether to use a small button frame.</param>
     /// <param name="TabStop">Whether keyboard navigation selects this button.</param>
-    public sealed record MenuItem(string Id, string Label, string Tooltip, double X, double Y, bool Small = false, bool TabStop = true);
+    /// <param name="TextOnly">Whether the button has text without a background frame.</param>
+    /// <param name="Alignment">The text alignment for a text-only button.</param>
+    public sealed record MenuItem(string Id, string Label, string Tooltip, double X, double Y, bool Small = false, bool TabStop = true,
+        bool TextOnly = false, TextAlignment Alignment = TextAlignment.Center);
 
     /// <summary>A button's final logical hit rectangle.</summary>
     /// <param name="Id">The action identifier.</param>
@@ -54,6 +59,7 @@ namespace Mooh.Presentation.Screens
         private readonly List<PlacedButton> _buttons = [];
         private readonly List<OutgoingPanel> _outgoing = [];
         private string[] _tiles = [];
+        private bool _mapPanel;
         private string _title = string.Empty;
         private double _titleY;
         private double _elapsed;
@@ -69,7 +75,7 @@ namespace Mooh.Presentation.Screens
         public bool IsReady => _elapsed >= 0.35;
 
         /// <summary>Gets the current panel center.</summary>
-        public double PanelY => -200 + (500 * Math.Min(1, _elapsed / 0.35));
+        public double PanelY => _mapPanel ? 0 : -200 + (500 * Math.Min(1, _elapsed / 0.35));
 
         /// <summary>Gets the buttons' screen-space hit rectangles.</summary>
         public IReadOnlyList<MenuButton> Buttons => [.. _buttons.Select(b => new MenuButton(b.Item.Id, 400 + b.Left, PanelY + b.Top, 400 + b.Right, PanelY + b.Bottom))];
@@ -132,14 +138,17 @@ namespace Mooh.Presentation.Screens
         private List<ScreenElement> RenderPanel(bool interactive)
         {
             List<ScreenElement> result = [];
-            if (_tiles.Length == 0)
+            if (_tiles.Length == 0 && _buttons.Count == 0)
             {
                 return result;
             }
             result.AddRange(_tiles.Select(tile => new ScreenSprite("SpriteMenuPrt", tile, 400, Math.Round(PanelY))));
             // Panel contents share the panel's position and stay between its background and controls.
             result.AddRange(Contents.Select(element => Translate(element, 400, PanelY)));
-            result.Add(new ScreenText(_title, 406, Math.Round(PanelY) + _titleY, "MenuFntTit"));
+            if (_title.Length > 0)
+            {
+                result.Add(new ScreenText(_title, 406, Math.Round(PanelY) + _titleY, "MenuFntTit"));
+            }
             for (int index = 0; index < _buttons.Count; index++)
             {
                 PlacedButton button = _buttons[index];
@@ -149,7 +158,10 @@ namespace Mooh.Presentation.Screens
                 double x = Math.Round(400 + button.X + button.Spring.X + shift);
                 double y = Math.Round(PanelY + button.Y + button.Spring.Y + shift);
                 double textX = Math.Round(400 + button.TextX + button.Spring.X + shift);
-                result.Add(new ScreenSprite("SpriteMenuPrt", button.Frame + "_" + state, x, y));
+                if (button.Frame.Length > 0)
+                {
+                    result.Add(new ScreenSprite("SpriteMenuPrt", button.Frame + "_" + state, x, y));
+                }
                 result.Add(new ScreenText(button.Item.Label, textX, y, "MenuFntBtn" + state, TextAlignment.Left));
             }
 
@@ -196,6 +208,7 @@ namespace Mooh.Presentation.Screens
         public void Clear()
         {
             _tiles = [];
+            _mapPanel = false;
             _title = string.Empty;
             Contents = [];
             _buttons.Clear();
@@ -221,6 +234,7 @@ namespace Mooh.Presentation.Screens
             Contents = [];
 
             _title = title;
+            _mapPanel = kind == MenuPanelKind.Map;
             _tiles = kind switch
             {
                 MenuPanelKind.Main => Tiles("c_BackMain_", 12),
@@ -228,17 +242,32 @@ namespace Mooh.Presentation.Screens
                 MenuPanelKind.HighScores => [.. Tiles("c_BackBig_", 18), .. Tiles("c_BackHScore_", 18)],
                 MenuPanelKind.Statistics => [.. Tiles("c_BackBig_", 18), .. Tiles("c_backLStat_", 18)],
                 MenuPanelKind.Completion => [.. Tiles("c_BackBig_", 18), .. Tiles("c_BackCongr_", 18)],
+                MenuPanelKind.Map => [],
                 MenuPanelKind.PreLevel => [.. Tiles("c_BackBig_", 18), .. Tiles("c_backPreLvl_", 12)],
                 _ => throw new ArgumentOutOfRangeException(nameof(kind)),
             };
             _titleY = kind == MenuPanelKind.Main ? -199 : kind == MenuPanelKind.Message ? -153 : kind == MenuPanelKind.HighScores ? -174 : -176;
-            _elapsed = _tooltipTime = 0;
+            _elapsed = _mapPanel ? 0.35 : 0;
+            _tooltipTime = 0;
             _pressed = -1;
             _hovered = -1;
             _buttons.Clear();
             foreach (MenuItem item in items)
             {
                 (int left, int top, int right, int bottom) = font.Bounds(item.Label);
+                if (item.TextOnly)
+                {
+                    double textOnlyX = item.Alignment switch
+                    {
+                        TextAlignment.Left => item.X,
+                        TextAlignment.Center => item.X - Math.Floor((left + right) / 2.0),
+                        TextAlignment.Right => item.X - right,
+                        _ => throw new ArgumentOutOfRangeException(nameof(items)),
+                    };
+                    _buttons.Add(new PlacedButton(item, string.Empty, item.X, item.Y, textOnlyX,
+                        textOnlyX + left - 5, item.Y + top - 5, textOnlyX + right + 5, item.Y + bottom + 5));
+                    continue;
+                }
                 string prefix = item.Small ? "OBtnSm" : "OBtnNrm";
                 string frameName = Enumerable.Range(1, item.Small ? 2 : 16)
                     .Select(n => prefix + n.ToString("00", System.Globalization.CultureInfo.InvariantCulture))
@@ -254,7 +283,7 @@ namespace Mooh.Presentation.Screens
                     Math.Max(textX + right, x + frame.PivotX + frame.Width) + 5,
                     Math.Max(item.Y + bottom, item.Y + frame.PivotY + frame.Height) + 5));
             }
-            if (_buttons.Count > 0)
+            if (_buttons.Count > 0 && !_mapPanel)
             {
                 double backX = (_tiles.Min(t => page[t].PivotX) + _tiles.Max(t => page[t].PivotX + page[t].Width)) / 2.0;
                 double backY = (_tiles.Min(t => page[t].PivotY) + _tiles.Max(t => page[t].PivotY + page[t].Height)) / 2.0;
