@@ -23,9 +23,9 @@ namespace Mooh.Presentation.Text
         internal static FontAppearance ForStyle(string name)
         {
             FontEdge black = new(SKColors.Black, 2);
-            // A centered one-pixel rim preserves the bold face's counters and spacing.
-            // Skia strokes straddle the glyph boundary, so the full width is two pixels.
-            FontEdge buttonRim = black;
+            // A centered two-pixel rim separates bold text from the textured menu panels.
+            // Skia strokes straddle the glyph boundary, so the full width is four pixels.
+            FontEdge buttonRim = new(SKColors.Black, 4);
             return name switch
             {
                 "AppFont" => Solid(0xffffff, black),

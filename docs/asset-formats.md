@@ -39,7 +39,7 @@ text, gold title gradients with a gray bevel and black shadow, white tooltips wi
 edges, and green/purple edging on floating scores. Normal, selected and pressed buttons keep
 separate gold, yellow and dark-gold fills. Edge widths and offsets use logical screen pixels.
 Menus, map controls and HUD values use Comic Neue Bold. Stories, tooltips, explanatory text
-and version fine print use Comic Neue Regular. Button outlines use a centered one-pixel black
+and version fine print use Comic Neue Regular. Button outlines use a centered two-pixel black
 rim, and large HUD labels use a two-pixel rim, keeping counters and letter spacing open.
 Glyph fills are drawn without synthetic thickening; the original colors remain unchanged.
 Fades apply to the complete composed glyph so overlapping outlines do not accumulate opacity.

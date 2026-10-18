@@ -10,14 +10,14 @@ using Xunit;
 
 namespace Mooh.Desktop.Tests
 {
-    /// <summary>Checks that bold UI text keeps a clear, compact outline.</summary>
+    /// <summary>Checks that bold UI text keeps a clear outline against textured menus.</summary>
     public sealed class BitmapOutlineTests
     {
-        /// <summary>The button rim stays compact so it does not overwhelm the colored bold face.</summary>
+        /// <summary>The button rim stays at least two pixels thick against textured menu panels.</summary>
         [Theory]
         [InlineData("MenuFntBtnNrm")]
         [InlineData("MenuFntBtnSel")]
-        public void MenuOutlineStaysCompact(string style)
+        public void MenuOutlineSeparatesTextFromPanel(string style)
         {
             using SKBitmap bitmap = new(160, 120);
             using SKCanvas canvas = new(bitmap);
@@ -41,7 +41,7 @@ namespace Mooh.Desktop.Tests
                 }
             }
             Assert.True(fillRight >= 0);
-            Assert.InRange(outlineRight - fillRight, 1, 2);
+            Assert.InRange(outlineRight - fillRight, 2, 3);
         }
     }
 }
