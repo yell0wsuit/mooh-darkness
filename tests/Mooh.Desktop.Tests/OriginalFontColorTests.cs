@@ -39,10 +39,12 @@ namespace Mooh.Desktop.Tests
         public void SolidFillsUseOriginalPalette(string style, uint color)
         {
             using SKBitmap bitmap = Render(style);
+            SKColor fill = new(color);
             int matches = 0;
             foreach (SKColor pixel in bitmap.Pixels)
             {
-                if (pixel == new SKColor(color))
+                // FreeType rarely gives thin 9px stems full coverage, so match the fill on mostly covered pixels.
+                if (pixel.Alpha >= 128 && Near(pixel.Red, fill.Red) && Near(pixel.Green, fill.Green) && Near(pixel.Blue, fill.Blue))
                 {
                     matches++;
                 }
@@ -95,6 +97,12 @@ namespace Mooh.Desktop.Tests
             using SKBitmap bitmap = Render("GameFontScr", 0.25);
             Assert.Contains(bitmap.Pixels, pixel => pixel.Alpha > 0);
             Assert.All(bitmap.Pixels, pixel => Assert.InRange(pixel.Alpha, (byte)0, (byte)64));
+        }
+
+        private static bool Near(byte actual, byte expected)
+        {
+            // Unpremultiplying partially covered pixels can shift each channel by a step.
+            return Math.Abs(actual - expected) <= 2;
         }
 
         private static SKBitmap Render(string style, double opacity = 1)
