@@ -152,7 +152,12 @@ namespace Mooh.Core.Tests.Player
             Assert.Equal(1.125, block.Motion.Speed, precision: 12);
         }
 
-        /// <summary>Verifies eligible beyond-cell occupants are removed before push authority commits.</summary>
+        /// <summary>
+        /// Verifies eligible beyond-cell occupants are destroyed before push authority commits.
+        /// The recovered order is the kill loop first and <c>ObjMoveDir</c> after, and the crush
+        /// reports <see cref="EntityDestroyed"/> because it runs the same <c>Game.ObjKill</c> a
+        /// placed weapon runs. Occupancy is newest-arrival-first, so the later arrival dies first.
+        /// </summary>
         [Fact]
         public void PushThroughOccupantsAreRemovedBeforePushStarts()
         {
@@ -174,6 +179,8 @@ namespace Mooh.Core.Tests.Player
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(second.Id));
             Assert.Equal(
                 [
+                    new EntityDestroyed(second.Id, second.Id),
+                    new EntityDestroyed(first.Id, first.Id),
                     new PushStarted(block.Id, Direction.Right),
                     new PlayerMoveStarted(player.Id, Direction.Right),
                 ],
@@ -203,6 +210,7 @@ namespace Mooh.Core.Tests.Player
             _ = Assert.Throws<KeyNotFoundException>(() => world.GetEntity(eligible.Id));
             Assert.Equal(
                 [
+                    new EntityDestroyed(eligible.Id, eligible.Id),
                     new PushStarted(pushThrough.Id, Direction.Right),
                     new PushStarted(ordinary.Id, Direction.Right),
                     new PlayerMoveStarted(player.Id, Direction.Right),
@@ -304,6 +312,49 @@ namespace Mooh.Core.Tests.Player
             Assert.Equal([blocker, block], world.GetOccupants(new GridPosition(3, 1)));
             Assert.Equal(new GridPosition(2, 1), player.Position);
             Assert.DoesNotContain(events, item => item is CellEntered entered && entered.EntityId == block.Id);
+        }
+
+        /// <summary>Verifies catching a forward-moving pushable preserves its current cell and offset.</summary>
+        [Theory]
+        [InlineData(MotionCause.PlayerPushed)]
+        [InlineData(MotionCause.StrikePushed)]
+        [InlineData(MotionCause.Sliding)]
+        public void APlayerCanPushAnObjectAlreadyMovingInTheSameDirection(MotionCause cause)
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(2, 1.5);
+            Entity block = Add(world, x: 2, Pushable);
+            KinematicsSystem.Start(block, cause, Direction.Right, 1);
+            KinematicsSystem.Advance(block, TimeSpan.FromMilliseconds(500));
+            simulation.SetPlayerInput(HeldRight);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(10));
+
+            Assert.Contains(events, item => item == new PushStarted(block.Id, Direction.Right));
+            Assert.Equal(new GridPosition(2, 1), block.Position);
+            Assert.Equal(0.53, block.Motion!.Progress, 10);
+            Assert.Equal(3, block.Motion.Speed);
+            Assert.Equal(new GridPosition(2, 1), player.Position);
+            Assert.Equal([player, block], world.GetOccupants(new GridPosition(2, 1)));
+        }
+
+        /// <summary>Verifies opposite and perpendicular motion cannot be taken over by a walking push.</summary>
+        [Theory]
+        [InlineData(MotionCause.PlayerPushed, Direction.Left)]
+        [InlineData(MotionCause.PlayerPushed, Direction.Up)]
+        [InlineData(MotionCause.Falling, Direction.Down)]
+        [InlineData(MotionCause.Sliding, Direction.Left)]
+        public void IncompatibleMovingObjectsBlockThePush(MotionCause cause, Direction direction)
+        {
+            (WorldGrid world, Entity player, SimulationWorld simulation) = CreateScenario(2, 1.5);
+            Entity block = Add(world, x: 2, Pushable);
+            KinematicsSystem.Start(block, cause, direction, 1);
+            simulation.SetPlayerInput(HeldRight);
+
+            IReadOnlyList<SimulationEvent> events = simulation.Advance(TimeSpan.FromMilliseconds(10));
+
+            Assert.DoesNotContain(events, item => item is PushStarted);
+            Assert.Equal(new GridPosition(1, 1), player.Position);
+            Assert.Equal(cause, block.Motion!.Cause);
         }
 
         private static PlayerInputState HeldRight => new(

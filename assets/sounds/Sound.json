@@ -1,0 +1,2024 @@
+{
+  "HeartWrn1": {
+    "files": [
+      "PlHeartWrn1_01",
+      "PlHeartWrn1_02",
+      "PlHeartWrn1_03",
+      "PlHeartWrn1_04"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "HeartWrn2": {
+    "files": [
+      "PlHeartWrn2_01",
+      "PlHeartWrn2_02",
+      "PlHeartWrn2_03",
+      "PlHeartWrn2_04"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "PlayerFinal": {
+    "files": [
+      "game_start"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.4,
+      1.4
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "LevelBuild": {
+    "files": [
+      "LvlBld_01",
+      "LvlBld_02",
+      "LvlBld_03",
+      "LvlBld_04",
+      "LvlBld_05",
+      "LvlBld_06"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "ClockWarning": {
+    "files": [
+      "Clock01",
+      "Clock02"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "ClockStop": {
+    "files": [
+      "ClockStop"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "PlayerVoice": {
+    "files": [
+      "player_Fist"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "AmbientWhats": {
+    "files": [],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "AmbientScr": {
+    "files": [],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "AmbientJump": {
+    "files": [
+      "PlAmbJump01",
+      "PlAmbJump02",
+      "PlAmbJump03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "PlayerPStrike": {
+    "files": [
+      "PlPStr01",
+      "PlPStr02",
+      "PlPStr03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "PlayerStrike": {
+    "files": [
+      "_PlStr01"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "TPortIn": {
+    "files": [
+      "TPortIn01"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "TPortOut": {
+    "files": [
+      "TPortOut01"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "TPortMove": {
+    "files": [
+      "TPortMove01",
+      "TPortMove02",
+      "TPortMove03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "PlayerHeal": {
+    "files": [
+      "player_Fist"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DeadFall": {
+    "files": [],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DeadFatal": {
+    "files": [
+      "_PlDeadFatal"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DeadWBirds": {
+    "files": [
+      "PlDeadBird01",
+      "PlDeadBird02",
+      "PlDeadBird03",
+      "PlDeadBird04"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DeadLand": {
+    "files": [
+      "PlDeadLand01"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "StepsWood": {
+    "files": [
+      "StepWood01",
+      "StepWood02",
+      "StepWood03",
+      "StepWood04",
+      "StepWood05",
+      "StepWood06",
+      "StepWood07",
+      "StepWood08"
+    ],
+    "buffers": 4,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "StepsEarth": {
+    "files": [
+      "StepEarth01",
+      "StepEarth02",
+      "StepEarth03",
+      "StepEarth04",
+      "StepEarth05",
+      "StepEarth06",
+      "StepEarth07",
+      "StepEarth08"
+    ],
+    "buffers": 4,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "StepsMetal": {
+    "files": [
+      "StepMetal01",
+      "StepMetal02",
+      "StepMetal03",
+      "StepMetal04",
+      "StepMetal05",
+      "StepMetal06",
+      "StepMetal07",
+      "StepMetal08"
+    ],
+    "buffers": 4,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "StepsPipe": {
+    "files": [
+      "StepPipe01",
+      "StepPipe02",
+      "StepPipe03",
+      "StepPipe04"
+    ],
+    "buffers": 4,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "CellBreak": {
+    "files": [
+      "_CellBrk01",
+      "_CellBrk02"
+    ],
+    "buffers": 3,
+    "volume": [
+      0.5,
+      0.6
+    ],
+    "frequency": [
+      0.8,
+      1.2
+    ]
+  },
+  "TonIn": {
+    "files": [
+      "_TonIn01"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "TonOut": {
+    "files": [
+      "_TonOut01"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "TonFlip": {
+    "files": [
+      "TonFlip"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "TopPl": {
+    "files": [
+      "TonPl01",
+      "TonPl02",
+      "TonPl03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "GrenadeExpl": {
+    "files": [
+      "WeapGrExpl01",
+      "WeapGrExpl02",
+      "WeapGrExpl03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "GrenadeBoxExpl": {
+    "files": [
+      "WeapGrBExpl01",
+      "WeapGrBExpl02",
+      "WeapGrBExpl03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "GrenadePlace": {
+    "files": [
+      "WeapGrPlace01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "WeaponGet": {
+    "files": [
+      "WeapGet01",
+      "WeapGet02",
+      "WeapGet03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "NOWeapon": {
+    "files": [
+      "WeapNo"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "ChangeWeapon": {
+    "files": [
+      "WeapChng"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "RocketFly": {
+    "files": [
+      "WeapRockFly01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "RocketExpl": {
+    "files": [
+      "WeapRockExpl01",
+      "WeapRockExpl02",
+      "WeapRockExpl03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "RocketBoxExpl": {
+    "files": [
+      "WeapRockBExpl01",
+      "WeapRockBExpl02",
+      "WeapRockBExpl03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "RocketRot": {
+    "files": [
+      "WeapRockRot01",
+      "WeapRockRot02",
+      "WeapRockRot03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MinePlace": {
+    "files": [
+      "WeapMinePlace01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MineExpl": {
+    "files": [
+      "WeapMineExpl01",
+      "WeapMineExpl02",
+      "WeapMineExpl03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MineBoxExpl": {
+    "files": [
+      "WeapMineBExpl01",
+      "WeapMineBExpl02",
+      "WeapMineBExpl03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BBombTick1": {
+    "files": [
+      "WeapBBombTick1_01",
+      "WeapBBombTick1_02",
+      "WeapBBombTick1_03",
+      "WeapBBombTick1_04"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BBombTick2": {
+    "files": [
+      "WeapBBombTick2_01",
+      "WeapBBombTick2_02",
+      "WeapBBombTick2_03",
+      "WeapBBombTick2_04"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BBombPlace": {
+    "files": [
+      "WeapBBombPlace01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BBombExpl": {
+    "files": [
+      "WeapBBombExpl01",
+      "WeapBBombExpl02",
+      "WeapBBombExpl03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "WeaponDrop": {
+    "files": [
+      "WDrop01",
+      "WDrop02",
+      "WDrop03",
+      "WDrop04"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DoorIn": {
+    "files": [
+      "DoorIn01"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DoorOut": {
+    "files": [
+      "DoorOut01"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DoorOpen": {
+    "files": [
+      "DoorOpen"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DoorClose": {
+    "files": [
+      "DoorClose"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "WeightLand": {
+    "files": [
+      "WeightLand01",
+      "WeightLand02",
+      "WeightLand03",
+      "WeightLand04"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "WeightSlide": {
+    "files": [
+      "WeightSlide01",
+      "WeightSlide02",
+      "WeightSlide03",
+      "WeightSlide04"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "RockLand": {
+    "files": [
+      "RockLand01",
+      "RockLand02",
+      "RockLand03",
+      "RockLand04"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "RockSlide": {
+    "files": [
+      "RockSlide01",
+      "RockSlide02",
+      "RockSlide03",
+      "RockSlide04"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MagicWork": {
+    "files": [
+      "MagicWork01",
+      "MagicWork02",
+      "MagicWork03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DiamondFall": {
+    "files": [
+      "DiamFall01",
+      "DiamFall02",
+      "DiamFall03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DiamondBrk": {
+    "files": [
+      "DiamBrk01",
+      "DiamBrk02",
+      "DiamBrk03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "CoinEat": {
+    "files": [
+      "CoinGet01",
+      "CoinGet02",
+      "CoinGet03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "CoinBrk": {
+    "files": [
+      "CoinBrk01",
+      "CoinBrk02",
+      "CoinBrk03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "CoinGet": {
+    "files": [
+      "ConGetBon"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "CoinFall": {
+    "files": [
+      "CoinFall01",
+      "CoinFall02",
+      "CoinFall03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "KeyGet": {
+    "files": [
+      "KeyGet01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "KeyDoor": {
+    "files": [
+      "KeyDoor01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "KeyLand": {
+    "files": [
+      "KeyLand01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BaloonMorph": {
+    "files": [
+      "BaloonMorth"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BaloonExpl": {
+    "files": [
+      "BaloonExpl01",
+      "BaloonExpl02",
+      "BaloonExpl03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BaloonPreExpl": {
+    "files": [
+      "BaloonPreExpl"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BaloonTick1": {
+    "files": [
+      "BaloonTick01",
+      "BaloonTick02"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BaloonTick2": {
+    "files": [
+      "BaloonTick11",
+      "BaloonTick12"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BottleExpl": {
+    "files": [
+      "BottleExpl01",
+      "BottleExpl02"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BottleSlide": {
+    "files": [
+      "BottleSlide01",
+      "BottleSlide02",
+      "BottleSlide03",
+      "BottleSlide04"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BarrelExpl": {
+    "files": [
+      "BarrelExpl01",
+      "BarrelExpl02",
+      "BarrelExpl03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BarrelMainExpl": {
+    "files": [
+      "BarrelMainExpl01"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "FlyFall": {
+    "files": [
+      "FlyFall01",
+      "FlyFall02",
+      "FlyFall03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "FlyFly": {
+    "files": [
+      "FlyFly01",
+      "FlyFly02",
+      "FlyFly03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "FlyExpl": {
+    "files": [
+      "FlyExpl01",
+      "FlyExpl02",
+      "FlyExpl03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "FlyRot": {
+    "files": [
+      "FlyRot01",
+      "FlyRot02",
+      "FlyRot03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "FlySlide": {
+    "files": [
+      "FlySlide01"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "EatEat": {
+    "files": [
+      "EatEat01",
+      "EatEat02"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "EatEat2": {
+    "files": [
+      "EatEat2_01",
+      "EatEat2_02"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "EatFall": {
+    "files": [
+      "EatFall01",
+      "EatFall02",
+      "EatFall03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "TableTxt": {
+    "files": [
+      "TableTxt01"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BioExpl": {
+    "files": [
+      "BioExpl01",
+      "BioExpl02",
+      "BioExpl03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BioNew": {
+    "files": [
+      "BioNew01",
+      "BioNew02",
+      "BioNew03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BioRot": {
+    "files": [
+      "BioRot01",
+      "BioRot02",
+      "BioRot03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "WorldRot": {
+    "files": [
+      "WorldRot01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "WorldRotBegin": {
+    "files": [
+      "WorldRotBeg01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "SmallFly": {
+    "files": [
+      "SmFly01",
+      "SmFly02",
+      "SmFly03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "SmallGet": {
+    "files": [
+      "_SmGet01",
+      "_SmGet02",
+      "_SmGet03"
+    ],
+    "buffers": 2,
+    "volume": [
+      0.6,
+      0.7
+    ],
+    "frequency": [
+      0.95,
+      1.05
+    ]
+  },
+  "SmallKill": {
+    "files": [
+      "SmKill01",
+      "SmKill02",
+      "SmKill03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "FireBrk": {
+    "files": [
+      "FireBrk01",
+      "FireBrk02",
+      "FireBrk03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "FirePop": {
+    "files": [
+      "FirePop01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "FireBob": {
+    "files": [
+      "FireBob01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BobKill": {
+    "files": [
+      "BobKill01",
+      "BobKill02",
+      "BobKill03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BobMove": {
+    "files": [
+      "BobMove01",
+      "BobMove02",
+      "BobMove03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BlueKill": {
+    "files": [
+      "MonBlKill01",
+      "MonBlKill02",
+      "MonBlKill03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "BlueStrike": {
+    "files": [
+      "_MonBlStr01",
+      "_MonBlStr02",
+      "_MonBlStr03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "GreenKill": {
+    "files": [
+      "_MonGrKill01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "GreenStrike": {
+    "files": [
+      "_MonGrStr01",
+      "_MonGrStr02",
+      "_MonGrStr03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DefaultExpl": {
+    "files": [
+      "DefExpl01",
+      "DefExpl02",
+      "DefExpl03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DefaultFall": {
+    "files": [
+      "DefFall01",
+      "DefFall02",
+      "DefFall03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "DefaultSlide": {
+    "files": [
+      "DefSlide01",
+      "DefSlide02",
+      "DefSlide03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "AntiGBegin": {
+    "files": [
+      "AntiGBegin01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "AntiGStop": {
+    "files": [
+      "AntiGStop01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "AntiGWork": {
+    "files": [
+      "AntiGWork01",
+      "AntiGWork02",
+      "AntiGWork03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "AirWork": {
+    "files": [
+      "AirWork01",
+      "AirWork02",
+      "AirWork03",
+      "AirWork04",
+      "AirWork05",
+      "AirWork06"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "ColaWork": {
+    "files": [
+      "BonColaWork01",
+      "BonColaWork02",
+      "BonColaWork03"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "ColaOn": {
+    "files": [
+      "BonColaOn01"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "ColaOff": {
+    "files": [
+      "BonColaOff"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "ColaAmb": {
+    "files": [
+      "BonColaAmb01",
+      "BonColaAmb02",
+      "BonColaAmb03",
+      "BonColaAmb04",
+      "BonColaAmb05",
+      "BonColaAmb06"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "ColaDrink": {
+    "files": [
+      "BonColaDrink"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "ColaFizz": {
+    "files": [
+      "BonColaFizz01",
+      "BonColaFizz02"
+    ],
+    "buffers": 1,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "ColaPlDrink": {
+    "files": [
+      "BonColaPlDrink01",
+      "BonColaPlDrink02"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "IceWork": {
+    "files": [
+      "BonIceWork01",
+      "BonIceWork02",
+      "BonIceWork03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "IceOn": {
+    "files": [
+      "BonIceOn"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "EyeOn": {
+    "files": [
+      "BonEyeOn01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "EyeOff": {
+    "files": [
+      "BonEyeOff01"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MenuBtnClick": {
+    "files": [
+      "MenuBtnPrs01",
+      "MenuBtnPrs02",
+      "MenuBtnPrs03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MenuBtnChange": {
+    "files": [
+      "MenuBtnChng01",
+      "MenuBtnChng02",
+      "MenuBtnChng03"
+    ],
+    "buffers": 3,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MenuClick": {
+    "files": [
+      "MenuPrs01",
+      "MenuPrs02",
+      "MenuPrs03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MenuBeetleCannonOut": {
+    "files": [
+      "MenuBeetleCanonOut"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MenuBeetleCannonKill": {
+    "files": [
+      "MenuBeetleCanonKill01",
+      "MenuBeetleCanonKill02",
+      "MenuBeetleCanonKill03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MenuBeetleStrike": {
+    "files": [
+      "MenuBeetleStr01",
+      "MenuBeetleStr02",
+      "MenuBeetleStr03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MenuBeetleStrikeOk": {
+    "files": [
+      "MenuBeetleStrOk01",
+      "MenuBeetleStrOk02",
+      "MenuBeetleStrOk03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MenuBeetleBioDown": {
+    "files": [
+      "MenuBeetleBioDown01",
+      "MenuBeetleBioDown02",
+      "MenuBeetleBioDown03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "MenuBeetleBioLand": {
+    "files": [
+      "MenuBeetleBioLand01",
+      "MenuBeetleBioLand02",
+      "MenuBeetleBioLand03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "CrateBreak": {
+    "files": [
+      "CrateBreak01",
+      "CrateBreak02",
+      "CrateBreak03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "CannonShoot": {
+    "files": [
+      "CanonShoot01",
+      "CanonShoot02",
+      "CanonShoot03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "CannonFly": {
+    "files": [
+      "CanonFly01",
+      "CanonFly02",
+      "CanonFly03",
+      "CanonFly04"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  },
+  "CannonKill": {
+    "files": [
+      "CanonKill01",
+      "CanonKill02",
+      "CanonKill03"
+    ],
+    "buffers": 2,
+    "volume": [
+      1.0,
+      1.0
+    ],
+    "frequency": [
+      1.0,
+      1.0
+    ]
+  }
+}

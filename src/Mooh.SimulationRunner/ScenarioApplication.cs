@@ -2,6 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Threading;
+
+using Mooh.Core.Content;
+using Mooh.Core.Simulation;
 
 namespace Mooh.SimulationRunner
 {
@@ -9,7 +14,7 @@ namespace Mooh.SimulationRunner
     public static class ScenarioApplication
     {
         /// <summary>Runs the deterministic scenario command-line application.</summary>
-        /// <param name="arguments">Exactly one scenario file or directory path.</param>
+        /// <param name="arguments">A scenario path, or <c>level-board</c> followed by a level path.</param>
         /// <param name="output">The pass/fail summary destination.</param>
         /// <param name="error">The usage and failure diagnostic destination.</param>
         /// <returns>Zero on success, one on scenario failure, or two on usage/path failure.</returns>
@@ -24,6 +29,22 @@ namespace Mooh.SimulationRunner
             ArgumentNullException.ThrowIfNull(arguments);
             ArgumentNullException.ThrowIfNull(output);
             ArgumentNullException.ThrowIfNull(error);
+
+            if (arguments.Count == 2
+                && string.Equals(arguments[0], "level-board", StringComparison.Ordinal))
+            {
+                return RunBoard(arguments, output, error);
+            }
+
+            if (arguments.Count >= 1 && string.Equals(arguments[0], "play", StringComparison.Ordinal))
+            {
+                return RunPlay(arguments, output, error);
+            }
+
+            if (arguments.Count >= 1 && string.Equals(arguments[0], "sweep", StringComparison.Ordinal))
+            {
+                return RunSweep(arguments, output, error);
+            }
 
             if (arguments.Count != 1)
             {
@@ -88,6 +109,49 @@ namespace Mooh.SimulationRunner
             return failed ? 1 : 0;
         }
 
+        private static int RunBoard(
+            IReadOnlyList<string> arguments,
+            TextWriter output,
+            TextWriter error)
+        {
+            if (arguments.Count != 2)
+            {
+                WriteUsage(error);
+                return 2;
+            }
+
+            string path = arguments[1];
+            if (!File.Exists(path))
+            {
+                error.WriteLine($"Level path does not exist: '{path}'.");
+                WriteUsage(error);
+                return 2;
+            }
+
+            try
+            {
+                string json = File.ReadAllText(path);
+                LevelDocument level = JsonLevelLoader.Load(json, path);
+                output.Write(LevelBoardRenderer.Render(level, Path.GetFileName(path)));
+                return 0;
+            }
+            catch (LevelValidationException exception)
+            {
+                error.WriteLine(exception.Message);
+                return 2;
+            }
+            catch (IOException exception)
+            {
+                error.WriteLine($"{path}: Unable to read level: {exception.Message}");
+                return 2;
+            }
+            catch (UnauthorizedAccessException exception)
+            {
+                error.WriteLine($"{path}: Unable to read level: {exception.Message}");
+                return 2;
+            }
+        }
+
         private static ScenarioRunResult RunFile(string path)
         {
             string fallbackName = Path.GetFileNameWithoutExtension(path);
@@ -129,6 +193,198 @@ namespace Mooh.SimulationRunner
         private static void WriteUsage(TextWriter error)
         {
             error.WriteLine("Usage: Mooh.SimulationRunner <scenario.json|directory>");
+            error.WriteLine("       Mooh.SimulationRunner level-board <level.json>");
+            error.WriteLine("       Mooh.SimulationRunner play [manifest.json] [--level N] [--port N] [--difficulty 0|1|2]");
+            error.WriteLine("       Mooh.SimulationRunner sweep [manifest.json] [--seconds N] [--seed N]");
+        }
+
+        /// <summary>
+        /// Loads the recovered string table that sits beside the level pack, at
+        /// <c>assets/text/strings.json</c>, or nothing when it is absent.
+        /// </summary>
+        private static StringTable? LoadStrings(string manifestPath)
+        {
+            string path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(manifestPath)) ?? ".", "..", "text", "strings.json");
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            using FileStream stream = File.OpenRead(path);
+            return StringTable.Load(stream);
+        }
+
+        /// <summary>
+        /// Plays every level of a pack with the seeded sweep bot and reports each level, failing
+        /// when any level throws.
+        /// </summary>
+        private static int RunSweep(
+            IReadOnlyList<string> arguments,
+            TextWriter output,
+            TextWriter error)
+        {
+            string manifestPath = Path.Combine("assets", "levels", "manifest.json");
+            int seconds = 30;
+            int seed = 1;
+            for (int index = 1; index < arguments.Count; index++)
+            {
+                string argument = arguments[index];
+                if (string.Equals(argument, "--seconds", StringComparison.Ordinal)
+                    || string.Equals(argument, "--seed", StringComparison.Ordinal))
+                {
+                    if (index + 1 >= arguments.Count || !int.TryParse(arguments[index + 1], out int value) || value < 0)
+                    {
+                        error.WriteLine($"Option '{argument}' requires a non-negative integer value.");
+                        return 2;
+                    }
+
+                    if (string.Equals(argument, "--seconds", StringComparison.Ordinal))
+                    {
+                        seconds = value;
+                    }
+                    else
+                    {
+                        seed = value;
+                    }
+
+                    index++;
+                }
+                else
+                {
+                    manifestPath = argument;
+                }
+            }
+
+            LoadedLevelPack pack;
+            try
+            {
+                pack = JsonLevelPackLoader.Load(manifestPath);
+            }
+            catch (Exception exception)
+                when (exception is IOException or UnauthorizedAccessException or LevelValidationException)
+            {
+                error.WriteLine($"Unable to load level pack '{manifestPath}': {exception.Message}");
+                return 2;
+            }
+
+            int failures = 0;
+            foreach (CorpusSweepResult result in CorpusSweep.Run(pack, TimeSpan.FromSeconds(seconds), seed))
+            {
+                string status = result.Failure is null ? "OK  " : "FAIL";
+                output.WriteLine(
+                    $"{status} {result.Name,-32} {result.Outcome,-10} score {result.Score,6} events {result.EventCount,7}"
+                    + (result.Failure is null ? string.Empty : $"  {result.Failure}"));
+                failures += result.Failure is null ? 0 : 1;
+            }
+
+            output.WriteLine($"{failures} of {pack.Levels.Count} levels failed.");
+            return failures == 0 ? 0 : 1;
+        }
+
+        private static int RunPlay(
+            IReadOnlyList<string> arguments,
+            TextWriter output,
+            TextWriter error)
+        {
+            string manifestPath = Path.Combine("assets", "levels", "manifest.json");
+            int level = 1;
+            int port = 8080;
+            DifficultySpeeds difficulty = DifficultySpeeds.Standard;
+            for (int index = 1; index < arguments.Count; index++)
+            {
+                string argument = arguments[index];
+                if (string.Equals(argument, "--difficulty", StringComparison.Ordinal))
+                {
+                    // The recovered difficulty table is indexed 0 (reduced speeds and damage),
+                    // 1 (standard) and 2 (timed).
+                    DifficultySpeeds? selected = index + 1 < arguments.Count
+                        ? arguments[index + 1] switch
+                        {
+                            "0" => DifficultySpeeds.DifficultyZero,
+                            "1" => DifficultySpeeds.Standard,
+                            "2" => DifficultySpeeds.Timed,
+                            _ => null,
+                        }
+                        : null;
+                    if (selected is null)
+                    {
+                        error.WriteLine("Option '--difficulty' requires 0, 1 or 2.");
+                        return 2;
+                    }
+
+                    difficulty = selected;
+                    index++;
+                }
+                else if (string.Equals(argument, "--level", StringComparison.Ordinal)
+                    || string.Equals(argument, "--port", StringComparison.Ordinal))
+                {
+                    if (index + 1 >= arguments.Count
+                        || !int.TryParse(arguments[index + 1], out int value)
+                        || value < 1)
+                    {
+                        error.WriteLine($"Option '{argument}' requires a positive integer value.");
+                        return 2;
+                    }
+
+                    if (string.Equals(argument, "--level", StringComparison.Ordinal))
+                    {
+                        level = value;
+                    }
+                    else
+                    {
+                        port = value;
+                    }
+
+                    index++;
+                }
+                else
+                {
+                    manifestPath = argument;
+                }
+            }
+
+            LoadedLevelPack pack;
+            try
+            {
+                pack = JsonLevelPackLoader.Load(manifestPath);
+            }
+            catch (Exception exception)
+                when (exception is IOException or UnauthorizedAccessException or LevelValidationException)
+            {
+                error.WriteLine($"Unable to load level pack '{manifestPath}': {exception.Message}");
+                return 2;
+            }
+
+            int levelCount = pack.Levels?.Count ?? 0;
+            if (level > levelCount)
+            {
+                error.WriteLine($"Level {level} is outside the pack, which holds {levelCount} levels.");
+                return 2;
+            }
+
+            using CancellationTokenSource cancellation = new();
+            void Handler(object? sender, ConsoleCancelEventArgs eventArguments)
+            {
+                eventArguments.Cancel = true;
+                cancellation.Cancel();
+            }
+
+            Console.CancelKeyPress += Handler;
+            try
+            {
+                new PlayServer(new PlaySession(pack, level - 1, difficulty: difficulty, strings: LoadStrings(manifestPath)))
+                    .Listen(port, output, cancellation.Token);
+                return 0;
+            }
+            catch (HttpListenerException exception)
+            {
+                error.WriteLine($"Unable to listen on port {port}: {exception.Message}");
+                return 2;
+            }
+            finally
+            {
+                Console.CancelKeyPress -= Handler;
+            }
         }
     }
 }

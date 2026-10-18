@@ -37,10 +37,16 @@ namespace Mooh.Core.Motion
         }
 
         /// <summary>Gets the behavior responsible for the motion.</summary>
-        public MotionCause Cause { get; }
+        public MotionCause Cause
+        {
+            get;
+        }
 
         /// <summary>Gets the direction from the source cell to the destination cell.</summary>
-        public Direction SegmentDirection { get; }
+        public Direction SegmentDirection
+        {
+            get;
+        }
 
         /// <summary>Gets the sign applied to progress while advancing along the segment.</summary>
         public int TravelSign { get; internal set; } = 1;
@@ -51,12 +57,21 @@ namespace Mooh.Core.Motion
             : SegmentDirection.Opposite();
 
         /// <summary>Gets the order in which simultaneous boundaries are resolved.</summary>
-        public int ResolutionOrder { get; }
+        public int ResolutionOrder
+        {
+            get;
+        }
 
         /// <summary>Gets the speed in cells per second.</summary>
-        public double Speed { get; }
+        public double Speed
+        {
+            get;
+        }
 
         /// <summary>Gets the fractional progress toward the destination cell.</summary>
-        public double Progress { get; internal set; }
+        public double Progress
+        {
+            get; internal set;
+        }
     }
 }

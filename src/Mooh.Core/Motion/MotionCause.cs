@@ -16,5 +16,36 @@ namespace Mooh.Core.Motion
 
         /// <summary>An object is moving after being pushed by the player.</summary>
         PlayerPushed,
+
+        /// <summary>
+        /// An object is sliding away from a player hand strike.
+        /// </summary>
+        StrikePushed,
+
+        /// <summary>A monster is walking under autonomous control.</summary>
+        MonsterWalking,
+
+        /// <summary>
+        /// A launched arrow is flying. The recovered <c>_DoFlyInt</c> re-decides at every cell
+        /// whether to bore through what is ahead, detonate against it, or keep going.
+        /// </summary>
+        ArrowFlight,
+
+        /// <summary>
+        /// A fired rocket is flying. The recovered <c>DoFly</c> re-decides at every cell whether
+        /// the cell ahead stops it.
+        /// </summary>
+        RocketFlight,
+
+        /// <summary>
+        /// A newly spread bio mass is sliding into the neighbor its parent chose, at
+        /// <c>CNT_BioSpawnSp</c> times the normal speed.
+        /// </summary>
+        BioSpread,
+
+        /// <summary>
+        /// The player is being carried along a tunnel.
+        /// </summary>
+        TunnelTransit,
     }
 }

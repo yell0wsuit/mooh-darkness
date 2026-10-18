@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The desktop game: an SDL3 window drawn by Skia, following contre-jour-dx's host. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Mooh</AssemblyName>
+    <RootNamespace>Mooh.Desktop</RootNamespace>
+    <IncludeSourceRevisionInInformationalVersion Condition="'$(VersionSuffix)' == ''">false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <PublishSingleFile Condition="'$(PublishAot)' != 'true'">true</PublishSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Mooh.Desktop.Platform/Mooh.Desktop.Platform.csproj" />
+    <ProjectReference Include="../Mooh.Presentation/Mooh.Presentation.csproj" />
+    <InternalsVisibleTo Include="Mooh.Desktop.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../assets/sprites/*.png;../../assets/sprites/*.json"
+             Link="assets/sprites/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/screens/**/*"
+             Link="assets/screens/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/map/*.json"
+             Link="assets/map/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/sounds/*.ogg;../../assets/sounds/Sound.json"
+             Link="assets/sounds/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/music/TrackMenu.json;../../assets/music/Music.json"
+             Link="assets/music/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/music/samples/*.ogg"
+             Link="assets/music/samples/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/animations/*.json"
+             Link="assets/animations/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/levels/*.json"
+             Link="assets/levels/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/fonts/*.ttf;../../assets/fonts/OFL.txt"
+             Link="assets/fonts/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/text/*.json"
+             Link="assets/text/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="@(Content)" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+</Project>

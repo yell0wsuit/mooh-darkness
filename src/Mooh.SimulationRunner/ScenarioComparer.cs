@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Mooh.Core.Combat;
+using Mooh.Core.Enemies;
 using Mooh.Core.Entities;
 using Mooh.Core.Grid;
 using Mooh.Core.Motion;
@@ -76,7 +78,7 @@ namespace Mooh.SimulationRunner
             ObservedEntityState[] actual =
             [
                 .. materialized.World.Entities.Select(
-                    entity => ObserveEntity(entity, materialized.AliasesById[entity.Id])),
+                    entity => ObserveEntity(entity, EventObserver.ResolveAlias(entity.Id, materialized.AliasesById))),
             ];
             const string path = "expectFinal.entities";
             if (expected.Entities.Count != actual.Length)
@@ -112,6 +114,66 @@ namespace Mooh.SimulationRunner
                 $"{path}.facingDirection");
             CompareMotion(expected.Motion, actual.Motion, source, $"{path}.motion");
             CompareRotation(expected.Rotation, actual.Rotation, source, $"{path}.rotation");
+            CompareOptionalDouble(
+                expected.CurrentHealth,
+                actual.CurrentHealth,
+                source,
+                $"{path}.currentHealth");
+            CompareValue(
+                expected.ImmunityMilliseconds,
+                actual.ImmunityMilliseconds,
+                source,
+                $"{path}.immunityMilliseconds");
+            CompareValue(
+                ParseOptionalEnum<PlayerReactionKind>(expected.PlayerReaction),
+                actual.PlayerReaction,
+                source,
+                $"{path}.playerReaction");
+            CompareValue(
+                expected.ReactionMilliseconds,
+                actual.ReactionMilliseconds,
+                source,
+                $"{path}.reactionMilliseconds");
+            CompareValue(
+                ParseOptionalEnum<GreenMonsterState>(expected.GreenMonsterState),
+                actual.GreenMonsterState,
+                source,
+                $"{path}.greenMonsterState");
+            CompareValue(
+                ParseOptionalDirection(expected.GreenMonsterFacingDirection),
+                actual.GreenMonsterFacingDirection,
+                source,
+                $"{path}.greenMonsterFacingDirection");
+            CompareValue(
+                expected.GreenMonsterRemainingMilliseconds,
+                actual.GreenMonsterRemainingMilliseconds,
+                source,
+                $"{path}.greenMonsterRemainingMilliseconds");
+            CompareValue(
+                actual.GreenMonsterState is null ? null : expected.GreenMonsterIsFrozen ?? false,
+                actual.GreenMonsterIsFrozen,
+                source,
+                $"{path}.greenMonsterIsFrozen");
+            CompareValue(
+                actual.GreenMonsterState is null ? null : expected.GreenMonsterIsSmall ?? false,
+                actual.GreenMonsterIsSmall,
+                source,
+                $"{path}.greenMonsterIsSmall");
+            CompareValue(
+                ParseOptionalEnum<BlueMonsterState>(expected.BlueMonsterState),
+                actual.BlueMonsterState,
+                source,
+                $"{path}.blueMonsterState");
+            CompareValue(
+                ParseOptionalDirection(expected.BlueMonsterFacingDirection),
+                actual.BlueMonsterFacingDirection,
+                source,
+                $"{path}.blueMonsterFacingDirection");
+            CompareValue(
+                expected.BlueMonsterRemainingMilliseconds,
+                actual.BlueMonsterRemainingMilliseconds,
+                source,
+                $"{path}.blueMonsterRemainingMilliseconds");
         }
 
         private static void CompareMotion(
@@ -219,7 +281,42 @@ namespace Mooh.SimulationRunner
                         rotation.From,
                         rotation.To,
                         rotation.RemainingSeconds,
-                        rotation.SuspendedProgress));
+                        rotation.SuspendedProgress),
+                entity.HealthBody?.Current,
+                entity.HealthBody is null
+                    ? null
+                    : entity.HealthBody.ImmunityRemaining.Ticks / TimeSpan.TicksPerMillisecond,
+                entity.PlayerBody?.Reaction.Kind,
+                entity.PlayerBody is null
+                    ? null
+                    : entity.PlayerBody.Reaction.Remaining.Ticks / TimeSpan.TicksPerMillisecond,
+                entity.GreenMonsterBody?.State,
+                entity.GreenMonsterBody?.FacingDirection,
+                entity.GreenMonsterBody is null
+                    ? null
+                    : entity.GreenMonsterBody.Remaining.Ticks / TimeSpan.TicksPerMillisecond,
+                entity.GreenMonsterBody?.IsFrozen,
+                entity.GreenMonsterBody?.IsSmall,
+                entity.BlueMonsterBody?.State,
+                entity.BlueMonsterBody?.FacingDirection,
+                entity.BlueMonsterBody is null
+                    ? null
+                    : entity.BlueMonsterBody.Remaining.Ticks / TimeSpan.TicksPerMillisecond);
+        }
+
+        private static void CompareOptionalDouble(
+            double? expected,
+            double? actual,
+            string source,
+            string path)
+        {
+            if (expected is double expectedValue && actual is double actualValue)
+            {
+                CompareDouble(expectedValue, actualValue, source, path);
+                return;
+            }
+
+            CompareValue(expected, actual, source, path);
         }
 
         private static void CompareDouble(
@@ -265,12 +362,34 @@ namespace Mooh.SimulationRunner
                 ParseOptionalDirection(expected.To),
                 expected.Position is null
                     ? null
-                    : new GridPosition(expected.Position.X, expected.Position.Y));
+                    : new GridPosition(expected.Position.X, expected.Position.Y),
+                expected.FromPosition is null
+                    ? null
+                    : new GridPosition(expected.FromPosition.X, expected.FromPosition.Y),
+                expected.ToPosition is null
+                    ? null
+                    : new GridPosition(expected.ToPosition.X, expected.ToPosition.Y),
+                expected.SourceEntity,
+                ParseOptionalEnum<DamageKind>(expected.DamageKind),
+                ParseOptionalEnum<DamageResult>(expected.DamageResult),
+                expected.Amount,
+                expected.RemainingHealth,
+                expected.DurationMilliseconds,
+                expected.IsSmall,
+                ParseOptionalEnum<WorldRotationDirection>(expected.WorldRotation),
+                expected.Width,
+                expected.Height);
         }
 
         private static Direction? ParseOptionalDirection(string? value)
         {
             return value is null ? null : Enum.Parse<Direction>(value, ignoreCase: false);
+        }
+
+        private static TEnum? ParseOptionalEnum<TEnum>(string? value)
+            where TEnum : struct, Enum
+        {
+            return value is null ? null : Enum.Parse<TEnum>(value, ignoreCase: false);
         }
     }
 }

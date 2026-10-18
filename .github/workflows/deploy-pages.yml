@@ -1,0 +1,66 @@
+name: Deploy Browser to GitHub Pages
+
+on:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+concurrency:
+    group: pages
+    cancel-in-progress: true
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: ./.github/actions/setup-dotnet
+            - name: Install WebAssembly workload
+              run: dotnet workload install wasm-tools
+            - uses: actions/setup-python@v7
+              with:
+                  python-version: "3.14"
+
+            # Build dependency only: the site contains Opus files, no FFmpeg binary.
+            - name: Install audio encoder
+              id: encoder
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y ffmpeg
+                  ffmpeg -hide_banner -encoders 2>/dev/null | grep libopus
+                  echo "version=$(ffmpeg -version | sha256sum | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+
+            # Restore across asset edits, never across encoder/renderer recipe edits.
+            - name: Cache converted browser content
+              uses: actions/cache@v6
+              with:
+                  path: |
+                      src/Mooh.Browser/wwwroot/content
+                      artifacts/browser-audio/sfx
+                  key: web-content-${{ runner.os }}-${{ steps.encoder.outputs.version }}-${{ hashFiles('tools/build_browser_content.py', 'tools/Mooh.MusicRenderer/**/*.cs', 'tools/Mooh.MusicRenderer/*.csproj', 'src/Mooh.Presentation/Music/**/*.cs', 'Directory.*.props', 'global.json') }}-${{ hashFiles('assets/**') }}
+                  restore-keys: |
+                      web-content-${{ runner.os }}-${{ steps.encoder.outputs.version }}-${{ hashFiles('tools/build_browser_content.py', 'tools/Mooh.MusicRenderer/**/*.cs', 'tools/Mooh.MusicRenderer/*.csproj', 'src/Mooh.Presentation/Music/**/*.cs', 'Directory.*.props', 'global.json') }}-
+
+            - name: Build browser content
+              run: python tools/build_browser_content.py
+            - name: Publish both AOT browser runtimes
+              run: python tools/publish_browser.py --output dist/browser
+            - name: Disable Jekyll
+              run: touch dist/browser/wwwroot/.nojekyll
+            - uses: actions/upload-pages-artifact@v5
+              with:
+                  path: dist/browser/wwwroot
+
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v5

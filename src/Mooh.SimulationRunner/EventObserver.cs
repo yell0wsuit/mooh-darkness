@@ -16,7 +16,7 @@ namespace Mooh.SimulationRunner
         /// <exception cref="ArgumentNullException">
         /// <paramref name="events"/> or <paramref name="aliasesById"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="InvalidOperationException">An event or entity identifier is unsupported.</exception>
+        /// <exception cref="InvalidOperationException">An event type is unsupported.</exception>
         public static IReadOnlyList<ObservedEvent> Observe(
             IReadOnlyList<SimulationEvent> events,
             IReadOnlyDictionary<EntityId, string> aliasesById)
@@ -30,8 +30,72 @@ namespace Mooh.SimulationRunner
                 string entity = ResolveAlias(simulationEvent.EntityId, aliasesById);
                 result.Add(simulationEvent switch
                 {
+                    MagicActivated value => new ObservedEvent(nameof(MagicActivated), entity, position: value.Position),
+                    FrozenMonsterShattered value => new ObservedEvent(nameof(FrozenMonsterShattered), entity, position: value.Position),
+                    SmallBeetleKilled value => new ObservedEvent(nameof(SmallBeetleKilled), entity, position: value.Position),
+                    FireContactResolved value => new ObservedEvent(nameof(FireContactResolved), entity, position: value.Position),
                     CellEntered value => new ObservedEvent(
                         nameof(CellEntered),
+                        entity,
+                        position: value.Position),
+                    DamageApplied value => new ObservedEvent(
+                        nameof(DamageApplied),
+                        entity,
+                        sourceEntity: ResolveAlias(value.SourceEntityId, aliasesById),
+                        damageKind: value.Kind,
+                        amount: value.Amount,
+                        remainingHealth: value.RemainingHealth),
+                    DamageIgnored value => new ObservedEvent(
+                        nameof(DamageIgnored),
+                        entity,
+                        sourceEntity: ResolveAlias(value.SourceEntityId, aliasesById),
+                        damageKind: value.Kind,
+                        damageResult: value.Reason),
+                    EnemyAttackStarted value => new ObservedEvent(
+                        nameof(EnemyAttackStarted),
+                        entity,
+                        position: value.TargetCell,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds),
+                    EnemyFrozen => new ObservedEvent(nameof(EnemyFrozen), entity),
+                    EnemyMoveStarted value => new ObservedEvent(
+                        nameof(EnemyMoveStarted),
+                        entity,
+                        fromPosition: value.From,
+                        toPosition: value.To),
+                    EnemyStrike value => new ObservedEvent(
+                        nameof(EnemyStrike),
+                        entity,
+                        position: value.TargetCell),
+                    EnemyThawed => new ObservedEvent(nameof(EnemyThawed), entity),
+                    EnemyTransformationCompleted value => new ObservedEvent(
+                        nameof(EnemyTransformationCompleted),
+                        entity,
+                        isSmall: value.IsSmall),
+                    EnemyTransformationStarted value => new ObservedEvent(
+                        nameof(EnemyTransformationStarted),
+                        entity,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds,
+                        isSmall: value.IsSmall),
+                    EnemyTurnCompleted value => new ObservedEvent(
+                        nameof(EnemyTurnCompleted),
+                        entity,
+                        direction: value.FacingDirection),
+                    EnemyTurnStarted value => new ObservedEvent(
+                        nameof(EnemyTurnStarted),
+                        entity,
+                        from: value.FromDirection,
+                        to: value.ToDirection,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds),
+                    EntityDestroyed value => new ObservedEvent(
+                        nameof(EntityDestroyed),
+                        entity,
+                        sourceEntity: ResolveAlias(value.SourceEntityId, aliasesById)),
+                    ExplosionCellReached value => new ObservedEvent(
+                        nameof(ExplosionCellReached),
+                        entity,
+                        position: value.Position),
+                    ExplosionStarted value => new ObservedEvent(
+                        nameof(ExplosionStarted),
                         entity,
                         position: value.Position),
                     FallStarted value => new ObservedEvent(
@@ -42,6 +106,10 @@ namespace Mooh.SimulationRunner
                         nameof(Landed),
                         entity,
                         direction: value.Direction),
+                    LevelLost => new ObservedEvent(nameof(LevelLost), entity),
+                    LevelOutcomeAnnounced => new ObservedEvent(nameof(LevelOutcomeAnnounced), entity),
+                    StrikePushStopped value => new ObservedEvent(nameof(StrikePushStopped), entity, direction: value.Direction),
+                    LevelWon => new ObservedEvent(nameof(LevelWon), entity),
                     PlayerAte value => new ObservedEvent(
                         nameof(PlayerAte),
                         entity,
@@ -54,6 +122,16 @@ namespace Mooh.SimulationRunner
                         nameof(PlayerMoveStarted),
                         entity,
                         direction: value.Direction),
+                    PlayerDied => new ObservedEvent(nameof(PlayerDied), entity),
+                    PlayerGrenadePlaced value => new ObservedEvent(
+                        nameof(PlayerGrenadePlaced),
+                        entity,
+                        position: value.Position),
+                    PlayerGrenadeThrowStarted value => new ObservedEvent(
+                        nameof(PlayerGrenadeThrowStarted),
+                        entity,
+                        direction: value.Direction,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds),
                     PlayerReturned value => new ObservedEvent(
                         nameof(PlayerReturned),
                         entity,
@@ -71,15 +149,47 @@ namespace Mooh.SimulationRunner
                         entity,
                         from: value.From,
                         to: value.To),
+                    PlayerShockEnded => new ObservedEvent(nameof(PlayerShockEnded), entity),
+                    PlayerShockStarted value => new ObservedEvent(
+                        nameof(PlayerShockStarted),
+                        entity,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds),
                     PlayerStopped => new ObservedEvent(nameof(PlayerStopped), entity),
+                    PlayerStrikeStarted value => new ObservedEvent(
+                        nameof(PlayerStrikeStarted),
+                        entity,
+                        direction: value.Direction,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds),
+                    PlayerStruck value => new ObservedEvent(
+                        nameof(PlayerStruck),
+                        entity,
+                        direction: value.Direction,
+                        position: value.Position),
+                    PlayerWeaponEmpty => new ObservedEvent(nameof(PlayerWeaponEmpty), entity),
                     PushStarted value => new ObservedEvent(
                         nameof(PushStarted),
                         entity,
                         direction: value.Direction),
+                    ShakeImpact => new ObservedEvent(nameof(ShakeImpact), entity),
                     SlideStarted value => new ObservedEvent(
                         nameof(SlideStarted),
                         entity,
                         direction: value.Direction),
+                    SmallBeetleSpawned value => new ObservedEvent(
+                        nameof(SmallBeetleSpawned),
+                        entity,
+                        position: value.Position),
+                    WorldRotationStarted value => new ObservedEvent(
+                        nameof(WorldRotationStarted),
+                        entity,
+                        durationMilliseconds: (long)value.Duration.TotalMilliseconds,
+                        worldRotation: value.Direction),
+                    WorldRotationCompleted value => new ObservedEvent(
+                        nameof(WorldRotationCompleted),
+                        entity,
+                        worldRotation: value.Direction,
+                        width: value.Width,
+                        height: value.Height),
                     _ => throw new InvalidOperationException(
                         $"Unsupported simulation event type '{simulationEvent.GetType().FullName}'."),
                 });
@@ -88,13 +198,19 @@ namespace Mooh.SimulationRunner
             return result;
         }
 
-        private static string ResolveAlias(
+        internal static string ResolveAlias(
             EntityId id,
             IReadOnlyDictionary<EntityId, string> aliasesById)
         {
             return aliasesById.TryGetValue(id, out string? alias)
                 ? alias
-                : throw new InvalidOperationException($"Event references unregistered entity '{id}'.");
+                : $"spawned:{id.Value:D}";
+        }
+
+        internal static bool IsSpawnedAlias(string alias)
+        {
+            return alias.StartsWith("spawned:", StringComparison.Ordinal)
+                && Guid.TryParseExact(alias.AsSpan(8), "D", out _);
         }
     }
 }

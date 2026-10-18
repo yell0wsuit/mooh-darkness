@@ -6,6 +6,9 @@ namespace Mooh.Core.Grid
     internal sealed class CellState
     {
         /// <summary>Gets or sets the simulation time at which gravity may use the cell again.</summary>
-        public double LockedUntilSeconds { get; set; }
+        public double LockedUntilSeconds
+        {
+            get; set;
+        }
     }
 }

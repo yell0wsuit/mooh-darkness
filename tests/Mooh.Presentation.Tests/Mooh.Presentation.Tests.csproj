@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Mooh.Presentation/Mooh.Presentation.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../assets/sprites/*.png"
+             Link="assets/sprites/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/sprites/*.json"
+             Link="assets/sprites/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/fonts/*.ttf;../../assets/fonts/OFL.txt"
+             Link="assets/fonts/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/text/strings.json"
+             Link="assets/text/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/music/TrackMenu.json;../../assets/music/Music.json"
+             Link="assets/music/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/music/samples/*.ogg"
+             Link="assets/music/samples/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/sounds/Sound.json"
+             Link="assets/sounds/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/animations/*.json"
+             Link="assets/animations/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/levels/**/*.json"
+             Link="assets/levels/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

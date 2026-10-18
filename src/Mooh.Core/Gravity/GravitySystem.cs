@@ -111,6 +111,12 @@ namespace Mooh.Core.Gravity
             return true;
         }
 
+        /// <summary>Checks an ongoing fall's next cell without applying entry deadlines.</summary>
+        internal bool CanContinueFalling(WorldGrid world, Entity entity, GridPosition destination)
+        {
+            return world.Contains(destination) && _collisionPolicy.CanEnter(world, entity, destination);
+        }
+
         internal bool CanEnter(WorldGrid world, Entity entity, GridPosition destination)
         {
             return world.Contains(destination)

@@ -1,0 +1,304 @@
+using System;
+using System.Buffers.Binary;
+using System.Collections.Generic;
+using System.Text.Json;
+
+using Mooh.Core.Combat;
+using Mooh.Core.Content;
+using Mooh.Core.Enemies;
+using Mooh.Core.Entities;
+using Mooh.Core.Explosions;
+using Mooh.Core.Gravity;
+using Mooh.Core.Grid;
+using Mooh.Core.Hazards;
+using Mooh.Core.Player;
+using Mooh.Core.Shakes;
+using Mooh.Core.Simulation;
+
+namespace Mooh.Core.Levels
+{
+    /// <summary>Translates validated archival levels through the explicit archival object catalog.</summary>
+    public static class LevelMaterializer
+    {
+        /// <summary>
+        /// The archival object identifier reported by an entity created at runtime, which has no
+        /// archival source and therefore cannot share the identifier space of placed objects.
+        /// </summary>
+        public const int RuntimeObjectId = -1;
+
+        /// <summary>
+        /// The archival saved-state class name under which a linked object stores its destination
+        /// cells. Only the teleporter uses it in the committed corpus.
+        /// </summary>
+        private const string LinkCoordinateStateClass = "GameLinkBase.CLinkCoordBase";
+
+        /// <summary>The archival editor property holding a message table's help-text id.</summary>
+        private const string HelpTextProperty = "_TableTxt";
+
+        private static readonly TimeSpan BlueMonsterTurnDuration = TimeSpan.FromMilliseconds(300);
+        private static readonly TimeSpan GreenMonsterTurnDuration = TimeSpan.FromMilliseconds(250);
+        private static readonly TimeSpan PlayerImmunityDuration = TimeSpan.FromMilliseconds(650);
+
+        /// <summary>Materializes a level with standard speeds and downward gravity.</summary>
+        /// <param name="level">The validated archival level.</param>
+        /// <returns>The live runtime level.</returns>
+        public static MaterializedLevel Materialize(LevelDocument level)
+        {
+            return Materialize(level, Direction.Down, DifficultySpeeds.Standard);
+        }
+
+        /// <summary>Materializes a level with an explicit initial gravity and difficulty profile.</summary>
+        /// <param name="level">The validated archival level.</param>
+        /// <param name="gravityDirection">The initial cardinal gravity direction.</param>
+        /// <param name="speeds">The recovered difficulty gameplay values.</param>
+        /// <returns>The live runtime level.</returns>
+        /// <exception cref="ArgumentNullException">A required argument is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="gravityDirection"/> is undefined.</exception>
+        /// <exception cref="LevelMaterializationException">An object cannot cross the explicit catalog boundary.</exception>
+        public static MaterializedLevel Materialize(
+            LevelDocument level,
+            Direction gravityDirection,
+            DifficultySpeeds speeds)
+        {
+            ArgumentNullException.ThrowIfNull(level);
+            ArgumentNullException.ThrowIfNull(speeds);
+            if (!Enum.IsDefined(gravityDirection))
+            {
+                throw new ArgumentOutOfRangeException(nameof(gravityDirection), gravityDirection, null);
+            }
+
+            IReadOnlyList<LevelObject> objects = level.Objects
+                ?? throw new LevelMaterializationException("The archival level has no object collection.");
+            WorldGrid world = new(level.Size.Width, level.Size.Height);
+            Dictionary<int, EntityId> idsByObjectId = [];
+
+            foreach (LevelObject source in objects)
+            {
+                ArchivalObjectDescriptor descriptor;
+                try
+                {
+                    descriptor = ArchivalObjectCatalog.Get(source.Type ?? string.Empty);
+                }
+                catch (Exception exception) when (exception is ArgumentException or KeyNotFoundException)
+                {
+                    throw new LevelMaterializationException(
+                        $"Archival object {source.Id} of type '{source.Type ?? "<null>"}' cannot be materialized.",
+                        exception);
+                }
+
+                EntityId id = CreateDeterministicId(source.Id);
+                Entity entity = CreateEntity(id, source, descriptor, speeds);
+                try
+                {
+                    world.Add(entity);
+                    idsByObjectId.Add(source.Id, id);
+                }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                {
+                    throw new LevelMaterializationException(
+                        $"Archival object {source.Id} of type '{descriptor.ArchivalType}' is invalid for this runtime world.",
+                        exception);
+                }
+            }
+
+            SimulationWorld simulation = new(
+                world,
+                gravityDirection,
+                new DefaultGravityCollisionPolicy(),
+                new Random(0),
+                0.5,
+                speeds);
+            return new MaterializedLevel(
+                level,
+                world,
+                simulation,
+                gravityDirection,
+                idsByObjectId);
+        }
+
+        /// <summary>
+        /// Materializes an object the original creates at runtime rather than placing in a level.
+        /// The recovered engine registers such an object under its own <c>ObjRep</c> name while
+        /// sharing a placed type's behavior: the thrown grenade <c>WBombInt</c> is
+        /// <c>GameTypeBomb</c>, exactly as the placed <c>WBomb</c> pickup is. The entity therefore
+        /// carries the catalog descriptor of the named placed type, and its archival identity
+        /// reports <see cref="RuntimeObjectId"/> because it has no archival source.
+        /// </summary>
+        /// <param name="id">The entity's stable identity.</param>
+        /// <param name="position">The cell the object is created in.</param>
+        /// <param name="archivalType">The placed type whose recovered behavior it shares.</param>
+        /// <param name="speeds">The recovered difficulty gameplay values.</param>
+        /// <returns>The runtime entity, not yet registered in a world.</returns>
+        /// <exception cref="ArgumentNullException">A required argument is null.</exception>
+        /// <exception cref="KeyNotFoundException">The type is not in the placed-type catalog.</exception>
+        public static Entity CreateRuntimeObject(
+            EntityId id,
+            GridPosition position,
+            string archivalType,
+            DifficultySpeeds speeds)
+        {
+            ArgumentNullException.ThrowIfNull(speeds);
+            ArchivalObjectDescriptor descriptor = ArchivalObjectCatalog.Get(archivalType);
+            LevelObject source = new(
+                RuntimeObjectId,
+                descriptor.ArchivalType,
+                0,
+                new LevelPosition(position.X, position.Y),
+                null,
+                null);
+            return CreateEntity(id, source, descriptor, speeds);
+        }
+
+        private static Entity CreateEntity(
+            EntityId id,
+            LevelObject source,
+            ArchivalObjectDescriptor descriptor,
+            DifficultySpeeds speeds)
+        {
+            Direction facing = descriptor.Variant is >= 0 and <= 3
+                ? (Direction)descriptor.Variant
+                : Direction.Down;
+            return new Entity(
+                id,
+                new GridPosition(source.Position.X, source.Position.Y),
+                descriptor.Interactions,
+                descriptor.HasGravity
+                    ? new GravityBody(
+                        speeds.NormalSpeed * descriptor.FallSpeedMultiplier,
+                        canSlide: true,
+                        descriptor.ImpactStrength,
+                        descriptor.TreatsShadowAsSupport)
+                    : null,
+                descriptor.Kind == EntityKind.Player
+                    ? new PlayerBody(speeds.PlayerSpeed, 1.5, Direction.Down)
+                    : null,
+                descriptor.Kind == EntityKind.Player
+                    ? new HealthBody(100, 100, PlayerImmunityDuration)
+                    : null,
+                descriptor.Kind == EntityKind.GreenMonster
+                    ? new GreenMonsterBody(
+                        speeds.MonsterSpeed,
+                        facing,
+                        GreenMonsterTurnDuration,
+                        strikeDamage: speeds.ShakeDamage)
+                    : null,
+                descriptor.Kind == EntityKind.BlueMonster
+                    ? new BlueMonsterBody(
+                        speeds.MonsterSpeed,
+                        facing,
+                        BlueMonsterTurnDuration,
+                        strikeDamage: speeds.ShakeDamage)
+                    : null,
+                new ArchivalObjectIdentity(source, descriptor),
+                descriptor.ExplosionReaction is ExplosionReaction reaction
+                    ? new ExplosionBody(reaction, descriptor.DetonatesOnLanding)
+                    : null,
+                smallBeetleBody: null,
+                shakeBody: descriptor.ShakeReaction == ShakeReaction.None
+                    && descriptor.HardShakeReaction == ShakeReaction.None
+                    ? null
+                    : new ShakeBody(
+                        descriptor.ShakeReaction,
+                        descriptor.HardShakeReaction,
+                        descriptor.ShakesItselfOnLanding),
+                fireBody: descriptor.FireContact is FireContact fireContact
+                    ? new FireBody(fireContact)
+                    : null,
+                tunnelBody: descriptor.TunnelShape is TunnelShape tunnelShape
+                    ? new TunnelBody(tunnelShape)
+                    : null,
+                flyingArrowBody: descriptor.Kind == EntityKind.FlyingArrow
+                    ? new FlyingArrowBody(facing)
+                    : null,
+                teleporterBody: descriptor.Kind == EntityKind.Teleporter
+                    ? new TeleporterBody(ReadLinkCoordinates(source))
+                    : null,
+                // The catalog separates the two rotator types by variant alone: OWRotL is -1 and
+                // OWRotR is 1, matching the sign of the recovered CNT_GPrm_WorldRotSp each passes.
+                worldRotationBody: descriptor.Kind == EntityKind.WorldRotation
+                    ? new WorldRotationBody(descriptor.Variant < 0
+                        ? WorldRotationDirection.Left
+                        : WorldRotationDirection.Right)
+                    : null,
+                balloonFuseBody: descriptor.Kind == EntityKind.Balloon
+                    ? new BalloonFuseBody()
+                    : null,
+                messageTableBody: descriptor.Kind == EntityKind.MessageTable
+                    ? new MessageTableBody(ReadHelpTextId(source))
+                    : null,
+                bioMassBody: descriptor.Kind == EntityKind.BioMass
+                    ? new BioMassBody()
+                    : null,
+                keyDoorBody: descriptor.Kind == EntityKind.KeyDoor
+                    ? new KeyDoorBody()
+                    : null);
+        }
+
+        /// <summary>
+        /// Reads a linked object's destination cells out of the archival saved state. The
+        /// recovered <c>CLinkCoordBase.__getstate__</c> returns a one-element tuple holding the
+        /// list of <c>(x, y)</c> pairs, which the archival JSON preserves verbatim under the
+        /// <c>GameLinkBase.CLinkCoordBase</c> class name. A malformed or absent entry yields no
+        /// links, which is a state the corpus already contains: fourteen of the forty-six placed
+        /// teleporters are linked to nothing.
+        /// </summary>
+        /// <summary>
+        /// Reads a message table's recovered <c>_TableTxt</c> editor property. Every placed table
+        /// in the committed corpus carries one, but the property is optional in the archival
+        /// format, so an absent or non-string value yields no id rather than failing the load.
+        /// </summary>
+        private static string? ReadHelpTextId(LevelObject source)
+        {
+            return source.Properties?.TryGetValue(HelpTextProperty, out JsonElement value) == true
+                && value.ValueKind == JsonValueKind.String
+                ? value.GetString()
+                : null;
+        }
+
+        private static List<GridPosition> ReadLinkCoordinates(LevelObject source)
+        {
+            List<GridPosition> links = [];
+            if (source.SavedState is not IReadOnlyList<LevelSavedState> states)
+            {
+                return links;
+            }
+
+            foreach (LevelSavedState state in states)
+            {
+                if (state.Class != LinkCoordinateStateClass
+                    || state.Value.ValueKind != JsonValueKind.Array
+                    || state.Value.GetArrayLength() == 0)
+                {
+                    continue;
+                }
+
+                JsonElement pairs = state.Value[0];
+                if (pairs.ValueKind != JsonValueKind.Array)
+                {
+                    continue;
+                }
+
+                foreach (JsonElement pair in pairs.EnumerateArray())
+                {
+                    if (pair.ValueKind == JsonValueKind.Array
+                        && pair.GetArrayLength() == 2
+                        && pair[0].TryGetInt32(out int x)
+                        && pair[1].TryGetInt32(out int y))
+                    {
+                        links.Add(new GridPosition(x, y));
+                    }
+                }
+            }
+
+            return links;
+        }
+
+        private static EntityId CreateDeterministicId(int objectId)
+        {
+            Span<byte> bytes = stackalloc byte[16];
+            bytes.Clear();
+            BinaryPrimitives.WriteInt32LittleEndian(bytes, objectId);
+            return new EntityId(new Guid(bytes));
+        }
+    }
+}

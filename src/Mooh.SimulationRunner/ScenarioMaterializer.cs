@@ -2,9 +2,13 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 
+using Mooh.Core.Combat;
+using Mooh.Core.Enemies;
 using Mooh.Core.Entities;
+using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
+using Mooh.Core.Hazards;
 using Mooh.Core.Interactions;
 using Mooh.Core.Player;
 using Mooh.Core.Simulation;
@@ -39,17 +43,32 @@ namespace Mooh.SimulationRunner
                     new GridPosition(definition.Position.X, definition.Position.Y),
                     CreateInteractionMask(definition.Interactions),
                     CreateGravityBody(definition.GravityBody),
-                    CreatePlayerBody(definition.PlayerBody, scenario.Name));
+                    CreatePlayerBody(definition.PlayerBody, scenario.Name),
+                    CreateHealthBody(definition.HealthBody),
+                    CreateGreenMonsterBody(definition.GreenMonsterBody, scenario.Name),
+                    CreateBlueMonsterBody(definition.BlueMonsterBody, scenario.Name),
+                    explosionBody: CreateExplosionBody(definition.ExplosionBody, scenario.Name),
+                    worldRotationBody: CreateWorldRotationBody(
+                        definition.WorldRotationBody,
+                        scenario.Name));
                 world.Add(entity);
                 idsByAlias.Add(definition.Alias, id);
                 aliasesById.Add(id, definition.Alias);
             }
 
+            DifficultySpeeds difficulty = scenario.World.HealthDrainPerSecond is double drain
+                ? DifficultySpeeds.Standard with
+                {
+                    HealthDrainPerSecond = drain
+                }
+                : DifficultySpeeds.Standard;
             SimulationWorld simulation = new(
                 world,
                 gravityDirection,
                 new DefaultGravityCollisionPolicy(),
-                new Random(scenario.World.RandomSeed));
+                new Random(scenario.World.RandomSeed),
+                0.5,
+                difficulty);
             return new MaterializedScenario(
                 scenario,
                 world,
@@ -84,6 +103,33 @@ namespace Mooh.SimulationRunner
                 : new GravityBody(definition.FallSpeed, definition.CanSlide);
         }
 
+        private static ExplosionBody? CreateExplosionBody(
+            ScenarioExplosionBody? definition,
+            string source)
+        {
+            return definition is null
+                ? null
+                : new ExplosionBody(
+                    ScenarioValidator.ParseEnum<ExplosionReaction>(
+                        definition.Reaction,
+                        source,
+                        "explosionBody.reaction"),
+                    definition.DetonatesOnLanding);
+        }
+
+        private static WorldRotationBody? CreateWorldRotationBody(
+            ScenarioWorldRotationBody? definition,
+            string source)
+        {
+            return definition is null
+                ? null
+                : new WorldRotationBody(
+                    ScenarioValidator.ParseEnum<WorldRotationDirection>(
+                        definition.Direction,
+                        source,
+                        "worldRotationBody.direction"));
+        }
+
         private static PlayerBody? CreatePlayerBody(ScenarioPlayerBody? definition, string source)
         {
             return definition is null
@@ -95,6 +141,53 @@ namespace Mooh.SimulationRunner
                         definition.FacingDirection,
                         source,
                         "playerBody.facingDirection"));
+        }
+
+        private static HealthBody? CreateHealthBody(ScenarioHealthBody? definition)
+        {
+            return definition is null
+                ? null
+                : new HealthBody(
+                    definition.Maximum,
+                    definition.Current,
+                    TimeSpan.FromMilliseconds(definition.ImmunityMilliseconds));
+        }
+
+        private static GreenMonsterBody? CreateGreenMonsterBody(
+            ScenarioGreenMonsterBody? definition,
+            string source)
+        {
+            return definition is null
+                ? null
+                : new GreenMonsterBody(
+                    definition.MoveSpeed,
+                    ScenarioValidator.ParseEnum<Direction>(
+                        definition.FacingDirection,
+                        source,
+                        "greenMonsterBody.facingDirection"),
+                    TimeSpan.FromMilliseconds(definition.TurnMilliseconds),
+                    TimeSpan.FromMilliseconds(definition.AttackWindupMilliseconds),
+                    TimeSpan.FromMilliseconds(definition.AttackRecoveryMilliseconds),
+                    definition.StrikeDamage);
+        }
+
+        private static BlueMonsterBody? CreateBlueMonsterBody(
+            ScenarioBlueMonsterBody? definition,
+            string source)
+        {
+            return definition is null
+                ? null
+                : new BlueMonsterBody(
+                    definition.MoveSpeed,
+                    ScenarioValidator.ParseEnum<Direction>(
+                        definition.FacingDirection,
+                        source,
+                        "blueMonsterBody.facingDirection"),
+                    TimeSpan.FromMilliseconds(definition.TurnMilliseconds),
+                    TimeSpan.FromMilliseconds(definition.AttackWindupMilliseconds),
+                    TimeSpan.FromMilliseconds(definition.LeftAttackRecoveryMilliseconds),
+                    TimeSpan.FromMilliseconds(definition.AttackRecoveryMilliseconds),
+                    definition.StrikeDamage);
         }
     }
 }

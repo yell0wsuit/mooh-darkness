@@ -1,0 +1,249 @@
+{
+  "frames": {
+    "OSt01": {
+      "frame": {
+        "x": 329,
+        "y": 0,
+        "w": 55,
+        "h": 46
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 55,
+        "h": 46
+      },
+      "sourceSize": {
+        "w": 55,
+        "h": 46
+      },
+      "pivot": {
+        "x": 0.509090909090909,
+        "y": 0.4782608695652174
+      }
+    },
+    "OSt02": {
+      "frame": {
+        "x": 165,
+        "y": 70,
+        "w": 56,
+        "h": 50
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 50
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 50
+      },
+      "pivot": {
+        "x": 0.5178571428571429,
+        "y": 0.52
+      }
+    },
+    "OSt03": {
+      "frame": {
+        "x": 109,
+        "y": 70,
+        "w": 56,
+        "h": 54
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 54
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 54
+      },
+      "pivot": {
+        "x": 0.5178571428571429,
+        "y": 0.5370370370370371
+      }
+    },
+    "OSt04": {
+      "frame": {
+        "x": 273,
+        "y": 59,
+        "w": 56,
+        "h": 58
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 58
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 58
+      },
+      "pivot": {
+        "x": 0.5178571428571429,
+        "y": 0.5689655172413793
+      }
+    },
+    "OSt05": {
+      "frame": {
+        "x": 273,
+        "y": 0,
+        "w": 56,
+        "h": 59
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 59
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 59
+      },
+      "pivot": {
+        "x": 0.5178571428571429,
+        "y": 0.576271186440678
+      }
+    },
+    "OSt06": {
+      "frame": {
+        "x": 218,
+        "y": 0,
+        "w": 55,
+        "h": 66
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 55,
+        "h": 66
+      },
+      "sourceSize": {
+        "w": 55,
+        "h": 66
+      },
+      "pivot": {
+        "x": 0.509090909090909,
+        "y": 0.6363636363636364
+      }
+    },
+    "OSt07": {
+      "frame": {
+        "x": 164,
+        "y": 0,
+        "w": 54,
+        "h": 70
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 54,
+        "h": 70
+      },
+      "sourceSize": {
+        "w": 54,
+        "h": 70
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.6571428571428571
+      }
+    },
+    "OSt08": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 55,
+        "h": 70
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 55,
+        "h": 70
+      },
+      "sourceSize": {
+        "w": 55,
+        "h": 70
+      },
+      "pivot": {
+        "x": 0.4909090909090909,
+        "y": 0.6571428571428571
+      }
+    },
+    "OSt09": {
+      "frame": {
+        "x": 109,
+        "y": 0,
+        "w": 55,
+        "h": 69
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 55,
+        "h": 69
+      },
+      "sourceSize": {
+        "w": 55,
+        "h": 69
+      },
+      "pivot": {
+        "x": 0.4909090909090909,
+        "y": 0.6521739130434783
+      }
+    },
+    "OSt10": {
+      "frame": {
+        "x": 55,
+        "y": 0,
+        "w": 54,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 54,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 54,
+        "h": 71
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.6619718309859155
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteObjBottle.png",
+    "scale": "1"
+  }
+}

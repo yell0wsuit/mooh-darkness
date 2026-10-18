@@ -1,0 +1,17 @@
+{
+  "game": {
+    "file": "TrackMenu",
+    "position": 40,
+    "volume": 0.6
+  },
+  "menu": {
+    "file": "TrackMenu",
+    "position": 0,
+    "volume": 0.6
+  },
+  "gameend": {
+    "file": "TrackMenu",
+    "position": 16,
+    "volume": 0.65
+  }
+}

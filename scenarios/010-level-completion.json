@@ -1,0 +1,95 @@
+{
+    "formatVersion": 1,
+    "name": "eating the last level-end lock carrier completes the level",
+    "world": {
+        "width": 3,
+        "height": 1,
+        "gravity": "Down",
+        "randomSeed": 0,
+        "healthDrainPerSecond": 0,
+        "entities": [
+            {
+                "alias": "player",
+                "position": { "x": 0, "y": 0 },
+                "interactions": ["BlocksMovement"],
+                "playerBody": {
+                    "moveSpeed": 1,
+                    "pushSpeedMultiplier": 1.5,
+                    "facingDirection": "Right"
+                },
+                "healthBody": {
+                    "maximum": 100,
+                    "current": 100,
+                    "immunityMilliseconds": 500
+                }
+            },
+            {
+                "alias": "carrier",
+                "position": { "x": 1, "y": 0 },
+                "interactions": ["PlayerEdible", "LevelEndLock"]
+            }
+        ]
+    },
+    "steps": [
+        {
+            "input": ["Right"],
+            "advanceMilliseconds": 100,
+            "expectEvents": [
+                {
+                    "type": "PlayerAte",
+                    "entity": "player",
+                    "eatenEntity": "carrier"
+                },
+                {
+                    "type": "PlayerMoveStarted",
+                    "entity": "player",
+                    "direction": "Right"
+                }
+            ]
+        },
+        {
+            "advanceMilliseconds": 900,
+            "expectEvents": [
+                {
+                    "type": "LevelOutcomeAnnounced",
+                    "entity": "player"
+                },
+                {
+                    "type": "CellEntered",
+                    "entity": "player",
+                    "position": { "x": 1, "y": 0 }
+                },
+                {
+                    "type": "PlayerStopped",
+                    "entity": "player"
+                }
+            ]
+        },
+        {
+            "advanceMilliseconds": 1000,
+            "expectEvents": [
+                {
+                    "type": "LevelWon",
+                    "entity": "player"
+                }
+            ]
+        }
+    ],
+    "expectFinal": {
+        "entities": [
+            {
+                "alias": "player",
+                "position": { "x": 1, "y": 0 },
+                "facingDirection": "Right",
+                "currentHealth": 100,
+                "immunityMilliseconds": 0,
+                "playerReaction": "Normal",
+                "reactionMilliseconds": 0
+            },
+            {
+                "alias": "spawned:02b6ed32-092c-d921-9aa3-47e9cda5dc2d",
+                "position": { "x": 1, "y": 0 }
+            }
+        ]
+    }
+}

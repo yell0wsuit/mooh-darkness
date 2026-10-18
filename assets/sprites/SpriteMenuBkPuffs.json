@@ -1,0 +1,105 @@
+{
+  "frames": {
+    "PPuff_01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 504,
+        "h": 185
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 504,
+        "h": 185
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 185
+      },
+      "pivot": {
+        "x": 0.6091269841269841,
+        "y": 0.6648648648648648
+      }
+    },
+    "PPuff_02": {
+      "frame": {
+        "x": 315,
+        "y": 185,
+        "w": 134,
+        "h": 56
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 134,
+        "h": 56
+      },
+      "sourceSize": {
+        "w": 134,
+        "h": 56
+      },
+      "pivot": {
+        "x": 0.8283582089552238,
+        "y": 0.9642857142857143
+      }
+    },
+    "PPuff_03": {
+      "frame": {
+        "x": 0,
+        "y": 296,
+        "w": 330,
+        "h": 50
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 330,
+        "h": 50
+      },
+      "sourceSize": {
+        "w": 330,
+        "h": 50
+      },
+      "pivot": {
+        "x": 0.6333333333333333,
+        "y": 1.02
+      }
+    },
+    "PPuff_04": {
+      "frame": {
+        "x": 0,
+        "y": 185,
+        "w": 315,
+        "h": 111
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 315,
+        "h": 111
+      },
+      "sourceSize": {
+        "w": 315,
+        "h": 111
+      },
+      "pivot": {
+        "x": 0.6158730158730159,
+        "y": 0.7027027027027027
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteMenuBkPuffs.png",
+    "scale": "1"
+  }
+}
