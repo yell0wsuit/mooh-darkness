@@ -1,5 +1,7 @@
+using Mooh.Core.Enemies;
 using Mooh.Core.Grid;
 using Mooh.Core.Motion;
+using Mooh.Core.Player;
 
 namespace Mooh.SimulationRunner
 {
@@ -35,10 +37,34 @@ namespace Mooh.SimulationRunner
     /// <param name="Motion">Active continuous motion, if any.</param>
     /// <param name="FacingDirection">Player-facing direction, if applicable.</param>
     /// <param name="Rotation">Active player rotation, if any.</param>
+    /// <param name="CurrentHealth">Current health, if applicable.</param>
+    /// <param name="ImmunityMilliseconds">Remaining damage immunity in milliseconds, if applicable.</param>
+    /// <param name="PlayerReaction">Current player reaction, if applicable.</param>
+    /// <param name="ReactionMilliseconds">Remaining player-reaction time in milliseconds, if applicable.</param>
+    /// <param name="GreenMonsterState">Current green-monster state, if applicable.</param>
+    /// <param name="GreenMonsterFacingDirection">Green-monster facing direction, if applicable.</param>
+    /// <param name="GreenMonsterRemainingMilliseconds">Remaining monster-state time in milliseconds, if applicable.</param>
+    /// <param name="GreenMonsterIsFrozen">Whether the Green Monster is frozen, if applicable.</param>
+    /// <param name="GreenMonsterIsSmall">Whether the Green Monster is in its glasses form, if applicable.</param>
+    /// <param name="BlueMonsterState">Current blue-monster state, if applicable.</param>
+    /// <param name="BlueMonsterFacingDirection">Blue-monster facing direction, if applicable.</param>
+    /// <param name="BlueMonsterRemainingMilliseconds">Remaining blue-monster state time in milliseconds, if applicable.</param>
     public sealed record ObservedEntityState(
         string Alias,
         GridPosition Position,
         ObservedMotionState? Motion,
         Direction? FacingDirection,
-        ObservedRotationState? Rotation);
+        ObservedRotationState? Rotation,
+        double? CurrentHealth,
+        long? ImmunityMilliseconds,
+        PlayerReactionKind? PlayerReaction,
+        long? ReactionMilliseconds,
+        GreenMonsterState? GreenMonsterState,
+        Direction? GreenMonsterFacingDirection,
+        long? GreenMonsterRemainingMilliseconds,
+        bool? GreenMonsterIsFrozen,
+        bool? GreenMonsterIsSmall,
+        BlueMonsterState? BlueMonsterState,
+        Direction? BlueMonsterFacingDirection,
+        long? BlueMonsterRemainingMilliseconds);
 }

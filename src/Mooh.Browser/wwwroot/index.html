@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#181e2e">
+<title>Mooh Darkness</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#181e2e;color:#f8edcf;font:16px system-ui,sans-serif}#game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none;cursor:none}#splash{position:fixed;inset:0;display:grid;place-items:center;background:#181e2ef2;padding:24px;z-index:2}#splash.hidden,#splash[hidden]{display:none}.panel{max-width:480px;text-align:center}h1{font-size:clamp(30px,6vw,48px);color:#ffd24b;margin:0 0 20px}button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:12px 28px;background:#ffd24b;color:#231a0a;cursor:pointer}button[hidden],[hidden]{display:none!important}p{line-height:1.65}#storage-warning{position:fixed;bottom:8px;left:8px;right:8px;text-align:center;background:#492d16e8;padding:8px;z-index:3}#update{position:fixed;top:16px;right:16px;max-width:320px;padding:16px;background:#292d3c;z-index:4;border:1px solid #ffd24b;border-radius:8px}#fullscreen{position:fixed;top:8px;right:8px;padding:4px 8px;opacity:.65;background:#181e2e;color:white;z-index:1}
+</style>
+<script>
+globalThis.moohFail = (message) => { console.error(message); const splash=document.getElementById('splash'); if(!splash)return; splash.hidden=false; splash.classList.remove('hidden'); document.getElementById('splash-progress').textContent=String(message); document.getElementById('start').hidden=true; document.getElementById('resume').hidden=false; };
+addEventListener('error', event => globalThis.moohFail(event.message));
+addEventListener('unhandledrejection', event => globalThis.moohFail(event.reason?.message ?? event.reason));
+</script>
+<script src="coi.js"></script>
+</head>
+<body>
+<canvas id="game" tabindex="0" aria-label="Mooh Darkness game"></canvas>
+<button id="fullscreen" title="Full screen" aria-label="Full screen">⛶</button>
+<section id="splash"><div class="panel"><h1>Mooh Darkness</h1><p id="splash-progress">Loading game…</p><button id="start" hidden>Play</button><p>Arrow keys to move · Space or Ctrl to fire<br>Enter switches weapons · 1–4 selects a weapon<br>Esc or P pauses · F2 restarts</p><p id="context-lost-error" hidden>The graphics context was lost. Reload to continue.</p><button id="resume" hidden onclick="location.reload()">Reload</button></div></section>
+<div id="storage-warning" hidden>Progress cannot be saved in this browser session.</div>
+<dialog id="update"><p>A game update is ready.</p><button id="update-now">Reload</button><button id="update-later">Later</button></dialog>
+<script type="module" src="main.js"></script>
+<script type="module" src="pwa.js"></script>
+</body></html>

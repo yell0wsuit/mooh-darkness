@@ -8,6 +8,7 @@ namespace Mooh.Core.Simulation
     /// </summary>
     /// <param name="EntityId">The pushed entity.</param>
     /// <param name="Direction">The push direction.</param>
-    public sealed record PushStarted(EntityId EntityId, Direction Direction)
+    /// <param name="IsStrike">Whether a hand strike started the push rather than walking.</param>
+    public sealed record PushStarted(EntityId EntityId, Direction Direction, bool IsStrike = false)
         : SimulationEvent(EntityId);
 }

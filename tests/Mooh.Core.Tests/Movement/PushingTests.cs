@@ -130,6 +130,55 @@ namespace Mooh.Core.Tests.Movement
             Assert.Equal(new GridPosition(3, 1), block.Position);
         }
 
+        /// <summary>
+        /// Verifies a shadow occupant beyond the push target does not block the push. The recovered
+        /// gate is <c>CellObjCheck(n, 0, 0, True)</c>, and a zero <c>ulMaskAny</c> makes the world
+        /// list skip every occupant carrying <c>CNT_OrMaskShadow</c>, so a message table, a
+        /// teleporter, fire or a deployed mine reads as an empty cell.
+        /// </summary>
+        [Fact]
+        public void ShadowOccupantBeyondPushTargetDoesNotBlockPush()
+        {
+            (WorldGrid World, MovementSystem Movement) context = CreateContext();
+            Entity mover = Add(context.World, 2, InteractionMask.None);
+            Entity block = Add(context.World, 3, Pushable);
+            Entity table = Add(context.World, 4, InteractionMask.OccupancyTransparent);
+
+            MovementPlan plan = context.Movement.Plan(new MoveRequest(mover.Id, Direction.Right));
+
+            Assert.Equal(MoveResult.Pushed, plan.Result);
+            Assert.Equal(
+                [
+                    new MovementStep(block.Id, new GridPosition(3, 1), new GridPosition(4, 1)),
+                    new MovementStep(mover.Id, new GridPosition(2, 1), new GridPosition(3, 1)),
+                ],
+                plan.Steps);
+            Assert.Equal(new GridPosition(4, 1), table.Position);
+        }
+
+        /// <summary>
+        /// Verifies a shadow occupant sharing the push target's cell does not turn the push into a
+        /// blocked move either, because the same filter hides it from the destination scan.
+        /// </summary>
+        [Fact]
+        public void ShadowOccupantSharingPushTargetDoesNotBlockPush()
+        {
+            (WorldGrid World, MovementSystem Movement) context = CreateContext();
+            Entity mover = Add(context.World, 2, InteractionMask.None);
+            Entity block = Add(context.World, 3, Pushable);
+            _ = Add(context.World, 3, InteractionMask.OccupancyTransparent);
+
+            MovementPlan plan = context.Movement.Plan(new MoveRequest(mover.Id, Direction.Right));
+
+            Assert.Equal(MoveResult.Pushed, plan.Result);
+            Assert.Equal(
+                [
+                    new MovementStep(block.Id, new GridPosition(3, 1), new GridPosition(4, 1)),
+                    new MovementStep(mover.Id, new GridPosition(2, 1), new GridPosition(3, 1)),
+                ],
+                plan.Steps);
+        }
+
         private static (WorldGrid World, MovementSystem Movement) CreateContext(int width = 10)
         {
             WorldGrid world = new(width, 3);

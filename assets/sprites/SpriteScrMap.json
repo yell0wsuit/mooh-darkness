@@ -1,0 +1,81 @@
+{
+  "frames": {
+    "MAlpha": {
+      "frame": {
+        "x": 248,
+        "y": 115,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "MGlass": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 248,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 248,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 248,
+        "h": 224
+      },
+      "pivot": {
+        "x": -1.1733870967741935,
+        "y": -0.9107142857142857
+      }
+    },
+    "MGlass0": {
+      "frame": {
+        "x": 248,
+        "y": 0,
+        "w": 143,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 143,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 143,
+        "h": 115
+      },
+      "pivot": {
+        "x": -2.3216783216783217,
+        "y": -2.0956521739130434
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteScrMap.png",
+    "scale": "1"
+  }
+}

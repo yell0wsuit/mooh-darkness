@@ -1,0 +1,201 @@
+{
+  "frames": {
+    "OCellEDesert01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 113
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 97,
+        "h": 113
+      },
+      "sourceSize": {
+        "w": 97,
+        "h": 113
+      },
+      "pivot": {
+        "x": 0.4020618556701031,
+        "y": 0.6814159292035398
+      }
+    },
+    "OCellEDesert02": {
+      "frame": {
+        "x": 99,
+        "y": 285,
+        "w": 98,
+        "h": 91
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 91
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 91
+      },
+      "pivot": {
+        "x": 0.40816326530612246,
+        "y": 0.6043956043956044
+      }
+    },
+    "OCellEDesert03": {
+      "frame": {
+        "x": 0,
+        "y": 193,
+        "w": 99,
+        "h": 93
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 99,
+        "h": 93
+      },
+      "sourceSize": {
+        "w": 99,
+        "h": 93
+      },
+      "pivot": {
+        "x": 0.40404040404040403,
+        "y": 0.5806451612903226
+      }
+    },
+    "OCellEDesert04": {
+      "frame": {
+        "x": 0,
+        "y": 286,
+        "w": 98,
+        "h": 90
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 90
+      },
+      "pivot": {
+        "x": 0.3979591836734694,
+        "y": 0.5888888888888889
+      }
+    },
+    "OCellEDesert05": {
+      "frame": {
+        "x": 0,
+        "y": 376,
+        "w": 98,
+        "h": 90
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 90
+      },
+      "pivot": {
+        "x": 0.40816326530612246,
+        "y": 0.5888888888888889
+      }
+    },
+    "OCellRDesert01": {
+      "frame": {
+        "x": 97,
+        "y": 0,
+        "w": 104,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 104,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 104,
+        "h": 98
+      },
+      "pivot": {
+        "x": 0.4230769230769231,
+        "y": 0.5612244897959183
+      }
+    },
+    "OCellRDesert02": {
+      "frame": {
+        "x": 99,
+        "y": 193,
+        "w": 99,
+        "h": 92
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 99,
+        "h": 92
+      },
+      "sourceSize": {
+        "w": 99,
+        "h": 92
+      },
+      "pivot": {
+        "x": 0.40404040404040403,
+        "y": 0.5978260869565217
+      }
+    },
+    "OCellRDesert03": {
+      "frame": {
+        "x": 97,
+        "y": 98,
+        "w": 99,
+        "h": 95
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 99,
+        "h": 95
+      },
+      "sourceSize": {
+        "w": 99,
+        "h": 95
+      },
+      "pivot": {
+        "x": 0.40404040404040403,
+        "y": 0.5789473684210527
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteCellDesert.png",
+    "scale": "1"
+  }
+}

@@ -1,0 +1,127 @@
+{
+    "formatVersion": 1,
+    "name": "simultaneous green monster strikes respect immunity",
+    "world": {
+        "width": 3,
+        "height": 1,
+        "gravity": "Down",
+        "randomSeed": 0,
+        "healthDrainPerSecond": 0,
+        "entities": [
+            {
+                "alias": "first-monster",
+                "position": { "x": 0, "y": 0 },
+                "interactions": ["BlocksMovement"],
+                "greenMonsterBody": {
+                    "moveSpeed": 1.5625,
+                    "facingDirection": "Right",
+                    "turnMilliseconds": 250,
+                    "attackWindupMilliseconds": 625,
+                    "attackRecoveryMilliseconds": 500,
+                    "strikeDamage": 20
+                }
+            },
+            {
+                "alias": "second-monster",
+                "position": { "x": 2, "y": 0 },
+                "interactions": ["BlocksMovement"],
+                "greenMonsterBody": {
+                    "moveSpeed": 1.5625,
+                    "facingDirection": "Left",
+                    "turnMilliseconds": 250,
+                    "attackWindupMilliseconds": 625,
+                    "attackRecoveryMilliseconds": 500,
+                    "strikeDamage": 20
+                }
+            },
+            {
+                "alias": "player",
+                "position": { "x": 1, "y": 0 },
+                "interactions": ["BlocksMovement"],
+                "playerBody": {
+                    "moveSpeed": 2.5,
+                    "pushSpeedMultiplier": 1.5,
+                    "facingDirection": "Right"
+                },
+                "healthBody": {
+                    "maximum": 100,
+                    "current": 100,
+                    "immunityMilliseconds": 500
+                }
+            }
+        ]
+    },
+    "steps": [
+        {
+            "advanceMilliseconds": 625,
+            "expectEvents": [
+                {
+                    "type": "EnemyAttackStarted",
+                    "entity": "first-monster",
+                    "position": { "x": 1, "y": 0 },
+                    "durationMilliseconds": 625
+                },
+                {
+                    "type": "EnemyAttackStarted",
+                    "entity": "second-monster",
+                    "position": { "x": 1, "y": 0 },
+                    "durationMilliseconds": 625
+                },
+                {
+                    "type": "EnemyStrike",
+                    "entity": "first-monster",
+                    "position": { "x": 1, "y": 0 }
+                },
+                {
+                    "type": "DamageApplied",
+                    "entity": "player",
+                    "sourceEntity": "first-monster",
+                    "damageKind": "Strike",
+                    "amount": 20,
+                    "remainingHealth": 80
+                },
+                {
+                    "type": "PlayerShockStarted",
+                    "entity": "player",
+                    "durationMilliseconds": 700
+                },
+                {
+                    "type": "ShakeImpact",
+                    "entity": "first-monster"
+                },
+                {
+                    "type": "EnemyStrike",
+                    "entity": "second-monster",
+                    "position": { "x": 1, "y": 0 }
+                }
+            ]
+        }
+    ],
+    "expectFinal": {
+        "entities": [
+            {
+                "alias": "first-monster",
+                "position": { "x": 0, "y": 0 },
+                "greenMonsterState": "AttackRecovery",
+                "greenMonsterFacingDirection": "Right",
+                "greenMonsterRemainingMilliseconds": 500
+            },
+            {
+                "alias": "second-monster",
+                "position": { "x": 2, "y": 0 },
+                "greenMonsterState": "AttackRecovery",
+                "greenMonsterFacingDirection": "Left",
+                "greenMonsterRemainingMilliseconds": 500
+            },
+            {
+                "alias": "player",
+                "position": { "x": 1, "y": 0 },
+                "facingDirection": "Right",
+                "currentHealth": 80,
+                "immunityMilliseconds": 500,
+                "playerReaction": "Shocked",
+                "reactionMilliseconds": 700
+            }
+        ]
+    }
+}

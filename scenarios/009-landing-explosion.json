@@ -1,0 +1,75 @@
+{
+    "formatVersion": 1,
+    "name": "landing explosive detonates",
+    "world": {
+        "width": 3,
+        "height": 4,
+        "gravity": "Down",
+        "randomSeed": 0,
+        "entities": [
+            {
+                "alias": "bomb",
+                "position": { "x": 1, "y": 0 },
+                "interactions": [],
+                "gravityBody": {
+                    "fallSpeed": 1,
+                    "canSlide": false
+                },
+                "explosionBody": {
+                    "reaction": "Detonate3x3",
+                    "detonatesOnLanding": true
+                }
+            },
+            {
+                "alias": "support",
+                "position": { "x": 1, "y": 2 },
+                "interactions": ["BlocksMovement"]
+            }
+        ]
+    },
+    "steps": [
+        {
+            "advanceMilliseconds": 1000,
+            "expectEvents": [
+                {
+                    "type": "FallStarted",
+                    "entity": "bomb",
+                    "direction": "Down"
+                },
+                {
+                    "type": "CellEntered",
+                    "entity": "bomb",
+                    "position": { "x": 1, "y": 1 }
+                },
+                {
+                    "type": "Landed",
+                    "entity": "bomb",
+                    "direction": "Down"
+                },
+                {
+                    "type": "ExplosionStarted",
+                    "entity": "bomb",
+                    "position": { "x": 1, "y": 1 }
+                },
+                {
+                    "type": "EntityDestroyed",
+                    "entity": "bomb",
+                    "sourceEntity": "bomb"
+                },
+                {
+                    "type": "ExplosionCellReached",
+                    "entity": "bomb",
+                    "position": { "x": 1, "y": 1 }
+                }
+            ]
+        }
+    ],
+    "expectFinal": {
+        "entities": [
+            {
+                "alias": "support",
+                "position": { "x": 1, "y": 2 }
+            }
+        ]
+    }
+}

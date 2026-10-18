@@ -1,0 +1,225 @@
+{
+  "frames": {
+    "OCellENrm01": {
+      "frame": {
+        "x": 104,
+        "y": 0,
+        "w": 108,
+        "h": 95
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 108,
+        "h": 95
+      },
+      "sourceSize": {
+        "w": 108,
+        "h": 95
+      },
+      "pivot": {
+        "x": 0.4444444444444444,
+        "y": 0.6
+      }
+    },
+    "OCellENrm02": {
+      "frame": {
+        "x": 104,
+        "y": 95,
+        "w": 106,
+        "h": 95
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 106,
+        "h": 95
+      },
+      "sourceSize": {
+        "w": 106,
+        "h": 95
+      },
+      "pivot": {
+        "x": 0.4339622641509434,
+        "y": 0.6
+      }
+    },
+    "OCellENrm03": {
+      "frame": {
+        "x": 0,
+        "y": 298,
+        "w": 100,
+        "h": 93
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 100,
+        "h": 93
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 93
+      },
+      "pivot": {
+        "x": 0.42,
+        "y": 0.5913978494623656
+      }
+    },
+    "OCellENrm04": {
+      "frame": {
+        "x": 0,
+        "y": 202,
+        "w": 100,
+        "h": 96
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 100,
+        "h": 96
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 96
+      },
+      "pivot": {
+        "x": 0.42,
+        "y": 0.6041666666666666
+      }
+    },
+    "OCellENrm05": {
+      "frame": {
+        "x": 0,
+        "y": 106,
+        "w": 101,
+        "h": 96
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 101,
+        "h": 96
+      },
+      "sourceSize": {
+        "w": 101,
+        "h": 96
+      },
+      "pivot": {
+        "x": 0.42574257425742573,
+        "y": 0.6041666666666666
+      }
+    },
+    "OCellRNrm01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 104,
+        "h": 106
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 104,
+        "h": 106
+      },
+      "sourceSize": {
+        "w": 104,
+        "h": 106
+      },
+      "pivot": {
+        "x": 0.41346153846153844,
+        "y": 0.6132075471698113
+      }
+    },
+    "OCellRNrm02": {
+      "frame": {
+        "x": 101,
+        "y": 190,
+        "w": 107,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 107,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 107,
+        "h": 94
+      },
+      "pivot": {
+        "x": 0.38317757009345793,
+        "y": 0.6170212765957447
+      }
+    },
+    "OCellRNrm03": {
+      "frame": {
+        "x": 100,
+        "y": 376,
+        "w": 99,
+        "h": 92
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 99,
+        "h": 92
+      },
+      "sourceSize": {
+        "w": 99,
+        "h": 92
+      },
+      "pivot": {
+        "x": 0.3939393939393939,
+        "y": 0.5978260869565217
+      }
+    },
+    "OCellRNrm04": {
+      "frame": {
+        "x": 100,
+        "y": 284,
+        "w": 102,
+        "h": 92
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 102,
+        "h": 92
+      },
+      "sourceSize": {
+        "w": 102,
+        "h": 92
+      },
+      "pivot": {
+        "x": 0.4117647058823529,
+        "y": 0.6086956521739131
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteCellNrm.png",
+    "scale": "1"
+  }
+}

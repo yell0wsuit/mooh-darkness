@@ -1,0 +1,273 @@
+{
+  "frames": {
+    "OCellEJungle01": {
+      "frame": {
+        "x": 107,
+        "y": 317,
+        "w": 109,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 109,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 109,
+        "h": 94
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.5957446808510638
+      }
+    },
+    "OCellEJungle02": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 120,
+        "h": 104
+      },
+      "pivot": {
+        "x": 0.49166666666666664,
+        "y": 0.5576923076923077
+      }
+    },
+    "OCellEJungle03": {
+      "frame": {
+        "x": 113,
+        "y": 216,
+        "w": 109,
+        "h": 101
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 109,
+        "h": 101
+      },
+      "sourceSize": {
+        "w": 109,
+        "h": 101
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.6138613861386139
+      }
+    },
+    "OCellEJungle04": {
+      "frame": {
+        "x": 120,
+        "y": 0,
+        "w": 111,
+        "h": 108
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 111,
+        "h": 108
+      },
+      "sourceSize": {
+        "w": 111,
+        "h": 108
+      },
+      "pivot": {
+        "x": 0.43243243243243246,
+        "y": 0.5925925925925926
+      }
+    },
+    "OCellEJungle05": {
+      "frame": {
+        "x": 0,
+        "y": 209,
+        "w": 113,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 113,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 113,
+        "h": 98
+      },
+      "pivot": {
+        "x": 0.4424778761061947,
+        "y": 0.5714285714285714
+      }
+    },
+    "OCellRJungle01": {
+      "frame": {
+        "x": 114,
+        "y": 108,
+        "w": 106,
+        "h": 108
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 106,
+        "h": 108
+      },
+      "sourceSize": {
+        "w": 106,
+        "h": 108
+      },
+      "pivot": {
+        "x": 0.44339622641509435,
+        "y": 0.5555555555555556
+      }
+    },
+    "OCellRJungle02": {
+      "frame": {
+        "x": 0,
+        "y": 403,
+        "w": 99,
+        "h": 102
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 99,
+        "h": 102
+      },
+      "sourceSize": {
+        "w": 99,
+        "h": 102
+      },
+      "pivot": {
+        "x": 0.41414141414141414,
+        "y": 0.5980392156862745
+      }
+    },
+    "OCellRJungle03": {
+      "frame": {
+        "x": 0,
+        "y": 505,
+        "w": 98,
+        "h": 92
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 92
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 92
+      },
+      "pivot": {
+        "x": 0.40816326530612246,
+        "y": 0.5978260869565217
+      }
+    },
+    "OCellPlantNrm01": {
+      "frame": {
+        "x": 0,
+        "y": 307,
+        "w": 107,
+        "h": 96
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 107,
+        "h": 96
+      },
+      "sourceSize": {
+        "w": 107,
+        "h": 96
+      },
+      "pivot": {
+        "x": 0.4205607476635514,
+        "y": 0.5833333333333334
+      }
+    },
+    "OCellPlantNrm02": {
+      "frame": {
+        "x": 0,
+        "y": 104,
+        "w": 114,
+        "h": 105
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 114,
+        "h": 105
+      },
+      "sourceSize": {
+        "w": 114,
+        "h": 105
+      },
+      "pivot": {
+        "x": 0.4298245614035088,
+        "y": 0.5714285714285714
+      }
+    },
+    "OCellPlantNrm03": {
+      "frame": {
+        "x": 99,
+        "y": 411,
+        "w": 106,
+        "h": 94
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 106,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 106,
+        "h": 94
+      },
+      "pivot": {
+        "x": 0.42452830188679247,
+        "y": 0.6063829787234043
+      }
+    }
+  },
+  "meta": {
+    "app": "Mooh SEQ conversion; TexturePacker JSON Hash",
+    "image": "SpriteCellJungle.png",
+    "scale": "1"
+  }
+}

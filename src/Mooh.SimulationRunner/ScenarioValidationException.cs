@@ -25,6 +25,9 @@ namespace Mooh.SimulationRunner
         }
 
         /// <summary>Gets the source name used in diagnostics.</summary>
-        public string SourceName { get; }
+        public string SourceName
+        {
+            get;
+        }
     }
 }

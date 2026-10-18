@@ -75,37 +75,56 @@ namespace Mooh.Core.Movement
                     [new MovementStep(mover.Id, mover.Position, destination)]);
             }
 
+            // GamePlayer.CtrlMove gates a gravity-axis push twice. The outer gate needs every
+            // occupant to carry CNT_CMaskObjVPush, and the ordinary push branch is then reached
+            // through `elif vm and ...`, so it is unavailable along gravity at all. Only an
+            // occupant that also carries CNT_CMaskPlCanPushThEat takes the earlier branch and
+            // survives both.
             if (gravityDirection is Direction gravity
                 && IsOnSameAxis(request.Direction, gravity)
-                && pushed.Any(
-                    entity => !entity.Interactions.HasFlag(InteractionMask.GravityAxisPushable)))
+                && (pushed.Any(
+                        entity => !entity.Interactions.HasFlag(InteractionMask.GravityAxisPushable))
+                    || !pushed.Exists(
+                        entity => entity.Interactions.HasFlag(InteractionMask.PushesThroughOccupants))))
             {
                 return new MovementPlan(MoveResult.Blocked, []);
             }
 
+            // A push can take over motion along its direction, preserving its offset.
+            // Opposite and perpendicular motion still block it.
+            if (pushed.Exists(entity => entity.Motion is { } motion
+                && motion.TravelDirection != request.Direction))
+            {
+                return new MovementPlan(MoveResult.Blocked, []);
+            }
+
+            EntityId[] offered = [.. pushed.Select(entity => entity.Id)];
+
+            // Both recovered gates on the cell beyond — CellObjCheck(n, 0, CNT_CMaskCallCanPushTh,
+            // True) and CellObjCheck(n, 0, 0, True) — are ordinary queries.
             GridPosition pushedDestination = destination.Offset(request.Direction);
-            IReadOnlyList<Entity> pushedDestinationOccupants = _world.Contains(pushedDestination)
-                ? _world.GetOccupants(pushedDestination)
+            List<Entity> pushedDestinationOccupants = _world.Contains(pushedDestination)
+                ? [.. CellQuery.VisibleOccupants(_world, pushedDestination)]
                 : [];
             if (!_world.Contains(pushedDestination)
                 || (pushedDestinationOccupants.Count != 0
                     && !pushed.Exists(
                         entity => entity.Interactions.HasFlag(InteractionMask.PushesThroughOccupants)))
-                || pushedDestinationOccupants.Any(
+                || pushedDestinationOccupants.Exists(
                     entity => !entity.Interactions.HasFlag(InteractionMask.CanBePushedThrough))
                 || pushed.Exists(
-                    entity => entity.Motion is not null
-                        || entity.Interactions.HasFlag(InteractionMask.MovementLocked)))
+                    entity => entity.Interactions.HasFlag(InteractionMask.MovementLocked)))
             {
-                return new MovementPlan(MoveResult.Blocked, []);
+                return new MovementPlan(MoveResult.Blocked, [], offered);
             }
 
             List<MovementStep> steps = [];
             steps.AddRange(
                 pushed.Select(
-                    entity => new MovementStep(entity.Id, entity.Position, pushedDestination)));
+                    entity => new MovementStep(entity.Id, entity.Position,
+                        entity.Motion is null ? pushedDestination : entity.Position)));
             steps.Add(new MovementStep(mover.Id, mover.Position, destination));
-            return new MovementPlan(MoveResult.Pushed, steps);
+            return new MovementPlan(MoveResult.Pushed, steps, offered);
         }
 
         private static bool IsOnSameAxis(Direction first, Direction second)

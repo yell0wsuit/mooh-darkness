@@ -18,15 +18,27 @@ namespace Mooh.Core.Player
         }
 
         /// <summary>Gets the facing direction before the rotation.</summary>
-        public Direction From { get; }
+        public Direction From
+        {
+            get;
+        }
 
         /// <summary>Gets the facing direction after the rotation.</summary>
-        public Direction To { get; }
+        public Direction To
+        {
+            get;
+        }
 
         /// <summary>Gets the remaining rotation duration in seconds.</summary>
-        public double RemainingSeconds { get; internal set; }
+        public double RemainingSeconds
+        {
+            get; internal set;
+        }
 
         /// <summary>Gets preserved progress from a suspended mid-cell reversal, if any.</summary>
-        public double? SuspendedProgress { get; }
+        public double? SuspendedProgress
+        {
+            get;
+        }
     }
 }

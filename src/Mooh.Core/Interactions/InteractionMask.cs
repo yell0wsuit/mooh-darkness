@@ -34,5 +34,38 @@ namespace Mooh.Core.Interactions
 
         /// <summary>The pushed entity can consume eligible occupants in its destination cell.</summary>
         PushesThroughOccupants = 1 << 7,
+
+        /// <summary>Monster navigation ignores the entity instead of treating its cell as occupied.</summary>
+        MonsterTransparent = 1 << 8,
+
+        /// <summary>A blue monster treats the entity as a strike target.</summary>
+        BlueMonsterTarget = 1 << 9,
+
+        /// <summary>
+        /// The entity holds the level open. A level is completed once no registered entity carries
+        /// this capability, provided at least one carrier existed when the level started.
+        /// </summary>
+        LevelEndLock = 1 << 10,
+
+        /// <summary>
+        /// The entity stops a flying entity from entering its cell.
+        /// Only terrain cells and tunnels carry it, so a beetle flies
+        /// over rocks, monsters and collectibles but not through a wall.
+        /// </summary>
+        BlocksFlight = 1 << 11,
+
+        /// <summary>
+        /// Ordinary cell-occupancy queries ignore the entity, so its cell reads as empty.
+        /// </summary>
+        OccupancyTransparent = 1 << 12,
+
+        /// <summary>
+        /// A flying arrow destroys the entity and keeps going instead of detonating against it.
+        /// This is the recovered <c>CNT_CMaskFlyThrought</c> bit, carried by exactly the twelve
+        /// breakable terrain types: the three diggable families, the five destructible ones and
+        /// the four wood trim pieces. Immortal metal terrain does not carry it, and neither do
+        /// pipes or tunnels, so an arrow bores through earth and rock but stops dead at metal.
+        /// </summary>
+        DestroyedByFlyingArrow = 1 << 13,
     }
 }

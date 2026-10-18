@@ -1,0 +1,313 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Mooh.Core.Combat;
+using Mooh.Core.Entities;
+using Mooh.Core.Grid;
+using Mooh.Core.Interactions;
+using Mooh.Core.Motion;
+using Mooh.Core.Movement;
+using Mooh.Core.Simulation;
+
+namespace Mooh.Core.Enemies
+{
+    internal sealed class GreenMonsterSystem
+    {
+        private const double CounterMotionMultiplier = 0.75;
+
+        private static readonly TimeSpan TimerTolerance = TimeSpan.FromTicks(1);
+
+        private readonly WorldGrid _world;
+
+        internal GreenMonsterSystem(WorldGrid world)
+        {
+            _world = world ?? throw new ArgumentNullException(nameof(world));
+        }
+
+        internal double? SecondsUntilNextTimer()
+        {
+            TimeSpan? remaining = _world.Entities
+                .Where(
+                    entity => entity.GreenMonsterBody is { IsFrozen: false }
+                        && entity.GreenMonsterBody.State is GreenMonsterState.Turning
+                            or GreenMonsterState.AttackWindup
+                            or GreenMonsterState.AttackRecovery
+                            or GreenMonsterState.TransformingSmall
+                            or GreenMonsterState.TransformingNormal)
+                .Min(entity => entity.GreenMonsterBody?.Remaining);
+            return remaining?.TotalSeconds;
+        }
+
+        internal void AdvanceTimer(
+            Entity monster,
+            double elapsedSeconds,
+            List<SimulationEvent> events,
+            Action<DamageRequest> applyDamage)
+        {
+            ArgumentNullException.ThrowIfNull(events);
+            ArgumentNullException.ThrowIfNull(applyDamage);
+            GreenMonsterBody? body = monster.GreenMonsterBody;
+            if (body is null
+                || body.IsFrozen
+                || body.State is not (GreenMonsterState.Turning
+                or GreenMonsterState.AttackWindup
+                or GreenMonsterState.AttackRecovery
+                or GreenMonsterState.TransformingSmall
+                or GreenMonsterState.TransformingNormal))
+            {
+                return;
+            }
+
+            TimeSpan elapsed = SimulationTime.Elapsed(elapsedSeconds);
+            if (body.Remaining - elapsed > TimerTolerance)
+            {
+                body.Remaining -= elapsed;
+                return;
+            }
+
+            CompleteTimedState(monster, body, events, applyDamage);
+        }
+
+        internal static void CompleteWalking(Entity monster)
+        {
+            ArgumentNullException.ThrowIfNull(monster);
+            GreenMonsterBody body = monster.GreenMonsterBody
+                ?? throw new InvalidOperationException("Monster walking requires a green-monster body.");
+            body.State = GreenMonsterState.Deciding;
+        }
+
+        internal void Freeze(Entity monster, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(monster);
+            ArgumentNullException.ThrowIfNull(events);
+            GreenMonsterBody body = monster.GreenMonsterBody
+                ?? throw new InvalidOperationException("Freezing requires a green-monster body.");
+            if (body.IsFrozen)
+            {
+                return;
+            }
+
+            MotionState? motion = monster.Motion;
+            if (motion is { Cause: MotionCause.MonsterWalking, Progress: < 0.5 })
+            {
+                _world.Relocate(
+                    monster.Id,
+                    monster.Position.Offset(motion.SegmentDirection.Opposite()));
+            }
+
+            body.IsFrozen = true;
+            KinematicsSystem.Stop(monster);
+            events.Add(new EnemyFrozen(monster.Id));
+        }
+
+        internal void Thaw(Entity monster, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(monster);
+            ArgumentNullException.ThrowIfNull(events);
+            GreenMonsterBody body = monster.GreenMonsterBody
+                ?? throw new InvalidOperationException("Thawing requires a green-monster body.");
+            if (!body.IsFrozen)
+            {
+                return;
+            }
+
+            body.IsFrozen = false;
+            // IceOff restarts the current animation, including the second part of a strike.
+            TimeSpan strikePhase = body.AttackWindupDuration * 0.4;
+            body.Remaining = body.State switch
+            {
+                GreenMonsterState.Turning => body.IsSmall ? body.SmallTurnDuration : body.TurnDuration,
+                GreenMonsterState.AttackWindup => body.Remaining <= strikePhase
+                    ? strikePhase : body.AttackWindupDuration,
+                GreenMonsterState.AttackRecovery => body.AttackRecoveryDuration,
+                GreenMonsterState.TransformingSmall or GreenMonsterState.TransformingNormal => body.TransformationDuration,
+                GreenMonsterState.Deciding or GreenMonsterState.Walking => TimeSpan.Zero,
+                _ => throw new InvalidOperationException("Undefined green-monster state.")
+            };
+            events.Add(new EnemyThawed(monster.Id));
+            if (body.State == GreenMonsterState.Walking)
+            {
+                GridPosition destination = monster.Position.Offset(body.FacingDirection);
+                if (_world.Contains(destination))
+                {
+                    StartWalking(monster, body, destination, 0, events);
+                }
+                else
+                {
+                    body.State = GreenMonsterState.Deciding;
+                }
+            }
+        }
+
+        internal void SetSmall(Entity monster, bool isSmall, List<SimulationEvent> events)
+        {
+            ArgumentNullException.ThrowIfNull(monster);
+            ArgumentNullException.ThrowIfNull(events);
+            GreenMonsterBody body = monster.GreenMonsterBody
+                ?? throw new InvalidOperationException("A glasses transformation requires a green-monster body.");
+            if (body.IsSmall == isSmall)
+            {
+                return;
+            }
+
+            MotionState? motion = monster.Motion;
+            if (motion is { Cause: MotionCause.MonsterWalking, Progress: < 0.5 })
+            {
+                _world.Relocate(
+                    monster.Id,
+                    monster.Position.Offset(motion.SegmentDirection.Opposite()));
+            }
+
+            KinematicsSystem.Stop(monster);
+            body.IsSmall = isSmall;
+            monster.Interactions = isSmall
+                ? monster.Interactions | InteractionMask.PlayerEdible
+                : monster.Interactions & ~InteractionMask.PlayerEdible;
+            body.State = isSmall
+                ? GreenMonsterState.TransformingSmall
+                : GreenMonsterState.TransformingNormal;
+            body.Remaining = body.TransformationDuration;
+            events.Add(new EnemyTransformationStarted(monster.Id, isSmall, body.TransformationDuration));
+        }
+
+        internal void Decide(Entity monster, int resolutionOrder, List<SimulationEvent> events)
+        {
+            GreenMonsterBody body = monster.GreenMonsterBody!;
+            GridPosition destination = monster.Position.Offset(body.FacingDirection);
+            if (!body.IsSmall && FindAttackablePlayer(destination) is not null)
+            {
+                body.State = GreenMonsterState.AttackWindup;
+                body.Remaining = body.AttackWindupDuration;
+                events.Add(
+                    new EnemyAttackStarted(
+                        monster.Id,
+                        destination,
+                        body.AttackWindupDuration));
+                return;
+            }
+
+            if (CellQuery.CanMonsterEnter(_world, monster, destination))
+            {
+                StartWalking(monster, body, destination, resolutionOrder, events);
+                return;
+            }
+
+            StartTurn(monster, body, events);
+        }
+
+        private void StartWalking(Entity monster, GreenMonsterBody body, GridPosition destination,
+            int resolutionOrder, List<SimulationEvent> events)
+        {
+            GridPosition source = monster.Position;
+            _world.CommitMoves([new PlannedMove(monster.Id, source, destination)]);
+            KinematicsSystem.Start(
+                monster,
+                MotionCause.MonsterWalking,
+                body.FacingDirection,
+                CellQuery.HasCounterMotion(_world, destination, body.FacingDirection)
+                    ? body.MoveSpeed * CounterMotionMultiplier
+                    : body.MoveSpeed,
+                resolutionOrder);
+            body.State = GreenMonsterState.Walking;
+            events.Add(new EnemyMoveStarted(monster.Id, source, destination));
+        }
+
+        /// <summary>
+        /// Applies the recovered forward-cell test. The original inspects the cell with every
+        /// interaction bit except the monster-shadow bit, so any occupant that is not explicitly
+        /// transparent to monsters blocks the walk, including collectibles the player could eat.
+        /// </summary>
+        private void CompleteTimedState(
+            Entity monster,
+            GreenMonsterBody body,
+            List<SimulationEvent> events,
+            Action<DamageRequest> applyDamage)
+        {
+            switch (body.State)
+            {
+                case GreenMonsterState.Turning:
+                    body.FacingDirection = body.FacingDirection.TurnRight();
+                    body.State = GreenMonsterState.Deciding;
+                    body.Remaining = TimeSpan.Zero;
+                    events.Add(new EnemyTurnCompleted(monster.Id, body.FacingDirection));
+                    break;
+                case GreenMonsterState.AttackWindup:
+                    ResolveStrike(monster, body, events, applyDamage);
+                    break;
+                case GreenMonsterState.AttackRecovery:
+                    StartTurn(monster, body, events);
+                    break;
+                case GreenMonsterState.TransformingSmall:
+                case GreenMonsterState.TransformingNormal:
+                    body.State = GreenMonsterState.Deciding;
+                    body.Remaining = TimeSpan.Zero;
+                    events.Add(new EnemyTransformationCompleted(monster.Id, body.IsSmall));
+                    break;
+                case GreenMonsterState.Deciding:
+                case GreenMonsterState.Walking:
+                    throw new InvalidOperationException("A non-timed green-monster state cannot expire.");
+                default:
+                    throw new InvalidOperationException("Undefined green-monster state.");
+            }
+        }
+
+        private void ResolveStrike(
+            Entity monster,
+            GreenMonsterBody body,
+            List<SimulationEvent> events,
+            Action<DamageRequest> applyDamage)
+        {
+            GridPosition targetCell = monster.Position.Offset(body.FacingDirection);
+            body.State = GreenMonsterState.AttackRecovery;
+            body.Remaining = body.AttackRecoveryDuration;
+            events.Add(new EnemyStrike(monster.Id, targetCell));
+
+            Entity? target = FindAttackablePlayer(targetCell);
+            if (target is not null)
+            {
+                applyDamage(
+                    new DamageRequest(
+                        monster.Id,
+                        target.Id,
+                        DamageKind.Strike,
+                        body.StrikeDamage));
+
+                (double x, double y) = body.FacingDirection switch
+                {
+                    Direction.Left => (-43.0 / 80, -3.0 / 75),
+                    Direction.Up => (-14.0 / 80, -51.0 / 75),
+                    Direction.Right => (54.0 / 80, 0),
+                    Direction.Down => (-16.0 / 80, 40.0 / 75),
+                    _ => throw new InvalidOperationException("Undefined strike direction.")
+                };
+                events.Add(new ShakeImpact(monster.Id, monster.Position.X + x, monster.Position.Y + y));
+            }
+        }
+
+        private Entity? FindAttackablePlayer(GridPosition position)
+        {
+            return _world.Contains(position)
+                ? _world.GetOccupants(position)
+                    .FirstOrDefault(entity => entity.IsLivingPlayer)
+                : null;
+        }
+
+        private static void StartTurn(
+            Entity monster,
+            GreenMonsterBody body,
+            List<SimulationEvent> events)
+        {
+            Direction nextDirection = body.FacingDirection.TurnRight();
+            TimeSpan duration = body.IsSmall ? body.SmallTurnDuration : body.TurnDuration;
+            body.State = GreenMonsterState.Turning;
+            body.Remaining = duration;
+            events.Add(
+                new EnemyTurnStarted(
+                    monster.Id,
+                    body.FacingDirection,
+                    nextDirection,
+                    duration));
+        }
+    }
+}

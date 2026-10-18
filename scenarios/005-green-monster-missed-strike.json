@@ -1,0 +1,100 @@
+{
+    "formatVersion": 1,
+    "name": "player avoids green monster strike",
+    "world": {
+        "width": 2,
+        "height": 2,
+        "gravity": "Down",
+        "randomSeed": 0,
+        "healthDrainPerSecond": 0,
+        "entities": [
+            {
+                "alias": "monster",
+                "position": { "x": 0, "y": 1 },
+                "interactions": ["BlocksMovement"],
+                "greenMonsterBody": {
+                    "moveSpeed": 1.5625,
+                    "facingDirection": "Right",
+                    "turnMilliseconds": 250,
+                    "attackWindupMilliseconds": 625,
+                    "attackRecoveryMilliseconds": 500,
+                    "strikeDamage": 20
+                }
+            },
+            {
+                "alias": "player",
+                "position": { "x": 1, "y": 1 },
+                "interactions": ["BlocksMovement"],
+                "playerBody": {
+                    "moveSpeed": 2.5,
+                    "pushSpeedMultiplier": 1.5,
+                    "facingDirection": "Up"
+                },
+                "healthBody": {
+                    "maximum": 100,
+                    "current": 100,
+                    "immunityMilliseconds": 500
+                }
+            }
+        ]
+    },
+    "steps": [
+        {
+            "advanceMilliseconds": 1,
+            "expectEvents": [
+                {
+                    "type": "EnemyAttackStarted",
+                    "entity": "monster",
+                    "position": { "x": 1, "y": 1 },
+                    "durationMilliseconds": 625
+                }
+            ]
+        },
+        {
+            "input": ["Up"],
+            "advanceMilliseconds": 624,
+            "expectEvents": [
+                {
+                    "type": "PlayerMoveStarted",
+                    "entity": "player",
+                    "direction": "Up"
+                },
+                {
+                    "type": "CellEntered",
+                    "entity": "player",
+                    "position": { "x": 1, "y": 0 }
+                },
+                {
+                    "type": "PlayerBlocked",
+                    "entity": "player",
+                    "direction": "Up"
+                },
+                {
+                    "type": "EnemyStrike",
+                    "entity": "monster",
+                    "position": { "x": 1, "y": 1 }
+                }
+            ]
+        }
+    ],
+    "expectFinal": {
+        "entities": [
+            {
+                "alias": "monster",
+                "position": { "x": 0, "y": 1 },
+                "greenMonsterState": "AttackRecovery",
+                "greenMonsterFacingDirection": "Right",
+                "greenMonsterRemainingMilliseconds": 500
+            },
+            {
+                "alias": "player",
+                "position": { "x": 1, "y": 0 },
+                "facingDirection": "Up",
+                "currentHealth": 100,
+                "immunityMilliseconds": 0,
+                "playerReaction": "Normal",
+                "reactionMilliseconds": 0
+            }
+        ]
+    }
+}

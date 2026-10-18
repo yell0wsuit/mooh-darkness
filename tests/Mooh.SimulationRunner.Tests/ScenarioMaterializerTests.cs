@@ -1,5 +1,8 @@
 using System;
 
+using Mooh.Core.Combat;
+using Mooh.Core.Enemies;
+using Mooh.Core.Explosions;
 using Mooh.Core.Gravity;
 using Mooh.Core.Grid;
 using Mooh.Core.Interactions;
@@ -22,6 +25,11 @@ namespace Mooh.SimulationRunner.Tests
                 Position = new ScenarioPosition { X = 2, Y = 1 },
                 Interactions = ["PlayerPushable", "RoundSupport"],
                 GravityBody = new ScenarioGravityBody { FallSpeed = 1.875, CanSlide = true },
+                ExplosionBody = new ScenarioExplosionBody
+                {
+                    Reaction = "Detonate3x3",
+                    DetonatesOnLanding = true,
+                },
             };
             scenario = ScenarioTestData.WithWorld(
                 scenario,
@@ -42,6 +50,10 @@ namespace Mooh.SimulationRunner.Tests
             GravityBody gravityBody = Assert.IsType<GravityBody>(materialized.World.Entities[1].GravityBody);
             Assert.Equal(1.875, gravityBody.FallSpeed);
             Assert.True(gravityBody.CanSlide);
+            ExplosionBody explosionBody = Assert.IsType<ExplosionBody>(
+                materialized.World.Entities[1].ExplosionBody);
+            Assert.Equal(ExplosionReaction.Detonate3x3, explosionBody.Reaction);
+            Assert.True(explosionBody.DetonatesOnLanding);
             Assert.NotNull(materialized.Simulation);
         }
 
@@ -67,6 +79,87 @@ namespace Mooh.SimulationRunner.Tests
             Assert.Equal(
                 new Guid("00000001-0000-0000-0000-000000000000"),
                 result.IdsByAlias["player"].Value);
+        }
+
+        /// <summary>Verifies health and green-monster declarations create their runtime components.</summary>
+        [Fact]
+        public void MaterializesHealthAndGreenMonsterBodies()
+        {
+            ScenarioDocument scenario = ScenarioTestData.CreateValid();
+            ScenarioEntity monster = new()
+            {
+                Alias = "monster",
+                Position = new ScenarioPosition { X = 2, Y = 1 },
+                Interactions = ["BlocksMovement"],
+                HealthBody = new ScenarioHealthBody
+                {
+                    Maximum = 60,
+                    Current = 45,
+                    ImmunityMilliseconds = 500,
+                },
+                GreenMonsterBody = new ScenarioGreenMonsterBody
+                {
+                    MoveSpeed = 1.5625,
+                    FacingDirection = "Left",
+                    TurnMilliseconds = 250,
+                    AttackWindupMilliseconds = 625,
+                    AttackRecoveryMilliseconds = 500,
+                    StrikeDamage = 20,
+                },
+            };
+            scenario = ScenarioTestData.WithWorld(
+                scenario,
+                entities: [scenario.World.Entities[0], monster]);
+            ScenarioValidator.Validate(scenario, "monster.json");
+
+            MaterializedScenario materialized = ScenarioMaterializer.Materialize(scenario);
+
+            HealthBody health = Assert.IsType<HealthBody>(materialized.World.Entities[1].HealthBody);
+            GreenMonsterBody body = Assert.IsType<GreenMonsterBody>(
+                materialized.World.Entities[1].GreenMonsterBody);
+            Assert.Equal(45, health.Current);
+            Assert.Equal(TimeSpan.FromMilliseconds(500), health.ImmunityDuration);
+            Assert.Equal(Direction.Left, body.FacingDirection);
+            Assert.Equal(TimeSpan.FromMilliseconds(625), body.AttackWindupDuration);
+            Assert.Equal(20, body.StrikeDamage);
+        }
+
+        /// <summary>Verifies blue-monster declarations create recovered runtime configuration.</summary>
+        [Fact]
+        public void MaterializesBlueMonsterBody()
+        {
+            ScenarioDocument scenario = ScenarioTestData.CreateValid();
+            ScenarioEntity monster = new()
+            {
+                Alias = "blue",
+                Position = new ScenarioPosition { X = 2, Y = 1 },
+                Interactions = ["BlocksMovement"],
+                BlueMonsterBody = new ScenarioBlueMonsterBody
+                {
+                    MoveSpeed = 1.5625,
+                    FacingDirection = "Left",
+                    TurnMilliseconds = 300,
+                    AttackWindupMilliseconds = 600,
+                    LeftAttackRecoveryMilliseconds = 985,
+                    AttackRecoveryMilliseconds = 1150,
+                    StrikeDamage = 20,
+                },
+            };
+            scenario = ScenarioTestData.WithWorld(
+                scenario,
+                entities: [scenario.World.Entities[0], monster]);
+            ScenarioValidator.Validate(scenario, "blue.json");
+
+            MaterializedScenario materialized = ScenarioMaterializer.Materialize(scenario);
+
+            BlueMonsterBody body = Assert.IsType<BlueMonsterBody>(
+                materialized.World.Entities[1].BlueMonsterBody);
+            Assert.Equal(Direction.Left, body.FacingDirection);
+            Assert.Equal(TimeSpan.FromMilliseconds(300), body.TurnDuration);
+            Assert.Equal(TimeSpan.FromMilliseconds(600), body.AttackWindupDuration);
+            Assert.Equal(TimeSpan.FromMilliseconds(985), body.LeftAttackRecoveryDuration);
+            Assert.Equal(TimeSpan.FromMilliseconds(1150), body.AttackRecoveryDuration);
+            Assert.Equal(20, body.StrikeDamage);
         }
     }
 }

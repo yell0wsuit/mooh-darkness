@@ -14,5 +14,11 @@
     <Content Include="../../scenarios/**/*.json"
              Link="scenarios/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/levels/**/*.json"
+             Link="assets/levels/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/text/*.json"
+             Link="assets/text/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
