@@ -140,8 +140,8 @@ namespace Mooh.Desktop
                 if (Screen == GameScreen.Map)
                 {
                     result.AddRange(_map.Elements);
-                    result.Add(new ScreenText(Localize("Map2MainMenu"), 60, 570, Alignment: TextAlignment.Left));
-                    result.Add(new ScreenText(Localize("MapLvlStart"), 740, 570, Alignment: TextAlignment.Right));
+                    result.Add(new ScreenText(Localize("Map2MainMenu"), 60, 570, "MapButtonFont", Alignment: TextAlignment.Left));
+                    result.Add(new ScreenText(Localize("MapLvlStart"), 740, 570, "MapButtonFont", Alignment: TextAlignment.Right));
                 }
                 else if (Screen != GameScreen.Playing)
                 {

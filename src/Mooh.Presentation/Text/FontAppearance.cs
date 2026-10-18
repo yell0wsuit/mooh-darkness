@@ -23,25 +23,29 @@ namespace Mooh.Presentation.Text
         internal static FontAppearance ForStyle(string name)
         {
             FontEdge black = new(SKColors.Black, 2);
+            // A centered one-pixel rim preserves the bold face's counters and spacing.
+            // Skia strokes straddle the glyph boundary, so the full width is two pixels.
+            FontEdge buttonRim = black;
             return name switch
             {
                 "AppFont" => Solid(0xffffff, black),
                 "EditFntSelTit" => Solid(0xffffbb),
                 "EditFntTit" => Solid(0xffff80),
                 "EditFntTTip" or "MapStoryFont" or "PanelInstrBlackFnt" => Solid(0x000000),
-                "MenuFntBtnNrm" => Solid(0xfebd2c, black),
-                "MenuFntBtnSel" or "MenuFntEncTitSel" => Solid(0xf5f532, black),
-                "MenuFntBtnPrs" => Solid(0xb27d09, new FontEdge(new SKColor(0, 0, 0, 180), 3, 0, 1, 0.6f), black),
-                "MenuFntEncTit" => Solid(0xffbe2d, new FontEdge(SKColors.Black, 3, 0, 1, 0.5f), black),
-                "MenuFntEncTxt" => Solid(0xf5f532, black),
-                "MenuFntMapTxt" => Solid(0xf5f532, new FontEdge(SKColors.Black, 3, 0, 1, 0.5f), black),
+                "MenuFntBtnNrm" or "MapButtonFont" => Solid(0xfebd2c, buttonRim),
+                "MenuFntBtnSel" or "MenuFntEncTitSel" => Solid(0xf5f532, buttonRim),
+                "MenuFntBtnPrs" => Solid(0xb27d09, buttonRim),
+                "MenuFntEncTit" => Solid(0xffbe2d, buttonRim),
+                "MenuFntEncTxt" => Solid(0xf5f532, new FontEdge(SKColors.Black, 2, 0, -0.5f)),
+                "MenuFntMapTxt" => Solid(0xf5f532, new FontEdge(SKColors.Black, 4, 0, -0.5f)),
                 "MenuFntTit" => new FontAppearance(Rgb(0xfee34f), Rgb(0xf9ad02),
                     [new FontEdge(SKColors.Black, 4, 1, 2, 0.5f), new FontEdge(Rgb(0x999999), 2, -1, -1)]),
                 "MenuFontRegTxt" => Solid(0xffe000),
                 "MenuFontToolTip" => Solid(0xffffff, new FontEdge(Rgb(0xfe521c), 1.5f, 0, 0, 0.6f)),
                 "MenuTTipFont" => Solid(0x8745ab),
-                "PanelDigFnt" or "PanelDigTextFnt" => Solid(0xf6e73d, black),
-                "PanelDigScr" => Solid(0xf6e73d, new FontEdge(SKColors.Black, 6)),
+                "PanelDigFnt" => Solid(0xf6e73d, new FontEdge(SKColors.Black, 2.5f, 0.5f)),
+                "PanelDigTextFnt" => Solid(0xf6e73d, black),
+                "PanelDigScr" => Solid(0xf6e73d, new FontEdge(SKColors.Black, 4)),
                 "PanelDigTextRedFnt" => Solid(0xf63d3d, black),
                 "GameFontScr" => new FontAppearance(Rgb(0xffff00), Rgb(0xffcc00),
                     [new FontEdge(SKColors.Black, 8), new FontEdge(Rgb(0xb06bde), 3, 1.5f, 1),

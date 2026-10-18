@@ -51,7 +51,7 @@ namespace Mooh.Presentation.Text
         /// <summary>Gets the bundled TrueType filename for a style.</summary>
         public static string FileName(string name)
         {
-            return name is "MapStoryFont" or "MenuFontToolTip" or "MenuTTipFont" or "MenuFntEncTxt" or "MenuFontRegTxt" or "PanelInstrBlackFnt"
+            return name is "MapStoryFont" or "MenuFontToolTip" or "MenuTTipFont" or "MenuFntEncTxt" or "MenuFontRegTxt" or "PanelInstrBlackFnt" or "EditFntTTip" or "VersionFont"
                 ? "ComicNeue-Regular.ttf" : "ComicNeue-Bold.ttf";
         }
 
@@ -87,6 +87,10 @@ namespace Mooh.Presentation.Text
         public (int Left, int Top, int Right, int Bottom) Bounds(string text)
         {
             _ = Font.MeasureText(text, out SKRect bounds);
+            if (bounds.IsEmpty)
+            {
+                return (0, 0, 0, 0);
+            }
             return ((int)Math.Floor(bounds.Left), (int)Math.Floor(bounds.Top + BaselineOffset),
                 (int)Math.Ceiling(bounds.Right), (int)Math.Ceiling(bounds.Bottom + BaselineOffset));
         }
@@ -118,7 +122,7 @@ namespace Mooh.Presentation.Text
                 "MenuFntTit" => 42,
                 "GameFontScr" => 34,
                 "PanelDigFnt" => 20,
-                "MenuFntBtnNrm" or "MenuFntBtnSel" or "MenuFntBtnPrs" or "MenuFntEncTit" or "MenuFntEncTitSel" => 23,
+                "MenuFntBtnNrm" or "MenuFntBtnSel" or "MenuFntBtnPrs" or "MenuFntEncTit" or "MenuFntEncTitSel" or "MapButtonFont" => 23,
                 "MenuFntMapTxt" => 15,
                 "MenuFntEncTxt" => 14,
                 "MenuFontToolTip" => 14,

@@ -27,6 +27,7 @@ namespace Mooh.Desktop.Tests
         [InlineData(2750, 600, "game")]
         [InlineData(2520, 1080, "main")]
         [InlineData(2560, 1496, "main")]
+        [InlineData(2560, 1496, "map")]
         [InlineData(3840, 1080, "main")]
         [InlineData(2750, 600, "main")]
         [InlineData(2520, 1080, "pause")]
@@ -55,7 +56,7 @@ namespace Mooh.Desktop.Tests
             GameShell shell = new(assets, JsonLevelPackLoader.Load(Path.Combine(assets, "levels", "manifest.json")),
                 library, StringTable.Load(text), GameFont.Load(HudPresenter.LevelFontName, font),
                 new PlayerProfile(), null);
-            if (screen == "main")
+            if (screen is "main" or "map")
             {
                 shell.InspectScreen(screen);
             }
