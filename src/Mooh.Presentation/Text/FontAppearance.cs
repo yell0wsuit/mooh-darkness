@@ -36,7 +36,7 @@ namespace Mooh.Presentation.Text
                 "MenuFntBtnSel" or "MenuFntEncTitSel" => Solid(0xf5f532, buttonRim),
                 "MenuFntBtnPrs" => Solid(0xb27d09, buttonRim),
                 "MenuFntEncTit" => Solid(0xffbe2d, buttonRim),
-                "MenuFntEncTxt" => Solid(0xf5f532, new FontEdge(SKColors.Black, 2, 0, -0.5f)),
+                "MenuFntEncTxt" => Solid(0xf5f532, buttonRim),
                 "MenuFntMapTxt" => Solid(0xf5f532, new FontEdge(SKColors.Black, 4, 0, -0.5f)),
                 "MenuFntTit" => new FontAppearance(Rgb(0xfee34f), Rgb(0xf9ad02),
                     [new FontEdge(SKColors.Black, 4, 1, 2, 0.5f), new FontEdge(Rgb(0x999999), 2, -1, -1)]),

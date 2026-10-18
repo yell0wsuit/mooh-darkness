@@ -17,6 +17,7 @@ namespace Mooh.Desktop.Tests
         [Theory]
         [InlineData("MenuFntBtnNrm")]
         [InlineData("MenuFntBtnSel")]
+        [InlineData("MenuFntEncTxt")]
         public void MenuOutlineSeparatesTextFromPanel(string style)
         {
             using SKBitmap bitmap = new(160, 120);
