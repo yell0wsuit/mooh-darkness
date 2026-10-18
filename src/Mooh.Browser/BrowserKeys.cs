@@ -31,6 +31,8 @@ namespace Mooh.Browser
             [20] = SDL.Keycode.Home,
             [21] = SDL.Keycode.End,
             [22] = SDL.Keycode.Tab,
+            [23] = SDL.Keycode.LShift,
+            [24] = SDL.Keycode.RShift,
         };
     }
 }

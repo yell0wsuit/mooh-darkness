@@ -35,16 +35,16 @@ namespace Mooh.Desktop.Tests
                 shell.Update(default, [], 0.1);
             }
 
-            shell.HandleKey(SDL.Keycode.F2, true);
+            PressKey(shell, SDL.Keycode.F2);
             Assert.Equal(GameScreen.Map, shell.Screen);
-            shell.HandleKey(SDL.Keycode.Return, true);
+            PressKey(shell, SDL.Keycode.Return);
             Assert.Equal(GameScreen.PreLevel, shell.Screen);
             for (int i = 0; i < 4; i++)
             {
                 shell.Update(default, [], 0.1);
             }
 
-            shell.HandleKey(SDL.Keycode.Return, true);
+            PressKey(shell, SDL.Keycode.Return);
             Assert.Equal(GameScreen.Playing, shell.Screen);
             Assert.Equal(0, shell.Game!.Session.LevelIndex);
         }
@@ -56,14 +56,14 @@ namespace Mooh.Desktop.Tests
             GameShell shell = Create();
             shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
             GameSession session = shell.Game!.Session;
-            shell.HandleKey(SDL.Keycode.Escape, true);
+            PressKey(shell, SDL.Keycode.Escape);
             Assert.Equal(GameScreen.Pause, shell.Screen);
             for (int i = 0; i < 4; i++)
             {
                 shell.Update(default, [], 0.1);
             }
 
-            shell.HandleKey(SDL.Keycode.Escape, true);
+            PressKey(shell, SDL.Keycode.Escape);
             Assert.Equal(GameScreen.Playing, shell.Screen);
             Assert.Same(session, shell.Game.Session);
         }
@@ -75,14 +75,14 @@ namespace Mooh.Desktop.Tests
             GameShell shell = Create();
             shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
             GameSession session = shell.Game!.Session;
-            shell.HandleKey(SDL.Keycode.F2, true);
+            PressKey(shell, SDL.Keycode.F2);
             Assert.Equal(GameScreen.Restart, shell.Screen);
             for (int i = 0; i < 4; i++)
             {
                 shell.Update(default, [], 0.1);
             }
 
-            shell.HandleKey(SDL.Keycode.Escape, true);
+            PressKey(shell, SDL.Keycode.Escape);
             Assert.Equal(GameScreen.Playing, shell.Screen);
             Assert.False(shell.Game.IsPaused);
             Assert.Same(session, shell.Game.Session);
@@ -130,19 +130,19 @@ namespace Mooh.Desktop.Tests
             profile.HighScores[1] = [new("Empty", 0, 0), new("Empty", 0, 0), new("Empty", 0, 0), new("Empty", 0, 0)];
             GameShell shell = Create(profile);
             shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
-            shell.HandleKey(SDL.Keycode.Escape, true);
+            PressKey(shell, SDL.Keycode.Escape);
             Settle(shell);
             Click(shell, "end");
             Assert.Equal(GameScreen.ScoreEntry, shell.Screen);
             Settle(shell);
             shell.HandleText("Alice");
-            shell.HandleKey(SDL.Keycode.Left, true);
+            PressKey(shell, SDL.Keycode.Left);
             shell.HandleText("X");
             shell.HandleKey(SDL.Keycode.Home, false);
-            shell.HandleKey(SDL.Keycode.Delete, true);
+            PressKey(shell, SDL.Keycode.Delete);
             shell.HandleKey(SDL.Keycode.End, false);
-            shell.HandleKey(SDL.Keycode.Backspace, true);
-            shell.HandleKey(SDL.Keycode.Return, true);
+            PressKey(shell, SDL.Keycode.Backspace);
+            PressKey(shell, SDL.Keycode.Return);
             Assert.Equal(GameScreen.HighScores, shell.Screen);
             Assert.Equal("lic", shell.Profile.HighScores[1][0].Name);
         }
@@ -202,7 +202,7 @@ namespace Mooh.Desktop.Tests
             Assert.Contains(shell.Elements.OfType<ScreenText>(), text => text.Text == "[x]");
             Assert.False(shell.Profile.Options.Fullscreen);
             Assert.True(shell.Menu.IsReady);
-            shell.HandleKey(SDL.Keycode.Escape, true);
+            PressKey(shell, SDL.Keycode.Escape);
             Assert.Equal(GameScreen.Main, shell.Screen);
             Assert.True(shell.Profile.Options.Fullscreen);
         }
@@ -213,10 +213,10 @@ namespace Mooh.Desktop.Tests
         {
             GameShell shell = Create();
             shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
-            shell.HandleKey(SDL.Keycode.Escape, true);
+            PressKey(shell, SDL.Keycode.Escape);
             Settle(shell);
             MenuButton previousButton = Assert.Single(shell.Menu.Buttons, button => button.Id == "end");
-            shell.HandleKey(SDL.Keycode.Escape, true);
+            PressKey(shell, SDL.Keycode.Escape);
             Assert.Empty(shell.Menu.Buttons);
             Assert.Empty(shell.Menu.Elements);
             shell.MouseMove((previousButton.Left + previousButton.Right) / 2, (previousButton.Top + previousButton.Bottom) / 2);
@@ -258,7 +258,7 @@ namespace Mooh.Desktop.Tests
 
             Assert.Equal(GameScreen.Statistics, shell.Screen);
             Settle(shell);
-            shell.HandleKey(SDL.Keycode.Return, true);
+            PressKey(shell, SDL.Keycode.Return);
             Assert.Equal(GameScreen.Map, shell.Screen);
             int score = shell.Game.Session.TotalScore;
             if (useMouse)
@@ -269,7 +269,7 @@ namespace Mooh.Desktop.Tests
             }
             else
             {
-                shell.HandleKey(SDL.Keycode.Escape, true);
+                PressKey(shell, SDL.Keycode.Escape);
             }
 
             Assert.Equal(GameScreen.ScoreEntry, shell.Screen);
@@ -284,7 +284,7 @@ namespace Mooh.Desktop.Tests
         {
             GameShell shell = Create();
             shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
-            shell.HandleKey(SDL.Keycode.Escape, true);
+            PressKey(shell, SDL.Keycode.Escape);
             Settle(shell);
             Click(shell, "end");
             Assert.Equal(GameScreen.HighScores, shell.Screen);
@@ -297,10 +297,10 @@ namespace Mooh.Desktop.Tests
         {
             GameShell shell = Create();
             Assert.Equal("menu", shell.TrackName);
-            shell.HandleKey(SDL.Keycode.Return, true);
+            PressKey(shell, SDL.Keycode.Return);
             Assert.Equal("menu", shell.TrackName);
             Settle(shell);
-            shell.HandleKey(SDL.Keycode.Escape, true);
+            PressKey(shell, SDL.Keycode.Escape);
             Assert.Equal(GameScreen.Outro, shell.Screen);
             Assert.Equal("menu", shell.TrackName);
         }
@@ -330,7 +330,7 @@ namespace Mooh.Desktop.Tests
             shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
             shell.InspectScreen("complete");
             Settle(shell);
-            shell.HandleKey(key, true);
+            PressKey(shell, key);
             Assert.Equal(GameScreen.ScoreEntry, shell.Screen);
         }
 
@@ -347,7 +347,7 @@ namespace Mooh.Desktop.Tests
             Click(shell, "begin");
             Assert.Equal(GameScreen.Playing, shell.Screen);
             shell.Update(default, [], 0.1);
-            shell.HandleKey(key, true);
+            PressKey(shell, key);
             Assert.DoesNotContain(shell.Elements.OfType<ScreenText>(), text => text.Text == previousTitle);
             _ = Assert.Single(shell.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntTit");
         }
@@ -360,12 +360,12 @@ namespace Mooh.Desktop.Tests
         {
             GameShell shell = Create();
             shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
-            shell.HandleKey(first, true);
+            PressKey(shell, first);
             Settle(shell);
             string previousTitle = Assert.Single(shell.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntTit").Text;
-            shell.HandleKey(SDL.Keycode.Escape, true);
+            PressKey(shell, SDL.Keycode.Escape);
             Assert.Equal(GameScreen.Playing, shell.Screen);
-            shell.HandleKey(second, true);
+            PressKey(shell, second);
             Assert.DoesNotContain(shell.Elements.OfType<ScreenText>(), text => text.Text == previousTitle);
         }
 
@@ -377,11 +377,163 @@ namespace Mooh.Desktop.Tests
             shell.InspectScreen("main");
             Settle(shell);
             string previousTitle = Assert.Single(shell.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntTit").Text;
-            shell.HandleKey(SDL.Keycode.F2, true);
+            PressKey(shell, SDL.Keycode.F2);
             Assert.Equal(GameScreen.Map, shell.Screen);
-            shell.HandleKey(SDL.Keycode.Return, true);
+            PressKey(shell, SDL.Keycode.Return);
             Assert.Equal(GameScreen.PreLevel, shell.Screen);
             Assert.DoesNotContain(shell.Elements.OfType<ScreenText>(), text => text.Text == previousTitle);
+        }
+
+        /// <summary>Keyboard confirmation stays pressed until the matching key is released.</summary>
+        [Theory]
+        [InlineData(SDL.Keycode.Return)]
+        [InlineData(SDL.Keycode.Space)]
+        public void KeyboardConfirmationShowsPressedFeedbackUntilRelease(SDL.Keycode key)
+        {
+            using GameShell shell = Create();
+            shell.InspectScreen("prelevel");
+            Settle(shell);
+            shell.HandleKey(key, true);
+            Assert.Equal(GameScreen.PreLevel, shell.Screen);
+            Assert.Contains(shell.Menu.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntBtnPrs");
+            shell.HandleKey(SDL.Keycode.F10, false);
+            Assert.Equal(GameScreen.PreLevel, shell.Screen);
+            shell.HandleKey(key, false);
+            Assert.Equal(GameScreen.Playing, shell.Screen);
+        }
+
+        /// <summary>Shortcuts press their own button even when another button is selected.</summary>
+        [Theory]
+        [InlineData(SDL.Keycode.F2, "new", nameof(GameScreen.Map))]
+        [InlineData(SDL.Keycode.F10, "options", nameof(GameScreen.Options))]
+        public void ShortcutsShowTheirTargetBeforeActivating(SDL.Keycode key, string target, string destination)
+        {
+            using GameShell shell = Create();
+            shell.InspectScreen("main");
+            Settle(shell);
+            shell.HandleKey(key, true);
+            Assert.Equal(GameScreen.Main, shell.Screen);
+            Assert.Equal(target, shell.Menu.Activate());
+            Assert.Contains(shell.Menu.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntBtnPrs");
+            shell.HandleKey(key, false);
+            Assert.Equal(destination, shell.Screen.ToString());
+        }
+
+        /// <summary>Home, End and reverse Tab select the original navigation endpoints.</summary>
+        [Fact]
+        public void MenuNavigationSupportsEndpointsAndShiftTab()
+        {
+            using GameShell shell = Create();
+            shell.InspectScreen("main");
+            Settle(shell);
+            PressKey(shell, SDL.Keycode.End);
+            Assert.Equal("exit", shell.Menu.Activate());
+            PressKey(shell, SDL.Keycode.Home);
+            Assert.Equal("new", shell.Menu.Activate());
+            shell.HandleKey(SDL.Keycode.LShift, true);
+            PressKey(shell, SDL.Keycode.Tab);
+            shell.HandleKey(SDL.Keycode.LShift, false);
+            Assert.Equal("exit", shell.Menu.Activate());
+        }
+
+        /// <summary>Leaving a hovered control retains its selection without replaying the hover cue.</summary>
+        [Fact]
+        public void HoverSelectionPersistsAndPlaysOneChangeSound()
+        {
+            using GameShell shell = Create();
+            shell.InspectScreen("main");
+            Settle(shell);
+            MenuButton button = shell.Menu.Buttons.Single(button => button.Id == "options");
+            double x = (button.Left + button.Right) / 2, y = (button.Top + button.Bottom) / 2;
+            shell.MouseMove(x, y);
+            shell.Update(default, [], 0);
+            Assert.Contains(shell.Sounds, sound => sound.Alias == "MenuBtnChange");
+            shell.MouseMove(x + 1, y);
+            shell.MouseMove(0, 0);
+            shell.Update(default, [], 0);
+            Assert.Empty(shell.Sounds);
+            Assert.Equal("options", shell.Menu.Activate());
+            shell.MouseButton(true);
+            shell.MouseButton(false);
+            Assert.Equal(GameScreen.Main, shell.Screen);
+        }
+
+        /// <summary>Losing focus disarms a held keyboard activation.</summary>
+        [Fact]
+        public void CancelingInputDisarmsKeyboardActivation()
+        {
+            using GameShell shell = Create();
+            shell.InspectScreen("prelevel");
+            Settle(shell);
+            shell.HandleKey(SDL.Keycode.Return, true);
+            shell.CancelPointer();
+            shell.HandleKey(SDL.Keycode.Return, false);
+            Assert.Equal(GameScreen.PreLevel, shell.Screen);
+            Assert.DoesNotContain(shell.Menu.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntBtnPrs");
+        }
+
+        /// <summary>A release outside the viewport cancels a pointer gesture without retaining a pressed button.</summary>
+        [Fact]
+        public void PointerReleaseOutsideTheViewportDisarmsTheButton()
+        {
+            using GameShell shell = Create();
+            shell.InspectScreen("main");
+            Settle(shell);
+            MenuButton button = shell.Menu.Buttons.Single(button => button.Id == "options");
+            shell.MouseMove((button.Left + button.Right) / 2, (button.Top + button.Bottom) / 2);
+            shell.MouseButton(true);
+            shell.MouseMove(-10, -10);
+            shell.MouseButton(false);
+            Assert.Equal(GameScreen.Main, shell.Screen);
+            Assert.DoesNotContain(shell.Menu.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntBtnPrs");
+        }
+
+        /// <summary>A held shortcut cannot repeat or be redirected by another key or a pointer move.</summary>
+        [Fact]
+        public void HeldKeyboardActionKeepsItsOriginalTarget()
+        {
+            using GameShell shell = Create();
+            shell.InspectScreen("main");
+            Settle(shell);
+            shell.HandleKey(SDL.Keycode.F10, true);
+            shell.HandleKey(SDL.Keycode.F10, true);
+            shell.HandleKey(SDL.Keycode.Down, true);
+            shell.HandleKey(SDL.Keycode.Down, false);
+            MenuButton button = shell.Menu.Buttons.Single(button => button.Id == "new");
+            shell.MouseMove((button.Left + button.Right) / 2, (button.Top + button.Bottom) / 2);
+            Assert.Equal(GameScreen.Main, shell.Screen);
+            shell.HandleKey(SDL.Keycode.F10, false);
+            Assert.Equal(GameScreen.Options, shell.Screen);
+        }
+
+        /// <summary>The high-score Save control uses the same held-key feedback without consuming spaces in names.</summary>
+        [Theory]
+        [InlineData(SDL.Keycode.Return)]
+        [InlineData(SDL.Keycode.Escape)]
+        public void HighScoreConfirmationWaitsForRelease(SDL.Keycode key)
+        {
+            PlayerProfile profile = new();
+            profile.HighScores[1] = [new("Empty", 0, 0), new("Empty", 0, 0), new("Empty", 0, 0), new("Empty", 0, 0)];
+            using GameShell shell = Create(profile);
+            shell.StartDirect(0, Core.Simulation.DifficultySpeeds.Standard);
+            PressKey(shell, SDL.Keycode.Escape);
+            Settle(shell);
+            Click(shell, "end");
+            Settle(shell);
+            shell.HandleText("Al ice");
+            shell.HandleKey(key, true);
+            Assert.Equal(GameScreen.ScoreEntry, shell.Screen);
+            Assert.Contains(shell.Menu.Elements.OfType<ScreenText>(), text => text.Font == "MenuFntBtnPrs");
+            shell.HandleText("Z");
+            shell.HandleKey(key, false);
+            Assert.Equal(GameScreen.HighScores, shell.Screen);
+            Assert.Equal("Al ice", profile.HighScores[1][0].Name);
+        }
+
+        private static void PressKey(GameShell shell, SDL.Keycode key)
+        {
+            shell.HandleKey(key, true);
+            shell.HandleKey(key, false);
         }
 
         private static void Settle(GameShell shell)

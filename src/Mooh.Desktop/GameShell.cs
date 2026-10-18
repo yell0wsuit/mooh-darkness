@@ -46,6 +46,10 @@ namespace Mooh.Desktop
         private double _mouseX = 400;
         private double _mouseY = 300;
         private bool _mouseDown;
+        private bool _leftShift;
+        private bool _rightShift;
+        private SDL.Keycode? _menuKey;
+        private string? _menuAction;
         private bool _optionsInGame;
         private bool _fullscreenChoice;
         private bool _mapCanChange;
@@ -94,6 +98,11 @@ namespace Mooh.Desktop
             get;
             private set
             {
+                if (field != value)
+                {
+                    _menuKey = null;
+                    _menuAction = null;
+                }
                 field = value;
                 if (value is GameScreen.Playing or GameScreen.Map or GameScreen.Intro or GameScreen.Outro)
                 {
@@ -275,6 +284,48 @@ namespace Mooh.Desktop
 
         public void HandleKey(SDL.Keycode key, bool pressed)
         {
+            if (key is SDL.Keycode.LShift or SDL.Keycode.RShift)
+            {
+                if (key == SDL.Keycode.LShift)
+                {
+                    _leftShift = pressed;
+                }
+                else
+                {
+                    _rightShift = pressed;
+                }
+                return;
+            }
+            if (_menuKey is SDL.Keycode held)
+            {
+                if (!pressed && key == held)
+                {
+                    string? action = _menuAction;
+                    _menuKey = null;
+                    _menuAction = null;
+                    Menu.CancelPress();
+                    Activate(action);
+                }
+                return;
+            }
+            if (Screen == GameScreen.ScoreEntry && key is SDL.Keycode.Return or SDL.Keycode.Escape or SDL.Keycode.Tab)
+            {
+                if (Menu.IsReady)
+                {
+                    _firstNameCharacter = false;
+                    HandleMenuKey(key, pressed);
+                }
+                return;
+            }
+            if (Screen is not (GameScreen.Intro or GameScreen.Outro or GameScreen.Playing or GameScreen.Map or GameScreen.ScoreEntry))
+            {
+                if (!Menu.IsReady)
+                {
+                    return;
+                }
+                HandleMenuKey(key, pressed);
+                return;
+            }
             if (!pressed)
             {
                 if (Screen == GameScreen.ScoreEntry && Menu.IsReady)
@@ -330,10 +381,6 @@ namespace Mooh.Desktop
 
                     _playerName = _playerName.Remove(_namePosition, 1);
                 }
-                else if (key is SDL.Keycode.Return or SDL.Keycode.Escape)
-                {
-                    SaveName();
-                }
 
                 if (key is SDL.Keycode.Left or SDL.Keycode.Right or SDL.Keycode.Delete or SDL.Keycode.Backspace or SDL.Keycode.Home or SDL.Keycode.End)
                 {
@@ -367,108 +414,78 @@ namespace Mooh.Desktop
                 }
                 return;
             }
-            if (key is SDL.Keycode.Up or SDL.Keycode.Left)
+        }
+
+        private void HandleMenuKey(SDL.Keycode key, bool pressed)
+        {
+            if (_mouseDown)
             {
-                Menu.Navigate(-1);
-                Cue("MenuBtnChange");
+                return;
             }
-            else if (key is SDL.Keycode.Down or SDL.Keycode.Right or SDL.Keycode.Tab)
+            bool navigation = key is SDL.Keycode.Up or SDL.Keycode.Left or SDL.Keycode.Down
+                or SDL.Keycode.Right or SDL.Keycode.Tab or SDL.Keycode.Home or SDL.Keycode.End;
+            if (navigation)
             {
-                Menu.Navigate(1);
-                Cue("MenuBtnChange");
-            }
-            else if (key is SDL.Keycode.Return or SDL.Keycode.Space)
-            {
-                Activate(Menu.Activate());
-            }
-            else if (key == SDL.Keycode.F10 && Screen is GameScreen.Main or GameScreen.Pause)
-            {
-                ShowOptions();
-            }
-            else if (key == SDL.Keycode.F2)
-            {
-                if (Screen == GameScreen.Main)
+                if (!pressed)
                 {
-                    BeginGame(false);
-                }
-                else if (Screen == GameScreen.Pause)
-                {
-                    ShowRestart();
-                }
-                else if (Screen == GameScreen.Restart)
-                {
-                    Activate("restart");
-                }
-                else if (Screen == GameScreen.Statistics)
-                {
-                    Activate("next");
-                }
-                else if (Screen == GameScreen.Completion)
-                {
-                    EndRun();
-                }
-                else if (Screen == GameScreen.PreLevel)
-                {
-                    Resume();
-                }
-            }
-            else if (key is SDL.Keycode.Escape or SDL.Keycode.P or SDL.Keycode.Pause)
-            {
-                if (Screen == GameScreen.Main)
-                {
-                    Exit();
-                }
-                else if (Screen == GameScreen.Pause)
-                {
-                    Resume();
-                }
-                else if (Screen == GameScreen.Restart)
-                {
-                    Resume();
-                }
-                else if (Screen == GameScreen.Options)
-                {
-                    ApplyDisplayOptions();
-                    Persist();
-                    if (_optionsInGame)
+                    string? previous = Menu.Activate();
+                    if (key is SDL.Keycode.Home or SDL.Keycode.End)
                     {
-                        ShowPause();
+                        Menu.NavigateToEnd(key == SDL.Keycode.End);
                     }
                     else
                     {
-                        ShowMain();
+                        bool reverse = key is SDL.Keycode.Up or SDL.Keycode.Left
+                            || (key == SDL.Keycode.Tab && (_leftShift || _rightShift));
+                        Menu.Navigate(reverse ? -1 : 1);
+                    }
+                    if (previous != Menu.Activate())
+                    {
+                        Cue("MenuBtnChange");
                     }
                 }
-                else if (Screen == GameScreen.Statistics)
+                return;
+            }
+            if (!pressed)
+            {
+                return;
+            }
+            string? action = key is SDL.Keycode.Return or SDL.Keycode.Space ? Menu.Activate()
+                : (Screen, key) switch
                 {
-                    Activate("next");
-                }
-                else if (Screen == GameScreen.Completion)
-                {
-                    EndRun();
-                }
-                else if (Screen == GameScreen.PreLevel)
-                {
-                    Resume();
-                }
-                else
-                {
-                    ShowMain();
-                }
+                    (GameScreen.ScoreEntry, SDL.Keycode.Escape) => "save-name",
+                    (GameScreen.Main, SDL.Keycode.F2) => "new",
+                    (GameScreen.Main or GameScreen.Pause, SDL.Keycode.F10) => "options",
+                    (GameScreen.Pause, SDL.Keycode.F2) => "restart-confirm",
+                    (GameScreen.Restart, SDL.Keycode.F2) => "restart",
+                    (GameScreen.PreLevel, SDL.Keycode.F2 or SDL.Keycode.Escape) => "begin",
+                    (GameScreen.Statistics, SDL.Keycode.F2 or SDL.Keycode.Escape) => "next",
+                    (GameScreen.Completion, SDL.Keycode.F2 or SDL.Keycode.Escape) => "finish-run",
+                    (GameScreen.Main, SDL.Keycode.Escape or SDL.Keycode.P or SDL.Keycode.Pause) => "exit",
+                    (GameScreen.Pause, SDL.Keycode.Escape or SDL.Keycode.P or SDL.Keycode.Pause) => "resume",
+                    (GameScreen.Restart or GameScreen.Options or GameScreen.HighScores,
+                        SDL.Keycode.Escape or SDL.Keycode.P or SDL.Keycode.Pause) => "back",
+                    _ => null,
+                };
+            if (action is not null && Menu.Buttons.Any(button => button.Id == action))
+            {
+                _menuKey = key;
+                _menuAction = action;
+                Menu.Press(action);
             }
         }
 
         /// <summary>Applies text input to the original overwrite-mode name editor.</summary>
         public void HandleText(string text)
         {
-            if (Screen != GameScreen.ScoreEntry || !Menu.IsReady)
+            if (Screen != GameScreen.ScoreEntry || !Menu.IsReady || _menuKey is not null)
             {
                 return;
             }
 
             foreach (char character in text)
             {
-                if (char.IsControl(character) || character > 255 || !_scoreFont.Has(character))
+                if (char.IsControl(character) || character > 255 || (character != ' ' && !_scoreFont.Has(character)))
                 {
                     continue;
                 }
@@ -527,7 +544,10 @@ namespace Mooh.Desktop
         {
             _mouseX = x;
             _mouseY = y;
-            Menu.MovePointer(x, y);
+            if (Menu.MovePointer(x, y))
+            {
+                Cue("MenuBtnChange");
+            }
         }
 
         public void MouseButton(bool pressed, bool right = false)
@@ -535,6 +555,10 @@ namespace Mooh.Desktop
             _mouseDown = pressed;
             if (_mouseX < 0 || _mouseX > 800 || _mouseY < 0 || _mouseY > 600)
             {
+                if (!pressed && _menuKey is null)
+                {
+                    Menu.CancelPress();
+                }
                 return;
             }
 
@@ -592,9 +616,17 @@ namespace Mooh.Desktop
 
                 return;
             }
+            if (_menuKey is not null)
+            {
+                return;
+            }
             if (pressed)
             {
-                Menu.Press();
+                _ = Menu.MovePointer(_mouseX, _mouseY);
+                if (Menu.Buttons.Any(button => _mouseX >= button.Left && _mouseX <= button.Right && _mouseY >= button.Top && _mouseY <= button.Bottom))
+                {
+                    Menu.Press();
+                }
             }
             else
             {
@@ -602,10 +634,13 @@ namespace Mooh.Desktop
             }
         }
 
-        /// <summary>Cancels a pointer press without invoking its selected action.</summary>
+        /// <summary>Cancels held menu input without invoking its selected action.</summary>
         public void CancelPointer()
         {
             _mouseDown = false;
+            _leftShift = _rightShift = false;
+            _menuKey = null;
+            _menuAction = null;
             Menu.CancelPress();
         }
 

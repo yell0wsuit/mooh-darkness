@@ -350,10 +350,22 @@ namespace Mooh.Presentation.Screens
             }
         }
 
-        /// <summary>Selects the button beneath the logical pointer.</summary>
+        /// <summary>Selects the first or last keyboard-selectable button.</summary>
+        /// <param name="last">Whether to select the last button instead of the first.</param>
+        public void NavigateToEnd(bool last)
+        {
+            if (IsReady)
+            {
+                _selected = last ? _buttons.FindLastIndex(button => button.Item.TabStop)
+                    : _buttons.FindIndex(button => button.Item.TabStop);
+            }
+        }
+
+        /// <summary>Selects the button beneath the logical pointer, retaining selection outside buttons.</summary>
         /// <param name="x">The horizontal coordinate.</param>
         /// <param name="y">The vertical coordinate.</param>
-        public void MovePointer(double x, double y)
+        /// <returns>Whether the pointer changed the selected button.</returns>
+        public bool MovePointer(double x, double y)
         {
             double dx = x - _pointerX;
             double dy = y - _pointerY;
@@ -361,7 +373,7 @@ namespace Mooh.Presentation.Screens
             _pointerY = y;
             if (!IsReady)
             {
-                return;
+                return false;
             }
 
             int selected = _buttons.FindIndex(b => x >= 400 + b.Left && x <= 400 + b.Right && y >= PanelY + b.Top && y <= PanelY + b.Bottom);
@@ -370,19 +382,29 @@ namespace Mooh.Presentation.Screens
                 _tooltipTime = 0;
             }
 
-            _selected = selected;
+            bool changed = selected >= 0 && selected != _selected;
+            if (selected >= 0)
+            {
+                _selected = selected;
+            }
             _hovered = selected;
             if (selected >= 0)
             {
                 _buttons[selected].Spring.AddSpeed(dx * 0.05 / _frameMilliseconds, dy * 0.05 / _frameMilliseconds);
             }
+            return changed;
         }
 
-        /// <summary>Arms the selected button on pointer press.</summary>
-        public void Press()
+        /// <summary>Arms the selected button or a keyboard shortcut target.</summary>
+        /// <param name="id">The shortcut target, or null to press the selected button.</param>
+        public void Press(string? id = null)
         {
             if (IsReady)
             {
+                if (id is not null)
+                {
+                    _selected = _buttons.FindIndex(button => button.Item.Id == id);
+                }
                 _pressed = _selected;
                 _tooltipTime = 10;
             }
@@ -398,7 +420,7 @@ namespace Mooh.Presentation.Screens
         /// <returns>The action identifier, or null.</returns>
         public string? Release()
         {
-            string? result = _pressed >= 0 && _pressed == _selected ? Activate() : null;
+            string? result = _pressed >= 0 && _pressed == _hovered ? _buttons[_pressed].Item.Id : null;
             _pressed = -1;
             return result;
         }

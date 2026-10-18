@@ -32,7 +32,7 @@ namespace Mooh.Presentation.Tests
             menu.Show(MenuPanelKind.Main, "Menu", [new MenuItem("start", "Start", "A tooltip long enough to need several background tiles", 0, 0)], centerX: 310);
             menu.Advance(0.35);
             MenuButton button = menu.Buttons[0];
-            menu.MovePointer(button.Right - 1, button.Top + 3);
+            _ = menu.MovePointer(button.Right - 1, button.Top + 3);
             menu.Advance(0.75);
             ScreenText tooltip = Assert.Single(menu.Elements.OfType<ScreenText>(), text => text.Font == "MenuFontToolTip");
             ScreenSprite[] tiles = [.. menu.Elements.OfType<ScreenSprite>().Where(sprite => sprite.Frame.StartsWith("OTTip", StringComparison.Ordinal))];
@@ -177,9 +177,9 @@ namespace Mooh.Presentation.Tests
             menu.Navigate(-1);
             Assert.Equal("b", menu.Activate());
             MenuButton first = menu.Buttons[0];
-            menu.MovePointer(first.Left + 2, first.Top + 2);
+            _ = menu.MovePointer(first.Left + 2, first.Top + 2);
             menu.Press();
-            menu.MovePointer(0, 0);
+            _ = menu.MovePointer(0, 0);
             Assert.Null(menu.Release());
         }
 

@@ -32,7 +32,7 @@ const KEY_IDS = {
     Space: 7, ControlLeft: 8, ControlRight: 9,
     Digit1: 10, Digit2: 11, Digit3: 12, Digit4: 13,
     KeyP: 14, Pause: 15, F2: 16, F10: 17,
-    Backspace: 18, Delete: 19, Home: 20, End: 21, Tab: 22,
+    Backspace: 18, Delete: 19, Home: 20, End: 21, Tab: 22, ShiftLeft: 23, ShiftRight: 24,
 };
 
 const POINTER_KINDS = { mouse: 0, pen: 1, touch: 2 };

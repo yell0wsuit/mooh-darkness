@@ -100,7 +100,10 @@ namespace Mooh.Browser
             bool down = input.Word0 != 0;
             bool repeat = input.Word2 != 0;
             GameScreen before = _shell.Screen;
-            _shell.HandleKey(key, down && (!repeat || _shell.Screen == GameScreen.ScoreEntry));
+            if (!down || !repeat || _shell.Screen == GameScreen.ScoreEntry)
+            {
+                _shell.HandleKey(key, down);
+            }
             if (before != _shell.Screen)
             {
                 _controls.ReleaseAll();

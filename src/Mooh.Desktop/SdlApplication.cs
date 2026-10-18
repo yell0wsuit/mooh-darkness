@@ -175,7 +175,10 @@ namespace Mooh.Desktop
                 else if (type == SDL.EventType.KeyDown)
                 {
                     GameScreen before = shell.Screen;
-                    shell.HandleKey(e.Key.Key, !e.Key.Repeat || shell.Screen == GameScreen.ScoreEntry);
+                    if (!e.Key.Repeat || shell.Screen == GameScreen.ScoreEntry)
+                    {
+                        shell.HandleKey(e.Key.Key, true);
+                    }
                     if (before != shell.Screen)
                     {
                         _controls.ReleaseAll();

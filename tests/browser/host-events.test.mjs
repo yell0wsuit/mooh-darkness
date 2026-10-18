@@ -36,7 +36,7 @@ test("DOM key IDs match managed SDL controls and aliases", async () => {
         Space: [7, "Space"], ControlLeft: [8, "LCtrl"], ControlRight: [9, "RCtrl"],
         Digit1: [10, "Alpha1"], Digit2: [11, "Alpha2"], Digit3: [12, "Alpha3"], Digit4: [13, "Alpha4"],
         KeyP: [14, "P"], Pause: [15, "Pause"], F2: [16, "F2"], F10: [17, "F10"],
-        Backspace: [18, "Backspace"], Delete: [19, "Delete"], Home: [20, "Home"], End: [21, "End"], Tab: [22, "Tab"],
+        Backspace: [18, "Backspace"], Delete: [19, "Delete"], Home: [20, "Home"], End: [21, "End"], Tab: [22, "Tab"], ShiftLeft: [23, "LShift"], ShiftRight: [24, "RShift"],
     };
     for (const [code, [id, sdl]] of Object.entries(keys)) {
         assert.equal(events.keyId(code), id, code);
